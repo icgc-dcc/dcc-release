@@ -71,6 +71,13 @@
       <artifactId>guava</artifactId>
     </dependency>
 
+    <!-- Logging -->
+    <dependency>
+      <groupId>uk.org.lidalia</groupId>
+      <artifactId>sysout-over-slf4j</artifactId>
+      <version>1.0.2</version>
+    </dependency>
+
     <!-- Testing - DCC -->
     <dependency>
       <groupId>${project.groupId}</groupId>

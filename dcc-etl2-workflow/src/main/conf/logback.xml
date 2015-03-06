@@ -1,9 +1,10 @@
-<!--                                         -->
-<!-- DCC ETL Staging - Logging configuration -->
-<!--                                         -->
+<!--                                           -->
+<!-- DCC ETL2 Workflow - Logging configuration -->
+<!--                                           -->
 <configuration debug="false">
-  <property name="log.name" value="dcc-etl-staging" />
-  <property name="log.debug.name" value="dcc-etl-staging.debug" />
+  <property name="log.dir" value="/u/btiernay/lib/dcc-etl2"/>
+  <property name="log.name" value="workflow" />
+  <property name="log.debug.name" value="workflow.debug" />
   <property name="pattern" value="%date{ISO8601} [%thread] %-5level %logger{20} - %msg%n" />
 
   <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
@@ -11,7 +12,7 @@
   </contextListener>
 
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <File>${log.name}.log</File>
+    <File>${log.dir}/${log.name}.log</File>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <FileNamePattern>${log.name}.%d{yyyy-MM-dd}.log</FileNamePattern>
     </rollingPolicy>
@@ -21,7 +22,7 @@
   </appender>
 
   <appender name="DEBUG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <File>${log.debug.name}.log</File>
+    <File>${log.dir}/${log.debug.name}.log</File>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <FileNamePattern>${log.debug.name}.%d{yyyy-MM-dd}.log</FileNamePattern>
     </rollingPolicy>
@@ -40,6 +41,9 @@
     <appender-ref ref="DEBUG" />
   </logger>
   <logger name="org.apache.hadoop.mapred.FileInputFormat" level="info" additivity="false">
+    <appender-ref ref="DEBUG" />
+  </logger>
+  <logger name="org.apache.hadoop.net.NetworkTopology" level="info" additivity="false">
     <appender-ref ref="DEBUG" />
   </logger>
   <logger name="org.apache.hadoop.util.NativeCodeLoader" level="info" additivity="false">
