@@ -8,17 +8,21 @@ Build
 
 From the command line:
 
-	mvn package
+```bash
+mvn clean package
+```
 	
 Spark
 ---
 
-To run with Hadoop MR1 on CDH 5.3.1 with Spark, a custom build is required since http://spark.apache.org/downloads.html does not support the latest CDH:
+To run Spark 1.2.1 on CDH 5.3.1 using Hadoop MR1 (DCC requirement), a custom build is required since http://spark.apache.org/downloads.html does not offer a pre-built distribution of CDH5:
 
-- `git clone https://github.com/apache/spark.git`
-- `cd spark`
-- `git checkout v1.2.1`
-- `./make-distribution.sh --tgz --skip-java-test -DskipTests -Dhadoop.version=2.5.0-mr1-cdh5.3.1`
-- `ls dist`
+```bash
+git clone https://github.com/apache/spark.git
+cd spark
+git checkout v1.2.1
+./make-distribution.sh --tgz --skip-java-test -DskipTests -Dhadoop.version=2.5.0-mr1-cdh5.3.1
+stat spark-1.2.1-bin-2.5.0-mr1-cdh5.3.1.tgz
+```
 
 See http://spark.apache.org/docs/1.2.1/building-spark.html#specifying-the-hadoop-version for details.
