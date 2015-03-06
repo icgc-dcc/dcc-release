@@ -1,0 +1,11 @@
+{
+  "_id": 54eb7f5ad93f22364eff893d,
+  "assembly_version": "GRCh37",
+  "chromosome": "6",
+  "chromosome_start": 55778318,
+  "chromosome_end": 55778318,
+  "mutation_type": "single base substitution",
+  "mutation": "GA>GA",
+  "reference_genome_allele": "G",
+  "_mutation_id": "MU101"
+}

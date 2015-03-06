@@ -1,0 +1,1986 @@
+{
+  "_gene_id": "ENSG00000204099",
+  "_id": "54eb7fc9d93f22364eff8a15",
+  "biotype": "protein_coding",
+  "canonical_transcript_id": "ENST00000325935",
+  "chromosome": "2",
+  "description": "The protein encoded by this gene belongs to a family of glycohydrolytic enzymes, which remove terminal sialic acid residues from various sialo derivatives, such as glycoproteins, glycolipids, oligosaccharides, and gangliosides. Alternatively spliced transcript variants encoding different isoforms have been noted for this gene. [provided by RefSeq, Nov 2009]",
+  "donor": [
+    {
+      "_donor_id": "DO4",
+      "_summary": {
+        "_cngv_exists": false,
+        "_stsm_exists": false,
+        "_meth_array_exists": false,
+        "_exp_array_exists": false,
+        "_meth_seq_exists": false,
+        "_exp_seq_exists": false,
+        "_ssm_count": 1,
+        "_pexp_exists": false,
+        "_mirna_seq_exists": false,
+        "_sgv_exists": false,
+        "_cnsm_exists": false,
+        "_stgv_exists": false,
+        "_jcn_exists": false
+      }
+    },
+    {
+      "_donor_id": "DO2",
+      "_summary": {
+        "_cngv_exists": false,
+        "_stsm_exists": false,
+        "_meth_array_exists": false,
+        "_exp_array_exists": false,
+        "_meth_seq_exists": false,
+        "_exp_seq_exists": false,
+        "_ssm_count": 1,
+        "_pexp_exists": false,
+        "_mirna_seq_exists": false,
+        "_sgv_exists": false,
+        "_cnsm_exists": false,
+        "_stgv_exists": false,
+        "_jcn_exists": false
+      }
+    },
+    {
+      "_donor_id": "DO5",
+      "_summary": {
+        "_cngv_exists": false,
+        "_stsm_exists": false,
+        "_meth_array_exists": false,
+        "_exp_array_exists": false,
+        "_meth_seq_exists": false,
+        "_exp_seq_exists": false,
+        "_ssm_count": 1,
+        "_pexp_exists": false,
+        "_mirna_seq_exists": false,
+        "_sgv_exists": false,
+        "_cnsm_exists": false,
+        "_stgv_exists": false,
+        "_jcn_exists": false
+      }
+    }
+  ],
+  "end": 242758739,
+  "external_db_ids": {
+    "hgnc": [
+      "21328"
+    ],
+    "omim_gene": [
+      "608527"
+    ],
+    "uniprotkb_swissprot": [
+      "Q8WWR8"
+    ],
+    "entrez_gene": [
+      "129807"
+    ]
+  },
+  "name": "sialidase 4",
+  "project": [
+    {
+      "_project_id": "PEME-CA",
+      "_summary": {
+        "_affected_donor_count": 1,
+        "_available_data_type": [
+          "ssm"
+        ]
+      }
+    },
+    {
+      "_project_id": "PACA-AU",
+      "_summary": {
+        "_affected_donor_count": 1,
+        "_available_data_type": [
+          "ssm"
+        ]
+      }
+    },
+    {
+      "_project_id": "OV-AU",
+      "_summary": {
+        "_affected_donor_count": 1,
+        "_available_data_type": [
+          "ssm"
+        ]
+      }
+    }
+  ],
+  "sets": [
+    {
+      "id": "REACT_22426",
+      "name": "Asparagine N-linked glycosylation",
+      "type": "pathway",
+      "annotation": "inferred"
+    },
+    {
+      "id": "REACT_22387",
+      "name": "Synthesis of substrates in N-glycan biosythesis",
+      "type": "pathway",
+      "annotation": "inferred"
+    },
+    {
+      "id": "REACT_17015",
+      "name": "Metabolism of proteins",
+      "type": "pathway",
+      "annotation": "inferred"
+    },
+    {
+      "id": "REACT_22161",
+      "name": "Post-translational protein modification",
+      "type": "pathway",
+      "annotation": "inferred"
+    },
+    {
+      "id": "REACT_22433",
+      "name": "Biosynthesis of the N-glycan precursor (dolichol lipid-linked oligosaccharide, LLO) and transfer to a nascent protein",
+      "type": "pathway",
+      "annotation": "inferred"
+    },
+    {
+      "id": "REACT_200874",
+      "name": "Sialic acid metabolism",
+      "type": "pathway",
+      "annotation": "direct"
+    },
+    {
+      "id": "GO:0046514",
+      "name": "ceramide catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0043687",
+      "name": "post-translational protein modification",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0005764",
+      "name": "lysosome",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0043226",
+      "name": "organelle",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0031090",
+      "name": "organelle membrane",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0046466",
+      "name": "membrane lipid catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0006807",
+      "name": "nitrogen compound metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0005515",
+      "name": "protein binding",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0044444",
+      "name": "cytoplasmic part",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0004308",
+      "name": "exo-alpha-sialidase activity",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0005739",
+      "name": "mitochondrion",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0044422",
+      "name": "organelle part",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0016798",
+      "name": "hydrolase activity, acting on glycosyl bonds",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044710",
+      "name": "single-organism metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:1903509",
+      "name": "liposaccharide metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044237",
+      "name": "cellular metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0009058",
+      "name": "biosynthetic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044464",
+      "name": "cell part",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044724",
+      "name": "single-organism carbohydrate catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044248",
+      "name": "cellular catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0009100",
+      "name": "glycoprotein metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0043231",
+      "name": "intracellular membrane-bounded organelle",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0008150",
+      "name": "biological_process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044281",
+      "name": "small molecule metabolic process",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0016020",
+      "name": "membrane",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0016997",
+      "name": "alpha-sialidase activity",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0005773",
+      "name": "vacuole",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0052795",
+      "name": "exo-alpha-(2->6)-sialidase activity",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0004553",
+      "name": "hydrolase activity, hydrolyzing O-glycosyl compounds",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044446",
+      "name": "intracellular organelle part",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0006689",
+      "name": "ganglioside catabolic process",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0044699",
+      "name": "single-organism process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0031974",
+      "name": "membrane-enclosed lumen",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0019538",
+      "name": "protein metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0005622",
+      "name": "intracellular",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0031967",
+      "name": "organelle envelope",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0005775",
+      "name": "vacuolar lumen",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0046479",
+      "name": "glycosphingolipid catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044260",
+      "name": "cellular macromolecule metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:1901565",
+      "name": "organonitrogen compound catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044437",
+      "name": "vacuolar part",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0006672",
+      "name": "ceramide metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0019866",
+      "name": "organelle inner membrane",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0016042",
+      "name": "lipid catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0043412",
+      "name": "macromolecule modification",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044255",
+      "name": "cellular lipid metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:1901564",
+      "name": "organonitrogen compound metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0006664",
+      "name": "glycolipid metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0009311",
+      "name": "oligosaccharide metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0009987",
+      "name": "cellular process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0006665",
+      "name": "sphingolipid metabolic process",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0071704",
+      "name": "organic substance metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0000323",
+      "name": "lytic vacuole",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:1901136",
+      "name": "carbohydrate derivative catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0043413",
+      "name": "macromolecule glycosylation",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0006464",
+      "name": "cellular protein modification process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0018279",
+      "name": "protein N-linked glycosylation via asparagine",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0044424",
+      "name": "intracellular part",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0006516",
+      "name": "glycoprotein catabolic process",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0044265",
+      "name": "cellular macromolecule catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044267",
+      "name": "cellular protein metabolic process",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0009057",
+      "name": "macromolecule catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0018196",
+      "name": "peptidyl-asparagine modification",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0005975",
+      "name": "carbohydrate metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0016052",
+      "name": "carbohydrate catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:1901135",
+      "name": "carbohydrate derivative metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0016787",
+      "name": "hydrolase activity",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0009101",
+      "name": "glycoprotein biosynthetic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0009056",
+      "name": "catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0003674",
+      "name": "molecular_function",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044249",
+      "name": "cellular biosynthetic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0006643",
+      "name": "membrane lipid metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044712",
+      "name": "single-organism catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0030149",
+      "name": "sphingolipid catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0034645",
+      "name": "cellular macromolecule biosynthetic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0052796",
+      "name": "exo-alpha-(2->8)-sialidase activity",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0003824",
+      "name": "catalytic activity",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044723",
+      "name": "single-organism carbohydrate metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0008152",
+      "name": "metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0043227",
+      "name": "membrane-bounded organelle",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0006486",
+      "name": "protein glycosylation",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0030163",
+      "name": "protein catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0070085",
+      "name": "glycosylation",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0043170",
+      "name": "macromolecule metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:1901576",
+      "name": "organic substance biosynthetic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0018193",
+      "name": "peptidyl-amino acid modification",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0005623",
+      "name": "cell",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0001573",
+      "name": "ganglioside metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:1901575",
+      "name": "organic substance catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0005737",
+      "name": "cytoplasm",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0043233",
+      "name": "organelle lumen",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0019377",
+      "name": "glycolipid catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0043229",
+      "name": "intracellular organelle",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0009313",
+      "name": "oligosaccharide catabolic process",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0006488",
+      "name": "dolichol-linked oligosaccharide biosynthetic process",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0006629",
+      "name": "lipid metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0006487",
+      "name": "protein N-linked glycosylation",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0036211",
+      "name": "protein modification process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0070013",
+      "name": "intracellular organelle lumen",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0006687",
+      "name": "glycosphingolipid metabolic process",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0031975",
+      "name": "envelope",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0052794",
+      "name": "exo-alpha-(2->3)-sialidase activity",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0044242",
+      "name": "cellular lipid catabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0005488",
+      "name": "binding",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:1901137",
+      "name": "carbohydrate derivative biosynthetic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0009059",
+      "name": "macromolecule biosynthetic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0005575",
+      "name": "cellular_component",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0044763",
+      "name": "single-organism cellular process",
+      "type": "go_term",
+      "annotation": "inferred"
+    },
+    {
+      "id": "GO:0043202",
+      "name": "lysosomal lumen",
+      "type": "go_term",
+      "annotation": "direct",
+      "qualifiers": [
+        null
+      ]
+    },
+    {
+      "id": "GO:0044238",
+      "name": "primary metabolic process",
+      "type": "go_term",
+      "annotation": "inferred"
+    }
+  ],
+  "start": 242749920,
+  "strand": 1,
+  "symbol": "NEU4",
+  "synonyms": [ ],
+  "transcripts": [
+    {
+      "id": "ENST00000325935",
+      "name": "NEU4-003",
+      "biotype": "protein_coding",
+      "is_canonical": true,
+      "length": 2288,
+      "length_amino_acid": 497,
+      "length_cds": 1494,
+      "number_of_exons": 4,
+      "start_exon": 0,
+      "seq_exon_start": 430,
+      "seq_exon_end": 998,
+      "end_exon": 3,
+      "translation_id": "ENSP00000320318",
+      "start": 242752095,
+      "end": 242758739,
+      "coding_region_start": 242752524,
+      "coding_region_end": 242758374,
+      "cdna_coding_start": 430,
+      "cdna_coding_end": 1923,
+      "exons": [
+        {
+          "start": 242752095,
+          "start_phase": -1,
+          "end": 242752556,
+          "end_phase": 0,
+          "cdna_start": 1,
+          "cdna_end": 462,
+          "genomic_coding_start": 242752524,
+          "genomic_coding_end": 242752556,
+          "cdna_coding_start": 430,
+          "cdna_coding_end": 462
+        },
+        {
+          "start": 242755676,
+          "start_phase": 0,
+          "end": 242755882,
+          "end_phase": 0,
+          "cdna_start": 463,
+          "cdna_end": 669,
+          "genomic_coding_start": 242755676,
+          "genomic_coding_end": 242755882,
+          "cdna_coding_start": 463,
+          "cdna_coding_end": 669
+        },
+        {
+          "start": 242756089,
+          "start_phase": 0,
+          "end": 242756344,
+          "end_phase": 1,
+          "cdna_start": 670,
+          "cdna_end": 925,
+          "genomic_coding_start": 242756089,
+          "genomic_coding_end": 242756344,
+          "cdna_coding_start": 670,
+          "cdna_coding_end": 925
+        },
+        {
+          "start": 242757377,
+          "start_phase": 1,
+          "end": 242758739,
+          "end_phase": -1,
+          "cdna_start": 926,
+          "cdna_end": 2288,
+          "genomic_coding_start": 242757377,
+          "genomic_coding_end": 242758374,
+          "cdna_coding_start": 926,
+          "cdna_coding_end": 1923
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000391969",
+      "name": "NEU4-002",
+      "biotype": "protein_coding",
+      "is_canonical": false,
+      "length": 2526,
+      "length_amino_acid": 484,
+      "length_cds": 1455,
+      "number_of_exons": 5,
+      "start_exon": 2,
+      "seq_exon_start": 4,
+      "seq_exon_end": 998,
+      "end_exon": 4,
+      "translation_id": "ENSP00000375830",
+      "start": 242752030,
+      "end": 242758734,
+      "coding_region_start": 242755682,
+      "coding_region_end": 242758374,
+      "cdna_coding_start": 712,
+      "cdna_coding_end": 2166,
+      "exons": [
+        {
+          "start": 242752030,
+          "start_phase": -1,
+          "end": 242752556,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 527,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242754471,
+          "start_phase": -1,
+          "end": 242754651,
+          "end_phase": -1,
+          "cdna_start": 528,
+          "cdna_end": 708,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242755679,
+          "start_phase": -1,
+          "end": 242755882,
+          "end_phase": 0,
+          "cdna_start": 709,
+          "cdna_end": 912,
+          "genomic_coding_start": 242755682,
+          "genomic_coding_end": 242755882,
+          "cdna_coding_start": 712,
+          "cdna_coding_end": 912
+        },
+        {
+          "start": 242756089,
+          "start_phase": 0,
+          "end": 242756344,
+          "end_phase": 1,
+          "cdna_start": 913,
+          "cdna_end": 1168,
+          "genomic_coding_start": 242756089,
+          "genomic_coding_end": 242756344,
+          "cdna_coding_start": 913,
+          "cdna_coding_end": 1168
+        },
+        {
+          "start": 242757377,
+          "start_phase": 1,
+          "end": 242758734,
+          "end_phase": -1,
+          "cdna_start": 1169,
+          "cdna_end": 2526,
+          "genomic_coding_start": 242757377,
+          "genomic_coding_end": 242758374,
+          "cdna_coding_start": 1169,
+          "cdna_coding_end": 2166
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000404257",
+      "name": "NEU4-001",
+      "biotype": "protein_coding",
+      "is_canonical": false,
+      "length": 2352,
+      "length_amino_acid": 496,
+      "length_cds": 1491,
+      "number_of_exons": 4,
+      "start_exon": 0,
+      "seq_exon_start": 498,
+      "seq_exon_end": 998,
+      "end_exon": 3,
+      "translation_id": "ENSP00000385149",
+      "start": 242752027,
+      "end": 242758738,
+      "coding_region_start": 242752524,
+      "coding_region_end": 242758374,
+      "cdna_coding_start": 498,
+      "cdna_coding_end": 1988,
+      "exons": [
+        {
+          "start": 242752027,
+          "start_phase": -1,
+          "end": 242752556,
+          "end_phase": 0,
+          "cdna_start": 1,
+          "cdna_end": 530,
+          "genomic_coding_start": 242752524,
+          "genomic_coding_end": 242752556,
+          "cdna_coding_start": 498,
+          "cdna_coding_end": 530
+        },
+        {
+          "start": 242755679,
+          "start_phase": 0,
+          "end": 242755882,
+          "end_phase": 0,
+          "cdna_start": 531,
+          "cdna_end": 734,
+          "genomic_coding_start": 242755679,
+          "genomic_coding_end": 242755882,
+          "cdna_coding_start": 531,
+          "cdna_coding_end": 734
+        },
+        {
+          "start": 242756089,
+          "start_phase": 0,
+          "end": 242756344,
+          "end_phase": 1,
+          "cdna_start": 735,
+          "cdna_end": 990,
+          "genomic_coding_start": 242756089,
+          "genomic_coding_end": 242756344,
+          "cdna_coding_start": 735,
+          "cdna_coding_end": 990
+        },
+        {
+          "start": 242757377,
+          "start_phase": 1,
+          "end": 242758738,
+          "end_phase": -1,
+          "cdna_start": 991,
+          "cdna_end": 2352,
+          "genomic_coding_start": 242757377,
+          "genomic_coding_end": 242758374,
+          "cdna_coding_start": 991,
+          "cdna_coding_end": 1988
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000405370",
+      "name": "NEU4-004",
+      "biotype": "protein_coding",
+      "is_canonical": false,
+      "length": 1907,
+      "length_amino_acid": 484,
+      "length_cds": 1455,
+      "number_of_exons": 4,
+      "start_exon": 1,
+      "seq_exon_start": 7,
+      "seq_exon_end": 998,
+      "end_exon": 3,
+      "translation_id": "ENSP00000384804",
+      "start": 242750282,
+      "end": 242758732,
+      "coding_region_start": 242755682,
+      "coding_region_end": 242758374,
+      "cdna_coding_start": 95,
+      "cdna_coding_end": 1549,
+      "exons": [
+        {
+          "start": 242750282,
+          "start_phase": -1,
+          "end": 242750369,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 88,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242755676,
+          "start_phase": -1,
+          "end": 242755882,
+          "end_phase": 0,
+          "cdna_start": 89,
+          "cdna_end": 295,
+          "genomic_coding_start": 242755682,
+          "genomic_coding_end": 242755882,
+          "cdna_coding_start": 95,
+          "cdna_coding_end": 295
+        },
+        {
+          "start": 242756089,
+          "start_phase": 0,
+          "end": 242756344,
+          "end_phase": 1,
+          "cdna_start": 296,
+          "cdna_end": 551,
+          "genomic_coding_start": 242756089,
+          "genomic_coding_end": 242756344,
+          "cdna_coding_start": 296,
+          "cdna_coding_end": 551
+        },
+        {
+          "start": 242757377,
+          "start_phase": 1,
+          "end": 242758732,
+          "end_phase": -1,
+          "cdna_start": 552,
+          "cdna_end": 1907,
+          "genomic_coding_start": 242757377,
+          "genomic_coding_end": 242758374,
+          "cdna_coding_start": 552,
+          "cdna_coding_end": 1549
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000406147",
+      "name": "NEU4-005",
+      "biotype": "retained_intron",
+      "is_canonical": false,
+      "length": 3142,
+      "length_amino_acid": null,
+      "length_cds": null,
+      "number_of_exons": 2,
+      "start_exon": null,
+      "seq_exon_start": null,
+      "seq_exon_end": null,
+      "end_exon": null,
+      "translation_id": null,
+      "start": 242750288,
+      "end": 242758735,
+      "coding_region_start": 0,
+      "coding_region_end": 0,
+      "cdna_coding_start": 0,
+      "cdna_coding_end": 0,
+      "exons": [
+        {
+          "start": 242750288,
+          "start_phase": -1,
+          "end": 242750369,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 82,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242755676,
+          "start_phase": -1,
+          "end": 242758735,
+          "end_phase": -1,
+          "cdna_start": 83,
+          "cdna_end": 3142,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000407683",
+      "name": "NEU4-007",
+      "biotype": "protein_coding",
+      "is_canonical": false,
+      "length": 2273,
+      "length_amino_acid": 484,
+      "length_cds": 1455,
+      "number_of_exons": 4,
+      "start_exon": 1,
+      "seq_exon_start": 4,
+      "seq_exon_end": 998,
+      "end_exon": 3,
+      "translation_id": "ENSP00000385402",
+      "start": 242749920,
+      "end": 242758739,
+      "coding_region_start": 242755682,
+      "coding_region_end": 242758374,
+      "cdna_coding_start": 454,
+      "cdna_coding_end": 1908,
+      "exons": [
+        {
+          "start": 242749920,
+          "start_phase": -1,
+          "end": 242750369,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 450,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242755679,
+          "start_phase": -1,
+          "end": 242755882,
+          "end_phase": 0,
+          "cdna_start": 451,
+          "cdna_end": 654,
+          "genomic_coding_start": 242755682,
+          "genomic_coding_end": 242755882,
+          "cdna_coding_start": 454,
+          "cdna_coding_end": 654
+        },
+        {
+          "start": 242756089,
+          "start_phase": 0,
+          "end": 242756344,
+          "end_phase": 1,
+          "cdna_start": 655,
+          "cdna_end": 910,
+          "genomic_coding_start": 242756089,
+          "genomic_coding_end": 242756344,
+          "cdna_coding_start": 655,
+          "cdna_coding_end": 910
+        },
+        {
+          "start": 242757377,
+          "start_phase": 1,
+          "end": 242758739,
+          "end_phase": -1,
+          "cdna_start": 911,
+          "cdna_end": 2273,
+          "genomic_coding_start": 242757377,
+          "genomic_coding_end": 242758374,
+          "cdna_coding_start": 911,
+          "cdna_coding_end": 1908
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000415936",
+      "name": "NEU4-010",
+      "biotype": "protein_coding",
+      "is_canonical": false,
+      "length": 860,
+      "length_amino_acid": 214,
+      "length_cds": 644,
+      "number_of_exons": 3,
+      "start_exon": 1,
+      "seq_exon_start": 7,
+      "seq_exon_end": 443,
+      "end_exon": 2,
+      "translation_id": "ENSP00000397167",
+      "start": 242750160,
+      "end": 242757819,
+      "coding_region_start": 242755682,
+      "coding_region_end": 242757819,
+      "cdna_coding_start": 217,
+      "cdna_coding_end": 860,
+      "exons": [
+        {
+          "start": 242750160,
+          "start_phase": -1,
+          "end": 242750369,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 210,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242755676,
+          "start_phase": -1,
+          "end": 242755882,
+          "end_phase": 0,
+          "cdna_start": 211,
+          "cdna_end": 417,
+          "genomic_coding_start": 242755682,
+          "genomic_coding_end": 242755882,
+          "cdna_coding_start": 217,
+          "cdna_coding_end": 417
+        },
+        {
+          "start": 242757377,
+          "start_phase": 0,
+          "end": 242757819,
+          "end_phase": -1,
+          "cdna_start": 418,
+          "cdna_end": 860,
+          "genomic_coding_start": 242757377,
+          "genomic_coding_end": 242757819,
+          "cdna_coding_start": 418,
+          "cdna_coding_end": 860
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000420288",
+      "name": "NEU4-014",
+      "biotype": "protein_coding",
+      "is_canonical": false,
+      "length": 845,
+      "length_amino_acid": 260,
+      "length_cds": 781,
+      "number_of_exons": 4,
+      "start_exon": 1,
+      "seq_exon_start": 7,
+      "seq_exon_end": 324,
+      "end_exon": 3,
+      "translation_id": "ENSP00000388707",
+      "start": 242752492,
+      "end": 242757700,
+      "coding_region_start": 242755682,
+      "coding_region_end": 242757700,
+      "cdna_coding_start": 65,
+      "cdna_coding_end": 845,
+      "exons": [
+        {
+          "start": 242752492,
+          "start_phase": -1,
+          "end": 242752549,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 58,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242755676,
+          "start_phase": -1,
+          "end": 242755882,
+          "end_phase": 0,
+          "cdna_start": 59,
+          "cdna_end": 265,
+          "genomic_coding_start": 242755682,
+          "genomic_coding_end": 242755882,
+          "cdna_coding_start": 65,
+          "cdna_coding_end": 265
+        },
+        {
+          "start": 242756089,
+          "start_phase": 0,
+          "end": 242756344,
+          "end_phase": 1,
+          "cdna_start": 266,
+          "cdna_end": 521,
+          "genomic_coding_start": 242756089,
+          "genomic_coding_end": 242756344,
+          "cdna_coding_start": 266,
+          "cdna_coding_end": 521
+        },
+        {
+          "start": 242757377,
+          "start_phase": 1,
+          "end": 242757700,
+          "end_phase": -1,
+          "cdna_start": 522,
+          "cdna_end": 845,
+          "genomic_coding_start": 242757377,
+          "genomic_coding_end": 242757700,
+          "cdna_coding_start": 522,
+          "cdna_coding_end": 845
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000423583",
+      "name": "NEU4-008",
+      "biotype": "protein_coding",
+      "is_canonical": false,
+      "length": 753,
+      "length_amino_acid": 188,
+      "length_cds": 566,
+      "number_of_exons": 5,
+      "start_exon": 2,
+      "seq_exon_start": 4,
+      "seq_exon_end": 109,
+      "end_exon": 4,
+      "translation_id": "ENSP00000397860",
+      "start": 242750330,
+      "end": 242757485,
+      "coding_region_start": 242755682,
+      "coding_region_end": 242757485,
+      "cdna_coding_start": 188,
+      "cdna_coding_end": 753,
+      "exons": [
+        {
+          "start": 242750330,
+          "start_phase": -1,
+          "end": 242750369,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 40,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242750877,
+          "start_phase": -1,
+          "end": 242751020,
+          "end_phase": -1,
+          "cdna_start": 41,
+          "cdna_end": 184,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242755679,
+          "start_phase": -1,
+          "end": 242755882,
+          "end_phase": 0,
+          "cdna_start": 185,
+          "cdna_end": 388,
+          "genomic_coding_start": 242755682,
+          "genomic_coding_end": 242755882,
+          "cdna_coding_start": 188,
+          "cdna_coding_end": 388
+        },
+        {
+          "start": 242756089,
+          "start_phase": 0,
+          "end": 242756344,
+          "end_phase": 1,
+          "cdna_start": 389,
+          "cdna_end": 644,
+          "genomic_coding_start": 242756089,
+          "genomic_coding_end": 242756344,
+          "cdna_coding_start": 389,
+          "cdna_coding_end": 644
+        },
+        {
+          "start": 242757377,
+          "start_phase": 1,
+          "end": 242757485,
+          "end_phase": -1,
+          "cdna_start": 645,
+          "cdna_end": 753,
+          "genomic_coding_start": 242757377,
+          "genomic_coding_end": 242757485,
+          "cdna_coding_start": 645,
+          "cdna_coding_end": 753
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000426032",
+      "name": "NEU4-013",
+      "biotype": "protein_coding",
+      "is_canonical": false,
+      "length": 676,
+      "length_amino_acid": 214,
+      "length_cds": 643,
+      "number_of_exons": 3,
+      "start_exon": 0,
+      "seq_exon_start": 34,
+      "seq_exon_end": 406,
+      "end_exon": 2,
+      "translation_id": "ENSP00000406678",
+      "start": 242752491,
+      "end": 242757782,
+      "coding_region_start": 242752524,
+      "coding_region_end": 242757782,
+      "cdna_coding_start": 34,
+      "cdna_coding_end": 676,
+      "exons": [
+        {
+          "start": 242752491,
+          "start_phase": -1,
+          "end": 242752556,
+          "end_phase": 0,
+          "cdna_start": 1,
+          "cdna_end": 66,
+          "genomic_coding_start": 242752524,
+          "genomic_coding_end": 242752556,
+          "cdna_coding_start": 34,
+          "cdna_coding_end": 66
+        },
+        {
+          "start": 242755679,
+          "start_phase": 0,
+          "end": 242755882,
+          "end_phase": 0,
+          "cdna_start": 67,
+          "cdna_end": 270,
+          "genomic_coding_start": 242755679,
+          "genomic_coding_end": 242755882,
+          "cdna_coding_start": 67,
+          "cdna_coding_end": 270
+        },
+        {
+          "start": 242757377,
+          "start_phase": 0,
+          "end": 242757782,
+          "end_phase": -1,
+          "cdna_start": 271,
+          "cdna_end": 676,
+          "genomic_coding_start": 242757377,
+          "genomic_coding_end": 242757782,
+          "cdna_coding_start": 271,
+          "cdna_coding_end": 676
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000428592",
+      "name": "NEU4-017",
+      "biotype": "protein_coding",
+      "is_canonical": false,
+      "length": 505,
+      "length_amino_acid": 144,
+      "length_cds": 433,
+      "number_of_exons": 3,
+      "start_exon": 0,
+      "seq_exon_start": 73,
+      "seq_exon_end": 109,
+      "end_exon": 2,
+      "translation_id": "ENSP00000396197",
+      "start": 242755214,
+      "end": 242756197,
+      "coding_region_start": 242755286,
+      "coding_region_end": 242756197,
+      "cdna_coding_start": 73,
+      "cdna_coding_end": 505,
+      "exons": [
+        {
+          "start": 242755214,
+          "start_phase": -1,
+          "end": 242755405,
+          "end_phase": 0,
+          "cdna_start": 1,
+          "cdna_end": 192,
+          "genomic_coding_start": 242755286,
+          "genomic_coding_end": 242755405,
+          "cdna_coding_start": 73,
+          "cdna_coding_end": 192
+        },
+        {
+          "start": 242755679,
+          "start_phase": 0,
+          "end": 242755882,
+          "end_phase": 0,
+          "cdna_start": 193,
+          "cdna_end": 396,
+          "genomic_coding_start": 242755679,
+          "genomic_coding_end": 242755882,
+          "cdna_coding_start": 193,
+          "cdna_coding_end": 396
+        },
+        {
+          "start": 242756089,
+          "start_phase": 0,
+          "end": 242756197,
+          "end_phase": -1,
+          "cdna_start": 397,
+          "cdna_end": 505,
+          "genomic_coding_start": 242756089,
+          "genomic_coding_end": 242756197,
+          "cdna_coding_start": 397,
+          "cdna_coding_end": 505
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000435855",
+      "name": "NEU4-006",
+      "biotype": "nonsense_mediated_decay",
+      "is_canonical": false,
+      "length": 2281,
+      "length_amino_acid": 158,
+      "length_cds": 477,
+      "number_of_exons": 5,
+      "start_exon": 1,
+      "seq_exon_start": 4,
+      "seq_exon_end": 20,
+      "end_exon": 3,
+      "translation_id": "ENSP00000394769",
+      "start": 242750288,
+      "end": 242758734,
+      "coding_region_start": 242755682,
+      "coding_region_end": 242756886,
+      "cdna_coding_start": 86,
+      "cdna_coding_end": 562,
+      "exons": [
+        {
+          "start": 242750288,
+          "start_phase": -1,
+          "end": 242750369,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 82,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242755679,
+          "start_phase": -1,
+          "end": 242755882,
+          "end_phase": 0,
+          "cdna_start": 83,
+          "cdna_end": 286,
+          "genomic_coding_start": 242755682,
+          "genomic_coding_end": 242755882,
+          "cdna_coding_start": 86,
+          "cdna_coding_end": 286
+        },
+        {
+          "start": 242756089,
+          "start_phase": 0,
+          "end": 242756344,
+          "end_phase": 1,
+          "cdna_start": 287,
+          "cdna_end": 542,
+          "genomic_coding_start": 242756089,
+          "genomic_coding_end": 242756344,
+          "cdna_coding_start": 287,
+          "cdna_coding_end": 542
+        },
+        {
+          "start": 242756867,
+          "start_phase": 1,
+          "end": 242757580,
+          "end_phase": -1,
+          "cdna_start": 543,
+          "cdna_end": 1256,
+          "genomic_coding_start": 242756867,
+          "genomic_coding_end": 242756886,
+          "cdna_coding_start": 543,
+          "cdna_coding_end": 562
+        },
+        {
+          "start": 242757710,
+          "start_phase": -1,
+          "end": 242758734,
+          "end_phase": -1,
+          "cdna_start": 1257,
+          "cdna_end": 2281,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000435894",
+      "name": "NEU4-012",
+      "biotype": "protein_coding",
+      "is_canonical": false,
+      "length": 484,
+      "length_amino_acid": 76,
+      "length_cds": 231,
+      "number_of_exons": 4,
+      "start_exon": 2,
+      "seq_exon_start": 7,
+      "seq_exon_end": 30,
+      "end_exon": 3,
+      "translation_id": "ENSP00000398571",
+      "start": 242752491,
+      "end": 242756118,
+      "coding_region_start": 242755682,
+      "coding_region_end": 242756118,
+      "cdna_coding_start": 254,
+      "cdna_coding_end": 484,
+      "exons": [
+        {
+          "start": 242752491,
+          "start_phase": -1,
+          "end": 242752556,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 66,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242754471,
+          "start_phase": -1,
+          "end": 242754651,
+          "end_phase": -1,
+          "cdna_start": 67,
+          "cdna_end": 247,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242755676,
+          "start_phase": -1,
+          "end": 242755882,
+          "end_phase": 0,
+          "cdna_start": 248,
+          "cdna_end": 454,
+          "genomic_coding_start": 242755682,
+          "genomic_coding_end": 242755882,
+          "cdna_coding_start": 254,
+          "cdna_coding_end": 454
+        },
+        {
+          "start": 242756089,
+          "start_phase": 0,
+          "end": 242756118,
+          "end_phase": -1,
+          "cdna_start": 455,
+          "cdna_end": 484,
+          "genomic_coding_start": 242756089,
+          "genomic_coding_end": 242756118,
+          "cdna_coding_start": 455,
+          "cdna_coding_end": 484
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000435934",
+      "name": "NEU4-011",
+      "biotype": "protein_coding",
+      "is_canonical": false,
+      "length": 451,
+      "length_amino_acid": 51,
+      "length_cds": 156,
+      "number_of_exons": 3,
+      "start_exon": 1,
+      "seq_exon_start": 224,
+      "seq_exon_end": 42,
+      "end_exon": 2,
+      "translation_id": "ENSP00000412688",
+      "start": 242752485,
+      "end": 242755720,
+      "coding_region_start": 242754694,
+      "coding_region_end": 242755720,
+      "cdna_coding_start": 296,
+      "cdna_coding_end": 451,
+      "exons": [
+        {
+          "start": 242752485,
+          "start_phase": -1,
+          "end": 242752556,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 72,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242754471,
+          "start_phase": -1,
+          "end": 242754807,
+          "end_phase": 0,
+          "cdna_start": 73,
+          "cdna_end": 409,
+          "genomic_coding_start": 242754694,
+          "genomic_coding_end": 242754807,
+          "cdna_coding_start": 296,
+          "cdna_coding_end": 409
+        },
+        {
+          "start": 242755679,
+          "start_phase": 0,
+          "end": 242755720,
+          "end_phase": -1,
+          "cdna_start": 410,
+          "cdna_end": 451,
+          "genomic_coding_start": 242755679,
+          "genomic_coding_end": 242755720,
+          "cdna_coding_start": 410,
+          "cdna_coding_end": 451
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000476542",
+      "name": "NEU4-009",
+      "biotype": "retained_intron",
+      "is_canonical": false,
+      "length": 536,
+      "length_amino_acid": null,
+      "length_cds": null,
+      "number_of_exons": 2,
+      "start_exon": null,
+      "seq_exon_start": null,
+      "seq_exon_end": null,
+      "end_exon": null,
+      "translation_id": null,
+      "start": 242750288,
+      "end": 242756129,
+      "coding_region_start": 0,
+      "coding_region_end": 0,
+      "cdna_coding_start": 0,
+      "cdna_coding_end": 0,
+      "exons": [
+        {
+          "start": 242750288,
+          "start_phase": -1,
+          "end": 242750369,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 82,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242755676,
+          "start_phase": -1,
+          "end": 242756129,
+          "end_phase": -1,
+          "cdna_start": 83,
+          "cdna_end": 536,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000488997",
+      "name": "NEU4-016",
+      "biotype": "retained_intron",
+      "is_canonical": false,
+      "length": 541,
+      "length_amino_acid": null,
+      "length_cds": null,
+      "number_of_exons": 2,
+      "start_exon": null,
+      "seq_exon_start": null,
+      "seq_exon_end": null,
+      "end_exon": null,
+      "translation_id": null,
+      "start": 242752520,
+      "end": 242756179,
+      "coding_region_start": 0,
+      "coding_region_end": 0,
+      "cdna_coding_start": 0,
+      "cdna_coding_end": 0,
+      "exons": [
+        {
+          "start": 242752520,
+          "start_phase": -1,
+          "end": 242752556,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 37,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242755676,
+          "start_phase": -1,
+          "end": 242756179,
+          "end_phase": -1,
+          "cdna_start": 38,
+          "cdna_end": 541,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        }
+      ],
+      "domains": [ ]
+    },
+    {
+      "id": "ENST00000494678",
+      "name": "NEU4-015",
+      "biotype": "retained_intron",
+      "is_canonical": false,
+      "length": 491,
+      "length_amino_acid": null,
+      "length_cds": null,
+      "number_of_exons": 2,
+      "start_exon": null,
+      "seq_exon_start": null,
+      "seq_exon_end": null,
+      "end_exon": null,
+      "translation_id": null,
+      "start": 242752504,
+      "end": 242754908,
+      "coding_region_start": 0,
+      "coding_region_end": 0,
+      "cdna_coding_start": 0,
+      "cdna_coding_end": 0,
+      "exons": [
+        {
+          "start": 242752504,
+          "start_phase": -1,
+          "end": 242752556,
+          "end_phase": -1,
+          "cdna_start": 1,
+          "cdna_end": 53,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        },
+        {
+          "start": 242754471,
+          "start_phase": -1,
+          "end": 242754908,
+          "end_phase": -1,
+          "cdna_start": 54,
+          "cdna_end": 491,
+          "genomic_coding_start": 0,
+          "genomic_coding_end": 0,
+          "cdna_coding_start": 0,
+          "cdna_coding_end": 0
+        }
+      ],
+      "domains": [ ]
+    }
+  ]
+}

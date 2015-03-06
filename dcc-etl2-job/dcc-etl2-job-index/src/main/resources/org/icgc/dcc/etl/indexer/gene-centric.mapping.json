@@ -1,0 +1,43 @@
+{
+    "gene-centric": {
+        "_all": {
+            "enabled": "false"
+        },
+        "_source": {
+            "compress": "true"
+        },
+        "date_detection": "false",
+        "dynamic_templates": [
+            {
+                "template_1": {
+                    "mapping": {
+                        "index": "not_analyzed"
+                    },
+                    "match": "*",
+                    "match_mapping_type": "string"
+                }
+            }
+        ],
+        "properties": {
+            "donor": {
+                "type": "nested",
+                "properties": {
+                    "ssm": {
+                        "type": "nested",
+                        "properties": {
+                            "consequence": {
+                                "type": "nested"
+                            },
+                            "observation": {
+                                "type": "nested"
+                            }
+                        }
+                    }
+                }
+            },
+            "project": {
+                "type": "nested"
+            }
+        }
+    }
+}

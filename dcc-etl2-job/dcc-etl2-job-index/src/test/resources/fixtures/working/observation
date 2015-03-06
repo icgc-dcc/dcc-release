@@ -1,0 +1,50 @@
+{
+  "_id": "54eb7f5ad4c665b79db93331",
+  "_donor_id": "DO1",
+  "_mutation_id": "MU101",
+  "chromosome": "6",
+  "chromosome_start": 55778318,
+  "chromosome_end": 55778318,
+  "mutation_type": "single base substitution",
+  "mutation": "GA>GA",
+  "assembly_version": "GRCh37",
+  "mutated_to_allele": "GA",
+  "mutated_from_allele": "GA",
+  "reference_genome_allele": "G",
+  "chromosome_strand": 1,
+  "consequence": [ ],
+  "observation": [
+    {
+      "analysis_id": "00411",
+      "analyzed_sample_id": "00312",
+      "quality_score": 37.30330813464509,
+      "probability": 40.73039023864987,
+      "total_read_count": 117,
+      "mutant_allele_read_count": 185,
+      "verification_status": "tested and verified",
+      "verification_platform": "Illumina HumanHT-12 v4.0 beadchip",
+      "biological_validation_status": "tested and inconclusive",
+      "marking": "OPEN",
+      "observation_id": "v35",
+      "matched_sample_id": "003161",
+      "platform": "Ion Torrent PGM",
+      "experimental_protocol": "test_1 https://www.icgc.org",
+      "base_calling_algorithm": "test_1 https://www.icgc.org",
+      "alignment_algorithm": "test_1 https://www.icgc.org",
+      "variation_calling_algorithm": "test_1 https://www.icgc.org",
+      "other_analysis_algorithm": "KfFsLlzXWW",
+      "sequencing_strategy": "MeDIP-Seq",
+      "seq_coverage": 31.68311426861921,
+      "raw_data_repository": "CGHub",
+      "raw_data_accession": "ITDoOKtXIQ",
+      "_specimen_id": "SP1",
+      "_sample_id": "SA6",
+      "_matched_sample_id": "SA51"
+    }
+  ],
+  "_project_id": "PEME-CA",
+  "_type": "ssm",
+  "functional_impact_prediction_summary": [
+    "UNKNOWN"
+  ]
+}

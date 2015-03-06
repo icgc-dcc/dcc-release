@@ -1,0 +1,155 @@
+{
+  "_donor_id": "DO9",
+  "_id": "54eb7f5ad4c665b79db9340b",
+  "_project_id": "OV-AU",
+  "_summary": {
+    "_age_at_diagnosis_group": "70 - 79",
+    "_available_data_type": [
+      "ssm"
+    ],
+    "_cngv_exists": false,
+    "_cnsm_exists": false,
+    "_exp_array_exists": false,
+    "_exp_seq_exists": false,
+    "_jcn_exists": false,
+    "_meth_array_exists": false,
+    "_meth_seq_exists": false,
+    "_mirna_seq_exists": false,
+    "_pexp_exists": false,
+    "_sgv_exists": false,
+    "_ssm_count": 19,
+    "_stgv_exists": false,
+    "_stsm_exists": false,
+    "experimental_analysis_performed": [
+      "Tn-Seq",
+      "ChIP-Seq",
+      "POOLCLONE",
+      "CTS",
+      "Bisulfite-Seq",
+      "VALIDATION"
+    ],
+    "experimental_analysis_performed_sample_count": {
+      "VALIDATION": 1,
+      "Tn-Seq": 1,
+      "Bisulfite-Seq": 1,
+      "POOLCLONE": 1,
+      "ChIP-Seq": 1,
+      "CTS": 1
+    },
+    "repository": [
+      "TCGA",
+      "EGA",
+      "GEO",
+      "dbSNP"
+    ]
+  },
+  "disease_status_last_followup": "partial remission",
+  "donor_age_at_diagnosis": 74,
+  "donor_age_at_enrollment": 173,
+  "donor_age_at_last_followup": 106,
+  "donor_diagnosis_icd10": "uAFbymved",
+  "donor_id": "0012",
+  "donor_interval_of_last_followup": 50,
+  "donor_relapse_interval": 7,
+  "donor_relapse_type": "distant recurrence/metastasis",
+  "donor_sex": "female",
+  "donor_tumour_stage_at_diagnosis": "dMoyk XNsB",
+  "donor_tumour_staging_system_at_diagnosis": "cdfuheWYEJ",
+  "donor_vital_status": "deceased",
+  "specimen": [
+    {
+      "sample": [
+        {
+          "analyzed_sample_id": "003161",
+          "analyzed_sample_interval": 53,
+          "percentage_cellularity": 27,
+          "_sample_id": "SA46",
+          "_project_id": "OV-AU",
+          "available_raw_sequence_data": [ ]
+        },
+        {
+          "analyzed_sample_id": "003172",
+          "percentage_cellularity": 12,
+          "_sample_id": "SA49",
+          "_project_id": "OV-AU",
+          "available_raw_sequence_data": [
+            {
+              "raw_data_accession": "rIEbAEMhMa",
+              "repository": "dbSNP",
+              "library_strategy": "CTS"
+            },
+            {
+              "raw_data_accession": "Y Uu qm rc",
+              "repository": "dbSNP",
+              "library_strategy": "POOLCLONE"
+            },
+            {
+              "raw_data_accession": "IP ktxhVCm",
+              "repository": "GEO",
+              "library_strategy": "Tn-Seq"
+            },
+            {
+              "raw_data_accession": "lmcIKwJOvd",
+              "repository": "TCGA",
+              "library_strategy": "Tn-Seq"
+            }
+          ]
+        },
+        {
+          "analyzed_sample_id": "003181",
+          "analyzed_sample_interval": 22,
+          "percentage_cellularity": 145,
+          "level_of_cellularity": "21-40%",
+          "_sample_id": "SA52",
+          "_project_id": "OV-AU",
+          "available_raw_sequence_data": [ ]
+        },
+        {
+          "analyzed_sample_id": "003192",
+          "analyzed_sample_interval": 189,
+          "percentage_cellularity": 177,
+          "level_of_cellularity": ">81%",
+          "_sample_id": "SA54",
+          "_project_id": "OV-AU",
+          "available_raw_sequence_data": [
+            {
+              "raw_data_accession": "hHcpkJqHlQ",
+              "repository": "TCGA",
+              "library_strategy": "Bisulfite-Seq"
+            },
+            {
+              "raw_data_accession": "UdSIJOAdMD",
+              "repository": "EGA",
+              "library_strategy": "ChIP-Seq"
+            },
+            {
+              "raw_data_accession": "XlJHKHAJrP",
+              "repository": "dbSNP",
+              "library_strategy": "VALIDATION"
+            }
+          ]
+        }
+      ],
+      "specimen_id": "0025",
+      "specimen_type": "2",
+      "specimen_donor_treatment_type": "surgery",
+      "specimen_donor_treatment_type_other": "e amvEtdkR",
+      "specimen_processing": "cryopreservation of live cells in liquid nitrogen",
+      "specimen_processing_other": "KjgzlBVIfx",
+      "specimen_storage": "other",
+      "specimen_storage_other": "HVhImpgOvj",
+      "tumour_confirmed": "yes",
+      "specimen_biobank": "NDbReRPnOb",
+      "specimen_biobank_id": "Bwg YCjkHd",
+      "tumour_histological_type": "WenqlHvekO",
+      "tumour_grading_system": "y ohQmdGMY",
+      "tumour_grade": "YVaYIykOf",
+      "tumour_stage_system": "DSEhZkWiGm",
+      "tumour_stage": "xFpBWYOFka",
+      "percentage_cellularity": 6,
+      "level_of_cellularity": "21-40%",
+      "_specimen_id": "SP17",
+      "_project_id": "OV-AU"
+    }
+  ]
+}

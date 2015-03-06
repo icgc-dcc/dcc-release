@@ -1,0 +1,129 @@
+{
+  "project-text": {
+    "_all": {
+      "enabled": "false"
+    },
+    "_source": {
+      "compress": "true"
+    },
+    "date_detection": "false",
+    "dynamic_templates": [
+      {
+        "template_1": {
+          "mapping": {
+            "index": "not_analyzed"
+          },
+          "match": "*",
+          "match_mapping_type": "string"
+        }
+      }
+    ],
+    "properties": {
+      "id": {
+        "type": "multi_field",
+        "fields": {
+          "raw": {
+            "index": "not_analyzed",
+            "store": "yes",
+            "type": "string"
+          },
+          "analyzed": {
+            "index": "analyzed",
+            "index_analyzer": "id_index",
+            "search_analyzer": "id_search",
+            "type": "string"
+          },
+          "search": {
+            "index": "analyzed",
+            "analyzer": "id_search",
+            "type": "string"
+          }
+        }
+      },
+      "name": {
+        "type": "multi_field",
+        "fields": {
+          "raw": {
+            "index": "not_analyzed",
+            "store": "yes",
+            "type": "string"
+          },
+          "analyzed": {
+            "index": "analyzed",
+            "index_analyzer": "id_index",
+            "search_analyzer": "id_search",
+            "type": "string"
+          },
+          "search": {
+            "index": "analyzed",
+            "analyzer": "id_search",
+            "type": "string"
+          }
+        }
+      },
+      "primarySite": {
+        "type": "multi_field",
+        "fields": {
+          "raw": {
+            "index": "not_analyzed",
+            "store": "yes",
+            "type": "string"
+          },
+          "analyzed": {
+            "index": "analyzed",
+            "index_analyzer": "id_index",
+            "search_analyzer": "id_search",
+            "type": "string"
+          },
+          "search": {
+            "index": "analyzed",
+            "analyzer": "id_search",
+            "type": "string"
+          }
+        }
+      },
+      "tumourType": {
+        "type": "multi_field",
+        "fields": {
+          "raw": {
+            "index": "not_analyzed",
+            "store": "yes",
+            "type": "string"
+          },
+          "analyzed": {
+            "index": "analyzed",
+            "index_analyzer": "id_index",
+            "search_analyzer": "id_search",
+            "type": "string"
+          },
+          "search": {
+            "index": "analyzed",
+            "analyzer": "id_search",
+            "type": "string"
+          }
+        }
+      },
+      "tumourSubtype": {
+        "type": "multi_field",
+        "fields": {
+          "raw": {
+            "index": "not_analyzed",
+            "store": "yes",
+            "type": "string"
+          },
+          "analyzed": {
+            "index": "analyzed",
+            "index_analyzer": "id_index",
+            "search_analyzer": "id_search",
+            "type": "string"
+          },
+          "search": {
+            "index": "analyzed",
+            "analyzer": "id_search",
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "gene":{
+    "enabled":"false",
+    "_source":{
+      "compress":"true"
+    },
+    "_all":{
+      "enabled":"false"
+    },
+    "date_detection":"false"
+  }
+}

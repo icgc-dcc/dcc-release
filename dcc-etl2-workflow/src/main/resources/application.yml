@@ -1,0 +1,106 @@
+---
+#
+# DCC ETL2 Workflow - Configuration
+#
+
+###################################################################################################
+# Common
+###################################################################################################
+
+# DCC
+dcc:
+   submission:
+      url: http://hwww2-dcc.oicr.on.ca:5380/ws
+   identifier:
+      url: http://hident-dcc.res.oicr.on.ca:6381
+
+# SnpEff
+snpeff:
+   resourceDir: /tmp/dcc-etl-staging
+   resourceUrl: https://seqwaremaven.oicr.on.ca/artifactory/simple/dcc-dependencies/org/icgc/dcc
+   version: 3.6c
+   databaseVersion: 3.6c-GRCh37.75
+   referenceGenomeVersion: GRCh37.75.v1
+   geneBuildVersion: 75
+   maxFileSizeMb: 512
+
+# Hadoop
+hadoop:
+   properties:
+      fs.defaultFS: ***REMOVED***
+
+# HBase
+hbase:
+   properties:
+      hbase.zookeeper.quorum: ***REMOVED***
+      hbase.zookeeper.property.clientPort: 2181
+
+# Spark
+spark:
+   properties:
+      spark.task.maxFailures: 0
+      spark.serializer: org.apache.spark.serializer.KryoSerializer
+      spark.kryo.registrator: org.icgc.dcc.etl2.core.util.CustomKryoRegistrator
+
+# Postgres
+postgres:
+   user: dcc
+   password: <fill in>
+   database: fathmm
+   server: ***REMOVED***
+   url: jdbc:postgresql://${postgres.server}/${postgres.database}?user=${postgres.user}&password=${postgres.password}
+
+---
+
+###################################################################################################
+# Production
+###################################################################################################
+
+# Workflow
+workflow:
+   parallel: true
+
+# Spring
+spring:
+   profiles: production
+   
+# Spark
+spark:
+   master: "spark://hproxy-dcc.res.oicr.on.ca:7077"
+   properties:
+      spark.executor.memory: 1g
+      spark.cores.max: 250
+
+# Mongo
+mongo:
+   uri:
+   userName:
+   password:
+   splitSizeMb: 256
+
+---
+
+###################################################################################################
+# Development
+###################################################################################################
+
+# Spring
+spring:
+   profiles: development
+   
+# Workflow
+workflow:
+   parallel: false
+
+# Spark
+spark:
+   master: "local"
+   properties:
+     spark.default.parallelism: 1
+
+# Mongo
+mongo:
+   uri: mongodb://localhost:27017
+   userName:
+   password:
+   splitSizeMb: 8

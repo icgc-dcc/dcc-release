@@ -1,0 +1,47 @@
+{
+  "observation-centric":{
+    "_source":{
+      "compress":"true"
+    },
+    "_all":{
+      "enabled":"false"
+    },
+    "dynamic_templates":[
+      {
+        "template_1":{
+          "match":"*",
+          "match_mapping_type":"string",
+          "mapping":{
+            "index":"not_analyzed"
+          }
+        }
+      }
+    ],
+    "date_detection":"false",
+    "properties":{
+      "donor":{
+        "type":"nested"
+      },
+      "project":{
+        "type":"nested"
+      },
+      "ssm":{
+        "type":"nested",
+	      "properties":{
+           "observation": {
+             "type":"nested"
+           },
+	        "consequence":{
+	          "type":"nested",
+			      "properties":{
+			        "gene":{
+			        	"properties":{
+			          }
+			        }
+		        }	          
+	        }
+        }
+      }
+    }   
+  }
+}

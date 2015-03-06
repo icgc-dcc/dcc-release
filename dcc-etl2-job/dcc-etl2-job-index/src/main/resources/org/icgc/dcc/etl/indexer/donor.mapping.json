@@ -1,0 +1,22 @@
+{
+  "donor":{
+    "_source":{
+      "compress":"true"
+    },
+    "_all":{
+      "enabled":"false"
+    },
+    "dynamic_templates":[
+      {
+        "template_1":{
+          "match":"*",
+          "match_mapping_type":"string",
+          "mapping":{
+            "index":"not_analyzed"
+          }
+        }
+      }
+    ],
+    "date_detection":"false"
+  }
+}
