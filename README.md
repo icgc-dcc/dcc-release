@@ -21,7 +21,7 @@ To run Spark 1.2.1 on CDH 5.3.1 using Hadoop MR1 (DCC requirement), a custom bui
 git clone https://github.com/apache/spark.git
 cd spark
 git checkout v1.2.1
-./make-distribution.sh --tgz --skip-java-test -DskipTests -Dhadoop.version=2.5.0-mr1-cdh5.3.1
+./make-distribution.sh --tgz --skip-java-test -DskipTests -Phadoop-2.4 -Dhadoop.version=2.5.0-mr1-cdh5.3.1
 stat spark-1.2.1-bin-2.5.0-mr1-cdh5.3.1.tgz
 ```
 
