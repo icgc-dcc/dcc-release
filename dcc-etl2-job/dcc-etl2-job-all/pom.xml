@@ -122,7 +122,6 @@
 
               <artifactSet combine.children="append">
                 <excludes>
-                  <exclude>org.icgc.dcc:dcc-heliotrope</exclude>
                   <exclude>org.mockito:*</exclude>
                   <exclude>commons-logging:*</exclude>
                   <exclude>log4j:*</exclude>
