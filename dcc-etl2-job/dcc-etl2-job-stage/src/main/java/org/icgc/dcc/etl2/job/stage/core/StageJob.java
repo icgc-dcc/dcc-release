@@ -61,7 +61,7 @@ public class StageJob implements Job {
   private final Schemas schemas;
 
   @Override
-  public JobType getJobType() {
+  public JobType getType() {
     return JobType.STAGE;
   }
 

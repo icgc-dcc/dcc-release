@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.etl2.workflow.cli.Options;
 import org.icgc.dcc.etl2.workflow.core.Workflow;
-import org.icgc.dcc.etl2.workflow.model.WorkflowContext;
+import org.icgc.dcc.etl2.workflow.core.WorkflowContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.ExitCodeGenerator;

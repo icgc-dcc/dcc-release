@@ -32,8 +32,8 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.core.task.Task;
+import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.index.config.IndexProperties;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
 import org.icgc.dcc.etl2.job.index.service.IndexService;
@@ -57,7 +57,7 @@ public class IndexJob implements Job {
   private final IndexProperties properties;
 
   @Override
-  public JobType getJobType() {
+  public JobType getType() {
     return JobType.INDEX;
   }
 

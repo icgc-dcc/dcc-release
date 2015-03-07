@@ -15,28 +15,45 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.workflow.model;
+package org.icgc.dcc.etl2.workflow.config;
 
-import java.util.List;
+import java.util.Properties;
 
-import lombok.NonNull;
-import lombok.Value;
+import lombok.val;
 
-import org.icgc.dcc.etl2.core.job.JobType;
+import org.icgc.dcc.etl2.workflow.config.WorkflowProperties.MailProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 
-@Value
-public class WorkflowContext {
+/**
+ * Mail system configuration.
+ * <p>
+ * See {@link ThymeleafAutoConfiguration} for details on mail templating.
+ */
+@Configuration
+public class MailConfig {
 
-  String releaseName;
-  List<String> projectNames;
+  /**
+   * Dependencies.
+   */
+  @Autowired
+  MailProperties mail;
 
-  String releaseDir;
-  String workingDir;
+  @Bean
+  @Primary
+  public JavaMailSender javaMailSender() {
+    val properties = new Properties();
+    properties.putAll(mail.getProperties());
 
-  List<JobType> jobTypes;
+    val sender = new JavaMailSenderImpl();
+    sender.setJavaMailProperties(properties);
 
-  public boolean isIncluded(@NonNull JobType jobType) {
-    return jobTypes.contains(jobType);
+    return sender;
   }
 
 }

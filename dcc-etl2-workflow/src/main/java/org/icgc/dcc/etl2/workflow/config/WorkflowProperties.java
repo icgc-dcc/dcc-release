@@ -63,6 +63,12 @@ public class WorkflowProperties {
     return new HadoopProperties();
   }
 
+  @Bean
+  @ConfigurationProperties(prefix = "mail")
+  public MailProperties mailProperties() {
+    return new MailProperties();
+  }
+
   @Data
   public static class SparkProperties {
 
@@ -74,6 +80,14 @@ public class WorkflowProperties {
   @Data
   public static class HadoopProperties {
 
+    private Map<String, String> properties = newLinkedHashMap();
+
+  }
+
+  @Data
+  public static class MailProperties {
+
+    private String recipients;
     private Map<String, String> properties = newLinkedHashMap();
 
   }

@@ -57,7 +57,7 @@ public class OrphanJob implements Job {
       );
 
   @Override
-  public JobType getJobType() {
+  public JobType getType() {
     return JobType.ORPHAN;
   }
 

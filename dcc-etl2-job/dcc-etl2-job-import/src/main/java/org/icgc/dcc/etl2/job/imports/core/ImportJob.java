@@ -44,7 +44,7 @@ public class ImportJob implements Job {
   private final MongoProperties properties;
 
   @Override
-  public JobType getJobType() {
+  public JobType getType() {
     return JobType.IMPORT;
   }
 

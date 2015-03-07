@@ -49,10 +49,11 @@ public class IdJob implements Job {
   private TaskExecutor executor;
 
   @Override
-  public JobType getJobType() {
+  public JobType getType() {
     return JobType.ID;
   }
 
+  @Override
   @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
     val releaseName = jobContext.getReleaseName();

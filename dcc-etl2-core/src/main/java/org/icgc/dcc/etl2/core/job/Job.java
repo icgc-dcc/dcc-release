@@ -22,7 +22,7 @@ package org.icgc.dcc.etl2.core.job;
  */
 public interface Job {
 
-  JobType getJobType();
+  JobType getType();
 
   void execute(JobContext context);
 

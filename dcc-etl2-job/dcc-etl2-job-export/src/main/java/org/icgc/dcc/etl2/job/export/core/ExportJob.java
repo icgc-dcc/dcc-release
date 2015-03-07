@@ -26,8 +26,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.core.task.Task;
+import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.task.ExportTableTask;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +56,7 @@ public class ExportJob implements Job {
   }
 
   @Override
-  public JobType getJobType() {
+  public JobType getType() {
     return JobType.EXPORT;
   }
 

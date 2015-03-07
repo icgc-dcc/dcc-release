@@ -15,41 +15,28 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.mask.core;
+package org.icgc.dcc.etl2.workflow.core;
+
+import java.util.List;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.Value;
 
-import org.icgc.dcc.etl2.core.job.Job;
-import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
-import org.icgc.dcc.etl2.job.mask.task.SgvPMaskingTask;
-import org.icgc.dcc.etl2.job.mask.task.SsmPMaskingTask;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-@Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
-public class MaskJob implements Job {
+@Value
+public class WorkflowContext {
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final TaskExecutor executor;
+  String releaseName;
+  List<String> projectNames;
 
-  @Override
-  public JobType getType() {
-    return JobType.MASK;
-  }
+  String releaseDir;
+  String workingDir;
 
-  @Override
-  @SneakyThrows
-  public void execute(@NonNull JobContext jobContext) {
-    executor.execute(jobContext, new SsmPMaskingTask());
-    executor.execute(jobContext, new SgvPMaskingTask());
+  List<JobType> jobTypes;
+
+  public boolean isIncluded(@NonNull JobType jobType) {
+    return jobTypes.contains(jobType);
   }
 
 }

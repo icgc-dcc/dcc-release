@@ -15,41 +15,16 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.mask.core;
+package org.icgc.dcc.etl2.core.job;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.Value;
 
-import org.icgc.dcc.etl2.core.job.Job;
-import org.icgc.dcc.etl2.core.job.JobContext;
-import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
-import org.icgc.dcc.etl2.job.mask.task.SgvPMaskingTask;
-import org.icgc.dcc.etl2.job.mask.task.SsmPMaskingTask;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import com.google.common.base.Stopwatch;
 
-@Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
-public class MaskJob implements Job {
+@Value
+public class JobSummary {
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final TaskExecutor executor;
-
-  @Override
-  public JobType getType() {
-    return JobType.MASK;
-  }
-
-  @Override
-  @SneakyThrows
-  public void execute(@NonNull JobContext jobContext) {
-    executor.execute(jobContext, new SsmPMaskingTask());
-    executor.execute(jobContext, new SgvPMaskingTask());
-  }
+  JobType type;
+  Stopwatch watch;
 
 }

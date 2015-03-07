@@ -1,5 +1,6 @@
 package org.icgc.dcc.etl2.workflow.core;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 
 import java.util.List;
@@ -13,10 +14,11 @@ import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.etl2.core.job.DefaultJobContext;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
+import org.icgc.dcc.etl2.core.job.JobSummary;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.core.submission.SubmissionFileSystem;
 import org.icgc.dcc.etl2.core.submission.SubmissionMetadataRepository;
-import org.icgc.dcc.etl2.workflow.model.WorkflowContext;
+import org.icgc.dcc.etl2.workflow.mail.Mailer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +35,9 @@ public class Workflow {
   @NonNull
   private final SubmissionMetadataRepository submissionMetadata;
   @NonNull
-  private final SubmissionFileSystem submissionFiles;
+  private final SubmissionFileSystem submissionFileSystem;
+  @NonNull
+  private final Mailer mailer;
 
   /**
    * Job dependencies.
@@ -45,8 +49,8 @@ public class Workflow {
     val watch = createStarted();
     log.info("Executing workflow...");
 
-    val files = resolveFiles(workflowContext);
-    val jobContext = createJobContext(workflowContext, files);
+    val submissionFiles = resolveFiles(workflowContext);
+    val jobContext = createJobContext(workflowContext, submissionFiles);
 
     executeJobs(workflowContext, jobContext);
 
@@ -56,40 +60,43 @@ public class Workflow {
   private void executeJobs(WorkflowContext workflowContext, JobContext jobContext) {
     for (val jobType : JobType.getTopologicalSortOrder()) {
       val included = workflowContext.isIncluded(jobType);
-      if (included) {
-        val job = findJob(jobType);
-
-        val watch = createStarted();
-        log.info("Executing job '{}'...", job.getJobType());
-        job.execute(jobContext);
-        log.info("Finished executing job '{}' in {}", job.getJobType(), watch);
+      if (!included) {
+        continue;
       }
+
+      val job = findJob(jobType);
+
+      val watch = createStarted();
+      log.info("Executing job '{}'...", jobType);
+      job.execute(jobContext);
+      log.info("Finished executing job '{}' in {}", jobType, watch);
+
+      log.info("Emailing '{}' job summary...", jobType);
+      val summary = new JobSummary(jobType, watch);
+      mailer.sendJobSummary(summary);
     }
   }
 
   private Table<String, String, List<Path>> resolveFiles(WorkflowContext workflowContext) {
     val schemas = submissionMetadata.getSchemas();
 
-    return submissionFiles.getFiles(workflowContext.getReleaseDir(), workflowContext.getProjectNames(), schemas);
+    return submissionFileSystem.getFiles(workflowContext.getReleaseDir(), workflowContext.getProjectNames(), schemas);
   }
 
-  private JobContext createJobContext(WorkflowContext workflowContext, Table<String, String, List<Path>> files) {
+  private JobContext createJobContext(WorkflowContext workflowContext, Table<String, String, List<Path>> submissionFiles) {
     return new DefaultJobContext(
         workflowContext.getReleaseDir(),
         workflowContext.getProjectNames(),
         workflowContext.getReleaseDir(),
         workflowContext.getWorkingDir(),
-        files);
+        submissionFiles);
   }
 
   private Job findJob(JobType jobType) {
-    for (val job : jobs) {
-      if (job.getJobType() == jobType) {
-        return job;
-      }
-    }
+    val result = jobs.stream().filter(job -> job.getType() == jobType).findFirst();
+    checkArgument(result.isPresent(), "Job type '%s' unavailable in '%s'", jobType, jobs);
 
-    throw new IllegalArgumentException("Job type '" + jobType + "' unavailable in " + jobs);
+    return result.get();
   }
 
 }

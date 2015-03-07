@@ -45,7 +45,7 @@ public class FunctionalImpactJob implements Job {
   private final TaskExecutor executor;
 
   @Override
-  public JobType getJobType() {
+  public JobType getType() {
     return JobType.FI;
   }
 

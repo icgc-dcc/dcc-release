@@ -50,6 +50,12 @@ postgres:
    server: ***REMOVED***
    url: jdbc:postgresql://${postgres.server}/${postgres.database}?user=${postgres.user}&password=${postgres.password}
 
+mail:
+   recipients: ***REMOVED***
+   properties:
+      mail.smtp.host: smtp.oicr.on.ca
+      mail.smtp.from: no-reply@oicr.on.ca
+
 ---
 
 ###################################################################################################

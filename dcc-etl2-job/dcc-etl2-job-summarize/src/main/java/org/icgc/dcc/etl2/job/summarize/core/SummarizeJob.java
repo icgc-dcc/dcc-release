@@ -44,10 +44,11 @@ public class SummarizeJob implements Job {
   private final TaskExecutor executor;
 
   @Override
-  public JobType getJobType() {
+  public JobType getType() {
     return JobType.SUMMARIZE;
   }
 
+  @Override
   @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
     val watch = createStarted();

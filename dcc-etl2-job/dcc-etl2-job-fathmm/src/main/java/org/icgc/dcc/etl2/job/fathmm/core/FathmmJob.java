@@ -30,8 +30,8 @@ import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.core.task.GenericProcessTask;
 import org.icgc.dcc.etl2.core.task.GenericTask;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.core.task.TaskContext;
+import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.fathmm.function.PredictFathmm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,7 +56,7 @@ public class FathmmJob implements Job {
   private String jdbcUrl;
 
   @Override
-  public JobType getJobType() {
+  public JobType getType() {
     return JobType.FATHMM;
   }
 

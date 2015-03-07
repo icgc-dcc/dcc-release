@@ -49,6 +49,9 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 public class SparkConfig {
 
+  /**
+   * Dependencies.
+   */
   @Autowired
   private SparkProperties spark;
   @Autowired
