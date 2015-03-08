@@ -23,7 +23,7 @@ public class ImportJobTest extends AbstractJobTest {
 
   @Test
   public void testExecute() {
-    job.execute(createContext());
+    job.execute(createContext(job.getType()));
 
     val results = produces("gene");
     for (val gene : results) {

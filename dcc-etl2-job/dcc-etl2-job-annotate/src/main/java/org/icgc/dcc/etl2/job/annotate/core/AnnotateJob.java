@@ -27,7 +27,7 @@ import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.annotate.config.SnpEffProperties;
-import org.icgc.dcc.etl2.job.annotate.task.AnnotationJob;
+import org.icgc.dcc.etl2.job.annotate.task.AnnotationTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -51,8 +51,8 @@ public class AnnotateJob implements Job {
   @Override
   @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
-    executor.execute(jobContext, new AnnotationJob(properties, FileType.SSM_P, FileType.SSM_S));
-    executor.execute(jobContext, new AnnotationJob(properties, FileType.SGV_P, FileType.SGV_S));
+    executor.execute(jobContext, new AnnotationTask(properties, FileType.SSM_P, FileType.SSM_S));
+    executor.execute(jobContext, new AnnotationTask(properties, FileType.SGV_P, FileType.SGV_S));
   }
 
 }

@@ -25,6 +25,8 @@ import com.google.common.collect.Table;
 
 public interface JobContext {
 
+  JobType getType();
+
   List<String> getProjectNames();
 
   String getReleaseDir();

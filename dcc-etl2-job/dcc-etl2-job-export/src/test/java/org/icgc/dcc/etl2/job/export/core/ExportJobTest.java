@@ -36,6 +36,7 @@ import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.icgc.dcc.etl2.core.job.DefaultJobContext;
 import org.icgc.dcc.etl2.core.job.JobContext;
+import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.model.ExportTables;
 import org.junit.After;
@@ -78,7 +79,9 @@ public class ExportJobTest extends BaseExportJobTest {
     val rows = of(row);
 
     // Setup
-    val jobContext = createJobContext();
+    val executor = createTaskExecutor();
+    val job = new ExportJob(executor, config);
+    val jobContext = createJobContext(job.getType());
 
     // Simulate exporter input dynamically
     given(inputFile()
@@ -89,8 +92,6 @@ public class ExportJobTest extends BaseExportJobTest {
 
     // Exercise
     log.info("Testing...");
-    val executor = createTaskExecutor();
-    val job = new ExportJob(executor, config);
     job.execute(jobContext);
 
     // Verify
@@ -120,8 +121,8 @@ public class ExportJobTest extends BaseExportJobTest {
   }
 
   @SuppressWarnings("unchecked")
-  private JobContext createJobContext() {
-    return new DefaultJobContext("ICGC18", of(""), "/dev/null", hadoopWorkingDir.toString(), mock(Table.class));
+  private JobContext createJobContext(JobType type) {
+    return new DefaultJobContext(type, "ICGC18", of(""), "/dev/null", hadoopWorkingDir.toString(), mock(Table.class));
   }
 
 }

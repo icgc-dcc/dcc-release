@@ -4,7 +4,6 @@ import static com.google.common.collect.ImmutableList.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import lombok.val;
 
-import org.icgc.dcc.etl2.job.image.core.ImageJob;
 import org.icgc.dcc.etl2.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +30,7 @@ public class ImageJobTest extends AbstractJobTest {
         .fileType("specimen_surrogate_key")
         .rows(of(row("{specimen_id: 1}"))));
 
-    job.execute(createContext(projectName));
+    job.execute(createContext(job.getType(), projectName));
 
     val results = produces(projectName, "specimen_surrogate_key_image");
 

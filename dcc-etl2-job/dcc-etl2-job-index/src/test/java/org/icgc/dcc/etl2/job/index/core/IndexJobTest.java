@@ -40,7 +40,6 @@ public class IndexJobTest extends AbstractJobTest {
         .fileType("gene")
         .fileName("working/gene"));
 
-    job.execute(createContext());
+    job.execute(createContext(job.getType()));
   }
-
 }

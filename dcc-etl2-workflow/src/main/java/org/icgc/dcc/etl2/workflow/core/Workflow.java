@@ -50,27 +50,31 @@ public class Workflow {
     log.info("Executing workflow...");
 
     val submissionFiles = resolveFiles(workflowContext);
-    val jobContext = createJobContext(workflowContext, submissionFiles);
 
-    executeJobs(workflowContext, jobContext);
+    executeJobs(submissionFiles, workflowContext);
 
     log.info("Finished executing workflowContext in {}", watch);
   }
 
-  private void executeJobs(WorkflowContext workflowContext, JobContext jobContext) {
+  private void executeJobs(Table<String, String, List<Path>> submissionFiles, WorkflowContext workflowContext) {
     for (val jobType : JobType.getTopologicalSortOrder()) {
+      // Filter
       val included = workflowContext.isIncluded(jobType);
       if (!included) {
         continue;
       }
 
+      // Resolve
       val job = findJob(jobType);
+      val jobContext = createJobContext(jobType, workflowContext, submissionFiles);
 
+      // Execute
       val watch = createStarted();
       log.info("Executing job '{}'...", jobType);
       job.execute(jobContext);
       log.info("Finished executing job '{}' in {}", jobType, watch);
 
+      // Notify
       log.info("Emailing '{}' job summary...", jobType);
       val summary = new JobSummary(jobType, watch);
       mailer.sendJobSummary(summary);
@@ -83,8 +87,10 @@ public class Workflow {
     return submissionFileSystem.getFiles(workflowContext.getReleaseDir(), workflowContext.getProjectNames(), schemas);
   }
 
-  private JobContext createJobContext(WorkflowContext workflowContext, Table<String, String, List<Path>> submissionFiles) {
+  private JobContext createJobContext(JobType type, WorkflowContext workflowContext,
+      Table<String, String, List<Path>> submissionFiles) {
     return new DefaultJobContext(
+        type,
         workflowContext.getReleaseDir(),
         workflowContext.getProjectNames(),
         workflowContext.getReleaseDir(),

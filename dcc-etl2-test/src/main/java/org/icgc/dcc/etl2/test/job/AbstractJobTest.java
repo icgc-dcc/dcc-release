@@ -17,6 +17,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.DefaultJobContext;
 import org.icgc.dcc.etl2.core.job.JobContext;
+import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.core.util.Partitions;
 import org.icgc.dcc.etl2.test.model.TestFile;
@@ -83,13 +84,13 @@ public abstract class AbstractJobTest {
     }
   }
 
-  protected JobContext createContext() {
-    return createContext("");
+  protected JobContext createContext(JobType type) {
+    return createContext(type, "");
   }
 
   @SuppressWarnings("unchecked")
-  protected JobContext createContext(String projectName) {
-    return new DefaultJobContext("ICGC<version>", of(projectName), "/dev/null", workingDir.toString(),
+  protected JobContext createContext(JobType type, String projectName) {
+    return new DefaultJobContext(type, "ICGC<version>", of(projectName), "/dev/null", workingDir.toString(),
         mock(Table.class));
   }
 

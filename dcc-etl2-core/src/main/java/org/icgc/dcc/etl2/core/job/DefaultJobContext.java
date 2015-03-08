@@ -11,6 +11,7 @@ import com.google.common.collect.Table;
 @Value
 public class DefaultJobContext implements JobContext {
 
+  JobType type;
   String releaseName;
   List<String> projectNames;
 

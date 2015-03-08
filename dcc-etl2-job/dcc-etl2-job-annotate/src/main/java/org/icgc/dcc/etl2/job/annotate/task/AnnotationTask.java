@@ -36,11 +36,11 @@ import org.icgc.dcc.etl2.job.annotate.model.AnnotatedFileType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Slf4j
-public class AnnotationJob extends GenericProcessTask {
+public class AnnotationTask extends GenericProcessTask {
 
   private final SnpEffProperties properties;
 
-  public AnnotationJob(SnpEffProperties properties, FileType inputFileType, FileType outputFileType) {
+  public AnnotationTask(SnpEffProperties properties, FileType inputFileType, FileType outputFileType) {
     super(inputFileType, outputFileType);
     this.properties = properties;
   }
