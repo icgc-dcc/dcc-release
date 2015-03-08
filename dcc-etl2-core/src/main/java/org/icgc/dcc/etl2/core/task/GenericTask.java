@@ -60,8 +60,13 @@ public abstract class GenericTask extends NamedTask {
   }
 
   protected void writeOutput(TaskContext taskContext, JavaRDD<ObjectNode> processed, FileType outputFileType) {
-    val output = processed.map(new FormatObjectNode());
     val outputPath = taskContext.getPath(outputFileType);
+
+    writeOutput(processed, outputPath);
+  }
+
+  protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath) {
+    val output = processed.map(new FormatObjectNode());
     output.saveAsTextFile(outputPath);
   }
 

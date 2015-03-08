@@ -1,0 +1,5 @@
+analysis_id	analyzed_sample_id	assembly_version	platform	total_read_count	experimental_protocol	alignment_algorithm	normalization_algorithm	other_analysis_algorithm	sequencing_strategy	raw_data_repository	raw_data_accession	reference_sample_type
+188	sample_normal1	1	60	987654321	RNASeqV2_RSEM_genes https://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor	-888	-888	-888	4	4	60273208-fd67-4180-a977-5095576c14e9	-888
+288	sample_normal1	1	60	987654321	RNASeqV2_RSEM_genes https://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor	-888	-888	-888	4	4	60273208-fd67-4180-a977-5095576c14e9	1
+344	sample_tumour1	1	60	987654321	RNASeqV2_RSEM_genes https://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor	-888	-888	-888	4	4	a5e8f882-9755-406f-879d-7f286b6bdcb7	1
+644	sample_tumour1	1	60	987654321	RNASeqV2_RSEM_genes https://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor	-888	-888	-888	4	4	a5e8f882-9755-406f-879d-7f286b6bdcb7	3

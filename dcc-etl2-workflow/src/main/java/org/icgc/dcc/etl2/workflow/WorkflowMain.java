@@ -29,8 +29,8 @@ import org.icgc.dcc.etl2.workflow.core.WorkflowContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.ExitCodeGenerator;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
@@ -63,7 +63,7 @@ public class WorkflowMain implements CommandLineRunner, ExitCodeGenerator {
   private int exitCode;
 
   public static void main(String[] args) {
-    SpringApplication.run(WorkflowMain.class, args);
+    new SpringApplicationBuilder(WorkflowMain.class).web(false).run(args);
   }
 
   @Override
@@ -106,6 +106,7 @@ public class WorkflowMain implements CommandLineRunner, ExitCodeGenerator {
     return new WorkflowContext(
         Temp.RELEASE_NAME,
         Temp.PROJECT_NAMES,
+        // ImmutableList.of("ALL_US"),
         Temp.RELEASE_DIR,
         Temp.STAGING_DIR,
 

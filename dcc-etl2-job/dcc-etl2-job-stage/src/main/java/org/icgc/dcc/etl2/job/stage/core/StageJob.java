@@ -80,7 +80,7 @@ public class StageJob implements Job {
       for (val entry : schemaPaths.entrySet()) {
         val projectName = entry.getKey();
         val schemaProjectPaths = entry.getValue();
-        val schemaProjectTask = new SchemaProjectStageTask(stagingDir, projectName, schemaProjectPaths, schema);
+        val schemaProjectTask = new SchemaProjectStageTask(schema, projectName, schemaProjectPaths);
 
         log.info("[{}] Submitting task '{}'...", taskCount++, schemaProjectTask.getName());
         schemaProjectTasks.add(schemaProjectTask);

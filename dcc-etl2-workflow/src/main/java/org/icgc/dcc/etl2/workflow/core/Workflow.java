@@ -1,6 +1,7 @@
 package org.icgc.dcc.etl2.workflow.core;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Strings.repeat;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 
 import java.util.List;
@@ -71,11 +72,17 @@ public class Workflow {
       val job = findJob(jobType);
       val jobContext = createJobContext(jobType, workflowContext, submissionFiles);
 
-      // Execute
       val watch = createStarted();
+      log.info("{}", repeat("-", 100));
       log.info("Executing job '{}'...", jobType);
+      log.info("{}", repeat("-", 100));
+
+      // Execute
       job.execute(jobContext);
+
+      log.info("{}", repeat("-", 100));
       log.info("Finished executing job '{}' in {}", jobType, watch);
+      log.info("{}", repeat("-", 100));
 
       // Notify
       log.info("Emailing '{}' job summary...", jobType);

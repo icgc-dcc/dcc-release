@@ -28,18 +28,22 @@ public class TrimValues implements Function<ObjectNode, ObjectNode> {
 
   @Override
   public ObjectNode call(ObjectNode row) throws Exception {
-    val iterator = row.fieldNames();
-    while (iterator.hasNext()) {
-      val fieldName = iterator.next();
-      val fieldValue = textValue(row, fieldName);
-
-      if (fieldValue != null) {
-        val trimmed = fieldValue.trim();
-        row.put(fieldName, trimmed);
-      }
-    }
+    trim(row);
 
     return row;
+  }
+
+  private void trim(ObjectNode row) {
+    row.fieldNames().forEachRemaining(fieldName -> trimField(row, fieldName));
+  }
+
+  private void trimField(ObjectNode row, String fieldName) {
+    val fieldValue = textValue(row, fieldName);
+
+    if (fieldValue != null) {
+      val trimmed = fieldValue.trim();
+      row.put(fieldName, trimmed);
+    }
   }
 
 }

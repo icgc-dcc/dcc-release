@@ -1,0 +1,3 @@
+analyzed_sample_id	specimen_id	analyzed_sample_interval	percentage_cellularity	level_of_cellularity	analyzed_sample_notes	study
+00301	0020	-888	-888	-888	-888	1
+00312	0020	68	-888	-888	QBbNUpprVD	1

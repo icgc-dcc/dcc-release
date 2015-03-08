@@ -1,0 +1,9 @@
+analysis_id	analyzed_sample_id	gene_model	gene_id	normalized_read_count	raw_read_count	fold_change
+188	sample_normal1	1	ENSG99999990	1234	11	-888
+188	sample_normal1	1	ENSG99999991	1234	17	-888
+188	sample_normal1	1	ENSG99999992	1234	292	-888
+288	sample_normal1	1	ENSG99999992	1234	292	-888
+344	sample_tumour1	1	ENSG99999993	1234	982	-888
+344	sample_tumour1	1	ENSG99999994	1234	514	-888
+344	sample_tumour1	1	ENSG99999995	1234	443	-888
+644	sample_tumour1	1	ENSG99999995	1234	443	-888

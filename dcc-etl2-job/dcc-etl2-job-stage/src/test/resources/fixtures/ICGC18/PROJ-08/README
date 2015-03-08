@@ -1,0 +1,7 @@
+IMPORTANT NOTE ABOUT SGV DATA: the SGV data in this folder is actually SSM data modified to fit the SGV schema - DO NEVER COMMIT ACTUAL SGV DATA
+
+The submission files for this project exercise the error conditions generated when sample types are inconsistent across 
+experimental and clinical files.
+
+See: https://wiki.oicr.on.ca/pages/viewpage.action?title=Consistent%2Bsample%2Btypes%2Bacross%2Brows%2Bin%2Bexperimental%2Bfiles&spaceKey=DCCBIO
+

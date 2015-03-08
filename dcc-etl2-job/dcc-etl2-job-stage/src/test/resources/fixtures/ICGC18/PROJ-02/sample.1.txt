@@ -1,0 +1,2 @@
+analyzed_sample_id	specimen_id	analyzed_sample_type	analyzed_sample_type_other	analyzed_sample_interval	percentage_cellularity	level_of_cellularity	analyzed_sample_notes
+00301	0020	2	 wCWTNOjYL	-888	-888	-888	jvgYzziaQI

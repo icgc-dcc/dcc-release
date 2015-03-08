@@ -1,0 +1,4 @@
+array_platform	probe_id
+2	cg00063979
+2	cg00064020
+2	cg00064051

@@ -1,0 +1,9 @@
+# This project is used to exercise different types of submission validation errors
+
+sample.2.txt: MISSING_ROWS_ERROR
+
+Out of date!:
+dd__01__001__donor__20130313.txt: FILE_HEADER_ERROR
+dd__01__001__specimen__20130313.txt: TOO_MANY_FILES_ERROR
+dd__01__001__specimen__20130314.txt: TOO_MANY_FILES_ERROR
+ssm__ee__01__001__m__1__20130313.txt.gz: REVERSE_RELATION_FILE_ERROR

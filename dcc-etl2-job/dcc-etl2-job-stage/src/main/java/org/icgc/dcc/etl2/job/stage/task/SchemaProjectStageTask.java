@@ -21,18 +21,15 @@ import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 
 import java.util.List;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.etl2.core.function.FormatObjectNode;
 import org.icgc.dcc.etl2.core.function.TranslateMissingCode;
+import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.submission.Schema;
-import org.icgc.dcc.etl2.core.task.Task;
+import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.task.TaskType;
 import org.icgc.dcc.etl2.core.util.JavaRDDs;
@@ -44,28 +41,20 @@ import org.icgc.dcc.etl2.job.stage.function.TrimValues;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@Slf4j
-@RequiredArgsConstructor
-public class SchemaProjectStageTask implements Task {
+public class SchemaProjectStageTask extends GenericTask {
 
   /**
    * Configuration.
    */
-  @NonNull
-  private final String workingDir;
-  @NonNull
+  private final Schema schema;
   private final String projectName;
-  @NonNull
   private final List<Path> schemaProjectPaths;
 
-  /**
-   * Metadata.
-   */
-  private final Schema schema;
-
-  @Override
-  public String getName() {
-    return schema.getName() + ":" + projectName;
+  public SchemaProjectStageTask(Schema schema, String projectName, List<Path> schemaProjectPaths) {
+    super(schema.getName() + ":" + projectName);
+    this.schema = schema;
+    this.projectName = projectName;
+    this.schemaProjectPaths = schemaProjectPaths;
   }
 
   @Override
@@ -78,8 +67,9 @@ public class SchemaProjectStageTask implements Task {
     val sparkContext = taskContext.getSparkContext();
 
     val input = readInput(sparkContext);
-    val output = transform(input);
-    writeOutput(output);
+    val processed = transform(input);
+
+    writeOutput(processed, getOutputPath(taskContext));
   }
 
   private JavaRDD<ObjectNode> readInput(JavaSparkContext sparkContext) {
@@ -97,29 +87,19 @@ public class SchemaProjectStageTask implements Task {
         .map(new ConvertValueType(schema));
   }
 
-  private void writeOutput(JavaRDD<ObjectNode> output) {
-    val converted = output.map(new FormatObjectNode());
-
-    val outputPath = getSchemaProjectOutputDir();
-    try {
-      // Output
-      log.info("Writing text file '{}'...", outputPath);
-      converted.saveAsTextFile(outputPath.toString());
-    } catch (Exception e) {
-      throw new IllegalStateException("Error processing '" + getName() + "':", e);
-    }
-  }
-
-  private Path getSchemaProjectOutputDir() {
-    return new Path(getSchemaOutputDir(), Partitions.getPartitionName(projectName));
-  }
-
-  private Path getSchemaOutputDir() {
-    return new Path(workingDir, schema.getName());
-  }
-
   private String formatProjectInputPaths() {
     return COMMA.join(schemaProjectPaths);
+  }
+
+  private String getOutputPath(TaskContext taskContext) {
+    val outputFileType = getOutputFileType();
+    val outputDir = new Path(taskContext.getJobContext().getWorkingDir(), outputFileType.getDirName());
+
+    return new Path(outputDir, Partitions.getPartitionName(projectName)).toString();
+  }
+
+  public FileType getOutputFileType() {
+    return FileType.valueOf(schema.getName().toUpperCase());
   }
 
 }

@@ -1,0 +1,5 @@
+analyzed_sample_id	specimen_id	analyzed_sample_interval	percentage_cellularity	level_of_cellularity	analyzed_sample_notes	study
+sample_normal1	specimen_normal1	-888	-888	-888	-888	1
+sample_tumour1	specimen_tumour1	68	-888	-888	QBbNUpprVD	1
+sample_normal2	specimen_normal2	-888	-888	-888	-888	1
+sample_tumour2	specimen_tumour2	68	-888	-888	QBbNUpprVD	1
