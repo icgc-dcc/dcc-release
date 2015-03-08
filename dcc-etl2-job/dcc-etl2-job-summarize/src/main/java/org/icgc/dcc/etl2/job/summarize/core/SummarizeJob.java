@@ -19,7 +19,6 @@ package org.icgc.dcc.etl2.job.summarize.core;
 
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -27,21 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.summarize.task.DonorGeneObservationSummarizeTask;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class SummarizeJob implements Job {
-
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final TaskExecutor executor;
 
   @Override
   public JobType getType() {
@@ -53,7 +43,7 @@ public class SummarizeJob implements Job {
   public void execute(@NonNull JobContext jobContext) {
     val watch = createStarted();
     log.info("Executing summary job...");
-    executor.execute(jobContext, new DonorGeneObservationSummarizeTask());
+    jobContext.execute(new DonorGeneObservationSummarizeTask());
     log.info("Finished executing summary job in {}", watch);
   }
 

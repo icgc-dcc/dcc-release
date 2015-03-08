@@ -30,9 +30,13 @@ public interface TaskContext {
 
   JavaSparkContext getSparkContext();
 
-  FileSystem getFileSystem();
-
   JobContext getJobContext();
+
+  /**
+   * Move these to JobContext?
+   */
+
+  FileSystem getFileSystem();
 
   String getPath(FileType fileType);
 

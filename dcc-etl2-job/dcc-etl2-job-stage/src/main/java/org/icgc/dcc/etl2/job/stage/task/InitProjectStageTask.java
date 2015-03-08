@@ -15,31 +15,27 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.image.task;
+package org.icgc.dcc.etl2.job.stage.task;
 
-import java.util.Map;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-import lombok.NonNull;
+import org.apache.hadoop.fs.Path;
+import org.icgc.dcc.etl2.core.task.Task;
+import org.icgc.dcc.etl2.core.task.TaskContext;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.task.GenericProcessTask;
-import org.icgc.dcc.etl2.job.image.function.AddSpecimenImage;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class ImageTask extends GenericProcessTask {
-
-  private final Map<String, String> urls;
-
-  public ImageTask(@NonNull Map<String, String> urls) {
-    super(FileType.SPECIMEN_SURROGATE_KEY, FileType.SPECIMEN_SURROGATE_KEY_IMAGE);
-    this.urls = urls;
-  }
+@Slf4j
+public class InitProjectStageTask implements Task {
 
   @Override
-  protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input.map(new AddSpecimenImage(urls));
+  @SneakyThrows
+  public void execute(TaskContext taskContext) {
+    val stagingDir = taskContext.getJobContext().getWorkingDir();
+    val fileSystem = taskContext.getFileSystem();
+
+    log.info("Deleting staging dir '{}'", stagingDir);
+    fileSystem.delete(new Path(stagingDir), true);
   }
 
 }

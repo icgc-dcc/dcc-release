@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,46 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.image.function;
+package org.icgc.dcc.etl2.job.fathmm.task;
 
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_DIGITAL_IMAGE_OF_STAINED_SECTION;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_SPECIMEN_ID;
-import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import lombok.Getter;
 
-import java.util.Map;
+import org.icgc.dcc.etl2.core.task.GenericTask;
+import org.icgc.dcc.etl2.core.task.TaskContext;
+import org.icgc.dcc.etl2.job.fathmm.core.FathmmTranscriptReader;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
+import com.google.common.collect.BiMap;
 
-import org.apache.spark.api.java.function.Function;
+public class ReadTranscriptsTask extends GenericTask {
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+  @Getter
+  private BiMap<String, String> transcripts;
 
-/**
- * This modifies the digital_image_of_stained_section field in donor specimen to a real URL, if applicable;
- */
-@RequiredArgsConstructor
-public class AddSpecimenImage implements Function<ObjectNode, ObjectNode> {
-
-  /**
-   * State.
-   */
-  @NonNull
-  private final Map<String, String> specimenUrls;
-
-  @Override
-  public ObjectNode call(ObjectNode row) throws Exception {
-    val specimenId = textValue(row, SUBMISSION_SPECIMEN_ID);
-    val specimenUrl = getSpecimenUrl(specimenId);
-
-    row.put(SUBMISSION_DIGITAL_IMAGE_OF_STAINED_SECTION, specimenUrl);
-
-    return row;
+  public ReadTranscriptsTask() {
+    super("read-transcripts");
   }
 
-  private String getSpecimenUrl(String specimenId) {
-    return specimenUrls.get(specimenId);
+  @Override
+  public void execute(TaskContext taskContext) {
+    this.transcripts = readTranscripts(taskContext);
+  }
+
+  private BiMap<String, String> readTranscripts(TaskContext taskContext) {
+    return new FathmmTranscriptReader(taskContext).readTranscripts();
   }
 
 }

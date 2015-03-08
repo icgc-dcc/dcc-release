@@ -79,8 +79,7 @@ public class ExportJobTest extends BaseExportJobTest {
     val rows = of(row);
 
     // Setup
-    val executor = createTaskExecutor();
-    val job = new ExportJob(executor, config);
+    val job = new ExportJob(config);
     val jobContext = createJobContext(job.getType());
 
     // Simulate exporter input dynamically
@@ -120,9 +119,11 @@ public class ExportJobTest extends BaseExportJobTest {
     fileSystem.copyFromLocalFile(new Path(super.workingDir.getAbsolutePath()), hadoopWorkingDir);
   }
 
+  @Override
   @SuppressWarnings("unchecked")
-  private JobContext createJobContext(JobType type) {
-    return new DefaultJobContext(type, "ICGC18", of(""), "/dev/null", hadoopWorkingDir.toString(), mock(Table.class));
+  protected JobContext createJobContext(JobType type) {
+    return new DefaultJobContext(type, "ICGC18", of(""), "/dev/null", hadoopWorkingDir.toString(), mock(Table.class),
+        taskExecutor);
   }
 
 }

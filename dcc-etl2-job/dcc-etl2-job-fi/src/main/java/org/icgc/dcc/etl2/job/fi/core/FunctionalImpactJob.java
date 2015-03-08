@@ -18,31 +18,15 @@
 package org.icgc.dcc.etl2.job.fi.core;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.GenericProcessTask;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
-import org.icgc.dcc.etl2.job.fi.function.CalculateImpact;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.icgc.dcc.etl2.job.fi.task.CalculateImpactTask;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 @Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class FunctionalImpactJob implements Job {
-
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final TaskExecutor executor;
 
   @Override
   public JobType getType() {
@@ -50,16 +34,8 @@ public class FunctionalImpactJob implements Job {
   }
 
   @Override
-  @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
-    executor.execute(jobContext, new GenericProcessTask(FileType.OBSERVATION_FATHMM, FileType.OBSERVATION_FI) {
-
-      @Override
-      protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-        return input.map(new CalculateImpact());
-      }
-
-    });
+    jobContext.execute(new CalculateImpactTask());
   }
 
 }

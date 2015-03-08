@@ -19,13 +19,11 @@ package org.icgc.dcc.etl2.job.imports.core;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.imports.config.MongoProperties;
 import org.icgc.dcc.etl2.job.imports.task.MongoImportTask;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,8 +37,6 @@ public class ImportJob implements Job {
    * Dependencies.
    */
   @NonNull
-  private final TaskExecutor executor;
-  @NonNull
   private final MongoProperties properties;
 
   @Override
@@ -49,13 +45,12 @@ public class ImportJob implements Job {
   }
 
   @Override
-  @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
-    executor.execute(jobContext, new MongoImportTask(properties, "dcc-genome", "Gene", FileType.GENE));
-
+    jobContext.execute(
+        new MongoImportTask(properties, "dcc-genome", "Gene", FileType.GENE));
     // TODO: After DCC-2865
-    // executor.execute(jobContext, new MongoImportTask(properties, "dcc-genome", "GeneSet", "gene_set"));
-    // executor.execute(jobContext, new MongoImportTask(properties, "dcc-genome", "Project", "project"));
+    // new MongoImportTask(properties, "dcc-genome", "GeneSet", "gene_set"),
+    // new MongoImportTask(properties, "dcc-genome", "Project", "project"));
   }
 
 }

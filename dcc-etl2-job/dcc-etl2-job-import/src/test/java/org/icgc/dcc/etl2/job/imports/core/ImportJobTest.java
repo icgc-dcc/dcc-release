@@ -18,12 +18,12 @@ public class ImportJobTest extends AbstractJobTest {
   @Before
   public void setUp() {
     super.setUp();
-    this.job = new ImportJob(createTaskExecutor(), new MongoProperties());
+    this.job = new ImportJob(new MongoProperties());
   }
 
   @Test
   public void testExecute() {
-    job.execute(createContext(job.getType()));
+    job.execute(createJobContext(job.getType()));
 
     val results = produces("gene");
     for (val gene : results) {

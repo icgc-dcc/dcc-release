@@ -18,7 +18,7 @@ public class SummarizeJobTest extends AbstractJobTest {
   @Before
   public void setUp() {
     super.setUp();
-    this.job = new SummarizeJob(taskExecutor);
+    this.job = new SummarizeJob();
   }
 
   @Test
@@ -29,7 +29,8 @@ public class SummarizeJobTest extends AbstractJobTest {
         .fileType("observation")
         .fileName("observation.json"));
 
-    job.execute(createContext(job.getType(), projectName));
+    val jobContext = createJobContext(job.getType(), projectName);
+    job.execute(jobContext);
 
     val results = produces(projectName, "donor-gene-observation-summary");
 

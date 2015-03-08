@@ -18,18 +18,15 @@
 package org.icgc.dcc.etl2.job.id.core;
 
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.val;
 
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.id.task.SurrogateDonorIdTask;
 import org.icgc.dcc.etl2.job.id.task.SurrogateMutationIdTask;
 import org.icgc.dcc.etl2.job.id.task.SurrogateSampleIdTask;
 import org.icgc.dcc.etl2.job.id.task.SurrogateSpecimenIdTask;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -42,26 +39,20 @@ public class IdJob implements Job {
   @Value("${dcc.identifier.url}")
   private String identifierUrl;
 
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  private TaskExecutor executor;
-
   @Override
   public JobType getType() {
     return JobType.ID;
   }
 
   @Override
-  @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
     val releaseName = jobContext.getReleaseName();
 
-    executor.execute(jobContext, new SurrogateDonorIdTask(identifierUrl, releaseName));
-    executor.execute(jobContext, new SurrogateSpecimenIdTask(identifierUrl, releaseName));
-    executor.execute(jobContext, new SurrogateSampleIdTask(identifierUrl, releaseName));
-    executor.execute(jobContext, new SurrogateMutationIdTask(identifierUrl, releaseName));
+    jobContext.execute(
+        new SurrogateDonorIdTask(identifierUrl, releaseName),
+        new SurrogateSpecimenIdTask(identifierUrl, releaseName),
+        new SurrogateSampleIdTask(identifierUrl, releaseName),
+        new SurrogateMutationIdTask(identifierUrl, releaseName));
   }
 
 }

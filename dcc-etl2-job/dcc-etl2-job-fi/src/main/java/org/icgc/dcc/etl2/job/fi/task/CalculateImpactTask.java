@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,46 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.image.function;
+package org.icgc.dcc.etl2.job.fi.task;
 
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_DIGITAL_IMAGE_OF_STAINED_SECTION;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_SPECIMEN_ID;
-import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
-
-import java.util.Map;
-
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-
-import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.etl2.core.job.FileType;
+import org.icgc.dcc.etl2.core.task.GenericProcessTask;
+import org.icgc.dcc.etl2.job.fi.function.CalculateImpact;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-/**
- * This modifies the digital_image_of_stained_section field in donor specimen to a real URL, if applicable;
- */
-@RequiredArgsConstructor
-public class AddSpecimenImage implements Function<ObjectNode, ObjectNode> {
+public class CalculateImpactTask extends GenericProcessTask {
 
-  /**
-   * State.
-   */
-  @NonNull
-  private final Map<String, String> specimenUrls;
-
-  @Override
-  public ObjectNode call(ObjectNode row) throws Exception {
-    val specimenId = textValue(row, SUBMISSION_SPECIMEN_ID);
-    val specimenUrl = getSpecimenUrl(specimenId);
-
-    row.put(SUBMISSION_DIGITAL_IMAGE_OF_STAINED_SECTION, specimenUrl);
-
-    return row;
+  public CalculateImpactTask() {
+    super(FileType.OBSERVATION_FATHMM, FileType.OBSERVATION_FI);
   }
 
-  private String getSpecimenUrl(String specimenId) {
-    return specimenUrls.get(specimenId);
+  @Override
+  protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
+    return input.map(new CalculateImpact());
   }
 
 }

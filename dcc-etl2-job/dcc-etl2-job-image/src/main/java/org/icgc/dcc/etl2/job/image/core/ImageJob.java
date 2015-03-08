@@ -20,27 +20,17 @@ package org.icgc.dcc.etl2.job.image.core;
 import java.util.Map;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.val;
 
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
-import org.icgc.dcc.etl2.job.image.task.ImageTask;
+import org.icgc.dcc.etl2.job.image.task.AddSpecimenImageTask;
 import org.icgc.dcc.etl2.job.image.util.SpecimenImageResolver;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class ImageJob implements Job {
-
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final TaskExecutor executor;
 
   @Override
   public JobType getType() {
@@ -48,13 +38,19 @@ public class ImageJob implements Job {
   }
 
   @Override
-  @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
-    executor.execute(jobContext, new ImageTask(getUrls()));
+    val specimenImageUrls = getSpecimenImageUrls();
+    val task = creatTask(specimenImageUrls);
+
+    jobContext.execute(task);
   }
 
-  private static Map<String, String> getUrls() {
+  private static Map<String, String> getSpecimenImageUrls() {
     return new SpecimenImageResolver(true).resolveUrls();
+  }
+
+  private static AddSpecimenImageTask creatTask(Map<String, String> specimenImageUrls) {
+    return new AddSpecimenImageTask(specimenImageUrls);
   }
 
 }

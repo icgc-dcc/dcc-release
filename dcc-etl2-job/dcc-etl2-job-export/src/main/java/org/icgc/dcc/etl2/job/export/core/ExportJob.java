@@ -17,8 +17,11 @@
  */
 package org.icgc.dcc.etl2.job.export.core;
 
+import static java.util.stream.Collectors.toList;
+
+import java.util.Collection;
+
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,15 +29,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.Task;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.task.ExportTableTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * See https://github.com/unicredit/hbase-rdd/blob/master/src/main/scala/unicredit/spark/hbase/HFileSupport.scala
@@ -46,12 +45,10 @@ public class ExportJob implements Job {
   /**
    * Dependencies.
    */
-  private final TaskExecutor executor;
   private final Configuration conf;
 
   @Autowired
-  public ExportJob(@NonNull TaskExecutor executor, @NonNull @Qualifier("hbaseConf") Configuration conf) {
-    this.executor = executor;
+  public ExportJob(@NonNull @Qualifier("hbaseConf") Configuration conf) {
     this.conf = conf;
   }
 
@@ -61,19 +58,19 @@ public class ExportJob implements Job {
   }
 
   @Override
-  @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
-    // TODO: May need this due to hbase override
-    // val fileSystem = FileSystem.get(conf);
+    val exportTasks = createExportTasks();
 
-    val tasks = ImmutableList.<Task> builder();
-    for (val table : ExportTable.values()) {
+    jobContext.execute(exportTasks);
+  }
+
+  private Collection<ExportTableTask> createExportTasks() {
+    val tables = ExportTable.stream();
+
+    return tables.map(table -> {
       log.info("Adding task to export to table '{}'...", table);
-      val task = new ExportTableTask(table, conf);
-      tasks.add(task);
-    }
-
-    executor.execute(jobContext, tasks.build());
+      return new ExportTableTask(table, conf);
+    }).collect(toList());
   }
 
 }

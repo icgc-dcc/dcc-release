@@ -84,14 +84,14 @@ public abstract class AbstractJobTest {
     }
   }
 
-  protected JobContext createContext(JobType type) {
-    return createContext(type, "");
+  protected JobContext createJobContext(JobType type) {
+    return createJobContext(type, "");
   }
 
   @SuppressWarnings("unchecked")
-  protected JobContext createContext(JobType type, String projectName) {
-    return new DefaultJobContext(type, "ICGC<version>", of(projectName), "/dev/null", workingDir.toString(),
-        mock(Table.class));
+  protected JobContext createJobContext(JobType type, String projectName) {
+    return new DefaultJobContext(type, "ICGC<version>", of(projectName), "/dev/null",
+        workingDir.toString(), mock(Table.class), taskExecutor);
   }
 
   protected void createInputFile(TestFile inputFile) {

@@ -19,7 +19,7 @@ public class ImageJobTest extends AbstractJobTest {
   @Before
   public void setUp() {
     super.setUp();
-    this.job = new ImageJob(taskExecutor);
+    this.job = new ImageJob();
   }
 
   @Test
@@ -30,7 +30,8 @@ public class ImageJobTest extends AbstractJobTest {
         .fileType("specimen_surrogate_key")
         .rows(of(row("{specimen_id: 1}"))));
 
-    job.execute(createContext(job.getType(), projectName));
+    val jobContext = createJobContext(job.getType(), projectName);
+    job.execute(jobContext);
 
     val results = produces(projectName, "specimen_surrogate_key_image");
 

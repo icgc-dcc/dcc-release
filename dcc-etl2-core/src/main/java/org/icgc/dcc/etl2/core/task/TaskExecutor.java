@@ -37,8 +37,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.JobContext;
 
-import com.google.common.collect.ImmutableList;
-
 @Slf4j
 @RequiredArgsConstructor
 public class TaskExecutor {
@@ -53,11 +51,7 @@ public class TaskExecutor {
   @NonNull
   protected final FileSystem fileSystem;
 
-  public void execute(@NonNull JobContext jobContext, Task... tasks) {
-    execute(jobContext, ImmutableList.copyOf(tasks));
-  }
-
-  public void execute(@NonNull JobContext jobContext, Collection<Task> tasks) {
+  public void execute(@NonNull JobContext jobContext, Collection<? extends Task> tasks) {
     val watch = createStarted();
     try {
       log.info("Starting '{}' tasks...", tasks.size());
@@ -72,7 +66,7 @@ public class TaskExecutor {
   }
 
   @SneakyThrows
-  private int executeTasks(JobContext jobContext, Collection<Task> tasks) {
+  private int executeTasks(JobContext jobContext, Collection<? extends Task> tasks) {
     val service = createCompletionService();
 
     val watch = createStarted();

@@ -25,7 +25,7 @@ public class IndexJobTest extends AbstractJobTest {
         .setEsUri("es://localhost:9300")
         .setOutputDir(new File(workingDir, "output").getAbsolutePath());
 
-    this.job = new IndexJob(createTaskExecutor(), sparkContext, properties);
+    this.job = new IndexJob(properties);
   }
 
   @Test
@@ -40,6 +40,7 @@ public class IndexJobTest extends AbstractJobTest {
         .fileType("gene")
         .fileName("working/gene"));
 
-    job.execute(createContext(job.getType()));
+    job.execute(createJobContext(job.getType()));
   }
+
 }

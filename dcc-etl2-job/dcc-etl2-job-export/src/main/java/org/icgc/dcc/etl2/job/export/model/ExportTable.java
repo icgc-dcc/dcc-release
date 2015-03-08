@@ -19,6 +19,10 @@ package org.icgc.dcc.etl2.job.export.model;
 
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.etl2.job.export.model.ExportTableType.DATA;
+
+import java.util.Arrays;
+import java.util.stream.Stream;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -32,5 +36,9 @@ public enum ExportTable {
 
   @NonNull
   private final ExportTableType type;
+
+  public static Stream<ExportTable> stream() {
+    return Arrays.stream(values());
+  }
 
 }

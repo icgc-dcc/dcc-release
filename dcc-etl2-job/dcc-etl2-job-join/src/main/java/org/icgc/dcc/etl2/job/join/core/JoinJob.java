@@ -18,27 +18,16 @@
 package org.icgc.dcc.etl2.job.join.core;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.join.task.ClinicalJoinTask;
 import org.icgc.dcc.etl2.job.join.task.ObservationJoinTask;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class JoinJob implements Job {
-
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final TaskExecutor executor;
 
   @Override
   public JobType getType() {
@@ -46,10 +35,10 @@ public class JoinJob implements Job {
   }
 
   @Override
-  @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
-    executor.execute(jobContext, new ClinicalJoinTask());
-    executor.execute(jobContext, new ObservationJoinTask());
+    jobContext.execute(
+        new ClinicalJoinTask(),
+        new ObservationJoinTask());
   }
 
 }

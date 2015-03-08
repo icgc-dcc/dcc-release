@@ -17,23 +17,20 @@
  */
 package org.icgc.dcc.etl2.job.stage.core;
 
-import java.io.IOException;
 import java.util.List;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.core.submission.Schemas;
 import org.icgc.dcc.etl2.core.task.Task;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
+import org.icgc.dcc.etl2.job.stage.task.InitProjectStageTask;
 import org.icgc.dcc.etl2.job.stage.task.SchemaProjectStageTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -47,14 +44,6 @@ import com.google.common.collect.Table;
 public class StageJob implements Job {
 
   /**
-   * Dependencies.
-   */
-  @NonNull
-  private final TaskExecutor executor;
-  @NonNull
-  private final FileSystem fileSystem;
-
-  /**
    * Metadata.
    */
   @NonNull
@@ -66,24 +55,21 @@ public class StageJob implements Job {
   }
 
   @Override
-  @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
-    val stagingDir = jobContext.getWorkingDir();
-    val files = jobContext.getFiles();
-
-    clean(stagingDir);
-
-    val tasks = createTasks(stagingDir, files);
-
-    executeTasks(jobContext, tasks);
+    clean(jobContext);
+    stage(jobContext);
   }
 
-  private void clean(String stagingDir) throws IOException {
-    log.info("Deleting staging dir '{}'", stagingDir);
-    fileSystem.delete(new Path(stagingDir), true);
+  private void stage(JobContext jobContext) {
+    val stagingTasks = createStagingTasks(jobContext.getWorkingDir(), jobContext.getFiles());
+    jobContext.execute(stagingTasks);
   }
 
-  private List<Task> createTasks(String workingDir, Table<String, String, List<Path>> files) {
+  private void clean(JobContext jobContext) {
+    jobContext.execute(new InitProjectStageTask());
+  }
+
+  private List<Task> createStagingTasks(String stagingDir, Table<String, String, List<Path>> files) {
     int taskCount = 0;
     val schemaProjectTasks = ImmutableList.<Task> builder();
 
@@ -94,7 +80,7 @@ public class StageJob implements Job {
       for (val entry : schemaPaths.entrySet()) {
         val projectName = entry.getKey();
         val schemaProjectPaths = entry.getValue();
-        val schemaProjectTask = new SchemaProjectStageTask(workingDir, projectName, schemaProjectPaths, schema);
+        val schemaProjectTask = new SchemaProjectStageTask(stagingDir, projectName, schemaProjectPaths, schema);
 
         log.info("[{}] Submitting task '{}'...", taskCount++, schemaProjectTask.getName());
         schemaProjectTasks.add(schemaProjectTask);
@@ -102,10 +88,6 @@ public class StageJob implements Job {
     }
 
     return schemaProjectTasks.build();
-  }
-
-  private void executeTasks(JobContext jobContext, List<Task> tasks) {
-    executor.execute(jobContext, tasks);
   }
 
 }

@@ -1,11 +1,15 @@
 package org.icgc.dcc.etl2.core.job;
 
+import java.util.Collection;
 import java.util.List;
 
 import lombok.Value;
 
 import org.apache.hadoop.fs.Path;
+import org.icgc.dcc.etl2.core.task.Task;
+import org.icgc.dcc.etl2.core.task.TaskExecutor;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 
 @Value
@@ -19,5 +23,17 @@ public class DefaultJobContext implements JobContext {
   String workingDir;
 
   Table<String, String, List<Path>> files;
+
+  TaskExecutor executor;
+
+  @Override
+  public void execute(Task... tasks) {
+    execute(ImmutableList.copyOf(tasks));
+  }
+
+  @Override
+  public void execute(Collection<? extends Task> tasks) {
+    executor.execute(this, tasks);
+  }
 
 }

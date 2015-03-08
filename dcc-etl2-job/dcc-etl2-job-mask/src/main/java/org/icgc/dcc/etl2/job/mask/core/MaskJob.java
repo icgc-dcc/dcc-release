@@ -18,27 +18,16 @@
 package org.icgc.dcc.etl2.job.mask.core;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.mask.task.SgvPMaskingTask;
 import org.icgc.dcc.etl2.job.mask.task.SsmPMaskingTask;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class MaskJob implements Job {
-
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final TaskExecutor executor;
 
   @Override
   public JobType getType() {
@@ -46,10 +35,10 @@ public class MaskJob implements Job {
   }
 
   @Override
-  @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
-    executor.execute(jobContext, new SsmPMaskingTask());
-    executor.execute(jobContext, new SgvPMaskingTask());
+    jobContext.execute(
+        new SsmPMaskingTask(),
+        new SgvPMaskingTask());
   }
 
 }

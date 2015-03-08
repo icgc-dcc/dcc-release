@@ -18,6 +18,7 @@ import org.icgc.dcc.etl2.core.job.JobSummary;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.core.submission.SubmissionFileSystem;
 import org.icgc.dcc.etl2.core.submission.SubmissionMetadataRepository;
+import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.workflow.mail.Mailer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,8 @@ public class Workflow {
   private final SubmissionMetadataRepository submissionMetadata;
   @NonNull
   private final SubmissionFileSystem submissionFileSystem;
+  @NonNull
+  private final TaskExecutor taskExecutor;
   @NonNull
   private final Mailer mailer;
 
@@ -95,7 +98,8 @@ public class Workflow {
         workflowContext.getProjectNames(),
         workflowContext.getReleaseDir(),
         workflowContext.getWorkingDir(),
-        submissionFiles);
+        submissionFiles,
+        taskExecutor);
   }
 
   private Job findJob(JobType jobType) {

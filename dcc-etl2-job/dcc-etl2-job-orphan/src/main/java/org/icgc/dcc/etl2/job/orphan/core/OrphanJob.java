@@ -18,7 +18,6 @@
 package org.icgc.dcc.etl2.job.orphan.core;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
 import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
@@ -26,23 +25,14 @@ import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.orphan.task.OrphanTask;
 import org.icgc.dcc.etl2.job.orphan.task.OrphanTaskDefinition;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableList;
 
 @Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class OrphanJob implements Job {
-
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final TaskExecutor executor;
 
   /**
    * Metadata.
@@ -64,7 +54,7 @@ public class OrphanJob implements Job {
   @Override
   @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
-    executor.execute(jobContext, new OrphanTask(definitions));
+    jobContext.execute(new OrphanTask(definitions));
   }
 
 }

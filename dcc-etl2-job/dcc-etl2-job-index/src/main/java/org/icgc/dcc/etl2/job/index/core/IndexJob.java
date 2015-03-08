@@ -24,16 +24,13 @@ import java.util.Collection;
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.core.task.Task;
-import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.index.config.IndexProperties;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
 import org.icgc.dcc.etl2.job.index.service.IndexService;
@@ -50,10 +47,6 @@ public class IndexJob implements Job {
    * Dependencies.
    */
   @NonNull
-  private final TaskExecutor executor;
-  @NonNull
-  private final JavaSparkContext sparkContext;
-  @NonNull
   private final IndexProperties properties;
 
   @Override
@@ -62,7 +55,6 @@ public class IndexJob implements Job {
   }
 
   @Override
-  @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
 
     //
@@ -102,7 +94,7 @@ public class IndexJob implements Job {
   private void write(JobContext jobContext) {
     val tasks = createTasks();
 
-    executor.execute(jobContext, tasks);
+    jobContext.execute(tasks);
   }
 
   private Collection<Task> createTasks() {

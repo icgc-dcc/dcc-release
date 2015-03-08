@@ -17,9 +17,11 @@
  */
 package org.icgc.dcc.etl2.core.job;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.hadoop.fs.Path;
+import org.icgc.dcc.etl2.core.task.Task;
 
 import com.google.common.collect.Table;
 
@@ -36,5 +38,9 @@ public interface JobContext {
   String getWorkingDir();
 
   Table<String, String, List<Path>> getFiles();
+
+  void execute(Task... tasks);
+
+  void execute(Collection<? extends Task> tasks);
 
 }

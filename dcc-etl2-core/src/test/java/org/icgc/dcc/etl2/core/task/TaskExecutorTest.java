@@ -25,12 +25,14 @@ import lombok.val;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.etl2.core.job.JobContext;
+import org.icgc.dcc.etl2.core.job.DefaultJobContext;
+import org.icgc.dcc.etl2.core.job.JobType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.MoreExecutors;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -40,18 +42,18 @@ public class TaskExecutorTest {
   JavaSparkContext sparkContext;
   @Mock
   FileSystem fileSystem;
-  @Mock
-  JobContext jobContext;
 
   ExecutorService executorService = MoreExecutors.sameThreadExecutor();
 
   @Test
   public void testExecute() {
-    val executor = new TaskExecutor(executorService, sparkContext, fileSystem);
-    executor.execute(jobContext,
+    val jobContext = new DefaultJobContext(
+        JobType.STAGE, "", ImmutableList.<String> of(), "", "", null,
+        new TaskExecutor(executorService, sparkContext, fileSystem));
+
+    jobContext.execute(
         task(() -> System.out.println("task 1")),
-        task(() -> System.out.println("task 2"))
-        );
+        task(() -> System.out.println("task 2")));
   }
 
   private static Task task(Runnable runnable) {
