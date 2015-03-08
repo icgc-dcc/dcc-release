@@ -38,7 +38,7 @@ import com.mongodb.hadoop.io.BSONWritable;
 @NoArgsConstructor(access = PRIVATE)
 public final class MongoJavaRDDs {
 
-  public static JavaRDD<ObjectNode> javaMongoCollection(JavaSparkContext context, MongoConfig mongoConfig,
+  public static JavaRDD<ObjectNode> javaMongoCollection(JavaSparkContext sparkContext, MongoConfig mongoConfig,
       JobConf hadoopConf) {
     // See https://groups.google.com/d/topic/cascading-user/ngLidsZQjIU/discussion
     FileInputFormat.addInputPaths(hadoopConf, mongoConfig.getInputURI().toString());
@@ -46,8 +46,8 @@ public final class MongoJavaRDDs {
     // See https://jira.mongodb.org/browse/HADOOP-62
     hadoopConf.setInputFormat(MongoAdminInputFormat.class);
 
-    val hadoopRDD = context.hadoopRDD(hadoopConf, MongoAdminInputFormat.class, BSONWritable.class, BSONWritable.class,
-        context.defaultMinPartitions());
+    val hadoopRDD = sparkContext.hadoopRDD(hadoopConf, MongoAdminInputFormat.class, BSONWritable.class, BSONWritable.class,
+        sparkContext.defaultMinPartitions());
 
     return hadoopRDD.map(new ConvertBSONWritableValue());
   }

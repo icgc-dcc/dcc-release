@@ -50,7 +50,7 @@ import com.google.common.collect.ImmutableList;
 
 @Slf4j
 @RequiredArgsConstructor
-public class IndexTask extends RemoteActionTask {
+public class IndexDocumentTask extends RemoteActionTask {
 
   /**
    * See

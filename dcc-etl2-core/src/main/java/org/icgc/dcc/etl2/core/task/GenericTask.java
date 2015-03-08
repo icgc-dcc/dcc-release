@@ -18,6 +18,7 @@
 package org.icgc.dcc.etl2.core.task;
 
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @Slf4j
 public abstract class GenericTask extends NamedTask {
 
-  public GenericTask(String name) {
+  public GenericTask(@NonNull String name) {
     super(name);
   }
 

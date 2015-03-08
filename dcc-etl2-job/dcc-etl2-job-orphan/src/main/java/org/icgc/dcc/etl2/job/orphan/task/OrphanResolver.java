@@ -59,7 +59,7 @@ import com.google.common.collect.Sets;
 public class OrphanResolver {
 
   @NonNull
-  private final TaskContext context;
+  private final TaskContext taskContext;
 
   public Orphans resolveOrphans() {
     val donorIds = readDonorIds();
@@ -190,13 +190,13 @@ public class OrphanResolver {
   }
 
   private JavaRDD<ObjectNode> readFileType(FileType fileType) {
-    val metaFileTypePath = context.getPath(fileType);
+    val metaFileTypePath = taskContext.getPath(fileType);
 
-    return javaTextObjectNodeRDD(context.getSparkContext(), metaFileTypePath);
+    return javaTextObjectNodeRDD(taskContext.getSparkContext(), metaFileTypePath);
   }
 
   private boolean isMissing(FileType fileType) {
-    return !context.exists(fileType);
+    return !taskContext.exists(fileType);
   }
 
   private static Collector<Tuple2<String, String>, ?, Map<String, String>> toTupleMap() {

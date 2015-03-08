@@ -47,8 +47,8 @@ public class PairRows implements PairFunction<Tuple2<String, Tuple2<ObjectNode, 
     return pair(key, association);
   }
 
-  private Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> pair(
-      String donorId, Tuple2<ObjectNode, Optional<java.lang.Iterable<ObjectNode>>> specimenSample) {
+  private Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> pair(String donorId,
+      Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>> specimenSample) {
     return new Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>(donorId, specimenSample);
   }
 

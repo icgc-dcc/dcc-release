@@ -27,9 +27,6 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.spark.api.java.JavaHadoopRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.FormatObjectNode;
@@ -85,15 +82,15 @@ public class SchemaProjectStageTask implements Task {
     writeOutput(output);
   }
 
-  private JavaHadoopRDD<LongWritable, Text> readInput(JavaSparkContext sparkContext) {
+  private JavaRDD<ObjectNode> readInput(JavaSparkContext sparkContext) {
     val projectPaths = formatProjectInputPaths();
 
-    return JavaRDDs.javaHadoopRDD(sparkContext, projectPaths);
+    return JavaRDDs.javaHadoopRDD(sparkContext, projectPaths)
+        .mapPartitionsWithInputSplit(new ParseLine(schema), false);
   }
 
-  private JavaRDD<ObjectNode> transform(JavaHadoopRDD<LongWritable, Text> input) {
+  private JavaRDD<ObjectNode> transform(JavaRDD<ObjectNode> input) {
     return input
-        .mapPartitionsWithInputSplit(new ParseLine(schema), false)
         .map(new TrimValues())
         .map(new TranslateMissingCode())
         .map(new TranslateCodeListTerm(schema))

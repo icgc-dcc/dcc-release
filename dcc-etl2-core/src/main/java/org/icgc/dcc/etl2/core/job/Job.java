@@ -24,6 +24,6 @@ public interface Job {
 
   JobType getType();
 
-  void execute(JobContext context);
+  void execute(JobContext jobContext);
 
 }

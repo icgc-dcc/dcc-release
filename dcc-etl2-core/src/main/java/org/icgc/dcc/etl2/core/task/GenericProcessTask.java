@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.etl2.core.task;
 
+import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,7 +36,7 @@ public abstract class GenericProcessTask extends GenericTask {
   protected final FileType inputFileType;
   protected final FileType outputFileType;
 
-  public GenericProcessTask(FileType inputFileType, FileType outputFileType) {
+  public GenericProcessTask(@NonNull FileType inputFileType, FileType outputFileType) {
     super(outputFileType.getDirName());
     this.inputFileType = inputFileType;
     this.outputFileType = outputFileType;

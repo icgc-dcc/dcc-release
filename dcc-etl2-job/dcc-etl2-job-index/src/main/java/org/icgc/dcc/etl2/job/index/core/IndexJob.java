@@ -34,7 +34,7 @@ import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.job.index.config.IndexProperties;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
 import org.icgc.dcc.etl2.job.index.service.IndexService;
-import org.icgc.dcc.etl2.job.index.task.IndexTask;
+import org.icgc.dcc.etl2.job.index.task.IndexDocumentTask;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.collect.ImmutableList;
@@ -100,9 +100,9 @@ public class IndexJob implements Job {
   private Collection<Task> createTasks() {
     // TODO: Add all
     return ImmutableList.<Task> of(
-        new IndexTask(properties, DocumentType.RELEASE_TYPE),
-        new IndexTask(properties, DocumentType.PROJECT_TYPE),
-        new IndexTask(properties, DocumentType.GENE_TYPE));
+        new IndexDocumentTask(properties, DocumentType.RELEASE_TYPE),
+        new IndexDocumentTask(properties, DocumentType.PROJECT_TYPE),
+        new IndexDocumentTask(properties, DocumentType.GENE_TYPE));
   }
 
 }

@@ -60,13 +60,13 @@ public class StageJob implements Job {
     stage(jobContext);
   }
 
+  private void clean(JobContext jobContext) {
+    jobContext.execute(new InitProjectStageTask());
+  }
+
   private void stage(JobContext jobContext) {
     val stagingTasks = createStagingTasks(jobContext.getWorkingDir(), jobContext.getFiles());
     jobContext.execute(stagingTasks);
-  }
-
-  private void clean(JobContext jobContext) {
-    jobContext.execute(new InitProjectStageTask());
   }
 
   private List<Task> createStagingTasks(String stagingDir, Table<String, String, List<Path>> files) {

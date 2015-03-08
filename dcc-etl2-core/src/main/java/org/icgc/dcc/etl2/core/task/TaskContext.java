@@ -32,10 +32,6 @@ public interface TaskContext {
 
   JobContext getJobContext();
 
-  /**
-   * Move these to JobContext?
-   */
-
   FileSystem getFileSystem();
 
   String getPath(FileType fileType);

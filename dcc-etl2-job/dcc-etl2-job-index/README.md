@@ -1,7 +1,7 @@
-ICGC DCC - ETL2 Import
+ICGC DCC - ETL2 Index
 ===
 
-Import module
+Index module
 
 Build
 ---

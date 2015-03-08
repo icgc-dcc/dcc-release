@@ -38,21 +38,21 @@ public class OrphanTask extends GenericTask {
   }
 
   @Override
-  public void execute(@NonNull TaskContext context) {
-    cleanOutput(context);
+  public void execute(@NonNull TaskContext taskContext) {
+    cleanOutput(taskContext);
 
-    val orphans = resolveOrphans(context);
+    val orphans = resolveOrphans(taskContext);
 
     for (val definition : definitions) {
-      writeOrphanedFileType(context, definition, orphans);
+      writeOrphanedFileType(taskContext, definition, orphans);
     }
   }
 
-  private void cleanOutput(TaskContext context) {
+  private void cleanOutput(TaskContext taskContext) {
     for (val definition : definitions) {
       val outputFileType = definition.getOutput();
-      if (context.exists(outputFileType)) {
-        context.delete(outputFileType);
+      if (taskContext.exists(outputFileType)) {
+        taskContext.delete(outputFileType);
       }
     }
   }
