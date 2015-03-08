@@ -15,18 +15,36 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.core.task;
+package org.icgc.dcc.etl2.workflow.util;
 
-import lombok.RequiredArgsConstructor;
+import java.io.File;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-@RequiredArgsConstructor
-public abstract class NamedTask implements Task {
+import lombok.val;
+import ch.qos.logback.core.joran.spi.NoAutoStart;
+import ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP;
 
-  private final String name;
+/**
+ * See http://stackoverflow.com/questions/2492022/how-to-roll-the-log-file-on-startup-in-logback
+ */
+@NoAutoStart
+public class StartupTimeBasedTriggeringPolicy<E> extends SizeAndTimeBasedFNATP<E> {
+
+  private final AtomicBoolean trigger = new AtomicBoolean();
 
   @Override
-  public String getName() {
-    return name;
+  public boolean isTriggeringEvent(final File activeFile, final E event) {
+    if (trigger.compareAndSet(false, true) && activeFile.length() > 0) {
+      val maxFileSize = getMaxFileSize();
+      setMaxFileSize("1");
+
+      super.isTriggeringEvent(activeFile, event);
+      setMaxFileSize(maxFileSize);
+
+      return true;
+    }
+
+    return super.isTriggeringEvent(activeFile, event);
   }
 
 }

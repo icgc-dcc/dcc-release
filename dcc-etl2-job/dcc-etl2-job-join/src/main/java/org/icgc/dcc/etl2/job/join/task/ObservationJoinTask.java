@@ -43,10 +43,6 @@ import com.google.common.collect.Maps;
 
 public class ObservationJoinTask extends GenericTask {
 
-  public ObservationJoinTask() {
-    super("observation-join");
-  }
-
   @Override
   public void execute(TaskContext taskContext) {
     val outputFileType = FileType.OBSERVATION;

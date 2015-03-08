@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 
 import com.google.common.collect.ImmutableList;
@@ -33,33 +34,30 @@ public abstract class RemoteActionTask implements Task {
 
   @Override
   public void execute(TaskContext taskContext) {
-    val sparkContext = taskContext.getSparkContext();
-
     val fsUri = taskContext.getFileSystem().getUri();
     val workingDir = taskContext.getJobContext().getWorkingDir();
 
-    sparkContext.parallelize(ImmutableList.of(1), 1).map(new Function<Integer, Integer>() {
+    executeRemote(taskContext.getSparkContext(), ignore -> {
+      val watch = createStarted();
+      log.info("Executing remote action...");
 
-      @Override
-      public Integer call(Integer ignore) throws Exception {
-        val watch = createStarted();
-        log.info("Executing remote action...");
+      val fileSystem = FileSystem.get(fsUri, new Configuration());
+      executeRemoteAction(fileSystem, new Path(workingDir));
+      log.info("Finished executing action in {}", watch);
 
-        val fileSystem = FileSystem.get(fsUri, new Configuration());
-        executeRemoteAction(fileSystem, new Path(workingDir));
-        log.info("Finished executing action in {}", watch);
+      return ignore;
+    });
+  }
 
-        return ignore;
-      }
+  private void executeRemote(JavaSparkContext sparkContext, Function<Integer, Integer> function) {
+    val numSlices = 1;
+    val task = ImmutableList.of(1);
 
-    }).count();
+    sparkContext.parallelize(task, numSlices).map(function).count();
   }
 
   /**
    * Template method. Subclasses are required to implement an action to be taken cluster side.
-   * 
-   * @param fileSystem
-   * @param workingDir
    */
   protected abstract void executeRemoteAction(FileSystem fileSystem, Path workingDir);
 

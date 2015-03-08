@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.etl2.core.task.RemoteActionTask;
+import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.core.task.TaskType;
 import org.icgc.dcc.etl2.job.index.config.IndexProperties;
 import org.icgc.dcc.etl2.job.index.core.CollectionReader;
@@ -66,7 +67,7 @@ public class IndexDocumentTask extends RemoteActionTask {
 
   @Override
   public String getName() {
-    return "index." + type;
+    return Task.getName(this.getClass(), type.toString());
   }
 
   @Override

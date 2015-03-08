@@ -17,12 +17,19 @@
  */
 package org.icgc.dcc.etl2.core.task;
 
+import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+
 import java.io.Serializable;
+
+import lombok.val;
+
+import org.icgc.dcc.common.core.util.Joiners;
 
 public interface Task extends Serializable {
 
   default String getName() {
-    return this.getClass().getSimpleName();
+    return getName(this.getClass());
   }
 
   default TaskType getType() {
@@ -30,5 +37,12 @@ public interface Task extends Serializable {
   }
 
   void execute(TaskContext taskContext);
+
+  static String getName(Class<? extends Task> taskClass, String... info) {
+    val className = taskClass.getClass().getSimpleName();
+    val name = UPPER_CAMEL.to(LOWER_UNDERSCORE, className);
+
+    return Joiners.COLON.join(name, info);
+  }
 
 }

@@ -20,6 +20,7 @@ package org.icgc.dcc.etl2.job.orphan.task;
 import java.util.Set;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.icgc.dcc.etl2.core.job.FileType;
@@ -28,14 +29,11 @@ import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.job.orphan.function.AddOrphanIndicator;
 import org.icgc.dcc.etl2.job.orphan.model.Orphans;
 
+@RequiredArgsConstructor
 public class OrphanTask extends GenericTask {
 
+  @NonNull
   private final Iterable<OrphanTaskDefinition> definitions;
-
-  public OrphanTask(@NonNull Iterable<OrphanTaskDefinition> definitions) {
-    super("orphan");
-    this.definitions = definitions;
-  }
 
   @Override
   public void execute(@NonNull TaskContext taskContext) {

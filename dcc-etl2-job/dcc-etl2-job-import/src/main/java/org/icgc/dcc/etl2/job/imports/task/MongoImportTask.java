@@ -26,6 +26,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
+import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.task.TaskType;
 import org.icgc.dcc.etl2.job.imports.config.MongoProperties;
@@ -46,7 +47,6 @@ public class MongoImportTask extends GenericTask {
   private final FileType outputFileType;
 
   public MongoImportTask(MongoProperties properties, String database, String collection, FileType outputFileType) {
-    super("mongo-import-" + outputFileType);
     this.properties = properties;
     this.database = database;
     this.collection = collection;
@@ -56,6 +56,11 @@ public class MongoImportTask extends GenericTask {
   @Override
   public TaskType getType() {
     return TaskType.FILE_TYPE;
+  }
+
+  @Override
+  public String getName() {
+    return Task.getName(this.getClass(), outputFileType.toString());
   }
 
   @Override

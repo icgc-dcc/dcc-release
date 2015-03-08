@@ -30,10 +30,6 @@ public class ReadTranscriptsTask extends GenericTask {
   @Getter
   private BiMap<String, String> transcripts;
 
-  public ReadTranscriptsTask() {
-    super("read-transcripts");
-  }
-
   @Override
   public void execute(TaskContext taskContext) {
     this.transcripts = readTranscripts(taskContext);

@@ -71,7 +71,7 @@ public class ExportTableTask implements Task {
 
   @Override
   public String getName() {
-    return "export:" + table.name();
+    return Task.getName(this.getClass(), table.name());
   }
 
   @Override
@@ -121,6 +121,7 @@ public class ExportTableTask implements Task {
   }
 
   private static Path getInputPath(TaskContext taskContext) {
+    // TODO: This is not a real input and should be decomposed to the upstream types
     return new Path(taskContext.getPath(FileType.EXPORT_INPUT));
   }
 

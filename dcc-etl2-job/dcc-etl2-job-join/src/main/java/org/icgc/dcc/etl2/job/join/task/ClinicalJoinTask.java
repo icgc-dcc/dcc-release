@@ -37,10 +37,6 @@ import com.google.common.base.Optional;
 
 public class ClinicalJoinTask extends GenericTask {
 
-  public ClinicalJoinTask() {
-    super("clinical-join");
-  }
-
   @Override
   public void execute(TaskContext taskContext) {
     val outputFileType = FileType.CLINICAL;

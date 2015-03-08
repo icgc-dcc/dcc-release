@@ -18,7 +18,7 @@
 package org.icgc.dcc.etl2.core.task;
 
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
-import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -34,10 +34,18 @@ import org.icgc.dcc.etl2.core.util.JavaRDDs;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Slf4j
-public abstract class GenericTask extends NamedTask {
+@RequiredArgsConstructor
+public abstract class GenericTask implements Task {
 
-  public GenericTask(@NonNull String name) {
-    super(name);
+  private final String name;
+
+  public GenericTask() {
+    this.name = Task.getName(this.getClass());
+  }
+
+  @Override
+  public String getName() {
+    return name;
   }
 
   protected JobConf createJobConf(TaskContext taskContext) {
@@ -67,6 +75,7 @@ public abstract class GenericTask extends NamedTask {
 
   protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath) {
     val output = processed.map(new FormatObjectNode());
+
     output.saveAsTextFile(outputPath);
   }
 
