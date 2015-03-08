@@ -56,7 +56,9 @@ public class AnnotationTask extends GenericProcessTask {
 
     val sparkContext = taskContext.getSparkContext();
     val path = taskContext.getPath(inputFileType);
-    val input = JavaRDDs.javaCombineTextFile(sparkContext, path, hadoopConf).map(new ParseObjectNode());
+    val input = JavaRDDs.combineTextFile(sparkContext, path, hadoopConf)
+        .map(tuple -> tuple._2.toString())
+        .map(new ParseObjectNode());
 
     logPartitions(input);
 

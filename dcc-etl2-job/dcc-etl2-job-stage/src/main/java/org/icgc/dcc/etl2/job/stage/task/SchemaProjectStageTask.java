@@ -25,7 +25,6 @@ import lombok.val;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.TranslateMissingCode;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.submission.Schema;
@@ -64,18 +63,17 @@ public class SchemaProjectStageTask extends GenericTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    val sparkContext = taskContext.getSparkContext();
-
-    val input = readInput(sparkContext);
+    val input = readInput(taskContext);
     val processed = transform(input);
 
     writeOutput(processed, getOutputPath(taskContext));
   }
 
-  private JavaRDD<ObjectNode> readInput(JavaSparkContext sparkContext) {
+  private JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
+    val sparkContext = taskContext.getSparkContext();
     val projectPaths = formatProjectInputPaths();
 
-    return JavaRDDs.javaHadoopRDD(sparkContext, projectPaths)
+    return JavaRDDs.combineTextFile(sparkContext, projectPaths)
         .mapPartitionsWithInputSplit(new ParseLine(schema), false);
   }
 
@@ -98,7 +96,7 @@ public class SchemaProjectStageTask extends GenericTask {
     return new Path(outputDir, Partitions.getPartitionName(projectName)).toString();
   }
 
-  public FileType getOutputFileType() {
+  private FileType getOutputFileType() {
     return FileType.valueOf(schema.getName().toUpperCase());
   }
 

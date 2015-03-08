@@ -27,7 +27,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
-import static org.icgc.dcc.etl2.core.util.JavaRDDs.javaTextObjectNodeRDD;
 
 import java.util.Map;
 import java.util.Set;
@@ -40,10 +39,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.common.core.model.FieldNames;
-import org.icgc.dcc.etl2.core.function.ExtractFieldPair;
 import org.icgc.dcc.etl2.core.function.CombineFields;
+import org.icgc.dcc.etl2.core.function.ExtractFieldPair;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.TaskContext;
+import org.icgc.dcc.etl2.core.util.ObjectNodeRDDs;
 import org.icgc.dcc.etl2.job.orphan.model.Orphans;
 
 import scala.Tuple2;
@@ -192,7 +192,7 @@ public class OrphanResolver {
   private JavaRDD<ObjectNode> readFileType(FileType fileType) {
     val metaFileTypePath = taskContext.getPath(fileType);
 
-    return javaTextObjectNodeRDD(taskContext.getSparkContext(), metaFileTypePath);
+    return ObjectNodeRDDs.textObjectNodeFile(taskContext.getSparkContext(), metaFileTypePath);
   }
 
   private boolean isMissing(FileType fileType) {

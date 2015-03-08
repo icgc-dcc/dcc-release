@@ -114,14 +114,12 @@ h1, h2, h3 {
 	line-height: 1.1;
 	margin-bottom: 15px;
 	color: #000;
-	margin: 40px 0 10px;
 	font-weight: 200;
 }
 
 h1 {
-	margin: 0px 0 10px;
+	margin: 0px 0 0px;
 	font-size: 52px;
-  border-bottom: 3px solid #BB0F16;
   vertical-align: middle;
 }
 
@@ -132,6 +130,7 @@ h1 img {
 
 h2 {
 	font-size: 28px;
+  margin-top: 20px;
 }
 
 h3 {
@@ -187,9 +186,11 @@ ul li, ol li {
       <tr>
          <td></td>
          <td class="container" bgcolor="#FFFFFF">
-            <h1>
-            <img src="icgc-logo-no-text.png" th:src="'cid:logo'" /><b>ICGC DCC</b> - ETL2</h1>
-            <h2>Workflow Job <b th:text="${summary.type}">STAGE</b> finished in <span th:text="${summary.watch}">43s</span></h2>
+            <hr style="height: 1px; margin-top: 2px; background-color: #6E91B0; border: none;" />
+            <h1><img src="icgc-logo-no-text.png" th:src="'cid:logo'" /><b>ICGC DCC</b> - ETL2</h1>
+            <hr style="height: 3px; margin-top: 1px; background-color: #BB0F16; border: none;"/>
+            <hr style="height: 15px; margin-top: 10px; background-color: #32597D; border: none;"/>
+            <h2>Workflow Job <b th:text="${summary.type}">STAGE</b> finished in <span th:text="${summary.watch}">43 s</span></h2>
             <table>
                <tr>
                   <td>

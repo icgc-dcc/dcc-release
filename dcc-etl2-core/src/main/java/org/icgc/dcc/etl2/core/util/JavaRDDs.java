@@ -23,58 +23,66 @@ import lombok.experimental.UtilityClass;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.spark.api.java.JavaHadoopRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.etl2.core.function.ExtractPairValue;
-import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.hadoop.CombineTextInputFormat;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @UtilityClass
 public class JavaRDDs {
 
   @NonNull
-  public static JavaHadoopRDD<LongWritable, Text> javaHadoopRDD(JavaSparkContext sparkContext, String paths) {
-    return (JavaHadoopRDD<LongWritable, Text>) sparkContext.hadoopFile(
-        paths, TextInputFormat.class, LongWritable.class, Text.class);
+  public static JavaHadoopRDD<LongWritable, Text> textFile(JavaSparkContext sparkContext, String paths) {
+    return textFile(sparkContext, paths, createJobConf(sparkContext));
   }
 
   @NonNull
-  public static JavaRDD<String> javaTextFile(JavaSparkContext sparkContext, String paths, JobConf hadoopConf) {
-    TextInputFormat.setInputPaths(hadoopConf, new Path(paths));
-    val hadoopRDD = sparkContext.hadoopRDD(hadoopConf, TextInputFormat.class, LongWritable.class, Text.class,
+  public static JavaHadoopRDD<LongWritable, Text> textFile(JavaSparkContext sparkContext, String paths, JobConf conf) {
+    TextInputFormat.setInputPaths(conf, new Path(paths));
+    val hadoopRDD = sparkContext.hadoopRDD(conf, TextInputFormat.class, LongWritable.class, Text.class,
         sparkContext.defaultMinPartitions());
 
-    return hadoopRDD.map(tuple -> tuple._2.toString());
+    return (JavaHadoopRDD<LongWritable, Text>) hadoopRDD;
   }
 
   @NonNull
-  public static JavaRDD<ObjectNode> javaTextObjectNodeRDD(JavaSparkContext sparkContext, String path) {
-    return sparkContext
-        .textFile(path)
-        .map(new ParseObjectNode());
+  public static <K, V> JavaHadoopRDD<K, V> sequenceFile(JavaSparkContext sparkContext, String paths,
+      Class<K> keyClass, Class<V> valueClass) {
+    return sequenceFile(sparkContext, paths, keyClass, valueClass, createJobConf(sparkContext));
   }
 
   @NonNull
-  public static JavaRDD<ObjectNode> javaSequenceObjectNodeRDD(JavaSparkContext sparkContext, String path) {
-    return sparkContext
-        .sequenceFile(path, NullWritable.class, ObjectNode.class)
-        .map(new ExtractPairValue<NullWritable, ObjectNode>());
-  }
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  public static <K, V> JavaHadoopRDD<K, V> sequenceFile(JavaSparkContext sparkContext, String paths, Class<K> keyClass,
+      Class<V> valueClass, JobConf conf) {
+    SequenceFileInputFormat.setInputPaths(conf, paths);
 
-  @NonNull
-  public static JavaRDD<String> javaCombineTextFile(JavaSparkContext sparkContext, String paths, JobConf hadoopConf) {
-    CombineTextInputFormat.setInputPaths(hadoopConf, new Path(paths));
-    val hadoopRDD = sparkContext.hadoopRDD(hadoopConf, CombineTextInputFormat.class, LongWritable.class, Text.class,
+    val hadoopRDD = sparkContext.hadoopRDD(conf, SequenceFileInputFormat.class, keyClass, valueClass,
         sparkContext.defaultMinPartitions());
 
-    return hadoopRDD.map(tuple -> tuple._2.toString());
+    return (JavaHadoopRDD<K, V>) hadoopRDD;
+  }
+
+  @NonNull
+  public static JavaHadoopRDD<LongWritable, Text> combineTextFile(JavaSparkContext sparkContext, String paths) {
+    return combineTextFile(sparkContext, paths, createJobConf(sparkContext));
+  }
+
+  @NonNull
+  public static JavaHadoopRDD<LongWritable, Text> combineTextFile(JavaSparkContext sparkContext, String paths,
+      JobConf conf) {
+    CombineTextInputFormat.setInputPaths(conf, paths);
+    val hadoopRDD = sparkContext.hadoopRDD(conf, CombineTextInputFormat.class, LongWritable.class, Text.class,
+        sparkContext.defaultMinPartitions());
+
+    return (JavaHadoopRDD<LongWritable, Text>) hadoopRDD;
+  }
+
+  private static JobConf createJobConf(JavaSparkContext sparkContext) {
+    return new JobConf(sparkContext.hadoopConfiguration());
   }
 
 }

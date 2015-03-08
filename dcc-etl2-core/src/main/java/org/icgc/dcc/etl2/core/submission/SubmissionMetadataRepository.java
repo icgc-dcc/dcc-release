@@ -44,7 +44,7 @@ public class SubmissionMetadataRepository {
   public List<Schema> getSchemas() {
     val watch = createStarted();
     log.info("Getting dictionary...");
-    val dictionary = getDictionary();
+    val dictionary = resolveDictionary();
 
     val schemas = ImmutableList.<Schema> builder();
     for (val schema : dictionary.get("files")) {

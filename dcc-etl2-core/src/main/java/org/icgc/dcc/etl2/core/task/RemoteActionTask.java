@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.etl2.core.task;
 
-import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +25,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.etl2.core.util.Stopwatches;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 
 @Slf4j
@@ -37,11 +38,12 @@ public abstract class RemoteActionTask implements Task {
     val fsUri = taskContext.getFileSystem().getUri();
     val workingDir = taskContext.getJobContext().getWorkingDir();
 
+    // Note: Can't use val in lambda (e.g. watch, fileSystem), don't try!
     executeRemote(taskContext.getSparkContext(), ignore -> {
-      val watch = createStarted();
+      Stopwatch watch = Stopwatches.createStarted();
       log.info("Executing remote action...");
 
-      val fileSystem = FileSystem.get(fsUri, new Configuration());
+      FileSystem fileSystem = FileSystem.get(fsUri, new Configuration());
       executeRemoteAction(fileSystem, new Path(workingDir));
       log.info("Finished executing action in {}", watch);
 
@@ -50,8 +52,9 @@ public abstract class RemoteActionTask implements Task {
   }
 
   private void executeRemote(JavaSparkContext sparkContext, Function<Integer, Integer> function) {
-    val numSlices = 1;
-    val task = ImmutableList.of(1);
+    val one = 1;
+    val task = ImmutableList.of(one);
+    val numSlices = one;
 
     sparkContext.parallelize(task, numSlices).map(function).count();
   }

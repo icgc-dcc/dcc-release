@@ -27,9 +27,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.rdd.HadoopPartition;
 import org.icgc.dcc.etl2.core.function.FormatObjectNode;
-import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.util.JavaRDDs;
+import org.icgc.dcc.etl2.core.util.ObjectNodeRDDs;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -63,8 +62,7 @@ public abstract class GenericTask implements Task {
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf hadoopConf, FileType inputFileType) {
     val sparkContext = taskContext.getSparkContext();
 
-    return JavaRDDs.javaTextFile(sparkContext, taskContext.getPath(inputFileType), hadoopConf)
-        .map(new ParseObjectNode());
+    return ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), hadoopConf);
   }
 
   protected void writeOutput(TaskContext taskContext, JavaRDD<ObjectNode> processed, FileType outputFileType) {

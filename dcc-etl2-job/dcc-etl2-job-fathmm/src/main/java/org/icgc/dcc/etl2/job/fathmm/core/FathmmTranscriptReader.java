@@ -18,7 +18,6 @@
 package org.icgc.dcc.etl2.job.fathmm.core;
 
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
-import static org.icgc.dcc.etl2.core.util.JavaRDDs.javaTextObjectNodeRDD;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 
@@ -36,6 +35,7 @@ import org.icgc.dcc.etl2.core.function.PullUpField;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.util.ObjectNodeFilter.FilterMode;
+import org.icgc.dcc.etl2.core.util.ObjectNodeRDDs;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.BiMap;
@@ -93,7 +93,7 @@ public class FathmmTranscriptReader {
   private JavaRDD<ObjectNode> readFileType(FileType fileType) {
     val metaFileTypePath = taskContext.getPath(fileType);
 
-    return javaTextObjectNodeRDD(taskContext.getSparkContext(), metaFileTypePath);
+    return ObjectNodeRDDs.textObjectNodeFile(taskContext.getSparkContext(), metaFileTypePath);
   }
 
 }
