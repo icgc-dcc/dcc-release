@@ -36,6 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.JobContext;
+import org.icgc.dcc.etl2.core.util.Stopwatches;
+
+import com.google.common.base.Stopwatch;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -54,15 +57,19 @@ public class TaskExecutor {
   public void execute(@NonNull JobContext jobContext, Collection<? extends Task> tasks) {
     val watch = createStarted();
     try {
-      log.info("Starting '{}' tasks...", tasks.size());
-
+      log.info("Starting {} task(s)...", tasks.size());
       executeTasks(jobContext, tasks);
-
-      log.info("Finished '{}' tasks in {}", tasks.size(), watch);
+      log.info("Finished {} task(s) in {}", tasks.size(), watch);
     } catch (Throwable t) {
       log.error("Aborting task executions due to exception...", t);
       propagate(t);
     }
+  }
+
+  public void shutdown() {
+    log.info("Cancelling all tasks...");
+    sparkContext.cancelAllJobs();
+    log.info("Cancelled all tasks");
   }
 
   @SneakyThrows
@@ -73,12 +80,16 @@ public class TaskExecutor {
     int taskCount = 0;
     for (val task : tasks) {
       if (task.getType() == TaskType.FILE_TYPE_PROJECT) {
-        submitProjectTasks(service, jobContext, task);
+        for (val projectName : jobContext.getProjectNames()) {
+          submitTask(service, jobContext, new ProjectTask(task, projectName));
+
+          taskCount++;
+        }
       } else {
         submitTask(service, jobContext, task);
-      }
 
-      taskCount++;
+        taskCount++;
+      }
     }
 
     await(service, taskCount);
@@ -87,37 +98,26 @@ public class TaskExecutor {
     return taskCount;
   }
 
-  private void submitProjectTasks(CompletionService<String> service, JobContext jobContext, Task task) {
-    for (val projectName : jobContext.getProjectNames()) {
-      submitProjectTask(service, jobContext, task, projectName);
-    }
-  }
-
-  private void submitProjectTask(CompletionService<String> service, JobContext jobContext, Task projectTask,
-      String projectName) {
-    val projectTaskName = projectTask.getName() + ":" + projectName;
-
-    log.info("Submitting '{}' task...", projectTaskName);
-    val taskContext = createTaskContext(jobContext, Optional.of(projectName));
-
-    // Submit project task async
-    service.submit(() -> {
-      projectTask.execute(taskContext);
-
-      return projectTaskName;
-    });
-  }
-
   private void submitTask(CompletionService<String> service, JobContext jobContext, Task task) {
     log.info("Submitting '{}' task...", task.getName());
     val taskContext = createTaskContext(jobContext, Optional.empty());
 
     // Submit async
     service.submit(() -> {
+      Stopwatch watch = Stopwatches.createStarted();
+      prepareSubmission(task);
+
       task.execute(taskContext);
 
-      return task.getName();
+      return task.getName() + " - " + watch;
     });
+  }
+
+  private void prepareSubmission(Task task) {
+    val interupt = true;
+    val description = "Task of type " + task.getType();
+
+    sparkContext.setJobGroup(task.getName(), description, interupt);
   }
 
   private TaskContext createTaskContext(JobContext jobContext, Optional<String> projectName) {
@@ -134,6 +134,22 @@ public class TaskExecutor {
       val taskName = service.take().get();
       log.info("Finished processing task '{}'", taskName);
     }
+  }
+
+  private static class ProjectTask extends ForwardingTask {
+
+    private final String projectName;
+
+    private ProjectTask(Task delegate, @NonNull String projectName) {
+      super(delegate);
+      this.projectName = projectName;
+    }
+
+    @Override
+    public String getName() {
+      return Task.getName(super.getName(), projectName);
+    }
+
   }
 
 }

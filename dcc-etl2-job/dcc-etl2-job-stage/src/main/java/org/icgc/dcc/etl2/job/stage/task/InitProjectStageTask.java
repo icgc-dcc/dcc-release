@@ -24,9 +24,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.core.task.TaskContext;
+import org.icgc.dcc.etl2.core.task.TaskType;
 
 @Slf4j
 public class InitProjectStageTask implements Task {
+
+  @Override
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
+  }
 
   @Override
   @SneakyThrows

@@ -23,11 +23,15 @@ import lombok.experimental.UtilityClass;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.compress.SnappyCodec;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.spark.api.java.JavaHadoopRDD;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.hadoop.CombineTextInputFormat;
 
@@ -79,6 +83,28 @@ public class JavaRDDs {
         sparkContext.defaultMinPartitions());
 
     return (JavaHadoopRDD<LongWritable, Text>) hadoopRDD;
+  }
+
+  @NonNull
+  public static <K, V> void saveAsSequenceFile(JavaPairRDD<K, V> rdd, Class<K> keyClass, Class<V> valueClass,
+      String path) {
+    rdd.saveAsHadoopFile(path, keyClass, valueClass, SequenceFileOutputFormat.class, createJobConf(rdd));
+  }
+
+  @NonNull
+  public static <K, V> void saveAsSequenceFile(JavaPairRDD<K, V> rdd, Class<K> keyClass, Class<V> valueClass,
+      String path, JobConf conf) {
+
+    // Compress
+    SequenceFileOutputFormat.setCompressOutput(conf, true);
+    SequenceFileOutputFormat.setOutputCompressionType(conf, CompressionType.BLOCK);
+    SequenceFileOutputFormat.setOutputCompressorClass(conf, SnappyCodec.class);
+
+    rdd.saveAsHadoopFile(path, keyClass, valueClass, SequenceFileOutputFormat.class, conf);
+  }
+
+  private static JobConf createJobConf(JavaPairRDD<?, ?> rdd) {
+    return new JobConf(rdd.context().hadoopConfiguration());
   }
 
   private static JobConf createJobConf(JavaSparkContext sparkContext) {

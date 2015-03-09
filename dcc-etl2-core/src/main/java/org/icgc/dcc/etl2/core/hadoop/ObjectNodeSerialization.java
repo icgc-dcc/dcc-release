@@ -17,8 +17,6 @@
  */
 package org.icgc.dcc.etl2.core.hadoop;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -86,18 +84,14 @@ public class ObjectNodeSerialization implements Serialization<ObjectNode> {
 
   class ObjectNodeSerializer implements Serializer<ObjectNode> {
 
-    DataOutputStream out;
+    OutputStream out;
 
     ObjectNodeSerializer(Class<ObjectNode> clazz) {
     }
 
     @Override
     public void open(OutputStream out) throws IOException {
-      if (out instanceof DataOutputStream) {
-        this.out = (DataOutputStream) out;
-      } else {
-        this.out = new DataOutputStream(out);
-      }
+      this.out = out;
     }
 
     @Override
@@ -106,29 +100,21 @@ public class ObjectNodeSerialization implements Serialization<ObjectNode> {
     }
 
     @Override
-    public void serialize(ObjectNode ObjectNode) throws IOException {
-      byte[] bytes = WRITER.writeValueAsBytes(ObjectNode);
-      int length = bytes.length;
-      out.writeInt(length);
-      out.write(bytes);
-      out.flush();
+    public void serialize(ObjectNode objectNode) throws IOException {
+      WRITER.writeValue(out, objectNode);
     }
   }
 
   class ObjectNodeDeserializer implements Deserializer<ObjectNode> {
 
-    DataInputStream in;
+    InputStream in;
 
     ObjectNodeDeserializer(Class<ObjectNode> clazz) {
     }
 
     @Override
     public void open(InputStream in) throws IOException {
-      if (in instanceof DataInputStream) {
-        this.in = (DataInputStream) in;
-      } else {
-        this.in = new DataInputStream(in);
-      }
+      this.in = in;
     }
 
     @Override
@@ -138,11 +124,7 @@ public class ObjectNodeSerialization implements Serialization<ObjectNode> {
 
     @Override
     public ObjectNode deserialize(ObjectNode next) throws IOException {
-      int length = in.readInt();
-      byte[] bytes = new byte[length];
-      in.readFully(bytes);
-
-      return READER.readValue(bytes);
+      return READER.readValue(in);
     }
 
   }

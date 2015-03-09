@@ -15,39 +15,25 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.core.task;
+package org.icgc.dcc.etl2.core.submission;
 
-import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
-import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static com.google.common.collect.Iterables.toArray;
+import static org.icgc.dcc.common.core.util.Splitters.TAB;
 
-import java.io.Serializable;
+import org.apache.hadoop.fs.Path;
 
-import lombok.val;
+public class SubmissionFiles {
 
-import org.icgc.dcc.common.core.util.Joiners;
-
-public interface Task extends Serializable {
-
-  default String getName() {
-    return getName(this.getClass());
+  public static Path getProjectPath(Path projectFilePath) {
+    return projectFilePath.getParent();
   }
 
-  default TaskType getType() {
-    return TaskType.FILE_TYPE_PROJECT;
+  public static String getProjectName(Path projectPath) {
+    return projectPath.getName();
   }
 
-  void execute(TaskContext taskContext);
-
-  static String getName(Class<? extends Task> taskClass, String... info) {
-    val className = UPPER_CAMEL.to(LOWER_UNDERSCORE, taskClass.getClass().getSimpleName());
-
-    return getName(className, info);
-  }
-
-  static String getName(String baseName, String... info) {
-    val joiner = Joiners.COLON;
-
-    return joiner.join(baseName, joiner.join(info));
+  public static String[] parseLine(String line) {
+    return toArray(TAB.split(line), String.class);
   }
 
 }

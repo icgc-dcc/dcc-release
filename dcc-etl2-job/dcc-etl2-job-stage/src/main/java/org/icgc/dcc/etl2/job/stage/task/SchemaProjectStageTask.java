@@ -34,7 +34,7 @@ import org.icgc.dcc.etl2.core.task.TaskType;
 import org.icgc.dcc.etl2.core.util.JavaRDDs;
 import org.icgc.dcc.etl2.core.util.Partitions;
 import org.icgc.dcc.etl2.job.stage.function.ConvertValueType;
-import org.icgc.dcc.etl2.job.stage.function.ParseLine;
+import org.icgc.dcc.etl2.job.stage.function.ParseFileSplit;
 import org.icgc.dcc.etl2.job.stage.function.TranslateCodeListTerm;
 import org.icgc.dcc.etl2.job.stage.function.TrimValues;
 
@@ -74,7 +74,7 @@ public class SchemaProjectStageTask extends GenericTask {
     val projectPaths = formatProjectInputPaths();
 
     return JavaRDDs.combineTextFile(sparkContext, projectPaths)
-        .mapPartitionsWithInputSplit(new ParseLine(schema), false);
+        .mapPartitionsWithInputSplit(new ParseFileSplit(schema), false);
   }
 
   private JavaRDD<ObjectNode> transform(JavaRDD<ObjectNode> input) {

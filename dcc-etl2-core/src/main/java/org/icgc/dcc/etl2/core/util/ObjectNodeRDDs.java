@@ -18,6 +18,7 @@
 package org.icgc.dcc.etl2.core.util;
 
 import lombok.NonNull;
+import lombok.val;
 import lombok.experimental.UtilityClass;
 
 import org.apache.hadoop.io.NullWritable;
@@ -25,6 +26,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -64,6 +67,22 @@ public class ObjectNodeRDDs {
     return JavaRDDs.combineTextFile(sparkContext, paths, conf)
         .map(tuple -> tuple._2.toString())
         .map(new ParseObjectNode());
+  }
+
+  @NonNull
+  public static void saveAsSequenceFile(JavaRDD<ObjectNode> rdd, String path) {
+    val conf = createJobConf(rdd);
+    saveAsSequenceFile(rdd, path, conf);
+  }
+
+  @NonNull
+  public static void saveAsSequenceFile(JavaRDD<ObjectNode> rdd, String path, JobConf conf) {
+    val pairRdd = rdd.mapToPair(row -> new Tuple2<NullWritable, ObjectNode>(NullWritable.get(), row));
+    JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, ObjectNode.class, path, conf);
+  }
+
+  private static JobConf createJobConf(JavaRDD<?> rdd) {
+    return new JobConf(rdd.context().hadoopConfiguration());
   }
 
   private static JobConf createJobConf(JavaSparkContext sparkContext) {

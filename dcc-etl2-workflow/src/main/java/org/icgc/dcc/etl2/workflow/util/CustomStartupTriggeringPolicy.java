@@ -17,34 +17,28 @@
  */
 package org.icgc.dcc.etl2.workflow.util;
 
-import java.io.File;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import lombok.val;
 import ch.qos.logback.core.joran.spi.NoAutoStart;
+import ch.qos.logback.core.rolling.RolloverFailure;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP;
 
 /**
  * See http://stackoverflow.com/questions/2492022/how-to-roll-the-log-file-on-startup-in-logback
  */
-@NoAutoStart
-public class StartupTimeBasedTriggeringPolicy<E> extends SizeAndTimeBasedFNATP<E> {
 
-  private final AtomicBoolean trigger = new AtomicBoolean();
+@NoAutoStart
+public class CustomStartupTriggeringPolicy<E> extends SizeAndTimeBasedFNATP<E> {
 
   @Override
-  public boolean isTriggeringEvent(final File activeFile, final E event) {
-    if (trigger.compareAndSet(false, true) && activeFile.length() > 0) {
-      val maxFileSize = getMaxFileSize();
-      setMaxFileSize("1");
+  public void start() {
+    super.start();
+    nextCheck = 0L;
+    isTriggeringEvent(null, null);
 
-      super.isTriggeringEvent(activeFile, event);
-      setMaxFileSize(maxFileSize);
-
-      return true;
+    try {
+      tbrp.rollover();
+    } catch (RolloverFailure e) {
+      // Do nothing
     }
-
-    return super.isTriggeringEvent(activeFile, event);
   }
 
 }

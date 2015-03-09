@@ -17,37 +17,28 @@
  */
 package org.icgc.dcc.etl2.core.task;
 
-import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
-import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-import java.io.Serializable;
+@RequiredArgsConstructor
+public class ForwardingTask implements Task {
 
-import lombok.val;
+  @NonNull
+  protected final Task delegate;
 
-import org.icgc.dcc.common.core.util.Joiners;
-
-public interface Task extends Serializable {
-
-  default String getName() {
-    return getName(this.getClass());
+  @Override
+  public void execute(TaskContext taskContext) {
+    delegate.execute(taskContext);
   }
 
-  default TaskType getType() {
-    return TaskType.FILE_TYPE_PROJECT;
+  @Override
+  public String getName() {
+    return delegate.getName();
   }
 
-  void execute(TaskContext taskContext);
-
-  static String getName(Class<? extends Task> taskClass, String... info) {
-    val className = UPPER_CAMEL.to(LOWER_UNDERSCORE, taskClass.getClass().getSimpleName());
-
-    return getName(className, info);
-  }
-
-  static String getName(String baseName, String... info) {
-    val joiner = Joiners.COLON;
-
-    return joiner.join(baseName, joiner.join(info));
+  @Override
+  public TaskType getType() {
+    return delegate.getType();
   }
 
 }

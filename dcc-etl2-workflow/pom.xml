@@ -105,22 +105,23 @@
               <goal>repackage</goal>
             </goals>
             <configuration>
-              <!-- NOTE: This is pretty important. Basically what we do here is import a shaded jar. This is key because it avoids bundling Spark dependencies into the "job jar". We leverage Spring Boot 
-                nested jars in the workflow artifact. This is mainly to speed up build times and to prevent having to do Shade resource transformations on Akka files. -->
+              <!-- NOTE: This is pretty important. Basically what we do here is import a shaded jar. -->
+              <!-- This is key because it avoids bundling Spark dependencies into the "job jar". -->
+              <!-- We leverage Spring Boot nested jars in the workflow artifact. This is mainly to -->
+              <!-- speed up build times and to prevent having to do Shade resource transformations on Akka files. -->
               <requiresUnpack>
                 <dependency>
                   <groupId>${project.groupId}</groupId>
                   <artifactId>dcc-etl2-job-all</artifactId>
                 </dependency>
+
+                <!-- NOTE: This is required for the Spark Application UI on port 4040. Cannot serve from nested jars -->
+                <dependency>
+                  <groupId>org.apache.spark</groupId>
+                  <artifactId>spark-core_${scala-build.version}</artifactId>
+                </dependency>
               </requiresUnpack>
 
-              <excludes>
-                <!-- TODO: remove from dcc-etl pom -->
-                <exclude>
-                  <groupId>org.icgc.dcc</groupId>
-                  <artifactId>dcc-common-core</artifactId>
-                </exclude>
-              </excludes>
               <excludeGroupIds>ch.qos.logback,slf4j.org</excludeGroupIds>
             </configuration>
           </execution>

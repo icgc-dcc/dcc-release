@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.rdd.HadoopPartition;
-import org.icgc.dcc.etl2.core.function.FormatObjectNode;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.util.ObjectNodeRDDs;
 
@@ -72,9 +71,9 @@ public abstract class GenericTask implements Task {
   }
 
   protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath) {
-    val output = processed.map(new FormatObjectNode());
-
-    output.saveAsTextFile(outputPath);
+    // val output = processed.map(new FormatObjectNode());
+    // output.saveAsTextFile(outputPath);
+    ObjectNodeRDDs.saveAsSequenceFile(processed, outputPath);
   }
 
   @SneakyThrows
