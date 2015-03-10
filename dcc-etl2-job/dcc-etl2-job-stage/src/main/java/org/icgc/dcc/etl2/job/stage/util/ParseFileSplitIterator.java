@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.icgc.dcc.common.core.model.FieldNames;
-import org.icgc.dcc.etl2.core.submission.Field;
+import org.icgc.dcc.etl2.core.submission.SubmissionFileField;
 import org.icgc.dcc.etl2.core.submission.SubmissionFiles;
 
 import scala.Tuple2;
@@ -57,7 +57,7 @@ public class ParseFileSplitIterator implements Iterator<ObjectNode> {
   /**
    * Metadata
    */
-  private final List<Field> fields;
+  private final List<SubmissionFileField> fields;
   private final String fileSplitName;
   private final long fileSplitLength;
   private final String projectName;

@@ -27,7 +27,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.function.TranslateMissingCode;
 import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.submission.Schema;
+import org.icgc.dcc.etl2.core.submission.SubmissionFileSchema;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.task.TaskType;
@@ -40,16 +40,16 @@ import org.icgc.dcc.etl2.job.stage.function.TrimValues;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class SchemaProjectStageTask extends GenericTask {
+public class FileSchemaProjectStageTask extends GenericTask {
 
   /**
    * Configuration.
    */
-  private final Schema schema;
+  private final SubmissionFileSchema schema;
   private final String projectName;
   private final List<Path> schemaProjectPaths;
 
-  public SchemaProjectStageTask(Schema schema, String projectName, List<Path> schemaProjectPaths) {
+  public FileSchemaProjectStageTask(SubmissionFileSchema schema, String projectName, List<Path> schemaProjectPaths) {
     super(schema.getName() + ":" + projectName);
     this.schema = schema;
     this.projectName = projectName;

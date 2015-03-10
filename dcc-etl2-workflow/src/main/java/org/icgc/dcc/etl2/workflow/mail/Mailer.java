@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.etl2.workflow.mail;
 
+import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.util.MimeTypeUtils.IMAGE_PNG_VALUE;
@@ -36,6 +38,7 @@ import org.icgc.dcc.etl2.core.job.JobSummary;
 import org.icgc.dcc.etl2.workflow.config.WorkflowProperties.MailProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -53,8 +56,9 @@ public class Mailer {
   /**
    * Constants.
    */
+  private static final String SUBJECT_PREFIX = "DCC Workflow - ";
   private static final String JOB_SUMMARY_TEMPLATE_NAME = "job-summary";
-  private static final ClassPathResource ICGC_LOGO = new ClassPathResource("/templates/icgc-logo-no-text.png");
+  private static final Resource ICGC_LOGO = new ClassPathResource("/templates/icgc-logo-no-text.png");
 
   /**
    * Dependencies.
@@ -72,36 +76,31 @@ public class Mailer {
 
   @SneakyThrows
   private void send(String templateName, Map<String, ?> variables) {
-    val context = createContext(variables);
-    val text = renderText(templateName, context);
-    val mimeMessage = createMimeMessage(templateName, text);
+    val body = createBody(templateName, variables);
+    val subject = createSubject(templateName);
+    val mimeMessage = createMimeMessage(subject, body);
 
-    send(mimeMessage);
-  }
-
-  private String renderText(String templateName, Context context) {
-    val text = templateEngine.process(templateName, context);
-
-    return text;
-  }
-
-  @SneakyThrows
-  private void send(MimeMessage mimeMessage) {
     log.info("Sending...");
     mailSender.send(mimeMessage);
     log.info("Sent: '{}'", mimeMessage.getSubject());
   }
 
-  private Context createContext(Map<String, ?> variables) {
+  private String createSubject(String templateName) {
+    val jobDescription = LOWER_HYPHEN.to(UPPER_UNDERSCORE, templateName).replaceAll("-", " ");
+
+    return SUBJECT_PREFIX + jobDescription;
+  }
+
+  private String createBody(String templateName, Map<String, ?> variables) {
     val context = new Context();
     context.setVariables(variables);
 
-    return context;
+    return templateEngine.process(templateName, context);
   }
 
-  private MimeMessage createMimeMessage(String templateName, String text) throws MessagingException {
+  private MimeMessage createMimeMessage(String subject, String text) throws MessagingException {
     val message = new MimeMessageHelper(mailSender.createMimeMessage(), true, UTF_8.name());
-    message.setSubject("DCC Workflow - " + templateName);
+    message.setSubject(subject);
     message.setText(text, true);
     message.setTo(mail.getRecipients());
     message.addInline("logo", ICGC_LOGO, IMAGE_PNG_VALUE);

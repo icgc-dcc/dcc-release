@@ -17,72 +17,71 @@
  */
 package org.icgc.dcc.etl2.workflow.config;
 
-import static scala.collection.JavaConversions.asScalaMap;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_SERIALIZATIONS_KEY;
 
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.etl2.core.job.Job;
+import java.io.IOException;
+
+import lombok.val;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.io.serializer.WritableSerialization;
+import org.icgc.dcc.etl2.core.hadoop.ObjectNodeSerialization;
 import org.icgc.dcc.etl2.job.export.config.HBaseProperties;
 import org.icgc.dcc.etl2.workflow.config.WorkflowProperties.HadoopProperties;
-import org.icgc.dcc.etl2.workflow.config.WorkflowProperties.SparkProperties;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
 
 /**
- * Spark configuration.
+ * Hadoop configuration.
  * <p>
  * See annotation documentation for details.
  */
-@Slf4j
-@Configuration
-public class SparkConfig {
+@Lazy
+@org.springframework.context.annotation.Configuration
+public class HadoopConfig {
 
   /**
    * Dependencies.
    */
+  @Value("#{sparkContext.hadoopConfiguration()}")
+  Configuration conf;
   @Autowired
-  private SparkProperties spark;
+  HadoopProperties hadoop;
   @Autowired
-  private HadoopProperties hadoop;
-  @Autowired
-  private HBaseProperties hbase;
+  HBaseProperties hbase;
 
   @Bean
-  public SparkConf sparkConf() {
-    log.info("Creating SparkConf with spark properties '{}'", spark);
-    return new SparkConf()
-        .setAppName("dcc-etl-workflow")
-        .setMaster(spark.getMaster())
-        .setAll(asScalaMap(spark.getProperties()));
+  @Primary
+  public Configuration hadoopConf() {
+    for (val entry : hadoop.getProperties().entrySet()) {
+      conf.set(entry.getKey(), entry.getValue());
+    }
+
+    // Custom serialization needed for outputs / inputs
+    conf.set(IO_SERIALIZATIONS_KEY,
+        WritableSerialization.class.getName() + "," + ObjectNodeSerialization.class.getName());
+
+    return conf;
   }
 
-  @Bean(destroyMethod = "stop")
-  public JavaSparkContext sparkContext() {
-    log.info("Creating JavaSparkContext with hadoop properties '{}'", hadoop);
-    val sparkContext = new JavaSparkContext(sparkConf());
+  @Bean
+  public Configuration hbaseConf() {
+    val config = HBaseConfiguration.create(hadoopConf());
+    for (val entry : hbase.getProperties().entrySet()) {
+      config.set(entry.getKey(), entry.getValue());
+    }
 
-    val jobJar = getJobJar();
-    log.info("Adding job jar: {}", jobJar);
-    sparkContext.addJar(jobJar);
-
-    return sparkContext;
+    return config;
   }
 
-  private String getJobJar() {
-    val jobJarAnchor = Job.class;
-    val path = getPath(jobJarAnchor);
-
-    return isExpoded(path) ? getPath(getClass()) : path;
+  @Bean
+  public FileSystem fileSystem() throws IOException {
+    return FileSystem.get(hadoopConf());
   }
 
-  private static boolean isExpoded(String path) {
-    return path.contains("classes");
-  }
-
-  private static String getPath(Class<?> type) {
-    return type.getProtectionDomain().getCodeSource().getLocation().getPath();
-  }
 }

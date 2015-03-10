@@ -114,12 +114,6 @@
                   <resource>META-INF/spring.factories</resource>
                 </transformer>
               </transformers>
-              <!-- -->
-              <!-- NOTE: May actually need this if we run into issues due to refactoring. -->
-              <!-- -->
-
-              <!-- <relocations> <relocation> <pattern>com.google.common</pattern> <shadedPattern>org.icgc.dcc.shaded.google.common</shadedPattern> </relocation> </relocations> -->
-
               <artifactSet combine.children="append">
                 <excludes>
                   <exclude>org.mockito:*</exclude>
@@ -129,9 +123,17 @@
                   <exclude>org.apache.zookeeper:*</exclude>
                   <exclude>org.apache.curator:*</exclude>
                   <exclude>com.jcraft:*</exclude>
+                  <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</exclude>
                 </excludes>
               </artifactSet>
             </configuration>
+              
+              <!-- -->
+              <!-- NOTE: May actually need this if we run into issues due to refactoring. -->
+              <!-- -->
+
+              <!-- <relocations> <relocation> <pattern>com.google.common</pattern> <shadedPattern>org.icgc.dcc.shaded.google.common</shadedPattern> </relocation> </relocations> -->
+
           </execution>
         </executions>
       </plugin>

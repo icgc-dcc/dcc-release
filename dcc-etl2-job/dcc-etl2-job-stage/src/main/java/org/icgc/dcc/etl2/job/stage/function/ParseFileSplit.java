@@ -32,7 +32,7 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.lib.CombineFileSplit;
 import org.apache.spark.api.java.function.Function2;
-import org.icgc.dcc.etl2.core.submission.Schema;
+import org.icgc.dcc.etl2.core.submission.SubmissionFileSchema;
 import org.icgc.dcc.etl2.core.submission.SubmissionFiles;
 import org.icgc.dcc.etl2.job.stage.util.ParseFileSplitIterator;
 
@@ -48,7 +48,7 @@ public class ParseFileSplit implements
    * Metadata.
    */
   @NonNull
-  private final Schema schema;
+  private final SubmissionFileSchema schema;
 
   @Override
   public Iterator<ObjectNode> call(InputSplit split, Iterator<Tuple2<LongWritable, Text>> iterator) throws Exception {

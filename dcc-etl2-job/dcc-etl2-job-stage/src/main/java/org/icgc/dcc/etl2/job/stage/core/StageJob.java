@@ -28,10 +28,10 @@ import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.submission.Schemas;
+import org.icgc.dcc.etl2.core.submission.SubmissionFileSchemas;
 import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.job.stage.task.InitProjectStageTask;
-import org.icgc.dcc.etl2.job.stage.task.SchemaProjectStageTask;
+import org.icgc.dcc.etl2.job.stage.task.FileSchemaProjectStageTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -47,7 +47,7 @@ public class StageJob implements Job {
    * Metadata.
    */
   @NonNull
-  private final Schemas schemas;
+  private final SubmissionFileSchemas schemas;
 
   @Override
   public JobType getType() {
@@ -80,7 +80,7 @@ public class StageJob implements Job {
       for (val entry : schemaPaths.entrySet()) {
         val projectName = entry.getKey();
         val schemaProjectPaths = entry.getValue();
-        val schemaProjectTask = new SchemaProjectStageTask(schema, projectName, schemaProjectPaths);
+        val schemaProjectTask = new FileSchemaProjectStageTask(schema, projectName, schemaProjectPaths);
 
         log.info("[{}] Submitting task '{}'...", taskCount++, schemaProjectTask.getName());
         schemaProjectTasks.add(schemaProjectTask);

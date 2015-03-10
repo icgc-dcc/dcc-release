@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.etl2.core.util;
 
-
 /**
  * 
  */

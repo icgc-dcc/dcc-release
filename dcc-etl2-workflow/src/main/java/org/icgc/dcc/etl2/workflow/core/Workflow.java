@@ -18,7 +18,7 @@ import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobSummary;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.core.submission.SubmissionFileSystem;
-import org.icgc.dcc.etl2.core.submission.SubmissionMetadataRepository;
+import org.icgc.dcc.etl2.core.submission.SubmissionMetadataService;
 import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.workflow.mail.Mailer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ public class Workflow {
    * Submission dependencies.
    */
   @NonNull
-  private final SubmissionMetadataRepository submissionMetadata;
+  private final SubmissionMetadataService submissionMetadata;
   @NonNull
   private final SubmissionFileSystem submissionFileSystem;
   @NonNull
@@ -53,7 +53,7 @@ public class Workflow {
     val watch = createStarted();
     log.info("Executing workflow...");
 
-    val submissionFiles = resolveFiles(workflowContext);
+    val submissionFiles = resolveSubmissionFiles(workflowContext);
 
     executeJobs(submissionFiles, workflowContext);
 
@@ -91,10 +91,10 @@ public class Workflow {
     }
   }
 
-  private Table<String, String, List<Path>> resolveFiles(WorkflowContext workflowContext) {
-    val schemas = submissionMetadata.getSchemas();
+  private Table<String, String, List<Path>> resolveSubmissionFiles(WorkflowContext workflowContext) {
+    val metadata = submissionMetadata.getMetadata();
 
-    return submissionFileSystem.getFiles(workflowContext.getReleaseDir(), workflowContext.getProjectNames(), schemas);
+    return submissionFileSystem.getFiles(workflowContext.getReleaseDir(), workflowContext.getProjectNames(), metadata);
   }
 
   private JobContext createJobContext(JobType type, WorkflowContext workflowContext,

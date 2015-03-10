@@ -20,7 +20,7 @@ import com.google.common.collect.Table;
 import com.google.common.collect.TreeBasedTable;
 
 /**
- * Service for interacting with the DCC submission system.
+ * Service for interacting with the DCC submission file system.
  */
 @Slf4j
 @Service
@@ -35,7 +35,8 @@ public class SubmissionFileSystem {
 
   @NonNull
   @SneakyThrows
-  public Table<String, String, List<Path>> getFiles(String releaseDir, List<String> projectNames, List<Schema> schemas) {
+  public Table<String, String, List<Path>> getFiles(String releaseDir, List<String> projectNames,
+      List<SubmissionFileSchema> metadata) {
     val watch = createStarted();
     log.info("Resolving submission files...");
 
@@ -46,7 +47,7 @@ public class SubmissionFileSystem {
       val status = iterator.next();
       val path = status.getPath();
 
-      for (val schema : schemas) {
+      for (val schema : metadata) {
         val name = path.getName();
         if (name.matches(schema.getPattern())) {
           addFile(projectNames, schema, path, table);
@@ -58,7 +59,8 @@ public class SubmissionFileSystem {
     return table;
   }
 
-  private void addFile(List<String> projectNames, Schema schema, Path path, Table<String, String, List<Path>> files) {
+  private void addFile(List<String> projectNames, SubmissionFileSchema schema, Path path,
+      Table<String, String, List<Path>> files) {
     val schemaName = schema.getName();
     val projectName = path.getParent().getName();
     if (isTestProject(projectName)) {

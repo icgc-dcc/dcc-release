@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.core.submission.Schema;
+import org.icgc.dcc.etl2.core.submission.SubmissionFileSchema;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
@@ -35,7 +35,7 @@ public class TranslateCodeListTerm implements Function<ObjectNode, ObjectNode> {
   @NonNull
   private final Map<String, Map<String, String>> fieldTerms = Maps.newHashMap();
 
-  public TranslateCodeListTerm(@NonNull Schema schema) {
+  public TranslateCodeListTerm(@NonNull SubmissionFileSchema schema) {
     for (val field : schema.getFields()) {
       if (field.getTerms() != null) {
         fieldTerms.put(field.getName(), field.getTerms());

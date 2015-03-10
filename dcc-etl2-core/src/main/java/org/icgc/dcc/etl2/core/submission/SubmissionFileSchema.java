@@ -6,10 +6,10 @@ import java.util.List;
 import lombok.Value;
 
 @Value
-public class Schema implements Serializable {
+public class SubmissionFileSchema implements Serializable {
 
   String name;
   String pattern;
-  List<Field> fields;
+  List<SubmissionFileField> fields;
 
 }

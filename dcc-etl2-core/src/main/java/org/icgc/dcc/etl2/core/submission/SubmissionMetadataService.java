@@ -7,15 +7,17 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.common.core.model.ValueType;
-import org.icgc.dcc.common.core.util.resolver.RestfulCodeListsResolver;
-import org.icgc.dcc.common.core.util.resolver.RestfulDictionaryResolver;
-import org.springframework.beans.factory.annotation.Value;
+import org.icgc.dcc.common.core.util.resolver.Resolver.CodeListsResolver;
+import org.icgc.dcc.common.core.util.resolver.Resolver.DictionaryResolver;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,29 +26,35 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+/**
+ * Service for interacting with the DCC submission metada system.
+ */
 @Slf4j
+@Lazy
 @Service
-@Setter
-public class SubmissionMetadataRepository {
+@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
+public class SubmissionMetadataService {
 
   /**
-   * Configuration.
+   * Dependencies.
    */
-  @Value("${dcc.submission.url}")
-  private String submissionUrl;
+  @NonNull
+  private final DictionaryResolver dictionaryResolver;
+  @NonNull
+  private final CodeListsResolver codeListsResolver;
 
   @Getter(value = PRIVATE, lazy = true)
   private final ObjectNode dictionary = resolveDictionary();
   @Getter(value = PRIVATE, lazy = true)
   private final List<ObjectNode> codeLists = resolveCodeLists();
 
-  @Cacheable("schemas")
-  public List<Schema> getSchemas() {
+  @Cacheable("metadata")
+  public List<SubmissionFileSchema> getMetadata() {
     val watch = createStarted();
     log.info("Getting dictionary...");
-    val dictionary = resolveDictionary();
+    val dictionary = getDictionary();
 
-    val schemas = ImmutableList.<Schema> builder();
+    val schemas = ImmutableList.<SubmissionFileSchema> builder();
     for (val schema : dictionary.get("files")) {
       schemas.add(getSchema(schema));
     }
@@ -55,17 +63,17 @@ public class SubmissionMetadataRepository {
     return schemas.build();
   }
 
-  private Schema getSchema(JsonNode schema) {
+  private SubmissionFileSchema getSchema(JsonNode schema) {
     val name = schema.get("name").asText();
     val pattern = schema.get("pattern").asText();
     val fields = getFields(schema);
 
-    log.info("Schema '{}' ({}): {}", new Object[] { name, pattern, fields });
-    return new Schema(name, pattern, fields);
+    log.info("SubmissionFileSchema '{}' ({}): {}", new Object[] { name, pattern, fields });
+    return new SubmissionFileSchema(name, pattern, fields);
   }
 
-  private List<Field> getFields(JsonNode schema) {
-    val fields = ImmutableList.<Field> builder();
+  private List<SubmissionFileField> getFields(JsonNode schema) {
+    val fields = ImmutableList.<SubmissionFileField> builder();
     for (val field : schema.withArray("fields")) {
       fields.add(getField(field));
     }
@@ -73,7 +81,7 @@ public class SubmissionMetadataRepository {
     return fields.build();
   }
 
-  private Field getField(JsonNode field) {
+  private SubmissionFileField getField(JsonNode field) {
     val name = field.get("name").asText();
     val type = ValueType.valueOf(field.get("valueType").asText());
     val restrictions = field.get("restrictions");
@@ -83,7 +91,7 @@ public class SubmissionMetadataRepository {
     val inconsistent = terms != null && type != ValueType.TEXT;
     val effectiveType = inconsistent ? ValueType.TEXT : type;
 
-    return new Field(name, effectiveType, terms);
+    return new SubmissionFileField(name, effectiveType, terms);
   }
 
   private Map<String, String> getFieldTerms(JsonNode restrictions) {
@@ -121,9 +129,8 @@ public class SubmissionMetadataRepository {
 
   private ObjectNode resolveDictionary() {
     val watch = createStarted();
-    log.info("Resolving dictionary from '{}'...", submissionUrl);
-    val resolver = new RestfulDictionaryResolver(submissionUrl);
-    val dictionary = resolver.get();
+    log.info("Resolving dictionary...");
+    val dictionary = dictionaryResolver.get();
     log.info("Finished resolving dictionary in {}", watch);
 
     return dictionary;
@@ -131,9 +138,8 @@ public class SubmissionMetadataRepository {
 
   private List<ObjectNode> resolveCodeLists() {
     val watch = createStarted();
-    log.info("Resolving code lists from '{}'...", submissionUrl);
-    val resolver = new RestfulCodeListsResolver(submissionUrl);
-    val array = resolver.get();
+    log.info("Resolving code lists...");
+    val array = codeListsResolver.get();
     log.info("Finished resolving code lists in {}", watch);
 
     val codeLists = Lists.<ObjectNode> newArrayList();

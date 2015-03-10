@@ -22,13 +22,10 @@ import java.util.concurrent.Executors;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.etl2.core.submission.Schemas;
-import org.icgc.dcc.etl2.core.submission.SubmissionMetadataRepository;
 import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -54,12 +51,6 @@ public class WorkflowConfig {
   @Bean
   public TaskExecutor taskExecutor(ExecutorService executor, JavaSparkContext sparkContext, FileSystem fileSystem) {
     return new TaskExecutor(executor, sparkContext, fileSystem);
-  }
-
-  @Lazy
-  @Bean
-  public Schemas schemas(SubmissionMetadataRepository repository) {
-    return new Schemas(repository.getSchemas());
   }
 
 }

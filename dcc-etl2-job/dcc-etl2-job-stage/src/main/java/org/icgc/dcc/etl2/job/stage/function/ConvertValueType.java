@@ -26,7 +26,7 @@ import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.ValueType;
-import org.icgc.dcc.etl2.core.submission.Schema;
+import org.icgc.dcc.etl2.core.submission.SubmissionFileSchema;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
@@ -37,7 +37,7 @@ public class ConvertValueType implements Function<ObjectNode, ObjectNode>, Seria
   @NonNull
   private final Map<String, ValueType> fieldTypes = Maps.newHashMap();
 
-  public ConvertValueType(@NonNull Schema schema) {
+  public ConvertValueType(@NonNull SubmissionFileSchema schema) {
     for (val field : schema.getFields()) {
       if (field.getTerms() != null) {
         fieldTypes.put(field.getName(), field.getType());

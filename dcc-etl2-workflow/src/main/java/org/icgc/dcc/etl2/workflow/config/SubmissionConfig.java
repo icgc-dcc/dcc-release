@@ -17,72 +17,45 @@
  */
 package org.icgc.dcc.etl2.workflow.config;
 
-import static scala.collection.JavaConversions.asScalaMap;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.etl2.core.job.Job;
-import org.icgc.dcc.etl2.job.export.config.HBaseProperties;
-import org.icgc.dcc.etl2.workflow.config.WorkflowProperties.HadoopProperties;
-import org.icgc.dcc.etl2.workflow.config.WorkflowProperties.SparkProperties;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.icgc.dcc.common.core.util.resolver.Resolver.CodeListsResolver;
+import org.icgc.dcc.common.core.util.resolver.Resolver.DictionaryResolver;
+import org.icgc.dcc.common.core.util.resolver.RestfulCodeListsResolver;
+import org.icgc.dcc.common.core.util.resolver.RestfulDictionaryResolver;
+import org.icgc.dcc.etl2.core.submission.SubmissionFileSchemas;
+import org.icgc.dcc.etl2.core.submission.SubmissionMetadataService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 /**
- * Spark configuration.
- * <p>
- * See annotation documentation for details.
+ * Submission system configuration.
  */
-@Slf4j
+@Lazy
 @Configuration
-public class SparkConfig {
+public class SubmissionConfig {
 
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  private SparkProperties spark;
-  @Autowired
-  private HadoopProperties hadoop;
-  @Autowired
-  private HBaseProperties hbase;
+  @Value("${dcc.submission.url}")
+  private String submissionUrl;
 
   @Bean
-  public SparkConf sparkConf() {
-    log.info("Creating SparkConf with spark properties '{}'", spark);
-    return new SparkConf()
-        .setAppName("dcc-etl-workflow")
-        .setMaster(spark.getMaster())
-        .setAll(asScalaMap(spark.getProperties()));
+  public SubmissionFileSchemas submissionFileSchemas() {
+    return new SubmissionFileSchemas(submissionMetadataService().getMetadata());
   }
 
-  @Bean(destroyMethod = "stop")
-  public JavaSparkContext sparkContext() {
-    log.info("Creating JavaSparkContext with hadoop properties '{}'", hadoop);
-    val sparkContext = new JavaSparkContext(sparkConf());
-
-    val jobJar = getJobJar();
-    log.info("Adding job jar: {}", jobJar);
-    sparkContext.addJar(jobJar);
-
-    return sparkContext;
+  @Bean
+  public SubmissionMetadataService submissionMetadataService() {
+    return new SubmissionMetadataService(dictionaryResolver(), codeListsResolver());
   }
 
-  private String getJobJar() {
-    val jobJarAnchor = Job.class;
-    val path = getPath(jobJarAnchor);
-
-    return isExpoded(path) ? getPath(getClass()) : path;
+  @Bean
+  public DictionaryResolver dictionaryResolver() {
+    return new RestfulDictionaryResolver(submissionUrl);
   }
 
-  private static boolean isExpoded(String path) {
-    return path.contains("classes");
+  @Bean
+  public CodeListsResolver codeListsResolver() {
+    return new RestfulCodeListsResolver(submissionUrl);
   }
 
-  private static String getPath(Class<?> type) {
-    return type.getProtectionDomain().getCodeSource().getLocation().getPath();
-  }
 }

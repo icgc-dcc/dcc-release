@@ -27,14 +27,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.core.submission.Field;
+import org.icgc.dcc.etl2.core.submission.SubmissionFileField;
 
 import com.google.common.collect.Maps;
 
 @RequiredArgsConstructor
 public class ParseMap implements Function<String, Map<String, String>> {
 
-  private final List<Field> fields;
+  private final List<SubmissionFileField> fields;
 
   @Override
   public Map<String, String> call(String row) throws Exception {

@@ -15,51 +15,57 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.imports.util;
+package org.icgc.dcc.etl2.job.stage.core;
 
-import static lombok.AccessLevel.PRIVATE;
-import lombok.NoArgsConstructor;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+
 import lombok.val;
 
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.job.imports.hadoop.MongoAdminInputFormat;
-import org.icgc.dcc.etl2.job.imports.hadoop.MongoWritables;
+import org.icgc.dcc.common.core.util.resolver.RestfulCodeListsResolver;
+import org.icgc.dcc.common.core.util.resolver.RestfulDictionaryResolver;
+import org.icgc.dcc.etl2.core.submission.SubmissionFileSchema;
+import org.icgc.dcc.etl2.core.submission.SubmissionFileSchemas;
+import org.icgc.dcc.etl2.core.submission.SubmissionMetadataService;
+import org.icgc.dcc.etl2.test.job.AbstractJobTest;
+import org.junit.Before;
+import org.junit.Test;
 
-import scala.Tuple2;
+public class StageJobTest extends AbstractJobTest {
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mongodb.hadoop.MongoConfig;
-import com.mongodb.hadoop.io.BSONWritable;
+  /**
+   * Class under test.
+   */
+  StageJob job;
 
-@NoArgsConstructor(access = PRIVATE)
-public final class MongoJavaRDDs {
-
-  public static JavaRDD<ObjectNode> javaMongoCollection(JavaSparkContext sparkContext, MongoConfig mongoConfig,
-      JobConf hadoopConf) {
-    // See https://groups.google.com/d/topic/cascading-user/ngLidsZQjIU/discussion
-    FileInputFormat.addInputPaths(hadoopConf, mongoConfig.getInputURI().toString());
-
-    // See https://jira.mongodb.org/browse/HADOOP-62
-    hadoopConf.setInputFormat(MongoAdminInputFormat.class);
-
-    val hadoopRDD =
-        sparkContext.hadoopRDD(hadoopConf, MongoAdminInputFormat.class, BSONWritable.class, BSONWritable.class,
-            sparkContext.defaultMinPartitions());
-
-    return hadoopRDD.map(new ConvertBSONWritableValue());
+  @Override
+  @Before
+  public void setUp() {
+    super.setUp();
+    this.job = new StageJob(getSchemas());
   }
 
-  private static class ConvertBSONWritableValue implements Function<Tuple2<BSONWritable, BSONWritable>, ObjectNode> {
+  @Test
+  public void testExecute() {
+    val jobContext = createJobContext(job.getType());
+    job.execute(jobContext);
 
-    @Override
-    public ObjectNode call(Tuple2<BSONWritable, BSONWritable> tuple) throws Exception {
-      return MongoWritables.convertBSONWritable(tuple._2);
-    }
+    val results = produces("ssm_m");
 
+    assertThat(results).hasSize(1);
+    assertThat(results.get(0).get("gene")).isNotNull();
+  }
+
+  private SubmissionFileSchemas getSchemas() {
+    return new SubmissionFileSchemas(getMetadata());
+  }
+
+  private List<SubmissionFileSchema> getMetadata() {
+    return new SubmissionMetadataService(
+        new RestfulDictionaryResolver(),
+        new RestfulCodeListsResolver())
+        .getMetadata();
   }
 
 }
