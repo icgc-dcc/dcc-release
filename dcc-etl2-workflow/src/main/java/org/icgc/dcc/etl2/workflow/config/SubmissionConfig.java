@@ -23,6 +23,7 @@ import org.icgc.dcc.common.core.util.resolver.RestfulCodeListsResolver;
 import org.icgc.dcc.common.core.util.resolver.RestfulDictionaryResolver;
 import org.icgc.dcc.etl2.core.submission.SubmissionFileSchemas;
 import org.icgc.dcc.etl2.core.submission.SubmissionMetadataService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,8 +39,11 @@ public class SubmissionConfig {
   @Value("${dcc.submission.url}")
   String submissionUrl;
 
+  @Autowired
+  SubmissionMetadataService submissionMetadataService;
+
   @Bean
-  public SubmissionFileSchemas submissionFileSchemas(SubmissionMetadataService submissionMetadataService) {
+  public SubmissionFileSchemas submissionFileSchemas() {
     return new SubmissionFileSchemas(submissionMetadataService.getMetadata());
   }
 

@@ -1,6 +1,7 @@
 package org.icgc.dcc.etl2.core.submission;
 
 import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 
 import java.util.List;
@@ -54,12 +55,19 @@ public class SubmissionMetadataService {
     log.info("Getting dictionary...");
     val dictionary = getDictionary();
 
+    log.info("Getting schemas...");
+    val schemas = getSchemas(dictionary);
+
+    log.info("Finished getting {} submission schemas in {}", formatCount(schemas), watch);
+    return schemas;
+  }
+
+  private List<SubmissionFileSchema> getSchemas(ObjectNode dictionary) {
     val schemas = ImmutableList.<SubmissionFileSchema> builder();
     for (val schema : dictionary.get("files")) {
       schemas.add(getSchema(schema));
     }
 
-    log.info("Finished getting metadata in {}", watch);
     return schemas.build();
   }
 
@@ -68,7 +76,6 @@ public class SubmissionMetadataService {
     val pattern = schema.get("pattern").asText();
     val fields = getFields(schema);
 
-    log.info("SubmissionFileSchema '{}' ({}): {}", new Object[] { name, pattern, fields });
     return new SubmissionFileSchema(name, pattern, fields);
   }
 
@@ -140,7 +147,7 @@ public class SubmissionMetadataService {
     val watch = createStarted();
     log.info("Resolving code lists...");
     val array = codeListsResolver.get();
-    log.info("Finished resolving code lists in {}", watch);
+    log.info("Finished resolving {} code lists in {}", formatCount(array), watch);
 
     val codeLists = Lists.<ObjectNode> newArrayList();
     for (val element : array) {

@@ -20,16 +20,12 @@ package org.icgc.dcc.etl2.workflow;
 
 import static com.google.common.base.Strings.repeat;
 import static java.lang.System.err;
-import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.etl2.workflow.cli.Options;
 import org.icgc.dcc.etl2.workflow.core.Workflow;
 import org.icgc.dcc.etl2.workflow.core.WorkflowContext;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ComponentScan;
@@ -42,7 +38,7 @@ import com.beust.jcommander.ParameterException;
 @Configuration
 @EnableAutoConfiguration
 @ComponentScan("org.icgc.dcc.etl2")
-public class WorkflowMain implements CommandLineRunner, ExitCodeGenerator {
+public class WorkflowMain {
 
   /**
    * Constants.
@@ -51,46 +47,30 @@ public class WorkflowMain implements CommandLineRunner, ExitCodeGenerator {
   public static final int SUCCESS_STATUS_CODE = 0;
   public static final int FAILURE_STATUS_CODE = 1;
 
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  private Workflow workflow;
-
-  /**
-   * State.
-   */
-  @Getter
-  private int exitCode;
-
   public static void main(String[] args) {
-    new SpringApplicationBuilder(WorkflowMain.class).web(false).run(args);
-  }
-
-  @Override
-  public void run(String... args) throws Exception {
     val options = new Options();
     val cli = new JCommander(options);
     cli.setAcceptUnknownOptions(true);
     cli.setProgramName(APPLICATION_NAME);
 
+    int exitCode = SUCCESS_STATUS_CODE;
     try {
       cli.parse(args);
+
       log.info("{}", repeat("-", 100));
       log.info("Running with {}", options);
       log.info("{}\n", repeat("-", 100));
 
-      execute(options);
-
-      exitCode = SUCCESS_STATUS_CODE;
+      execute(options, args);
     } catch (ParameterException e) {
+      log.error("Invalid parameter(s): ", e);
       err.println("Invalid parameter(s): " + e.getMessage());
       usage(cli);
 
       exitCode = FAILURE_STATUS_CODE;
     } catch (Exception e) {
       log.error("Unknown error: ", e);
-      err.println("Command error. Please check the log for detailed error messages: " + e.getMessage());
+      err.println("Unknow error. Please check the log for detailed error messages: " + e.getMessage());
 
       exitCode = FAILURE_STATUS_CODE;
     } finally {
@@ -98,12 +78,17 @@ public class WorkflowMain implements CommandLineRunner, ExitCodeGenerator {
       log.info("{}", repeat("-", 100));
       log.info("Exiting with return code {} ...", exitCode);
       log.info("{}", repeat("-", 100));
+
+      System.exit(exitCode);
     }
   }
 
-  private void execute(Options options) {
+  private static void execute(Options options, String[] args) {
+    val applicationContext = new SpringApplicationBuilder(WorkflowMain.class).web(false).run(args);
+    val workflow = applicationContext.getBean(Workflow.class);
     val workflowContext = createWorkflowContext(options);
 
+    log.info("{}\n", repeat("-", 100));
     workflow.execute(workflowContext);
   }
 

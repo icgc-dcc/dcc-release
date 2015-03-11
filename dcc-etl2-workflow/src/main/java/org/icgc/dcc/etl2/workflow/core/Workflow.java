@@ -59,7 +59,7 @@ public class Workflow {
 
     executeJobs(submissionFiles, workflowContext);
 
-    log.info("Finished executing workflowContext in {}", watch);
+    log.info("Finished executing workflow in {}", watch);
   }
 
   private void executeJobs(Table<String, String, List<Path>> submissionFiles, WorkflowContext workflowContext) {

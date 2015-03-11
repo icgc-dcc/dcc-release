@@ -14,7 +14,8 @@
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <File>${log.dir}/${log.name}.log</File>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <FileNamePattern>${log.name}.%d{yyyy-MM-dd}.log</FileNamePattern>
+      <FileNamePattern>${log.name}.%d{yyyy-MM-dd}.%d{HHmmss,aux}.log</FileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy class="org.icgc.dcc.etl2.workflow.util.CustomStartupTriggeringPolicy"></timeBasedFileNamingAndTriggeringPolicy>
     </rollingPolicy>
     <encoder>
       <pattern>${pattern}</pattern>
@@ -24,7 +25,8 @@
   <appender name="DEBUG" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <File>${log.dir}/${log.debug.name}.log</File>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <FileNamePattern>${log.debug.name}.%d{yyyy-MM-dd}.log</FileNamePattern>
+      <FileNamePattern>${log.debug.name}.%d{yyyy-MM-dd}.%d{HHmmss,aux}.log</FileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy class="org.icgc.dcc.etl2.workflow.util.CustomStartupTriggeringPolicy"></timeBasedFileNamingAndTriggeringPolicy>
     </rollingPolicy>
     <encoder>
       <pattern>${pattern}</pattern>
