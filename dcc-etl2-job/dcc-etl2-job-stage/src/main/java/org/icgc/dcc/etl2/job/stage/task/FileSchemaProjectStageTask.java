@@ -21,8 +21,12 @@ import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 
 import java.util.List;
 
+import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+import nl.basjes.hadoop.io.compress.SplittableGzipCodec;
 
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.function.TranslateMissingCode;
@@ -31,6 +35,7 @@ import org.icgc.dcc.etl2.core.submission.SubmissionFileSchema;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.task.TaskType;
+import org.icgc.dcc.etl2.core.util.Configurations;
 import org.icgc.dcc.etl2.core.util.JavaRDDs;
 import org.icgc.dcc.etl2.core.util.Partitions;
 import org.icgc.dcc.etl2.job.stage.function.ConvertValueType;
@@ -40,6 +45,7 @@ import org.icgc.dcc.etl2.job.stage.function.TrimValues;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+@Slf4j
 public class FileSchemaProjectStageTask extends GenericTask {
 
   /**
@@ -71,10 +77,36 @@ public class FileSchemaProjectStageTask extends GenericTask {
 
   private JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
     val sparkContext = taskContext.getSparkContext();
-    val projectPaths = formatProjectInputPaths();
+    val paths = formatInputPaths(schemaProjectPaths);
 
-    return JavaRDDs.combineTextFile(sparkContext, projectPaths)
-        .mapPartitionsWithInputSplit(new ParseFileSplit(schema), false);
+    val conf = createJobConf(taskContext);
+
+    val minLength = getMinInputFileLength(taskContext.getFileSystem());
+    val large = minLength > 128L * 1024L * 1024L;
+    if (large) {
+      // Add splittable gzip codec
+      Configurations.addCompressionCodec(conf, SplittableGzipCodec.class);
+    }
+
+    val input = JavaRDDs.textFile(sparkContext, paths, conf);
+
+    log.info("Input paths: {}", paths);
+    JavaRDDs.logPartitions(log, input.partitions());
+
+    return input.mapPartitionsWithInputSplit(new ParseFileSplit(schema), false);
+  }
+
+  @SneakyThrows
+  private long getMinInputFileLength(FileSystem fileSystem) {
+    long minLength = Long.MAX_VALUE;
+    for (val path : schemaProjectPaths) {
+      val length = fileSystem.getFileStatus(path).getLen();
+      if (length < minLength) {
+        minLength = length;
+      }
+    }
+
+    return minLength;
   }
 
   private JavaRDD<ObjectNode> transform(JavaRDD<ObjectNode> input) {
@@ -83,10 +115,6 @@ public class FileSchemaProjectStageTask extends GenericTask {
         .map(new TranslateMissingCode())
         .map(new TranslateCodeListTerm(schema))
         .map(new ConvertValueType(schema));
-  }
-
-  private String formatProjectInputPaths() {
-    return COMMA.join(schemaProjectPaths);
   }
 
   private String getOutputPath(TaskContext taskContext) {
@@ -98,6 +126,10 @@ public class FileSchemaProjectStageTask extends GenericTask {
 
   private FileType getOutputFileType() {
     return FileType.valueOf(schema.getName().toUpperCase());
+  }
+
+  private static String formatInputPaths(Iterable<?> paths) {
+    return COMMA.join(paths);
   }
 
 }

@@ -10,7 +10,7 @@
 # DCC
 dcc:
    submission:
-      url: http://hwww2-dcc.oicr.on.ca:5380/ws
+      url: http://***REMOVED***/ws
    identifier:
       url: http://hident-dcc.res.oicr.on.ca:6381
 

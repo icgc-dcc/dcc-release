@@ -17,55 +17,59 @@
  */
 package org.icgc.dcc.etl2.job.stage.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
-
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+import nl.basjes.hadoop.io.compress.SplittableGzipCodec;
 
-import org.icgc.dcc.common.core.util.resolver.RestfulCodeListsResolver;
-import org.icgc.dcc.common.core.util.resolver.RestfulDictionaryResolver;
-import org.icgc.dcc.etl2.core.submission.SubmissionFileSchema;
-import org.icgc.dcc.etl2.core.submission.SubmissionFileSchemas;
-import org.icgc.dcc.etl2.core.submission.SubmissionMetadataService;
-import org.icgc.dcc.etl2.test.job.AbstractJobTest;
-import org.junit.Before;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.etl2.core.util.Configurations;
+import org.icgc.dcc.etl2.core.util.JavaRDDs;
 import org.junit.Test;
+import org.springframework.context.annotation.Bean;
 
-public class StageJobTest extends AbstractJobTest {
+@Slf4j
+public class SplittableGzipTest {
 
-  /**
-   * Class under test.
-   */
-  StageJob job;
+  @Test
+  public void testSplitUncompressed() {
+    val sparkContext = new JavaSparkContext(sparkConf());
 
-  @Override
-  @Before
-  public void setUp() {
-    super.setUp();
-    this.job = new StageJob(getSchemas());
+    val conf = new JobConf(sparkContext.hadoopConfiguration());
+    val splitSize = Long.toString(128L * 1024L * 1024L);
+    conf.set("mapred.min.split.size", splitSize);
+    conf.set("mapred.max.split.size", splitSize);
+
+    val path = "/icgc/submission/ICGC18/BRCA-US/meth_array_p.20141111.txt";
+
+    val rdd = JavaRDDs.combineTextFile(sparkContext, path + "," + path, conf);
+    JavaRDDs.logPartitions(log, rdd.partitions());
   }
 
   @Test
-  public void testExecute() {
-    val jobContext = createJobContext(job.getType());
-    job.execute(jobContext);
+  public void testSplitCompressed() {
+    val sparkContext = new JavaSparkContext(sparkConf());
 
-    val results = produces("ssm_m");
+    val conf = new JobConf(sparkContext.hadoopConfiguration());
+    val splitSize = Long.toString(128L * 1024L * 1024L);
+    conf.set("mapred.min.split.size", splitSize);
+    conf.set("mapred.max.split.size", splitSize);
 
-    assertThat(results).hasSize(1);
-    assertThat(results.get(0).get("gene")).isNotNull();
+    Configurations.addCompressionCodec(conf, SplittableGzipCodec.class);
+
+    val path = "/tmp/meth_seq_p.txt.gz";
+
+    val rdd = JavaRDDs.combineTextFile(sparkContext, path, conf);
+    JavaRDDs.logPartitions(log, rdd.partitions());
   }
 
-  private SubmissionFileSchemas getSchemas() {
-    return new SubmissionFileSchemas(getMetadata());
-  }
-
-  private List<SubmissionFileSchema> getMetadata() {
-    return new SubmissionMetadataService(
-        new RestfulDictionaryResolver("http://***REMOVED***/ws"),
-        new RestfulCodeListsResolver("http://***REMOVED***/ws"))
-        .getMetadata();
+  @Bean
+  public SparkConf sparkConf() {
+    return new SparkConf()
+        .setAppName(SplittableGzipTest.class.getSimpleName())
+        .setMaster("local")
+        .set("spark.hadoop.fs.defaultFS", "***REMOVED***");
   }
 
 }

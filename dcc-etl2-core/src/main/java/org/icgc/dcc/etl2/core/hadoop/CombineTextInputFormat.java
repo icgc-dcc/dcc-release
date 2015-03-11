@@ -22,8 +22,6 @@ import java.io.IOException;
 import lombok.val;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -44,14 +42,6 @@ public class CombineTextInputFormat extends CombineFileInputFormat<LongWritable,
   public RecordReader<LongWritable, Text> getRecordReader(InputSplit split, JobConf conf, Reporter reporter)
       throws IOException {
     return new CombineFileRecordReader(conf, (CombineFileSplit) split, reporter, TextRecordReaderWrapper.class);
-  }
-
-  @Override
-  protected boolean isSplitable(FileSystem fs, Path filename) {
-    // Default is true. Make sure file will not be split by returning false.
-    val splitable = false;
-
-    return splitable;
   }
 
   private static abstract class CombineFileRecordReaderWrapper<K, V> implements RecordReader<K, V> {

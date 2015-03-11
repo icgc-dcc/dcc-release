@@ -18,7 +18,7 @@
 package org.icgc.dcc.etl2.workflow.mail;
 
 import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.util.MimeTypeUtils.IMAGE_PNG_VALUE;
@@ -86,7 +86,14 @@ public class Mailer {
   }
 
   private String createSubject(String templateName) {
-    val jobDescription = LOWER_HYPHEN.to(UPPER_UNDERSCORE, templateName).replaceAll("-", " ");
+    val jobDescription = LOWER_HYPHEN.to(UPPER_CAMEL, templateName).replaceAll(
+        String.format("%s|%s|%s",
+            "(?<=[A-Z])(?=[A-Z][a-z])",
+            "(?<=[^A-Z])(?=[A-Z])",
+            "(?<=[A-Za-z])(?=[^A-Za-z])"
+            ),
+        " "
+        );
 
     return SUBJECT_PREFIX + jobDescription;
   }

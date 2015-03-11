@@ -60,7 +60,7 @@ public class AnnotationTask extends GenericProcessTask {
         .map(tuple -> tuple._2.toString())
         .map(new ParseObjectNode());
 
-    logPartitions(input);
+    JavaRDDs.logPartitions(log, input.partitions());
 
     return input;
   }

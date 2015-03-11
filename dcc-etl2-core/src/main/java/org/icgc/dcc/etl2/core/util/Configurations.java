@@ -15,57 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.stage.core;
+package org.icgc.dcc.etl2.core.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
-
+import static com.google.common.base.Strings.isNullOrEmpty;
 import lombok.val;
+import lombok.experimental.UtilityClass;
 
-import org.icgc.dcc.common.core.util.resolver.RestfulCodeListsResolver;
-import org.icgc.dcc.common.core.util.resolver.RestfulDictionaryResolver;
-import org.icgc.dcc.etl2.core.submission.SubmissionFileSchema;
-import org.icgc.dcc.etl2.core.submission.SubmissionFileSchemas;
-import org.icgc.dcc.etl2.core.submission.SubmissionMetadataService;
-import org.icgc.dcc.etl2.test.job.AbstractJobTest;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.mapred.JobConf;
 
-public class StageJobTest extends AbstractJobTest {
+@UtilityClass
+public class Configurations {
 
-  /**
-   * Class under test.
-   */
-  StageJob job;
+  public static void addCompressionCodec(JobConf conf, Class<? extends CompressionCodec> codecClass) {
+    val codecsProperty = "io.compression.codecs";
+    val currentCodecs = conf.get(codecsProperty);
+    val codecs = codecClass.getName() + (isNullOrEmpty(currentCodecs) ? "" : "," + currentCodecs);
 
-  @Override
-  @Before
-  public void setUp() {
-    super.setUp();
-    this.job = new StageJob(getSchemas());
-  }
-
-  @Test
-  public void testExecute() {
-    val jobContext = createJobContext(job.getType());
-    job.execute(jobContext);
-
-    val results = produces("ssm_m");
-
-    assertThat(results).hasSize(1);
-    assertThat(results.get(0).get("gene")).isNotNull();
-  }
-
-  private SubmissionFileSchemas getSchemas() {
-    return new SubmissionFileSchemas(getMetadata());
-  }
-
-  private List<SubmissionFileSchema> getMetadata() {
-    return new SubmissionMetadataService(
-        new RestfulDictionaryResolver("http://***REMOVED***/ws"),
-        new RestfulCodeListsResolver("http://***REMOVED***/ws"))
-        .getMetadata();
+    conf.set(codecsProperty, codecs);
   }
 
 }

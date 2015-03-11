@@ -124,6 +124,8 @@
                   <exclude>org.apache.curator:*</exclude>
                   <exclude>com.jcraft:*</exclude>
                   <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</exclude>
+                  <exclude>com.google.code.findbugs:*</exclude>
+                  <exclude>org.mortbay.jetty:*</exclude>
                 </excludes>
               </artifactSet>
             </configuration>

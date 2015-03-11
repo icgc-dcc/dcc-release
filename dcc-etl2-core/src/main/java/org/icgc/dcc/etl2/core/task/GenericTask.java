@@ -17,21 +17,16 @@
  */
 package org.icgc.dcc.etl2.core.task;
 
-import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.rdd.HadoopPartition;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.util.ObjectNodeRDDs;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@Slf4j
 @RequiredArgsConstructor
 public abstract class GenericTask implements Task {
 
@@ -74,19 +69,6 @@ public abstract class GenericTask implements Task {
     // val output = processed.map(new FormatObjectNode());
     // output.saveAsTextFile(outputPath);
     ObjectNodeRDDs.saveAsSequenceFile(processed, outputPath);
-  }
-
-  @SneakyThrows
-  protected static void logPartitions(JavaRDD<?> rdd) {
-    val partitions = rdd.partitions();
-    for (int i = 0; i < partitions.size(); i++) {
-      val partition = (HadoopPartition) partitions.get(i);
-      log.info("[{}/{}] Input split ({}): {}",
-          i + 1,
-          partitions.size(),
-          formatBytes(partition.inputSplit().value().getLength()),
-          partition.inputSplit());
-    }
   }
 
 }

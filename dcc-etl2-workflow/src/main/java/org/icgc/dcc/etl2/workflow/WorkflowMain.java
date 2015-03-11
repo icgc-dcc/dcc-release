@@ -1,4 +1,5 @@
 /*
+
  * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
@@ -106,7 +107,7 @@ public class WorkflowMain implements CommandLineRunner, ExitCodeGenerator {
     return new WorkflowContext(
         Temp.RELEASE_NAME,
         Temp.PROJECT_NAMES,
-        // ImmutableList.of("ALL_US"),
+        // ImmutableList.of("PBCA-DE"),
         Temp.RELEASE_DIR,
         Temp.STAGING_DIR,
 

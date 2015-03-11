@@ -15,9 +15,24 @@
   <description>${project.name}</description>
 
   <dependencies>
-  
-    <!-- None. See parent -->
-    
+
+    <dependency>
+      <groupId>nl.basjes.hadoop</groupId>
+      <artifactId>splittablegzip</artifactId>
+      <version>${splittablegzip.version}</version>
+      <exclusions> <!-- Already present -->
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
   </dependencies>
+
+  <properties>
+    <!--Versions - Utilities -->
+    <splittablegzip.version>1.2</splittablegzip.version>
+  </properties>
 
 </project>

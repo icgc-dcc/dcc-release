@@ -17,11 +17,15 @@
  */
 package org.icgc.dcc.etl2.core.util;
 
+import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
+
+import java.util.List;
+
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
 import lombok.experimental.UtilityClass;
 
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.Text;
@@ -30,10 +34,13 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
+import org.apache.spark.Partition;
 import org.apache.spark.api.java.JavaHadoopRDD;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.rdd.HadoopPartition;
 import org.icgc.dcc.etl2.core.hadoop.CombineTextInputFormat;
+import org.slf4j.Logger;
 
 @UtilityClass
 public class JavaRDDs {
@@ -45,7 +52,7 @@ public class JavaRDDs {
 
   @NonNull
   public static JavaHadoopRDD<LongWritable, Text> textFile(JavaSparkContext sparkContext, String paths, JobConf conf) {
-    TextInputFormat.setInputPaths(conf, new Path(paths));
+    TextInputFormat.setInputPaths(conf, paths);
     val hadoopRDD = sparkContext.hadoopRDD(conf, TextInputFormat.class, LongWritable.class, Text.class,
         sparkContext.defaultMinPartitions());
 
@@ -101,6 +108,18 @@ public class JavaRDDs {
     SequenceFileOutputFormat.setOutputCompressorClass(conf, SnappyCodec.class);
 
     rdd.saveAsHadoopFile(path, keyClass, valueClass, SequenceFileOutputFormat.class, conf);
+  }
+
+  @SneakyThrows
+  public static void logPartitions(Logger log, List<Partition> partitions) {
+    for (int i = 0; i < partitions.size(); i++) {
+      val partition = (HadoopPartition) partitions.get(i);
+      log.info("[{}/{}] Input split ({}): {}",
+          i + 1,
+          partitions.size(),
+          formatBytes(partition.inputSplit().value().getLength()),
+          partition.inputSplit());
+    }
   }
 
   private static JobConf createJobConf(JavaPairRDD<?, ?> rdd) {
