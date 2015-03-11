@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CachingConfigurer;
+import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
@@ -40,7 +40,7 @@ import com.google.common.cache.CacheBuilder;
 @Lazy
 @Configuration
 @EnableCaching
-public class CacheConfig implements CachingConfigurer {
+public class CacheConfig extends CachingConfigurerSupport {
 
   /**
    * Constants.

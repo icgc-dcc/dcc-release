@@ -299,8 +299,8 @@
     <dcc-common.version>3.8.2.1</dcc-common.version>
 
     <!-- Versions - Spring -->
-    <spring.version>4.0.8.RELEASE</spring.version>
-    <spring-boot.version>1.1.10.RELEASE</spring-boot.version>
+    <spring.version>4.1.5.RELEASE</spring.version>
+    <spring-boot.version>1.2.2.RELEASE</spring-boot.version>
 
     <!-- Versions- Scala -->
     <scala-build.version>2.10</scala-build.version>
