@@ -75,7 +75,7 @@ spark:
    master: "spark://hproxy-dcc.res.oicr.on.ca:7077"
    properties:
       spark.executor.memory: 1g
-      spark.cores.max: 250
+      spark.cores.max: 100
 
 # Mongo
 mongo:
