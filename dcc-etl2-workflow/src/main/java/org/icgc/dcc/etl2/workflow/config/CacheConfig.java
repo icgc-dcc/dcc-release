@@ -30,12 +30,14 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.cache.interceptor.SimpleKeyGenerator;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import com.google.common.cache.CacheBuilder;
 
 /**
  * Server wide caching configuration.
  */
+@Lazy
 @Configuration
 @EnableCaching
 public class CacheConfig implements CachingConfigurer {

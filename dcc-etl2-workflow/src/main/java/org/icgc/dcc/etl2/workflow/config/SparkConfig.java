@@ -24,12 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.Job;
-import org.icgc.dcc.etl2.job.export.config.HBaseProperties;
-import org.icgc.dcc.etl2.workflow.config.WorkflowProperties.HadoopProperties;
 import org.icgc.dcc.etl2.workflow.config.WorkflowProperties.SparkProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 /**
  * Spark configuration.
@@ -37,6 +36,7 @@ import org.springframework.context.annotation.Configuration;
  * See annotation documentation for details.
  */
 @Slf4j
+@Lazy
 @Configuration
 public class SparkConfig {
 
@@ -44,11 +44,7 @@ public class SparkConfig {
    * Dependencies.
    */
   @Autowired
-  private SparkProperties spark;
-  @Autowired
-  private HadoopProperties hadoop;
-  @Autowired
-  private HBaseProperties hbase;
+  SparkProperties spark;
 
   @Bean
   public SparkConf sparkConf() {
@@ -61,7 +57,7 @@ public class SparkConfig {
 
   @Bean(destroyMethod = "stop")
   public JavaSparkContext sparkContext() {
-    log.info("Creating JavaSparkContext with hadoop properties '{}'", hadoop);
+    log.info("Creating JavaSparkContext...");
     val sparkContext = new JavaSparkContext(sparkConf());
 
     val jobJar = getJobJar();
@@ -85,4 +81,5 @@ public class SparkConfig {
   private static String getPath(Class<?> type) {
     return type.getProtectionDomain().getCodeSource().getLocation().getPath();
   }
+
 }

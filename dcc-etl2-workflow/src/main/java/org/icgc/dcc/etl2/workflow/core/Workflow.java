@@ -22,11 +22,13 @@ import org.icgc.dcc.etl2.core.submission.SubmissionMetadataService;
 import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.workflow.mail.Mailer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Table;
 
 @Slf4j
+@Lazy
 @Service
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class Workflow {

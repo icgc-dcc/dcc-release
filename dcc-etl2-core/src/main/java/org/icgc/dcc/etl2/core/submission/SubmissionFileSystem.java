@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Table;
 import com.google.common.collect.TreeBasedTable;
@@ -22,6 +24,8 @@ import com.google.common.collect.TreeBasedTable;
  * Service for interacting with the DCC submission file system.
  */
 @Slf4j
+@Lazy
+@Service
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class SubmissionFileSystem {
 

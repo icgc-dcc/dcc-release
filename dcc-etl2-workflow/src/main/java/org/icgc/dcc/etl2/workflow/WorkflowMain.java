@@ -93,6 +93,11 @@ public class WorkflowMain implements CommandLineRunner, ExitCodeGenerator {
       err.println("Command error. Please check the log for detailed error messages: " + e.getMessage());
 
       exitCode = FAILURE_STATUS_CODE;
+    } finally {
+      log.info("\n");
+      log.info("{}", repeat("-", 100));
+      log.info("Exiting with return code {} ...", exitCode);
+      log.info("{}", repeat("-", 100));
     }
   }
 

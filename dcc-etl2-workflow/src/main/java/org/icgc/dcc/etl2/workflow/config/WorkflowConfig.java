@@ -26,6 +26,7 @@ import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -34,6 +35,7 @@ import com.google.common.util.concurrent.MoreExecutors;
  * <p>
  * See Spring annotation documentation for details.
  */
+@Lazy
 @Configuration
 public class WorkflowConfig {
 

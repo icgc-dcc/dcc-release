@@ -28,6 +28,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.io.serializer.WritableSerialization;
 import org.icgc.dcc.etl2.core.hadoop.ObjectNodeSerialization;
+import org.icgc.dcc.etl2.core.util.Configurations;
 import org.icgc.dcc.etl2.job.export.config.HBaseProperties;
 import org.icgc.dcc.etl2.workflow.config.WorkflowProperties.HadoopProperties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,9 +59,7 @@ public class HadoopConfig {
   @Bean
   @Primary
   public Configuration hadoopConf() {
-    for (val entry : hadoop.getProperties().entrySet()) {
-      conf.set(entry.getKey(), entry.getValue());
-    }
+    Configurations.setAll(conf, hadoop.getProperties());
 
     // Custom serialization needed for outputs / inputs
     conf.set(IO_SERIALIZATIONS_KEY,
@@ -72,9 +71,7 @@ public class HadoopConfig {
   @Bean
   public Configuration hbaseConf() {
     val config = HBaseConfiguration.create(hadoopConf());
-    for (val entry : hbase.getProperties().entrySet()) {
-      config.set(entry.getKey(), entry.getValue());
-    }
+    Configurations.setAll(config, hbase.getProperties());
 
     return config;
   }

@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
@@ -35,6 +36,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
  * <p>
  * See {@link ThymeleafAutoConfiguration} for details on mail templating.
  */
+@Lazy
 @Configuration
 public class MailConfig {
 

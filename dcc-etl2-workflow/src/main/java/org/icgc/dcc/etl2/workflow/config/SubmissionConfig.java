@@ -36,16 +36,11 @@ import org.springframework.context.annotation.Lazy;
 public class SubmissionConfig {
 
   @Value("${dcc.submission.url}")
-  private String submissionUrl;
+  String submissionUrl;
 
   @Bean
-  public SubmissionFileSchemas submissionFileSchemas() {
-    return new SubmissionFileSchemas(submissionMetadataService().getMetadata());
-  }
-
-  @Bean
-  public SubmissionMetadataService submissionMetadataService() {
-    return new SubmissionMetadataService(dictionaryResolver(), codeListsResolver());
+  public SubmissionFileSchemas submissionFileSchemas(SubmissionMetadataService submissionMetadataService) {
+    return new SubmissionFileSchemas(submissionMetadataService.getMetadata());
   }
 
   @Bean
