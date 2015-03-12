@@ -25,8 +25,6 @@ import org.icgc.dcc.common.core.model.FileTypes;
 
 public enum FileType {
 
-  // TODO: Add all file types for job input outputs
-
   //
   // Clinical
   //

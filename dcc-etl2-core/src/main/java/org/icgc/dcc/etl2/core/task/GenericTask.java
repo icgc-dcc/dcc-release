@@ -48,15 +48,16 @@ public abstract class GenericTask implements Task {
   }
 
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, FileType inputFileType) {
-    val hadoopConf = createJobConf(taskContext);
+    val conf = createJobConf(taskContext);
 
-    return readInput(taskContext, hadoopConf, inputFileType);
+    return readInput(taskContext, conf, inputFileType);
   }
 
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf hadoopConf, FileType inputFileType) {
+  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType) {
     val sparkContext = taskContext.getSparkContext();
 
-    return ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), hadoopConf);
+    // return ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
+    return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
   }
 
   protected void writeOutput(TaskContext taskContext, JavaRDD<ObjectNode> processed, FileType outputFileType) {
@@ -66,8 +67,7 @@ public abstract class GenericTask implements Task {
   }
 
   protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath) {
-    // val output = processed.map(new FormatObjectNode());
-    // output.saveAsTextFile(outputPath);
+    // ObjectNodeRDDs.saveAsTextFile(processed, outputPath);
     ObjectNodeRDDs.saveAsSequenceFile(processed, outputPath);
   }
 

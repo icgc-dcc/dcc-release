@@ -25,6 +25,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.etl2.core.function.FormatObjectNode;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 
 import scala.Tuple2;
@@ -67,6 +68,12 @@ public class ObjectNodeRDDs {
     return JavaRDDs.combineTextFile(sparkContext, paths, conf)
         .map(tuple -> tuple._2.toString())
         .map(new ParseObjectNode());
+  }
+
+  @NonNull
+  public static void saveAsTextFile(JavaRDD<ObjectNode> rdd, String path) {
+    val output = rdd.map(new FormatObjectNode());
+    output.saveAsTextFile(path);
   }
 
   @NonNull

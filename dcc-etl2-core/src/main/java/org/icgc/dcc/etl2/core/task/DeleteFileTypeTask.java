@@ -18,63 +18,34 @@
 package org.icgc.dcc.etl2.core.task;
 
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.job.FileType;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 @Slf4j
-public abstract class GenericProcessTask extends GenericTask {
+public class DeleteFileTypeTask implements Task {
 
-  /**
-   * Configuration.
-   */
-  protected final FileType inputFileType;
-  protected final FileType outputFileType;
+  @NonNull
+  private final FileType[] fileTypes;
 
-  public GenericProcessTask(@NonNull FileType inputFileType, FileType outputFileType) {
-    super(outputFileType.getDirName());
-    this.inputFileType = inputFileType;
-    this.outputFileType = outputFileType;
+  public DeleteFileTypeTask(@NonNull FileType... fileTypes) {
+    this.fileTypes = fileTypes;
   }
 
   @Override
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
+  }
+
+  @Override
+  @SneakyThrows
   public void execute(TaskContext taskContext) {
-    if (!hasInput(taskContext)) {
-      log.info("[{}] No input for '{}' and output '{}'. Skipping...", getName(), inputFileType, outputFileType);
-      return;
+    for (val fileType : fileTypes) {
+      log.info("Deleting '{}' file type", fileType);
+      taskContext.delete(fileType);
     }
-
-    val input = readInput(taskContext);
-
-    val processed = process(input);
-
-    writeOutput(taskContext, processed);
-  }
-
-  /**
-   * Template method.
-   */
-  protected abstract JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input);
-
-  protected boolean hasInput(TaskContext taskContext) {
-    return taskContext.exists(inputFileType);
-  }
-
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
-    return super.readInput(taskContext, inputFileType);
-  }
-
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf hadoopConf) {
-    return super.readInput(taskContext, hadoopConf, inputFileType);
-  }
-
-  protected void writeOutput(TaskContext taskContext, JavaRDD<ObjectNode> processed) {
-    super.writeOutput(taskContext, processed, outputFileType);
   }
 
 }

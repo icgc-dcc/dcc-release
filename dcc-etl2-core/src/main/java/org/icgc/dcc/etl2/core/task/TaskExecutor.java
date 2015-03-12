@@ -81,12 +81,12 @@ public class TaskExecutor {
     for (val task : tasks) {
       if (task.getType() == TaskType.FILE_TYPE_PROJECT) {
         for (val projectName : jobContext.getProjectNames()) {
-          submitTask(service, jobContext, new ProjectTask(task, projectName));
+          submitTask(service, jobContext, new ProjectTask(task, projectName), Optional.of(projectName));
 
           taskCount++;
         }
       } else {
-        submitTask(service, jobContext, task);
+        submitTask(service, jobContext, task, Optional.empty());
 
         taskCount++;
       }
@@ -98,9 +98,10 @@ public class TaskExecutor {
     return taskCount;
   }
 
-  private void submitTask(CompletionService<String> service, JobContext jobContext, Task task) {
+  private void submitTask(CompletionService<String> service, JobContext jobContext, Task task,
+      Optional<String> projectName) {
     log.info("Submitting '{}' task...", task.getName());
-    val taskContext = createTaskContext(jobContext, Optional.empty());
+    val taskContext = createTaskContext(jobContext, projectName);
 
     // Submit async
     service.submit(() -> {
@@ -140,7 +141,7 @@ public class TaskExecutor {
 
     private final String projectName;
 
-    private ProjectTask(Task delegate, @NonNull String projectName) {
+    private ProjectTask(@NonNull Task delegate, @NonNull String projectName) {
       super(delegate);
       this.projectName = projectName;
     }

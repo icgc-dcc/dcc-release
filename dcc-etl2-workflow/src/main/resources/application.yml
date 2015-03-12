@@ -12,11 +12,11 @@ dcc:
    submission:
       url: http://***REMOVED***/ws
    identifier:
-      url: http://hident-dcc.res.oicr.on.ca:6381
+      url: http://hcache-dcc.oicr.on.ca:5391
 
 # SnpEff
 snpeff:
-   resourceDir: /tmp/dcc-etl-staging
+   resourceDir: /tmp/dcc-etl2
    resourceUrl: https://seqwaremaven.oicr.on.ca/artifactory/simple/dcc-dependencies/org/icgc/dcc
    version: 3.6c
    databaseVersion: 3.6c-GRCh37.75

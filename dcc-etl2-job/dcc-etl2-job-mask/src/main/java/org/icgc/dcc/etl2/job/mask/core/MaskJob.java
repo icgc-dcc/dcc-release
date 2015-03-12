@@ -19,9 +19,11 @@ package org.icgc.dcc.etl2.job.mask.core;
 
 import lombok.NonNull;
 
+import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
+import org.icgc.dcc.etl2.core.task.DeleteFileTypeTask;
 import org.icgc.dcc.etl2.job.mask.task.SgvPMaskingTask;
 import org.icgc.dcc.etl2.job.mask.task.SsmPMaskingTask;
 import org.springframework.stereotype.Component;
@@ -36,6 +38,16 @@ public class MaskJob implements Job {
 
   @Override
   public void execute(@NonNull JobContext jobContext) {
+    clean(jobContext);
+    mask(jobContext);
+  }
+
+  private void clean(JobContext jobContext) {
+    jobContext.execute(
+        new DeleteFileTypeTask(FileType.SSM_P_MASKED, FileType.SGV_P_MASKED));
+  }
+
+  private void mask(JobContext jobContext) {
     jobContext.execute(
         new SsmPMaskingTask(),
         new SgvPMaskingTask());
