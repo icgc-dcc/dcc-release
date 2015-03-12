@@ -51,19 +51,19 @@ public class ObjectNodeSerialization implements Serialization<ObjectNode> {
   /**
    * Constants.
    */
-  static final JsonFactory FACTORY = new SmileFactory()
+  public static final JsonFactory FACTORY = new SmileFactory()
       .disable(SmileGenerator.Feature.WRITE_HEADER)
       .disable(SmileParser.Feature.REQUIRE_HEADER)
 
       .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
       .disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
 
-  static final ObjectMapper MAPPER = new ObjectMapper(FACTORY)
+  public static final ObjectMapper MAPPER = new ObjectMapper(FACTORY)
       .disable(SerializationFeature.CLOSE_CLOSEABLE);
 
-  static final ObjectWriter WRITER = MAPPER.writerWithType(ObjectNode.class);
+  public static final ObjectWriter WRITER = MAPPER.writerWithType(ObjectNode.class);
 
-  static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
+  public static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
 
   @Override
   public boolean accept(Class<?> c) {

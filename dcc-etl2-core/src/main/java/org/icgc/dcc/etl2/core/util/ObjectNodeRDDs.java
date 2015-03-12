@@ -17,17 +17,19 @@
  */
 package org.icgc.dcc.etl2.core.util;
 
+import static org.icgc.dcc.etl2.core.hadoop.ObjectNodeSerialization.READER;
+import static org.icgc.dcc.etl2.core.hadoop.ObjectNodeSerialization.WRITER;
 import lombok.NonNull;
 import lombok.val;
 import lombok.experimental.UtilityClass;
 
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.FormatObjectNode;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
-import org.icgc.dcc.etl2.core.hadoop.ObjectNodeWritable;
 
 import scala.Tuple2;
 
@@ -55,8 +57,8 @@ public class ObjectNodeRDDs {
 
   @NonNull
   public static JavaRDD<ObjectNode> sequenceObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf) {
-    return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, ObjectNodeWritable.class)
-        .map(tuple -> tuple._2.get());
+    return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, BytesWritable.class)
+        .map(tuple -> READER.readValue(tuple._2.getBytes()));
   }
 
   @NonNull
@@ -87,9 +89,9 @@ public class ObjectNodeRDDs {
   @NonNull
   public static void saveAsSequenceObjectNodeFile(JavaRDD<ObjectNode> rdd, String path, JobConf conf) {
     val pairRdd = rdd.mapToPair(row ->
-        new Tuple2<NullWritable, ObjectNodeWritable>(NullWritable.get(), new ObjectNodeWritable(row)));
+        new Tuple2<NullWritable, BytesWritable>(NullWritable.get(), new BytesWritable(WRITER.writeValueAsBytes(row))));
 
-    JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, ObjectNodeWritable.class, path, conf);
+    JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, BytesWritable.class, path, conf);
   }
 
   private static JobConf createJobConf(JavaRDD<?> rdd) {
