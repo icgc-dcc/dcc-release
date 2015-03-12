@@ -67,8 +67,8 @@ public abstract class GenericTask implements Task {
   }
 
   protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath) {
-    // ObjectNodeRDDs.saveAsTextFile(processed, outputPath);
-    ObjectNodeRDDs.saveAsSequenceFile(processed, outputPath);
+    // ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath);
+    ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);
   }
 
 }

@@ -37,6 +37,7 @@ import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.spark.Partition;
 import org.apache.spark.api.java.JavaHadoopRDD;
 import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.rdd.HadoopPartition;
 import org.icgc.dcc.etl2.core.hadoop.CombineTextInputFormat;
@@ -93,9 +94,14 @@ public class JavaRDDs {
   }
 
   @NonNull
+  public static void saveAsTextFile(JavaRDD<?> rdd, String path) {
+    rdd.saveAsTextFile(path);
+  }
+
+  @NonNull
   public static <K, V> void saveAsSequenceFile(JavaPairRDD<K, V> rdd, Class<K> keyClass, Class<V> valueClass,
       String path) {
-    rdd.saveAsHadoopFile(path, keyClass, valueClass, SequenceFileOutputFormat.class, createJobConf(rdd));
+    saveAsSequenceFile(rdd, keyClass, valueClass, path, createJobConf(rdd));
   }
 
   @NonNull

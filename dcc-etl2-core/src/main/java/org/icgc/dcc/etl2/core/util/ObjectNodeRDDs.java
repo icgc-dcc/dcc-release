@@ -27,6 +27,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.FormatObjectNode;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
+import org.icgc.dcc.etl2.core.hadoop.ObjectNodeWritable;
 
 import scala.Tuple2;
 
@@ -54,8 +55,8 @@ public class ObjectNodeRDDs {
 
   @NonNull
   public static JavaRDD<ObjectNode> sequenceObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf) {
-    return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, ObjectNode.class)
-        .map(tuple -> tuple._2);
+    return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, ObjectNodeWritable.class)
+        .map(tuple -> tuple._2.get());
   }
 
   @NonNull
@@ -71,21 +72,24 @@ public class ObjectNodeRDDs {
   }
 
   @NonNull
-  public static void saveAsTextFile(JavaRDD<ObjectNode> rdd, String path) {
+  public static void saveAsTextObjectNodeFile(JavaRDD<ObjectNode> rdd, String path) {
     val output = rdd.map(new FormatObjectNode());
-    output.saveAsTextFile(path);
+
+    JavaRDDs.saveAsTextFile(output, path);
   }
 
   @NonNull
-  public static void saveAsSequenceFile(JavaRDD<ObjectNode> rdd, String path) {
+  public static void saveAsSequenceObjectNodeFile(JavaRDD<ObjectNode> rdd, String path) {
     val conf = createJobConf(rdd);
-    saveAsSequenceFile(rdd, path, conf);
+    saveAsSequenceObjectNodeFile(rdd, path, conf);
   }
 
   @NonNull
-  public static void saveAsSequenceFile(JavaRDD<ObjectNode> rdd, String path, JobConf conf) {
-    val pairRdd = rdd.mapToPair(row -> new Tuple2<NullWritable, ObjectNode>(NullWritable.get(), row));
-    JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, ObjectNode.class, path, conf);
+  public static void saveAsSequenceObjectNodeFile(JavaRDD<ObjectNode> rdd, String path, JobConf conf) {
+    val pairRdd = rdd.mapToPair(row ->
+        new Tuple2<NullWritable, ObjectNodeWritable>(NullWritable.get(), new ObjectNodeWritable(row)));
+
+    JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, ObjectNodeWritable.class, path, conf);
   }
 
   private static JobConf createJobConf(JavaRDD<?> rdd) {
