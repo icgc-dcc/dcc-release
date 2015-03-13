@@ -15,33 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.stage.task;
+package org.icgc.dcc.etl2.job.id.task;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.etl2.core.job.FileType;
+import org.icgc.dcc.etl2.job.id.function.AddSurrogateMutationId;
 
-import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.etl2.core.task.Task;
-import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.core.task.TaskType;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@Slf4j
-public class InitProjectStageTask implements Task {
+public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
 
-  @Override
-  public TaskType getType() {
-    return TaskType.FILE_TYPE;
+  public AddSurrogateMutationIdTask(String identifierUrl, String releaseName) {
+    super(FileType.SSM_P_MASKED, FileType.SSM_P_MASKED_SURROGATE_KEY, identifierUrl, releaseName);
   }
 
   @Override
-  @SneakyThrows
-  public void execute(TaskContext taskContext) {
-    val stagingDir = taskContext.getJobContext().getWorkingDir();
-    val fileSystem = taskContext.getFileSystem();
-
-    log.info("Deleting staging dir '{}'", stagingDir);
-    fileSystem.delete(new Path(stagingDir), true);
+  protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
+    return input
+        .map(new AddSurrogateMutationId(identifierUrl, releaseName));
   }
 
 }

@@ -19,7 +19,8 @@ package org.icgc.dcc.etl2.job.join.core;
 
 import lombok.NonNull;
 
-import org.icgc.dcc.etl2.core.job.Job;
+import org.icgc.dcc.etl2.core.job.FileType;
+import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.job.join.task.ClinicalJoinTask;
@@ -27,7 +28,7 @@ import org.icgc.dcc.etl2.job.join.task.ObservationJoinTask;
 import org.springframework.stereotype.Component;
 
 @Component
-public class JoinJob implements Job {
+public class JoinJob extends GenericJob {
 
   @Override
   public JobType getType() {
@@ -36,6 +37,17 @@ public class JoinJob implements Job {
 
   @Override
   public void execute(@NonNull JobContext jobContext) {
+    clean(jobContext);
+    join(jobContext);
+  }
+
+  private void clean(JobContext jobContext) {
+    // TODO: Add more
+    delete(jobContext, FileType.CLINICAL, FileType.OBSERVATION);
+  }
+
+  private void join(JobContext jobContext) {
+    // TODO: Add more
     jobContext.execute(
         new ClinicalJoinTask(),
         new ObservationJoinTask());

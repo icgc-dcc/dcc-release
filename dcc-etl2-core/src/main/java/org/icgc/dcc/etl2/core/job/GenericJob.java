@@ -15,24 +15,17 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.id.task;
+package org.icgc.dcc.etl2.core.job;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.job.id.function.AddSurrogateDonorId;
+import lombok.NonNull;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.icgc.dcc.etl2.core.task.DeleteFileTypeTask;
 
-public class SurrogateDonorIdTask extends SurrogateIdTask {
+public abstract class GenericJob implements Job {
 
-  public SurrogateDonorIdTask(String identifierUrl, String releaseName) {
-    super(FileType.DONOR, FileType.DONOR_SURROGATE_KEY, identifierUrl, releaseName);
-  }
-
-  @Override
-  protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input
-        .map(new AddSurrogateDonorId(identifierUrl, releaseName));
+  @NonNull
+  protected void delete(JobContext jobContext, FileType... fileTypes) {
+    jobContext.execute(new DeleteFileTypeTask(fileTypes));
   }
 
 }

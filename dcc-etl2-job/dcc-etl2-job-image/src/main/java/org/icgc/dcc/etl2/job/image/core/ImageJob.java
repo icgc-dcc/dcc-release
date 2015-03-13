@@ -22,7 +22,8 @@ import java.util.Map;
 import lombok.NonNull;
 import lombok.val;
 
-import org.icgc.dcc.etl2.core.job.Job;
+import org.icgc.dcc.etl2.core.job.FileType;
+import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.job.image.task.AddSpecimenImageTask;
@@ -30,7 +31,7 @@ import org.icgc.dcc.etl2.job.image.util.SpecimenImageResolver;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ImageJob implements Job {
+public class ImageJob extends GenericJob {
 
   @Override
   public JobType getType() {
@@ -39,7 +40,17 @@ public class ImageJob implements Job {
 
   @Override
   public void execute(@NonNull JobContext jobContext) {
+    clean(jobContext);
+
     val specimenImageUrls = getSpecimenImageUrls();
+    addSpecimenImage(jobContext, specimenImageUrls);
+  }
+
+  private void clean(JobContext jobContext) {
+    delete(jobContext, FileType.SPECIMEN_SURROGATE_KEY_IMAGE);
+  }
+
+  private void addSpecimenImage(JobContext jobContext, Map<String, String> specimenImageUrls) {
     val task = creatTask(specimenImageUrls);
 
     jobContext.execute(task);

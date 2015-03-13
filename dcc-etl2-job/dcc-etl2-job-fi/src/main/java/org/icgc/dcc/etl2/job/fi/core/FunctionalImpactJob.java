@@ -19,14 +19,15 @@ package org.icgc.dcc.etl2.job.fi.core;
 
 import lombok.NonNull;
 
-import org.icgc.dcc.etl2.core.job.Job;
+import org.icgc.dcc.etl2.core.job.FileType;
+import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.job.fi.task.CalculateImpactTask;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FunctionalImpactJob implements Job {
+public class FunctionalImpactJob extends GenericJob {
 
   @Override
   public JobType getType() {
@@ -35,6 +36,15 @@ public class FunctionalImpactJob implements Job {
 
   @Override
   public void execute(@NonNull JobContext jobContext) {
+    clean(jobContext);
+    impact(jobContext);
+  }
+
+  private void clean(JobContext jobContext) {
+    delete(jobContext, FileType.OBSERVATION_FI);
+  }
+
+  private void impact(JobContext jobContext) {
     jobContext.execute(new CalculateImpactTask());
   }
 

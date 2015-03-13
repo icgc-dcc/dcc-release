@@ -23,7 +23,8 @@ import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.icgc.dcc.etl2.core.job.Job;
+import org.icgc.dcc.etl2.core.job.FileType;
+import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.job.summarize.task.DonorGeneObservationSummarizeTask;
@@ -31,7 +32,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class SummarizeJob implements Job {
+public class SummarizeJob extends GenericJob {
 
   @Override
   public JobType getType() {
@@ -41,8 +42,19 @@ public class SummarizeJob implements Job {
   @Override
   @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
+    clean(jobContext);
+    summarize(jobContext);
+  }
+
+  private void clean(JobContext jobContext) {
+    // TODO: Add more
+    delete(jobContext, FileType.DONOR_GENE_OBSERVATION_SUMMARY);
+  }
+
+  private void summarize(JobContext jobContext) {
     val watch = createStarted();
     log.info("Executing summary job...");
+    // TODO: Add more
     jobContext.execute(new DonorGeneObservationSummarizeTask());
     log.info("Finished executing summary job in {}", watch);
   }

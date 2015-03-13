@@ -43,8 +43,10 @@ public class DeleteFileTypeTask implements Task {
   @SneakyThrows
   public void execute(TaskContext taskContext) {
     for (val fileType : fileTypes) {
-      log.info("Deleting '{}' file type", fileType);
-      taskContext.delete(fileType);
+      if (taskContext.exists(fileType)) {
+        log.info("Deleting '{}' file type", fileType);
+        taskContext.delete(fileType);
+      }
     }
   }
 

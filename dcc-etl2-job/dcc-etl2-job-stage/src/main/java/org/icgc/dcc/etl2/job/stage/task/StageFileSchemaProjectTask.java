@@ -46,7 +46,7 @@ import org.icgc.dcc.etl2.job.stage.function.TrimValues;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Slf4j
-public class FileSchemaProjectStageTask extends GenericTask {
+public class StageFileSchemaProjectTask extends GenericTask {
 
   /**
    * Configuration.
@@ -55,7 +55,7 @@ public class FileSchemaProjectStageTask extends GenericTask {
   private final String projectName;
   private final List<Path> schemaProjectPaths;
 
-  public FileSchemaProjectStageTask(SubmissionFileSchema schema, String projectName, List<Path> schemaProjectPaths) {
+  public StageFileSchemaProjectTask(SubmissionFileSchema schema, String projectName, List<Path> schemaProjectPaths) {
     super(schema.getName() + ":" + projectName);
     this.schema = schema;
     this.projectName = projectName;

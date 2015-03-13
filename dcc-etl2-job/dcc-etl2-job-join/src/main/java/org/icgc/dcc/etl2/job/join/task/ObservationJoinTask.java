@@ -46,7 +46,6 @@ public class ObservationJoinTask extends GenericTask {
   @Override
   public void execute(TaskContext taskContext) {
     val outputFileType = FileType.OBSERVATION;
-    taskContext.delete(outputFileType);
 
     val sampleDonorIds = resolveSampleDonorIds(taskContext);
 

@@ -22,7 +22,7 @@ import lombok.SneakyThrows;
 
 import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
 import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.job.Job;
+import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.job.orphan.task.OrphanTask;
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.ImmutableList;
 
 @Component
-public class OrphanJob implements Job {
+public class OrphanJob extends GenericJob {
 
   /**
    * Metadata.
@@ -54,6 +54,18 @@ public class OrphanJob implements Job {
   @Override
   @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
+    clean(jobContext);
+    markOrphans(jobContext);
+  }
+
+  private void clean(JobContext jobContext) {
+    delete(jobContext,
+        FileType.DONOR_ORPHANED,
+        FileType.SPECIMEN_ORPHANED,
+        FileType.SAMPLE_ORPHANED);
+  }
+
+  private void markOrphans(JobContext jobContext) {
     jobContext.execute(new OrphanTask(definitions));
   }
 

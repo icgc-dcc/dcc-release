@@ -17,22 +17,21 @@
  */
 package org.icgc.dcc.etl2.job.id.task;
 
-import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.job.id.function.AddSurrogateSpecimenId;
+import org.icgc.dcc.etl2.core.task.GenericProcessTask;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+public abstract class AddSurrogateIdTask extends GenericProcessTask {
 
-public class SurrogateSpecimenIdTask extends SurrogateIdTask {
+  /**
+   * Configuration.
+   */
+  protected final String identifierUrl;
+  protected final String releaseName;
 
-  public SurrogateSpecimenIdTask(String identifierUrl, String releaseName) {
-    super(FileType.SPECIMEN, FileType.SPECIMEN_SURROGATE_KEY, identifierUrl, releaseName);
-  }
-
-  @Override
-  protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input
-        .map(new AddSurrogateSpecimenId(identifierUrl, releaseName));
+  public AddSurrogateIdTask(FileType inputFileType, FileType outputFileType, String identifierUrl, String releaseName) {
+    super(inputFileType, outputFileType);
+    this.identifierUrl = identifierUrl;
+    this.releaseName = releaseName;
   }
 
 }

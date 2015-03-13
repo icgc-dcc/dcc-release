@@ -21,7 +21,8 @@ import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.icgc.dcc.etl2.core.job.Job;
+import org.icgc.dcc.etl2.core.job.FileType;
+import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.job.fathmm.task.PredictFathmmTask;
@@ -36,7 +37,7 @@ import com.google.common.collect.BiMap;
  */
 @Slf4j
 @Component
-public class FathmmJob implements Job {
+public class FathmmJob extends GenericJob {
 
   @Value("${postgres.url}")
   private String jdbcUrl;
@@ -48,9 +49,13 @@ public class FathmmJob implements Job {
 
   @Override
   public void execute(@NonNull JobContext jobContext) {
+    clean(jobContext);
     val transcripts = readTranscripts(jobContext);
-
     predict(jobContext, transcripts);
+  }
+
+  private void clean(JobContext jobContext) {
+    delete(jobContext, FileType.OBSERVATION_FATHMM);
   }
 
   private BiMap<String, String> readTranscripts(JobContext jobContext) {

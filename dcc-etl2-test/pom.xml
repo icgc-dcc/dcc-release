@@ -46,7 +46,14 @@
       <artifactId>spark-core_${scala-build.version}</artifactId>
     </dependency>
 
-    <!-- Testing - Unit, mocking, assertions (note no "test" scope below) -->
+    <!-- Testing - DCC -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-resources</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Testing - Unit, mocking, assertions (note: "test" scope implied due to dep management) -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

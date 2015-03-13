@@ -15,57 +15,33 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.stage.core;
+package org.icgc.dcc.etl2.job.stage.task;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
-
+import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-import org.icgc.dcc.common.core.util.resolver.ArtifactoryCodeListsResolver;
-import org.icgc.dcc.common.core.util.resolver.ArtifactoryDictionaryResolver;
-import org.icgc.dcc.etl2.core.submission.SubmissionFileSchema;
-import org.icgc.dcc.etl2.core.submission.SubmissionFileSchemas;
-import org.icgc.dcc.etl2.core.submission.SubmissionMetadataService;
-import org.icgc.dcc.etl2.test.job.AbstractJobTest;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.hadoop.fs.Path;
+import org.icgc.dcc.etl2.core.task.Task;
+import org.icgc.dcc.etl2.core.task.TaskContext;
+import org.icgc.dcc.etl2.core.task.TaskType;
 
-public class StageJobTest extends AbstractJobTest {
-
-  /**
-   * Class under test.
-   */
-  StageJob job;
+@Slf4j
+public class DeleteStageTask implements Task {
 
   @Override
-  @Before
-  public void setUp() {
-    super.setUp();
-    this.job = new StageJob(getSchemas());
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
   }
 
-  @Test
-  public void testExecute() {
-    val jobContext = createJobContext(job.getType());
-    job.execute(jobContext);
+  @Override
+  @SneakyThrows
+  public void execute(TaskContext taskContext) {
+    val stagingDir = taskContext.getJobContext().getWorkingDir();
+    val fileSystem = taskContext.getFileSystem();
 
-    val results = produces("ssm_m");
-
-    assertThat(results).hasSize(1);
-    assertThat(results.get(0).get("gene")).isNotNull();
-  }
-
-  private SubmissionFileSchemas getSchemas() {
-    return new SubmissionFileSchemas(getMetadata());
-  }
-
-  private List<SubmissionFileSchema> getMetadata() {
-    return new SubmissionMetadataService(
-        new ArtifactoryDictionaryResolver(),
-        new ArtifactoryCodeListsResolver())
-        .getMetadata();
+    log.info("Deleting staging dir '{}'", stagingDir);
+    fileSystem.delete(new Path(stagingDir), true);
   }
 
 }

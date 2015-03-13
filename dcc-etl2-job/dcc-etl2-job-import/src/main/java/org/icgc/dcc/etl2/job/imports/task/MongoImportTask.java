@@ -65,10 +65,6 @@ public class MongoImportTask extends GenericTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    if (taskContext.exists(outputFileType)) {
-      taskContext.delete(outputFileType);
-    }
-
     val input = readInput(taskContext, createJobConf(taskContext), null);
 
     writeOutput(taskContext, input);

@@ -20,18 +20,19 @@ package org.icgc.dcc.etl2.job.id.core;
 import lombok.NonNull;
 import lombok.val;
 
-import org.icgc.dcc.etl2.core.job.Job;
+import org.icgc.dcc.etl2.core.job.FileType;
+import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.job.id.task.SurrogateDonorIdTask;
-import org.icgc.dcc.etl2.job.id.task.SurrogateMutationIdTask;
-import org.icgc.dcc.etl2.job.id.task.SurrogateSampleIdTask;
-import org.icgc.dcc.etl2.job.id.task.SurrogateSpecimenIdTask;
+import org.icgc.dcc.etl2.job.id.task.AddSurrogateDonorIdTask;
+import org.icgc.dcc.etl2.job.id.task.AddSurrogateMutationIdTask;
+import org.icgc.dcc.etl2.job.id.task.AddSurrogateSampleIdTask;
+import org.icgc.dcc.etl2.job.id.task.AddSurrogateSpecimenIdTask;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class IdJob implements Job {
+public class IdJob extends GenericJob {
 
   /**
    * Constants.
@@ -46,13 +47,26 @@ public class IdJob implements Job {
 
   @Override
   public void execute(@NonNull JobContext jobContext) {
+    clean(jobContext);
+    id(jobContext);
+  }
+
+  private void clean(JobContext jobContext) {
+    delete(jobContext,
+        FileType.DONOR_SURROGATE_KEY,
+        FileType.SPECIMEN_SURROGATE_KEY,
+        FileType.SAMPLE_SURROGATE_KEY,
+        FileType.SSM_P_MASKED_SURROGATE_KEY);
+  }
+
+  private void id(JobContext jobContext) {
     val releaseName = jobContext.getReleaseName();
 
     jobContext.execute(
-        new SurrogateDonorIdTask(identifierUrl, releaseName),
-        new SurrogateSpecimenIdTask(identifierUrl, releaseName),
-        new SurrogateSampleIdTask(identifierUrl, releaseName),
-        new SurrogateMutationIdTask(identifierUrl, releaseName));
+        new AddSurrogateDonorIdTask(identifierUrl, releaseName),
+        new AddSurrogateSpecimenIdTask(identifierUrl, releaseName),
+        new AddSurrogateSampleIdTask(identifierUrl, releaseName),
+        new AddSurrogateMutationIdTask(identifierUrl, releaseName));
   }
 
 }

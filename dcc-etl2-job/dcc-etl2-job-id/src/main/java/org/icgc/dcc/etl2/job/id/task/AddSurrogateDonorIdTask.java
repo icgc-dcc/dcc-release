@@ -19,20 +19,20 @@ package org.icgc.dcc.etl2.job.id.task;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.job.id.function.AddSurrogateSampleId;
+import org.icgc.dcc.etl2.job.id.function.AddSurrogateDonorId;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class SurrogateSampleIdTask extends SurrogateIdTask {
+public class AddSurrogateDonorIdTask extends AddSurrogateIdTask {
 
-  public SurrogateSampleIdTask(String identifierUrl, String releaseName) {
-    super(FileType.SAMPLE, FileType.SAMPLE_SURROGATE_KEY, identifierUrl, releaseName);
+  public AddSurrogateDonorIdTask(String identifierUrl, String releaseName) {
+    super(FileType.DONOR, FileType.DONOR_SURROGATE_KEY, identifierUrl, releaseName);
   }
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
     return input
-        .map(new AddSurrogateSampleId(identifierUrl, releaseName));
+        .map(new AddSurrogateDonorId(identifierUrl, releaseName));
   }
 
 }

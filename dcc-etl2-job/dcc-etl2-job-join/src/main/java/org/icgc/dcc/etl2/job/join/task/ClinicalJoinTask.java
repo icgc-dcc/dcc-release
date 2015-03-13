@@ -41,8 +41,6 @@ public class ClinicalJoinTask extends GenericTask {
   public void execute(TaskContext taskContext) {
     val outputFileType = FileType.CLINICAL;
 
-    taskContext.delete(outputFileType);
-
     val donor = parseDonor(taskContext);
     val specimen = parseSpecimen(taskContext);
     val sample = parseSample(taskContext);

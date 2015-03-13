@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
 import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.job.Job;
+import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.job.annotate.config.SnpEffProperties;
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
-public class AnnotateJob implements Job {
+public class AnnotateJob extends GenericJob {
 
   /**
    * Dependencies.
@@ -48,6 +48,15 @@ public class AnnotateJob implements Job {
   @Override
   @SneakyThrows
   public void execute(@NonNull JobContext jobContext) {
+    clean(jobContext);
+    annotate(jobContext);
+  }
+
+  private void clean(JobContext jobContext) {
+    delete(jobContext, FileType.SSM_S, FileType.SGV_S);
+  }
+
+  private void annotate(JobContext jobContext) {
     jobContext.execute(
         new AnnotationTask(properties, FileType.SSM_P, FileType.SSM_S),
         new AnnotationTask(properties, FileType.SGV_P, FileType.SGV_S));

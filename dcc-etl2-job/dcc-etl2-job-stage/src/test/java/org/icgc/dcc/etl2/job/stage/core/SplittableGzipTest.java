@@ -26,10 +26,12 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.util.Configurations;
 import org.icgc.dcc.etl2.core.util.JavaRDDs;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.annotation.Bean;
 
 @Slf4j
+@Ignore("prototyping")
 public class SplittableGzipTest {
 
   @Test
