@@ -4,9 +4,12 @@ import static com.google.common.collect.ImmutableList.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import lombok.val;
 
+import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 public class ImageJobTest extends AbstractJobTest {
 
@@ -27,13 +30,13 @@ public class ImageJobTest extends AbstractJobTest {
     val projectName = "PACA-CA";
 
     given(inputFile(projectName)
-        .fileType("specimen_surrogate_key")
+        .fileType(FileType.SPECIMEN_SURROGATE_KEY.name())
         .rows(of(row("{specimen_id: 1}"))));
 
-    val jobContext = createJobContext(job.getType(), projectName);
+    val jobContext = createJobContext(job.getType(), ImmutableList.of(projectName));
     job.execute(jobContext);
 
-    val results = produces(projectName, "specimen_surrogate_key_image");
+    val results = produces(projectName, FileType.SPECIMEN_SURROGATE_KEY_IMAGE.name());
 
     assertThat(results).hasSize(1);
     assertThat(results.get(0)).isEqualTo(row("{specimen_id: 1, digital_image_of_stained_section: null}"));

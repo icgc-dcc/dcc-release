@@ -1,7 +1,5 @@
 package org.icgc.dcc.etl2.test.job;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.ImmutableList.of;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
@@ -30,6 +28,7 @@ import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -84,27 +83,61 @@ public abstract class AbstractJobTest {
     }
   }
 
+  protected void given(File inputDirectory) {
+    File[] fileTypes = inputDirectory.listFiles();
+    for (File fileTypeDir : fileTypes) {
+      if (fileTypeDir.isFile()) {
+        continue;
+      }
+      String fileType = fileTypeDir.getName();
+      File[] projects = fileTypeDir.listFiles();
+      for (File projectDir : projects) {
+        if (projectDir.isFile()) {
+          continue;
+        }
+        String projectName = projectDir.getName().split("=")[1];
+        File[] files = projectDir.listFiles();
+        for (File file : files) {
+          String fileName = file.getName();
+          if (fileName.startsWith("part-")) {
+            TestFile testFile =
+                TestFile.builder().projectName(projectName).fileType(fileType).fileName(fileName)
+                    .path(file.getAbsolutePath()).build();
+            createInputFile(testFile);
+          }
+        }
+      }
+    }
+
+  }
+
   protected JobContext createJobContext(JobType type) {
-    return createJobContext(type, "");
+    return createJobContext(type, ImmutableList.of(""));
   }
 
   @SuppressWarnings("unchecked")
-  protected JobContext createJobContext(JobType type, String projectName) {
-    return new DefaultJobContext(type, "ICGC<version>", of(projectName), "/dev/null",
+  protected JobContext createJobContext(JobType type, List<String> projectNames) {
+    return new DefaultJobContext(type, "ICGC<version>", projectNames, "/dev/null",
         workingDir.toString(), mock(Table.class), taskExecutor);
   }
 
   protected void createInputFile(TestFile inputFile) {
     val fileTypeDirectory = getFileTypeDirectory(inputFile.getFileType());
-    checkState(fileTypeDirectory.mkdirs());
+    if (!fileTypeDirectory.exists()) {
+      fileTypeDirectory.mkdirs();
+    }
 
     val target = inputFile.isProjectPartitioned() ?
         getProjectFileTypeDirectory(inputFile.getProjectName(), inputFile.getFileType()) :
         getFileTypeFile(inputFile.getFileType());
+    if (!target.exists()) {
+      target.mkdirs();
+    }
 
     if (inputFile.isFile()) {
-      val sourceFile = new File(TEST_FIXTURES_DIR + "/" + inputFile.getFileName());
-      TestFiles.writeInputFile(sourceFile, target);
+      val sourceFile = new File(inputFile.getPath());
+      val targetFile = new File(target, sourceFile.getName());
+      TestFiles.writeInputFile(sourceFile, targetFile);
     } else {
       TestFiles.writeInputFile(inputFile.getRows(), target);
     }

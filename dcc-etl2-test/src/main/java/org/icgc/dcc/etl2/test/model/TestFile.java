@@ -19,8 +19,8 @@ package org.icgc.dcc.etl2.test.model;
 
 import java.util.List;
 
-import lombok.Value;
 import lombok.Builder;
+import lombok.Value;
 import lombok.experimental.Wither;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -33,6 +33,7 @@ public class TestFile {
   String projectName;
   String fileType;
   String fileName;
+  String path;
 
   List<ObjectNode> rows;
 
