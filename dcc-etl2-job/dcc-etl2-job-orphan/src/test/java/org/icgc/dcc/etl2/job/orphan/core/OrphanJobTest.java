@@ -11,6 +11,7 @@ import org.icgc.dcc.etl2.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
 public class OrphanJobTest extends AbstractJobTest {
@@ -18,7 +19,8 @@ public class OrphanJobTest extends AbstractJobTest {
   /**
    * Constants.
    */
-  private static final File TEST_FIXTURES_DIR = new File("src/test/resources/fixtures");
+  private static final String TEST_FIXTURES_DIR = "src/test/resources/fixtures";
+  private static final String INPUT_DIR = TEST_FIXTURES_DIR + "/staging";
 
   /**
    * Class under test.
@@ -30,22 +32,46 @@ public class OrphanJobTest extends AbstractJobTest {
   public void setUp() {
     super.setUp();
     this.job = new OrphanJob();
-    // this.workingDir = new File(super.TEST_FIXTURES_DIR + "/staging");
   }
 
   @Test
   public void testExecute() {
     List<String> projectNames = ImmutableList.of("All-US", "CMDI-UK", "EOPC-DE", "LAML-KR", "PRAD-CA");
 
-    given(new File(TEST_FIXTURES_DIR + "/staging"));
+    given(new File(INPUT_DIR));
 
     val jobContext = createJobContext(job.getType(), projectNames);
     job.execute(jobContext);
 
     for (String projectName : projectNames) {
-      val results = produces(projectName, "donor_orphaned");
-      assertThat(results.get(0).get("orphaned")).isNotNull();
-    }
+      if (projectName.equals("LAML-KR")) {
+        val donorResults = produces(projectName, "donor_orphaned");
+        assertThat(orphanCount(donorResults)).isZero();
 
+        val specimenResults = produces(projectName, "specimen_orphaned");
+        assertThat(orphanCount(specimenResults)).isZero();
+
+        val sampleResults = produces(projectName, "sample_orphaned");
+        assertThat(orphanCount(sampleResults)).isZero();
+      }
+
+      if (projectName.equals("ALL-US")) {
+        val donorResults = produces(projectName, "donor_orphaned");
+        assertThat(orphanCount(donorResults)).isEqualTo(213);
+
+        val specimenResults = produces(projectName, "specimen_orphaned");
+        assertThat(orphanCount(specimenResults)).isEqualTo(535);
+
+        val sampleResults = produces(projectName, "sample_orphaned");
+        assertThat(orphanCount(sampleResults)).isEqualTo(899);
+      }
+    }
+  }
+
+  private long orphanCount(List<ObjectNode> rows) {
+    return rows
+        .stream()
+        .filter(row -> row.get("orphaned").asText().equals("true"))
+        .count();
   }
 }

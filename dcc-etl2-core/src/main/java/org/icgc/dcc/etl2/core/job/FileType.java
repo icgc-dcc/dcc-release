@@ -139,7 +139,7 @@ public enum FileType {
 
   public Optional<FileTypes.FileType> getSubmissionFileType() {
     try {
-      return Optional.of(FileTypes.FileType.valueOf(name()));
+      return Optional.of(FileTypes.FileType.valueOf(name() + "_TYPE"));
     } catch (Exception e) {
       return Optional.empty();
     }

@@ -47,7 +47,8 @@ public class TestFiles {
     val output = new PrintWriter(target);
     while (iterator.hasNext()) {
       val row = iterator.next();
-      output.write(row.toString());
+      output.print(row.toString());
+      output.println();
     }
   }
 
@@ -56,7 +57,8 @@ public class TestFiles {
     @Cleanup
     val output = new PrintWriter(target);
     for (val row : rows) {
-      output.write(row.toString());
+      output.print(row.toString());
+      output.println();
     }
   }
 
@@ -70,7 +72,6 @@ public class TestFiles {
     val rows = Lists.<ObjectNode> newArrayList();
     while (iterator.hasNext()) {
       val row = iterator.next();
-
       rows.add(row);
     }
 

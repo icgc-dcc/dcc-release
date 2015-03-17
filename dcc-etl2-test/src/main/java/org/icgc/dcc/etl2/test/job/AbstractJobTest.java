@@ -35,11 +35,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 public abstract class AbstractJobTest {
 
   /**
-   * Constants.
-   */
-  private static final File TEST_FIXTURES_DIR = new File("src/test/resources/fixtures");
-
-  /**
    * Collaborators.
    */
   protected JavaSparkContext sparkContext;
@@ -85,30 +80,41 @@ public abstract class AbstractJobTest {
 
   protected void given(File inputDirectory) {
     File[] fileTypes = inputDirectory.listFiles();
+    processFileTypes(fileTypes);
+  }
+
+  private void processFileTypes(File[] fileTypes) {
     for (File fileTypeDir : fileTypes) {
       if (fileTypeDir.isFile()) {
         continue;
       }
       String fileType = fileTypeDir.getName();
       File[] projects = fileTypeDir.listFiles();
-      for (File projectDir : projects) {
-        if (projectDir.isFile()) {
-          continue;
-        }
-        String projectName = projectDir.getName().split("=")[1];
-        File[] files = projectDir.listFiles();
-        for (File file : files) {
-          String fileName = file.getName();
-          if (fileName.startsWith("part-")) {
-            TestFile testFile =
-                TestFile.builder().projectName(projectName).fileType(fileType).fileName(fileName)
-                    .path(file.getAbsolutePath()).build();
-            createInputFile(testFile);
-          }
-        }
+      processProjects(fileType, projects);
+    }
+  }
+
+  private void processProjects(String fileType, File[] projects) {
+    for (File projectDir : projects) {
+      if (projectDir.isFile()) {
+        continue;
+      }
+      String projectName = projectDir.getName().split("=")[1];
+      File[] files = projectDir.listFiles();
+      createInputFiles(files, projectName, fileType);
+    }
+  }
+
+  private void createInputFiles(File[] files, String projectName, String fileType) {
+    for (File file : files) {
+      String fileName = file.getName();
+      if (fileName.startsWith("part-")) {
+        TestFile testFile =
+            TestFile.builder().projectName(projectName).fileType(fileType).fileName(fileName)
+                .path(file.getAbsolutePath()).build();
+        createInputFile(testFile);
       }
     }
-
   }
 
   protected JobContext createJobContext(JobType type) {
