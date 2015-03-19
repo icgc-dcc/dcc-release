@@ -37,14 +37,14 @@ public class OrphanJobTest extends AbstractJobTest {
 
   @Test
   public void testExecute() {
-    List<String> projectNames = ImmutableList.of("All-US", "CMDI-UK", "EOPC-DE", "LAML-KR", "PRAD-CA");
+    val projectNames = ImmutableList.of("All-US", "CMDI-UK", "EOPC-DE", "LAML-KR", "PRAD-CA");
 
     given(new File(INPUT_DIR));
 
     val jobContext = createJobContext(job.getType(), projectNames);
     job.execute(jobContext);
 
-    for (String projectName : projectNames) {
+    for (val projectName : projectNames) {
       if (projectName.equals("LAML-KR")) {
         val donorResults = produces(projectName, FileType.DONOR_ORPHANED);
         assertThat(orphanCount(donorResults)).isZero();
@@ -72,7 +72,7 @@ public class OrphanJobTest extends AbstractJobTest {
   private long orphanCount(List<ObjectNode> rows) {
     return rows
         .stream()
-        .filter(row -> row.get("orphaned").asText().equals("true"))
+        .filter(row -> row.get("orphaned").asBoolean())
         .count();
   }
 }

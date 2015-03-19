@@ -111,7 +111,8 @@ public abstract class AbstractJobTest {
       String fileName = file.getName();
       if (fileName.startsWith("part-")) {
         TestFile testFile =
-            TestFile.builder().projectName(projectName).fileType(FileType.valueOf(fileTypeDirName)).fileName(fileName)
+            TestFile.builder().projectName(projectName).fileType(FileType.valueOf(fileTypeDirName.toUpperCase()))
+                .fileName(fileName)
                 .path(file.getAbsolutePath()).build();
         createInputFile(testFile);
       }
