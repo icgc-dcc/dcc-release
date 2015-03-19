@@ -19,7 +19,6 @@ package org.icgc.dcc.etl2.job.fathmm.core;
 
 import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Maps.newHashMap;
-import static com.google.common.primitives.Ints.tryParse;
 import static java.util.regex.Pattern.compile;
 import static org.apache.commons.lang3.StringUtils.left;
 import static org.apache.commons.lang3.StringUtils.right;
@@ -41,7 +40,6 @@ import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.Query;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 
 /**
@@ -54,6 +52,7 @@ public class FathmmPredictor implements Closeable {
    * Constants.
    */
   private static final String WARNING_NO_SEQUENCE_FOUND = "No Sequence Record Found";
+  private static final Pattern SINGLE_NUCLEOTIDE_PATTERN = compile("^[A-Z]\\d+[A-Z]$");
   private static final Pattern SUBSTITUTION_PATTERN = compile("^[ARNDCEQGHILKMFPSTWYV]\\d+[ARNDCEQGHILKMFPSTWYV]$");
   private static final Comparator<Map<String, Object>> INFORMATION_COMPARATOR = new Comparator<Map<String, Object>>() {
 
@@ -265,17 +264,32 @@ public class FathmmPredictor implements Closeable {
   }
 
   private static int parseSubstitution(String aaChange) {
-    val text = aaChange.substring(1, aaChange.length() - 1);
-    val result = tryParse(text);
+    val matcher = SINGLE_NUCLEOTIDE_PATTERN.matcher(aaChange);
+    int result = -1;
 
-    if (result == null) {
-      log.warn("Could not parse substitution from '{}'", aaChange);
+    if (matcher.matches()) {
+      if (aaChange.charAt(0) == aaChange.charAt(aaChange.length() - 1)) {
+        log.warn("Could not parse substitution from '{}', start and end letters must be different.", aaChange);
+        return -1;
+      }
+
+      val digitsText = aaChange.substring(1, aaChange.length() - 1);
+
+      try {
+        result = Integer.parseInt(digitsText);
+      } catch (NumberFormatException e) {
+        log.warn("Could not parse substitution from '{}'", aaChange);
+        return -1;
+      }
+
+      if (result == 0) {
+        log.warn("Could not parse substitution from '{}', digits can not contain only 0(s);", aaChange);
+        return -1;
+      }
+
     }
-    // TODO: When DCC-2467 is addressed, uncomment the following
-    // checkArgument(result == null, "Could not parse substitution from '%s'", aaChange);
 
-    // TODO: When DCC-2467 is addressed change to: return result;
-    return Objects.firstNonNull(result, -1);
+    return result;
   }
 
   private static boolean isSubstitution(String aaChange) {
