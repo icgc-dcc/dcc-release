@@ -19,6 +19,7 @@ package org.icgc.dcc.etl2.job.fathmm.core;
 
 import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.primitives.Ints.tryParse;
 import static java.util.regex.Pattern.compile;
 import static org.apache.commons.lang3.StringUtils.left;
 import static org.apache.commons.lang3.StringUtils.right;
@@ -33,7 +34,6 @@ import java.util.regex.Pattern;
 
 import lombok.NonNull;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.StringUtils;
 import org.skife.jdbi.v2.DBI;
@@ -45,14 +45,12 @@ import com.google.common.collect.Iterables;
 /**
  * This is a java port for FatHMM using postgresql database
  */
-@Slf4j
 public class FathmmPredictor implements Closeable {
 
   /**
    * Constants.
    */
   private static final String WARNING_NO_SEQUENCE_FOUND = "No Sequence Record Found";
-  private static final Pattern SINGLE_NUCLEOTIDE_PATTERN = compile("^[A-Z]\\d+[A-Z]$");
   private static final Pattern SUBSTITUTION_PATTERN = compile("^[ARNDCEQGHILKMFPSTWYV]\\d+[ARNDCEQGHILKMFPSTWYV]$");
   private static final Comparator<Map<String, Object>> INFORMATION_COMPARATOR = new Comparator<Map<String, Object>>() {
 
@@ -114,7 +112,6 @@ public class FathmmPredictor implements Closeable {
   // Calculate prediction via FATHMM database
   private Map<String, String> calculateFATHMM(String translationId, String aaChange, String weights) {
     Map<String, String> result = newHashMap();
-    int substitution = parseSubstitution(aaChange);
     val facade = new ArrayList<Map<String, Object>>();
 
     // TODO: Cache this!!!
@@ -126,7 +123,7 @@ public class FathmmPredictor implements Closeable {
     // Check null
     if (null == sequence) {
       result = newHashMap();
-      result.put("Warning", WARNING_NO_SEQUENCE_FOUND);
+      result.put("Warning", WARNING_NO_SEQUENCE_FOUND + " For " + aaChange);
       return result;
     }
 
@@ -135,25 +132,45 @@ public class FathmmPredictor implements Closeable {
 
     if (!isSubstitution(aaChange)) {
       result = newHashMap();
-      result.put("Warning", "Invalid Substitution Format");
+      result.put("Warning", "Invalid Substitution Format For " + aaChange);
       return result;
     }
+
+    // The two letters must be different.
+    if (left(aaChange, 1).equals(right(aaChange, 1))) {
+      result = newHashMap();
+      result.put("Warning", "Synonymous Mutation For " + aaChange);
+      return result;
+    }
+
+    val digits = aaChange.substring(1, aaChange.length() - 1);
+    val substitution = tryParse(digits);
+
+    if (substitution == null) {
+      result = newHashMap();
+      result.put("Warning", "Invalid Substitution Value For " + aaChange + " With Substituion: " + substitution);
+      return result;
+    }
+
+    // Digit(s) in the middle can not contain only 0(s).
+    if (substitution == 0) {
+      result = newHashMap();
+      result.put("Warning", "Invalid Substitution Value For " + aaChange + " With Substituion: " + substitution);
+      return result;
+    }
+
     if (substitution > sequenceStr.length()) {
       result = newHashMap();
-      result.put("Warning", "Invalid Substitution Position");
+      result.put("Warning", "Invalid Substitution Position For " + aaChange + " With Substituion: " + substitution);
       return result;
     }
+
     if (!aaChange.substring(0, 1).equals(sequenceStr.substring(substitution - 1, substitution))) {
       result = newHashMap();
       result.put(
           "Warning",
           "Inconsistent Wild-Type Residue (Expected '"
               + sequenceStr.substring(substitution - 1, substitution) + "')");
-      return result;
-    }
-    if (left(aaChange, 1).equals(right(aaChange, 1))) {
-      result = newHashMap();
-      result.put("Warning", "Synonymous Mutation");
       return result;
     }
 
@@ -263,39 +280,8 @@ public class FathmmPredictor implements Closeable {
     return result;
   }
 
-  private static int parseSubstitution(String aaChange) {
-    val matcher = SINGLE_NUCLEOTIDE_PATTERN.matcher(aaChange);
-    int result = -1;
-
-    if (matcher.matches()) {
-      if (aaChange.charAt(0) == aaChange.charAt(aaChange.length() - 1)) {
-        log.warn("Could not parse substitution from '{}', start and end letters must be different.", aaChange);
-        return -1;
-      }
-
-      val digitsText = aaChange.substring(1, aaChange.length() - 1);
-
-      try {
-        result = Integer.parseInt(digitsText);
-      } catch (NumberFormatException e) {
-        log.warn("Could not parse substitution from '{}'", aaChange);
-        return -1;
-      }
-
-      if (result == 0) {
-        log.warn("Could not parse substitution from '{}', digits can not contain only 0(s);", aaChange);
-        return -1;
-      }
-
-    }
-
-    return result;
-  }
-
   private static boolean isSubstitution(String aaChange) {
-    val matcher = SUBSTITUTION_PATTERN.matcher(aaChange);
-
-    return matcher.matches();
+    return SUBSTITUTION_PATTERN.matcher(aaChange).matches();
   }
 
 }
