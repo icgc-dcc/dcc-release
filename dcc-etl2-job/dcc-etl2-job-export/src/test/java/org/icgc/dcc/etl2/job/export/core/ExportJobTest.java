@@ -35,6 +35,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.icgc.dcc.etl2.core.job.DefaultJobContext;
+import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
@@ -84,7 +85,7 @@ public class ExportJobTest extends BaseExportJobTest {
 
     // Simulate exporter input dynamically
     given(inputFile()
-        .fileType("export_input")
+        .fileType(FileType.EXPORT_INPUT)
         .rows(rows));
 
     copyFiles();

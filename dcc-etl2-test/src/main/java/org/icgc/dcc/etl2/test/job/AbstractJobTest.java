@@ -1,7 +1,5 @@
 package org.icgc.dcc.etl2.test.job;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.ImmutableList.of;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
@@ -16,6 +14,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.DefaultJobContext;
+import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.core.task.TaskExecutor;
@@ -30,15 +29,11 @@ import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 import com.google.common.util.concurrent.MoreExecutors;
 
 public abstract class AbstractJobTest {
-
-  /**
-   * Constants.
-   */
-  private static final File TEST_FIXTURES_DIR = new File("src/test/resources/fixtures");
 
   /**
    * Collaborators.
@@ -84,27 +79,73 @@ public abstract class AbstractJobTest {
     }
   }
 
+  protected void given(File inputDirectory) {
+    File[] fileTypes = inputDirectory.listFiles();
+    processFileTypes(fileTypes);
+  }
+
+  private void processFileTypes(File[] fileTypes) {
+    for (File fileTypeDir : fileTypes) {
+      if (fileTypeDir.isFile()) {
+        continue;
+      }
+      String fileTypeDirName = fileTypeDir.getName();
+      File[] projects = fileTypeDir.listFiles();
+      processProjects(fileTypeDirName, projects);
+    }
+  }
+
+  private void processProjects(String fileTypeDirName, File[] projects) {
+    for (File projectDir : projects) {
+      if (projectDir.isFile()) {
+        continue;
+      }
+      String projectName = projectDir.getName().split("=")[1];
+      File[] files = projectDir.listFiles();
+      createInputFiles(files, projectName, fileTypeDirName);
+    }
+  }
+
+  private void createInputFiles(File[] files, String projectName, String fileTypeDirName) {
+    for (File file : files) {
+      String fileName = file.getName();
+      if (fileName.startsWith("part-")) {
+        TestFile testFile =
+            TestFile.builder().projectName(projectName).fileType(FileType.valueOf(fileTypeDirName.toUpperCase()))
+                .fileName(fileName)
+                .path(file.getAbsolutePath()).build();
+        createInputFile(testFile);
+      }
+    }
+  }
+
   protected JobContext createJobContext(JobType type) {
-    return createJobContext(type, "");
+    return createJobContext(type, ImmutableList.of(""));
   }
 
   @SuppressWarnings("unchecked")
-  protected JobContext createJobContext(JobType type, String projectName) {
-    return new DefaultJobContext(type, "ICGC<version>", of(projectName), "/dev/null",
+  protected JobContext createJobContext(JobType type, List<String> projectNames) {
+    return new DefaultJobContext(type, "ICGC<version>", projectNames, "/dev/null",
         workingDir.toString(), mock(Table.class), taskExecutor);
   }
 
   protected void createInputFile(TestFile inputFile) {
     val fileTypeDirectory = getFileTypeDirectory(inputFile.getFileType());
-    checkState(fileTypeDirectory.mkdirs());
+    if (!fileTypeDirectory.exists()) {
+      fileTypeDirectory.mkdirs();
+    }
 
     val target = inputFile.isProjectPartitioned() ?
         getProjectFileTypeDirectory(inputFile.getProjectName(), inputFile.getFileType()) :
         getFileTypeFile(inputFile.getFileType());
+    if (!target.exists()) {
+      target.mkdirs();
+    }
 
     if (inputFile.isFile()) {
-      val sourceFile = new File(TEST_FIXTURES_DIR + "/" + inputFile.getFileName());
-      TestFiles.writeInputFile(sourceFile, target);
+      val sourceFile = new File(inputFile.getPath());
+      val targetFile = new File(target, sourceFile.getName());
+      TestFiles.writeInputFile(sourceFile, targetFile);
     } else {
       TestFiles.writeInputFile(inputFile.getRows(), target);
     }
@@ -114,33 +155,33 @@ public abstract class AbstractJobTest {
     return new TaskExecutor(MoreExecutors.sameThreadExecutor(), sparkContext, fileSystem);
   }
 
-  private File getFileTypeFile(String fileType) {
+  private File getFileTypeFile(FileType fileType) {
     return new File(getFileTypeDirectory(fileType), "part-00000");
   }
 
-  private File getFileTypeDirectory(String fileType) {
-    val type = new File(workingDir, fileType);
+  private File getFileTypeDirectory(FileType fileType) {
+    val type = new File(workingDir, fileType.name());
 
     return type;
   }
 
-  private File getProjectFileTypeDirectory(String projectName, String fileType) {
+  private File getProjectFileTypeDirectory(String projectName, FileType fileType) {
     return new File(getFileTypeDirectory(fileType), Partitions.getPartitionName(projectName));
   }
 
-  private File getProjectFileTypeFile(String projectName, String fileType) {
+  private File getProjectFileTypeFile(String projectName, FileType fileType) {
     return new File(getProjectFileTypeDirectory(projectName, fileType), "part-00000");
   }
 
   @SneakyThrows
-  protected List<ObjectNode> produces(String projectName, String fileType) {
+  protected List<ObjectNode> produces(String projectName, FileType fileType) {
     val file = projectName == null ? getFileTypeFile(fileType) : getProjectFileTypeFile(projectName, fileType);
 
     return TestFiles.readInputFile(file);
   }
 
   @SneakyThrows
-  protected List<ObjectNode> produces(String fileType) {
+  protected List<ObjectNode> produces(FileType fileType) {
     return produces(null, fileType);
   }
 

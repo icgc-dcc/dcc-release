@@ -19,9 +19,10 @@ package org.icgc.dcc.etl2.core.util;
 
 import static org.icgc.dcc.etl2.core.hadoop.ObjectNodeSerialization.READER;
 import static org.icgc.dcc.etl2.core.hadoop.ObjectNodeSerialization.WRITER;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
-import lombok.experimental.UtilityClass;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -35,8 +36,8 @@ import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@UtilityClass
-public class ObjectNodeRDDs {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class ObjectNodeRDDs {
 
   @NonNull
   public static JavaRDD<ObjectNode> textObjectNodeFile(JavaSparkContext sparkContext, String path) {

@@ -21,10 +21,11 @@ import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 
 import java.util.List;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import lombok.experimental.UtilityClass;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
@@ -43,8 +44,8 @@ import org.apache.spark.rdd.HadoopPartition;
 import org.icgc.dcc.etl2.core.hadoop.CombineTextInputFormat;
 import org.slf4j.Logger;
 
-@UtilityClass
-public class JavaRDDs {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class JavaRDDs {
 
   @NonNull
   public static JavaHadoopRDD<LongWritable, Text> textFile(JavaSparkContext sparkContext, String paths) {

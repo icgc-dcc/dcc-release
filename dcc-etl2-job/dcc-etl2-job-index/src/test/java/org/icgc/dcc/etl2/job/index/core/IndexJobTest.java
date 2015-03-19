@@ -4,6 +4,7 @@ import java.io.File;
 
 import lombok.val;
 
+import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.job.index.config.IndexProperties;
 import org.icgc.dcc.etl2.test.job.AbstractJobTest;
 import org.junit.Before;
@@ -31,13 +32,13 @@ public class IndexJobTest extends AbstractJobTest {
   @Test
   public void testExecute() {
     given(inputFile()
-        .fileType("release")
+        .fileType(FileType.RELEASE)
         .fileName("working/release"));
     given(inputFile()
-        .fileType("project")
+        .fileType(FileType.PROJECT)
         .fileName("working/project"));
     given(inputFile()
-        .fileType("gene")
+        .fileType(FileType.GENE)
         .fileName("working/gene"));
 
     job.execute(createJobContext(job.getType()));

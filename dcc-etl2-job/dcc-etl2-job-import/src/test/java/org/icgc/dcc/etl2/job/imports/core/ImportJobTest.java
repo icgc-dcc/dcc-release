@@ -2,6 +2,7 @@ package org.icgc.dcc.etl2.job.imports.core;
 
 import lombok.val;
 
+import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.job.imports.config.MongoProperties;
 import org.icgc.dcc.etl2.test.job.AbstractJobTest;
 import org.junit.Before;
@@ -25,7 +26,7 @@ public class ImportJobTest extends AbstractJobTest {
   public void testExecute() {
     job.execute(createJobContext(job.getType()));
 
-    val results = produces("gene");
+    val results = produces(FileType.GENE);
     for (val gene : results) {
       System.out.println(gene);
     }

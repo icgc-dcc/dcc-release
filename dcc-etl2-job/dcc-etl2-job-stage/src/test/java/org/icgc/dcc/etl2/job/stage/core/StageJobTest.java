@@ -25,6 +25,7 @@ import lombok.val;
 
 import org.icgc.dcc.common.core.util.resolver.ArtifactoryCodeListsResolver;
 import org.icgc.dcc.common.core.util.resolver.ArtifactoryDictionaryResolver;
+import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.submission.SubmissionFileSchema;
 import org.icgc.dcc.etl2.core.submission.SubmissionFileSchemas;
 import org.icgc.dcc.etl2.core.submission.SubmissionMetadataService;
@@ -51,7 +52,7 @@ public class StageJobTest extends AbstractJobTest {
     val jobContext = createJobContext(job.getType());
     job.execute(jobContext);
 
-    val results = produces("ssm_m");
+    val results = produces(FileType.SSM_M);
 
     assertThat(results).hasSize(1);
     assertThat(results.get(0).get("gene")).isNotNull();
