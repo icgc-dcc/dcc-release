@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.etl2.job.orphan.function;
 
+import static org.icgc.dcc.etl2.core.util.FieldNames.OrphanFieldNames.ORPHANED_FIELD;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 
 import java.util.Set;
@@ -31,11 +32,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @RequiredArgsConstructor
 public class AddOrphanIndicator implements Function<ObjectNode, ObjectNode> {
-
-  /**
-   * Constants.
-   */
-  public static final String ORPHANED_FIELD = "orphaned";
 
   @NonNull
   private final String idFieldName;

@@ -30,13 +30,13 @@ public class ImageJobTest extends AbstractJobTest {
     val projectName = "PACA-CA";
 
     given(inputFile(projectName)
-        .fileType(FileType.SPECIMEN_SURROGATE_KEY.name())
+        .fileType(FileType.SPECIMEN_SURROGATE_KEY)
         .rows(of(row("{specimen_id: 1}"))));
 
     val jobContext = createJobContext(job.getType(), ImmutableList.of(projectName));
     job.execute(jobContext);
 
-    val results = produces(projectName, FileType.SPECIMEN_SURROGATE_KEY_IMAGE.name());
+    val results = produces(projectName, FileType.SPECIMEN_SURROGATE_KEY_IMAGE);
 
     assertThat(results).hasSize(1);
     assertThat(results.get(0)).isEqualTo(row("{specimen_id: 1, digital_image_of_stained_section: null}"));

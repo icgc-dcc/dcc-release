@@ -22,4 +22,10 @@ package org.icgc.dcc.etl2.core.util;
  */
 public class FieldNames {
 
+  public static class OrphanFieldNames {
+
+    public static final String ORPHANED_FIELD = "orphaned";
+
+  }
+
 }

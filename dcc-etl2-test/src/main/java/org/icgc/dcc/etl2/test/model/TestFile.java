@@ -23,6 +23,8 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.Wither;
 
+import org.icgc.dcc.etl2.core.job.FileType;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Value
@@ -31,7 +33,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class TestFile {
 
   String projectName;
-  String fileType;
+  FileType fileType;
   String fileName;
   String path;
 

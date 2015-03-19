@@ -29,13 +29,13 @@ public class SummarizeJobTest extends AbstractJobTest {
     val projectName = "PACA-CA";
 
     given(inputFile(projectName)
-        .fileType(FileType.OBSERVATION.name())
+        .fileType(FileType.OBSERVATION)
         .fileName("observation.json"));
 
     val jobContext = createJobContext(job.getType(), ImmutableList.of(projectName));
     job.execute(jobContext);
 
-    val results = produces(projectName, "donor-gene-observation-summary");
+    val results = produces(projectName, FileType.DONOR_GENE_OBSERVATION_SUMMARY);
 
     assertThat(results).hasSize(1);
     assertThat(results.get(0).get("gene")).isNotNull();

@@ -14,6 +14,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.DefaultJobContext;
+import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.core.task.TaskExecutor;
@@ -88,29 +89,29 @@ public abstract class AbstractJobTest {
       if (fileTypeDir.isFile()) {
         continue;
       }
-      String fileType = fileTypeDir.getName();
+      String fileTypeDirName = fileTypeDir.getName();
       File[] projects = fileTypeDir.listFiles();
-      processProjects(fileType, projects);
+      processProjects(fileTypeDirName, projects);
     }
   }
 
-  private void processProjects(String fileType, File[] projects) {
+  private void processProjects(String fileTypeDirName, File[] projects) {
     for (File projectDir : projects) {
       if (projectDir.isFile()) {
         continue;
       }
       String projectName = projectDir.getName().split("=")[1];
       File[] files = projectDir.listFiles();
-      createInputFiles(files, projectName, fileType);
+      createInputFiles(files, projectName, fileTypeDirName);
     }
   }
 
-  private void createInputFiles(File[] files, String projectName, String fileType) {
+  private void createInputFiles(File[] files, String projectName, String fileTypeDirName) {
     for (File file : files) {
       String fileName = file.getName();
       if (fileName.startsWith("part-")) {
         TestFile testFile =
-            TestFile.builder().projectName(projectName).fileType(fileType).fileName(fileName)
+            TestFile.builder().projectName(projectName).fileType(FileType.valueOf(fileTypeDirName)).fileName(fileName)
                 .path(file.getAbsolutePath()).build();
         createInputFile(testFile);
       }
@@ -153,33 +154,33 @@ public abstract class AbstractJobTest {
     return new TaskExecutor(MoreExecutors.sameThreadExecutor(), sparkContext, fileSystem);
   }
 
-  private File getFileTypeFile(String fileType) {
+  private File getFileTypeFile(FileType fileType) {
     return new File(getFileTypeDirectory(fileType), "part-00000");
   }
 
-  private File getFileTypeDirectory(String fileType) {
-    val type = new File(workingDir, fileType);
+  private File getFileTypeDirectory(FileType fileType) {
+    val type = new File(workingDir, fileType.name());
 
     return type;
   }
 
-  private File getProjectFileTypeDirectory(String projectName, String fileType) {
+  private File getProjectFileTypeDirectory(String projectName, FileType fileType) {
     return new File(getFileTypeDirectory(fileType), Partitions.getPartitionName(projectName));
   }
 
-  private File getProjectFileTypeFile(String projectName, String fileType) {
+  private File getProjectFileTypeFile(String projectName, FileType fileType) {
     return new File(getProjectFileTypeDirectory(projectName, fileType), "part-00000");
   }
 
   @SneakyThrows
-  protected List<ObjectNode> produces(String projectName, String fileType) {
+  protected List<ObjectNode> produces(String projectName, FileType fileType) {
     val file = projectName == null ? getFileTypeFile(fileType) : getProjectFileTypeFile(projectName, fileType);
 
     return TestFiles.readInputFile(file);
   }
 
   @SneakyThrows
-  protected List<ObjectNode> produces(String fileType) {
+  protected List<ObjectNode> produces(FileType fileType) {
     return produces(null, fileType);
   }
 

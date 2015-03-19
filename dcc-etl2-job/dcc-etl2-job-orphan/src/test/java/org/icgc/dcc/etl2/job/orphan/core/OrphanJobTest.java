@@ -7,6 +7,7 @@ import java.util.List;
 
 import lombok.val;
 
+import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,24 +46,24 @@ public class OrphanJobTest extends AbstractJobTest {
 
     for (String projectName : projectNames) {
       if (projectName.equals("LAML-KR")) {
-        val donorResults = produces(projectName, "donor_orphaned");
+        val donorResults = produces(projectName, FileType.DONOR_ORPHANED);
         assertThat(orphanCount(donorResults)).isZero();
 
-        val specimenResults = produces(projectName, "specimen_orphaned");
+        val specimenResults = produces(projectName, FileType.SPECIMEN_ORPHANED);
         assertThat(orphanCount(specimenResults)).isZero();
 
-        val sampleResults = produces(projectName, "sample_orphaned");
+        val sampleResults = produces(projectName, FileType.SAMPLE_ORPHANED);
         assertThat(orphanCount(sampleResults)).isZero();
       }
 
       if (projectName.equals("ALL-US")) {
-        val donorResults = produces(projectName, "donor_orphaned");
+        val donorResults = produces(projectName, FileType.DONOR_ORPHANED);
         assertThat(orphanCount(donorResults)).isEqualTo(213);
 
-        val specimenResults = produces(projectName, "specimen_orphaned");
+        val specimenResults = produces(projectName, FileType.SPECIMEN_ORPHANED);
         assertThat(orphanCount(specimenResults)).isEqualTo(535);
 
-        val sampleResults = produces(projectName, "sample_orphaned");
+        val sampleResults = produces(projectName, FileType.SPECIMEN_ORPHANED);
         assertThat(orphanCount(sampleResults)).isEqualTo(899);
       }
     }
