@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.etl2.job.index.service;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.base.Strings.repeat;
@@ -29,6 +28,7 @@ import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
+import static org.icgc.dcc.etl2.job.index.factory.JacksonFactory.newDefaultMapper;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -52,7 +52,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.io.Resources;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -94,7 +93,7 @@ public class IndexService implements Closeable {
       log.info("Creating index '{}'...", indexName);
       checkState(client
           .prepareCreate(indexName)
-          .setSettings(IndexService.getSettings())
+          .setSettings(IndexService.getSettings().toString())
           .execute()
           .actionGet()
           .isAcknowledged(),
@@ -102,7 +101,7 @@ public class IndexService implements Closeable {
 
       for (IndexType type : IndexType.values()) {
         String typeName = type.getName();
-        String source = IndexService.getTypeMapping(typeName);
+        String source = IndexService.getTypeMapping(typeName).toString();
 
         log.info("Creating index '{}' mapping for type '{}'...", indexName, typeName);
         checkState(client.preparePutMapping(indexName)
@@ -179,14 +178,14 @@ public class IndexService implements Closeable {
     log.info("                    {} ", formatBytes(indexStats.getTotal().getStore().getSizeInBytes()));
   }
 
-  public static String getSettings() throws IOException {
+  public static ObjectNode getSettings() throws IOException {
     String resourceName = format("%s/index.settings.json", ES_CONFIG_BASE_PATH);
     URL settingsFileUrl = getResource(resourceName);
 
-    return Resources.toString(settingsFileUrl, UTF_8);
+    return (ObjectNode) newDefaultMapper().readTree(settingsFileUrl);
   }
 
-  public static String getTypeMapping(String typeName) throws JsonProcessingException, IOException {
+  public static ObjectNode getTypeMapping(String typeName) throws JsonProcessingException, IOException {
     String resourceName = format("%s/%s.mapping.json", ES_CONFIG_BASE_PATH, typeName);
     URL mappingFileUrl = getResource(resourceName);
 
@@ -202,7 +201,7 @@ public class IndexService implements Closeable {
       _meta.put(key, value);
     }
 
-    return typeMapping.toString();
+    return (ObjectNode) typeMapping;
   }
 
   private Set<String> getIndexNames() {
