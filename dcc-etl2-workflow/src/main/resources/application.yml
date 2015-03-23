@@ -11,6 +11,7 @@
 dcc:
    submission:
       url: http://***REMOVED***/ws
+      dictionaryVersion: 0.10a
    identifier:
       url: http://hcache-dcc.oicr.on.ca:5391
 
@@ -72,7 +73,7 @@ spring:
    
 # Spark
 spark:
-   master: "spark://hproxy-dcc.res.oicr.on.ca:7077"
+   master: "spark://***REMOVED***:7077"
    properties:
       spark.executor.memory: 1g
       spark.cores.max: 100
