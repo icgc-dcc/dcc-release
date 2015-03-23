@@ -138,10 +138,10 @@ public class HDFSCollectionReader implements CollectionReader {
   }
 
   private Path getFilePath(FileType fileType) throws IOException {
-    val filePath = new Path(collectionDir, fileType.getDirName());
-    checkState(fileSystem.exists(filePath), filePath);
+    val basePath = new Path(collectionDir, fileType.getDirName());
+    checkState(fileSystem.exists(basePath), basePath);
 
-    return filePath;
+    return fileType.isPartitioned() ? new Path(basePath, "*") : basePath;
   }
 
   private static FileType resolveFileType(ReleaseCollection collection) {

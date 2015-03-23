@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.etl2.job.index.core;
 
+import static org.icgc.dcc.etl2.core.util.Streams.map;
 import static org.icgc.dcc.etl2.job.index.factory.TransportClientFactory.newTransportClient;
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -89,13 +90,10 @@ public class IndexJob implements Job {
   }
 
   private void write(JobContext jobContext, String indexName) {
-    val releaseName = jobContext.getReleaseName();
+    val tasks = map(DocumentType.values(), type -> {
+      return new IndexDocumentTask(properties, indexName, jobContext.getReleaseName(), type);
+    });
 
-    jobContext.execute(
-        new IndexDocumentTask(properties, indexName, releaseName, DocumentType.RELEASE_TYPE),
-        new IndexDocumentTask(properties, indexName, releaseName, DocumentType.PROJECT_TYPE),
-        new IndexDocumentTask(properties, indexName, releaseName, DocumentType.GENE_TYPE)
-        );
+    jobContext.execute(tasks);
   }
-
 }
