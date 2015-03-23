@@ -15,7 +15,7 @@ mvn clean package
 Spark
 ---
 
-## Build
+### Build
 
 To run Spark 1.2.1 on CDH 5.3.1 using Hadoop MR1 (DCC requirement), a custom build is required since http://spark.apache.org/downloads.html does not offer a pre-built distribution of CDH5:
 
@@ -30,9 +30,9 @@ stat spark-1.2.1-bin-2.5.0-mr1-cdh5.3.1.tgz
 See http://spark.apache.org/docs/1.2.1/building-spark.html#specifying-the-hadoop-version for details.
 
 
-## Configuration
+### Configuration
 
-### `conf/spark-defaults.conf`
+#### `conf/spark-defaults.conf`
 
 ```bash
 spark.executor.extraClassPath   /opt/cloudera/parcels/GPLEXTRAS/lib/hadoop/lib/hadoop-lzo.jar
@@ -40,7 +40,7 @@ spark.executor.extraLibraryPath /opt/cloudera/parcels/CDH/lib/hadoop/lib/native:
 spark.driver.extraLibraryPath   /opt/cloudera/parcels/CDH/lib/hadoop/lib/native:/opt/cloudera/parcels/GPLEXTRAS/lib/hadoop/lib/native
 ```
 
-### `conf/spark-env.sh`
+#### `conf/spark-env.sh`
 
 ```bash
 export HADOOP_CONF_DIR=${HADOOP_CONF_DIR:-/etc/hadoop/conf}
@@ -56,6 +56,6 @@ export SPARK_WORKER_MEMORY=32g
 export SPARK_WORKER_INSTANCES=4
 ```
 
-### `conf/slaves`
+#### `conf/slaves`
 
 Add all slaves hostnames to this file
