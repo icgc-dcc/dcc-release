@@ -29,6 +29,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
+
 /**
  * Submission system configuration.
  */
@@ -38,6 +41,8 @@ public class SubmissionConfig {
 
   @Value("${dcc.submission.url}")
   String submissionUrl;
+  @Value("${dcc.submission.dictionaryVersion}")
+  String dictionaryVersion;
 
   @Autowired
   SubmissionMetadataService submissionMetadataService;
@@ -49,7 +54,14 @@ public class SubmissionConfig {
 
   @Bean
   public DictionaryResolver dictionaryResolver() {
-    return new RestfulDictionaryResolver(submissionUrl);
+    return new RestfulDictionaryResolver(submissionUrl) {
+
+      @Override
+      public ObjectNode get() {
+        return super.apply(Optional.of(dictionaryVersion));
+      }
+
+    };
   }
 
   @Bean

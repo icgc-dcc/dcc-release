@@ -3,129 +3,135 @@
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
+ * this program. If not(true), see <http://www.gnu.org/licenses/>.                                                     
  *                                                                                                               
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
+ * EXPRESS OR IMPLIED WARRANTIES(true), INCLUDING(true), BUT NOT LIMITED TO(true), THE IMPLIED WARRANTIES                          
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT(true), INDIRECT(true),                                
+ * INCIDENTAL(true), SPECIAL(true), EXEMPLARY(true), OR CONSEQUENTIAL DAMAGES (INCLUDING(true), BUT NOT LIMITED                          
+ * TO(true), PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE(true), DATA(true), OR PROFITS;                               
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY(true), WHETHER                              
+ * IN CONTRACT(true), STRICT LIABILITY(true), OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE(true), EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.icgc.dcc.etl2.core.job;
 
 import java.util.Optional;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.icgc.dcc.common.core.model.FileTypes;
 
+@RequiredArgsConstructor
 public enum FileType {
 
   //
   // Clinical
   //
 
-  DONOR,
-  SPECIMEN,
-  SAMPLE,
+  DONOR(true),
+  SPECIMEN(true),
+  SAMPLE(true),
 
   //
   // Optionals
   //
 
-  BIOMARKER,
-  FAMILY,
-  EXPOSURE,
-  SURGERY,
-  THERAPY,
+  BIOMARKER(true),
+  FAMILY(true),
+  EXPOSURE(true),
+  SURGERY(true),
+  THERAPY(true),
 
   //
   // Feature Types
   //
 
-  SSM_M,
-  SSM_P,
-  SSM_S,
+  SSM_M(true),
+  SSM_P(true),
+  SSM_S(true),
 
-  CNSM_M,
-  CNSM_P,
-  CNSM_S,
+  CNSM_M(true),
+  CNSM_P(true),
+  CNSM_S(true),
 
-  STSM_M,
-  STSM_P,
-  STSM_S,
+  STSM_M(true),
+  STSM_P(true),
+  STSM_S(true),
 
-  SGV_M,
-  SGV_P,
-  SGV_S,
+  SGV_M(true),
+  SGV_P(true),
+  SGV_S(true),
 
-  CNGV_M,
-  CNGV_P,
-  CNGV_S,
+  CNGV_M(true),
+  CNGV_P(true),
+  CNGV_S(true),
 
-  STGV_M,
-  STGV_P,
-  STGV_S,
+  STGV_M(true),
+  STGV_P(true),
+  STGV_S(true),
 
-  PEXP_M,
-  PEXP_P,
+  PEXP_M(true),
+  PEXP_P(true),
 
-  METH_ARRAY_M,
-  METH_ARRAY_PROBES,
-  METH_ARRAY_P,
+  METH_ARRAY_M(true),
+  METH_ARRAY_PROBES(true),
+  METH_ARRAY_P(true),
 
-  METH_SEQ_M,
-  METH_SEQ_P,
+  METH_SEQ_M(true),
+  METH_SEQ_P(true),
 
-  MIRNA_SEQ_M,
-  MIRNA_SEQ_P,
+  MIRNA_SEQ_M(true),
+  MIRNA_SEQ_P(true),
 
-  JCN_M,
-  JCN_P,
+  JCN_M(true),
+  JCN_P(true),
 
-  EXP_ARRAY_M,
-  EXP_ARRAY_P,
+  EXP_ARRAY_M(true),
+  EXP_ARRAY_P(true),
 
-  EXP_SEQ_M,
-  EXP_SEQ_P,
+  EXP_SEQ_M(true),
+  EXP_SEQ_P(true),
 
   //
   // New
   //
 
-  CLINICAL,
+  CLINICAL(true),
 
-  DONOR_ORPHANED,
-  SPECIMEN_ORPHANED,
-  SAMPLE_ORPHANED,
+  DONOR_ORPHANED(true),
+  SPECIMEN_ORPHANED(true),
+  SAMPLE_ORPHANED(true),
 
-  DONOR_SURROGATE_KEY,
-  SPECIMEN_SURROGATE_KEY_IMAGE,
-  SAMPLE_SURROGATE_KEY,
+  DONOR_SURROGATE_KEY(true),
+  SPECIMEN_SURROGATE_KEY_IMAGE(true),
+  SAMPLE_SURROGATE_KEY(true),
 
-  SSM_P_MASKED,
-  SSM_P_MASKED_SURROGATE_KEY,
-  SPECIMEN_SURROGATE_KEY,
+  SSM_P_MASKED(true),
+  SSM_P_MASKED_SURROGATE_KEY(true),
+  SPECIMEN_SURROGATE_KEY(true),
 
-  SGV_P_MASKED,
+  SGV_P_MASKED(true),
 
-  RELEASE,
-  PROJECT,
-  GENE,
-  GENE_SET,
-  OBSERVATION,
-  MUTATION,
+  RELEASE(false),
+  PROJECT(false),
+  GENE(false),
+  GENE_SET(false),
+  OBSERVATION(true),
+  MUTATION(false),
 
-  OBSERVATION_FATHMM,
-  OBSERVATION_FI,
+  OBSERVATION_FATHMM(true),
+  OBSERVATION_FI(true),
 
-  DONOR_GENE_OBSERVATION_SUMMARY,
+  DONOR_GENE_OBSERVATION_SUMMARY(true),
 
-  EXPORT_INPUT;
+  EXPORT_INPUT(true);
+
+  @Getter
+  private final boolean partitioned;
 
   public String getDirName() {
     return name().toLowerCase();
