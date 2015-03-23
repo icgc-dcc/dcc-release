@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -89,16 +90,22 @@ public class SubmissionMetadataService {
   }
 
   private SubmissionFileField getField(JsonNode field) {
-    val name = field.get("name").asText();
-    val type = ValueType.valueOf(field.get("valueType").asText());
-    val restrictions = field.get("restrictions");
-    val terms = getFieldTerms(restrictions);
+    try {
+      val name = field.get("name").asText();
+      val type = ValueType.valueOf(field.get("valueType").asText());
+      val restrictions = field.get("restrictions");
+      val terms = getFieldTerms(restrictions);
 
-    // TODO: Fix in the dictionary!
-    val inconsistent = terms != null && type != ValueType.TEXT;
-    val effectiveType = inconsistent ? ValueType.TEXT : type;
+      // TODO: Fix in the dictionary!
+      val inconsistent = terms != null && type != ValueType.TEXT;
+      val effectiveType = inconsistent ? ValueType.TEXT : type;
 
-    return new SubmissionFileField(name, effectiveType, terms);
+      return new SubmissionFileField(name, effectiveType, terms);
+    } catch (Exception e) {
+      val mesage = "Error getting submission file field from JSON: " + field;
+      log.error(mesage, e);
+      throw new RuntimeException(mesage, e);
+    }
   }
 
   private Map<String, String> getFieldTerms(JsonNode restrictions) {
