@@ -26,6 +26,7 @@ import lombok.Data;
 import org.icgc.dcc.etl2.job.annotate.config.SnpEffProperties;
 import org.icgc.dcc.etl2.job.export.config.HBaseProperties;
 import org.icgc.dcc.etl2.job.imports.config.MongoProperties;
+import org.icgc.dcc.etl2.job.index.config.IndexProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,6 +50,12 @@ public class WorkflowProperties {
   @ConfigurationProperties(prefix = "snpeff")
   public SnpEffProperties snpEffProperties() {
     return new SnpEffProperties();
+  }
+
+  @Bean
+  @ConfigurationProperties(prefix = "index")
+  public IndexProperties indexProperties() {
+    return new IndexProperties();
   }
 
   @Bean

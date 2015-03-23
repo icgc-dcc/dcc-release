@@ -27,9 +27,12 @@ import java.util.concurrent.TimeUnit;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.etl2.job.imports.config.MongoProperties;
 import org.icgc.dcc.etl2.workflow.cli.Options;
 import org.icgc.dcc.etl2.workflow.core.Workflow;
 import org.icgc.dcc.etl2.workflow.core.WorkflowContext;
+import org.icgc.dcc.etl2.workflow.util.MongoCollectionHDFSImporter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ComponentScan;
@@ -81,12 +84,26 @@ public class WorkflowMain {
 
   private static void execute(Options options, String[] args) {
     val applicationContext = new SpringApplicationBuilder(WorkflowMain.class).web(false).run(args);
-
     val workflow = applicationContext.getBean(Workflow.class);
     val workflowContext = createWorkflowContext(options);
-
     log.info("{}\n", repeat("-", 100));
+
     workflow.execute(workflowContext);
+  }
+
+  @SuppressWarnings("unused")
+  private static void copyMongo(Options options, String[] args) {
+    val applicationContext = new SpringApplicationBuilder(WorkflowMain.class).web(false).run(args);
+    val workflowContext = createWorkflowContext(options);
+    applicationContext.getBean(JavaSparkContext.class);
+
+    val importer = new MongoCollectionHDFSImporter(
+        workflowContext.getWorkingDir(),
+        applicationContext.getBean(JavaSparkContext.class),
+        applicationContext.getBean(MongoProperties.class),
+        "ICGC18-0-3");
+
+    importer.execute();
   }
 
   private static WorkflowContext createWorkflowContext(Options options) {

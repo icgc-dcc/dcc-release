@@ -103,7 +103,7 @@ public class Workflow {
       Table<String, String, List<Path>> submissionFiles) {
     return new DefaultJobContext(
         type,
-        workflowContext.getReleaseDir(),
+        workflowContext.getReleaseName(),
         workflowContext.getProjectNames(),
         workflowContext.getReleaseDir(),
         workflowContext.getWorkingDir(),

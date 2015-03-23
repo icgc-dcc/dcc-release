@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.etl2.workflow.util;
 
+import static com.google.common.base.Strings.repeat;
 import static org.icgc.dcc.etl2.core.util.ObjectNodeRDDs.saveAsTextObjectNodeFile;
 import static org.icgc.dcc.etl2.job.imports.util.MongoJavaRDDs.javaMongoCollection;
 
@@ -25,6 +26,7 @@ import java.util.List;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
@@ -43,6 +45,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.hadoop.MongoConfig;
 
+@Slf4j
 public class MongoCollectionHDFSImporter {
 
   @NonNull
@@ -98,11 +101,15 @@ public class MongoCollectionHDFSImporter {
   private void execute(ReleaseCollection collection, FileType outputFileType) {
     val outputDir = workingDir + "/" + outputFileType.getDirName();
     if (outputFileType.isPartitioned()) {
-      for (val projectName : projectNames) {
+      for (int i = 0; i < projectNames.size(); i++) {
+        val projectName = projectNames.get(i);
+        banner("[{}/{}] Processing '{}:{}'", i + 1, projectNames.size(), outputFileType, projectName);
+
         val input = readInput(collection.getId(), "{\"" + LoaderFieldNames.PROJECT_ID + "\": \"" + projectName + "\"}");
         saveAsTextObjectNodeFile(input, outputDir + "/" + Partitions.getPartitionName(projectName));
       }
     } else {
+      banner("Processing '{}'", outputFileType);
       val input = readInput(collection.getId(), "{}");
       saveAsTextObjectNodeFile(input, outputDir);
     }
@@ -128,6 +135,12 @@ public class MongoCollectionHDFSImporter {
         .database(database)
         .collection(collection)
         .build();
+  }
+
+  private static void banner(String message, Object... args) {
+    log.info("{}", repeat("-", 100));
+    log.info(message, args);
+    log.info("{}", repeat("-", 100));
   }
 
 }

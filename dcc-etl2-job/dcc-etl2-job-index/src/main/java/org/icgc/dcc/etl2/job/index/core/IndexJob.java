@@ -18,9 +18,6 @@
 package org.icgc.dcc.etl2.job.index.core;
 
 import static org.icgc.dcc.etl2.job.index.factory.TransportClientFactory.newTransportClient;
-
-import java.util.Collection;
-
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -30,16 +27,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.job.index.config.IndexProperties;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
 import org.icgc.dcc.etl2.job.index.service.IndexService;
 import org.icgc.dcc.etl2.job.index.task.IndexDocumentTask;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import com.google.common.collect.ImmutableList;
+import org.springframework.stereotype.Component;
 
 @Slf4j
+@Component
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class IndexJob implements Job {
 
@@ -68,7 +64,8 @@ public class IndexJob implements Job {
     val client = newTransportClient(properties.getEsUri());
     val indexService = new IndexService(client);
 
-    String indexName = properties.getIndexName();
+    // TODOD: Fix this to be tied to a run id:
+    val indexName = "test-etl2-" + jobContext.getReleaseName().toLowerCase();
 
     // Prepare
     log.info("Initializing index...");
@@ -76,7 +73,7 @@ public class IndexJob implements Job {
 
     // Populate
     log.info("Populating index...");
-    write(jobContext);
+    write(jobContext, indexName);
 
     // Report
     log.info("Reporting index...");
@@ -91,18 +88,14 @@ public class IndexJob implements Job {
     indexService.freezeIndex(indexName);
   }
 
-  private void write(JobContext jobContext) {
-    val tasks = createTasks();
+  private void write(JobContext jobContext, String indexName) {
+    val releaseName = jobContext.getReleaseName();
 
-    jobContext.execute(tasks);
-  }
-
-  private Collection<Task> createTasks() {
-    // TODO: Add all
-    return ImmutableList.<Task> of(
-        new IndexDocumentTask(properties, DocumentType.RELEASE_TYPE),
-        new IndexDocumentTask(properties, DocumentType.PROJECT_TYPE),
-        new IndexDocumentTask(properties, DocumentType.GENE_TYPE));
+    jobContext.execute(
+        new IndexDocumentTask(properties, indexName, releaseName, DocumentType.RELEASE_TYPE),
+        new IndexDocumentTask(properties, indexName, releaseName, DocumentType.PROJECT_TYPE),
+        new IndexDocumentTask(properties, indexName, releaseName, DocumentType.GENE_TYPE)
+        );
   }
 
 }
