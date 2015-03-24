@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.etl2.job.index.core;
 
-import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatRate;
@@ -108,8 +107,9 @@ public class DocumentProcessor {
         callback.call(document);
       }
     } catch (Exception e) {
+      val message = "Error procesing " + type + " document with root: " + root;
       log.error("Error procesing document with root: " + root, e);
-      propagate(e);
+      throw new RuntimeException(message, e);
     }
   }
 
