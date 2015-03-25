@@ -46,10 +46,14 @@ import org.skife.jdbi.v2.Query;
  */
 public class FathmmPredictor implements Closeable {
 
+  private static final String PREDICTION = "Prediction";
+  private static final String SCORE = "Score";
+  private static final String AA_MUTATION = "aaMutation";
+  private static final String TRANSLATION_ID = "translationId";
+
   /**
    * Constants.
    */
-  private static final String WARNING_NO_SEQUENCE_FOUND = "No Sequence Record Found";
   private static final Pattern SUBSTITUTION_PATTERN = compile("^[ARNDCEQGHILKMFPSTWYV]\\d+[ARNDCEQGHILKMFPSTWYV]$");
   private static final Comparator<Map<String, Object>> INFORMATION_COMPARATOR = new Comparator<Map<String, Object>>() {
 
@@ -89,38 +93,38 @@ public class FathmmPredictor implements Closeable {
   }
 
   public Map<String, String> predict(String translationId, String aaChange) {
-    Map<String, String> result = null;
-    Map<String, Object> cache = cacheQuery.bind("translationId", translationId).bind("aaMutation", aaChange).first();
+    Map<String, String> result = newHashMap();
+    Map<String, Object> cache = cacheQuery.bind(TRANSLATION_ID, translationId).bind(AA_MUTATION, aaChange).first();
 
     if (cache != null) {
-      result = newHashMap();
       if (cache.get("score") != null) {
-        result.put("Score", cache.get("score").toString());
-        result.put("Prediction", cache.get("prediction").toString());
+        result.put(SCORE, cache.get("score").toString());
+        result.put(PREDICTION, cache.get("prediction").toString());
       }
     } else {
       result = calculateFATHMM(translationId, aaChange, "INHERITED");
-      handle.execute("insert into \"DCC_CACHE\" (translation_id,  aa_mutation, score, prediction) values (?,?,?,?)",
-          translationId, aaChange, result.get("Score"), result.get("Prediction"));
+      updateCache(translationId, aaChange, result.get(SCORE), result.get(PREDICTION));
     }
 
     return result;
   }
 
+  private void updateCache(String translationId, String aaChange, String score, String prediction) {
+    handle.execute("insert into \"DCC_CACHE\" (translation_id,  aa_mutation, score, prediction) values (?,?,?,?)",
+        translationId, aaChange, score, prediction);
+  }
+
   // Calculate prediction via FATHMM database
   private Map<String, String> calculateFATHMM(String translationId, String aaChange, String weights) {
-
     val facade = new ArrayList<Map<String, Object>>();
-    val weightQuery = handle.createQuery("select * from \"WEIGHTS\" where id=:wid  and type='" + weights + "'");
-    val sequence = sequenceQuery.bind("translationId", translationId).first();
+    val weightQuery =
+        handle.createQuery("select disease, other from \"WEIGHTS\" where id=:wid  and type='" + weights + "'");
+    val sequence = sequenceQuery.bind(TRANSLATION_ID, translationId).first();
 
     // Check null
     if (null == sequence) {
-      return improperResult(WARNING_NO_SEQUENCE_FOUND + " For " + aaChange);
+      return improperResult("No Sequence Record Found For " + aaChange);
     }
-
-    // Check aaChange formats
-    String sequenceStr = sequence.get("sequence").toString();
 
     if (!isSubstitution(aaChange)) {
       return improperResult("Invalid Substitution Format For " + aaChange);
@@ -134,17 +138,21 @@ public class FathmmPredictor implements Closeable {
     val digits = aaChange.substring(1, aaChange.length() - 1);
     val substitution = tryParse(digits);
 
+    String substitutionWarning = "Invalid Substitution Value For " + aaChange + " With Substituion: " + substitution;
     if (substitution == null) {
-      return improperResult("Invalid Substitution Value For " + aaChange + " With Substituion: " + substitution);
+      return improperResult(substitutionWarning);
     }
 
     // Digit(s) in the middle can not contain only 0(s).
     if (substitution == 0) {
-      return improperResult("Invalid Substitution Value For " + aaChange + " With Substituion: " + substitution);
+      return improperResult(substitutionWarning);
     }
 
+    // Check aaChange formats
+    String sequenceStr = sequence.get("sequence").toString();
+
     if (substitution > sequenceStr.length()) {
-      return improperResult("Invalid Substitution Position For " + aaChange + " With Substituion: " + substitution);
+      return improperResult(substitutionWarning);
     }
 
     val substring = sequenceStr.substring(substitution - 1, substitution);
@@ -249,13 +257,13 @@ public class FathmmPredictor implements Closeable {
     result.put("M", String.valueOf(M));
     result.put("D", String.valueOf(D));
     result.put("O", String.valueOf(O));
-    result.put("Score", String.valueOf(score));
+    result.put(SCORE, String.valueOf(score));
 
     if (weights.equals("INHERITED")) {
       if (score <= -1.5f) {
-        result.put("Prediction", "DAMAGING");
+        result.put(PREDICTION, "DAMAGING");
       } else {
-        result.put("Prediction", "TOLERATED");
+        result.put(PREDICTION, "TOLERATED");
       }
     }
     return result;
