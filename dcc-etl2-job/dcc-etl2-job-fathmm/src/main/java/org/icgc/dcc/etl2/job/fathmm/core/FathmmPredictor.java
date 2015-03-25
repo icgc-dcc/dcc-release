@@ -123,25 +123,19 @@ public class FathmmPredictor implements Closeable {
     val substitution = getSubstitution(aaChange);
 
     // Check the values and return a warning result if any issues are found.
-    val preconditionCheckResult = check(sequence, aaChange);
-    if (preconditionCheckResult != null) {
-      return preconditionCheckResult;
+    val valueCheckResult = checkValues(sequence, aaChange);
+    if (valueCheckResult != null) {
+      return valueCheckResult;
     }
 
-    val facade = new ArrayList<Map<String, Object>>();
     val weightQuery =
         handle.createQuery("select disease, other from \"WEIGHTS\" where id=:wid  and type='" + weights + "'");
 
-    val domainList = domainQuery.bind("sequenceId", sequence.get("id")).bind("substitution", substitution).list();
+    List<Map<String, Object>> domainList =
+        domainQuery.bind("sequenceId", sequence.get("id")).bind("substitution", substitution).list();
 
-    for (val domain : domainList) {
-      addProbability(facade, substitution, domain);
-    }
-
-    // Sort facade
-    if (facade.size() > 1) {
-      Collections.sort(facade, INFORMATION_COMPARATOR);
-    }
+    val facade = calculateaddProbabilities(domainList, substitution);
+    Collections.sort(facade, INFORMATION_COMPARATOR);
 
     // Phenotypes????
 
@@ -174,18 +168,22 @@ public class FathmmPredictor implements Closeable {
     return newHashMap();
   }
 
-  /**
-   * @param aaChange
-   * @return
-   */
-  private java.lang.Integer getSubstitution(String aaChange) {
+  private List<Map<String, Object>> calculateaddProbabilities(List<Map<String, Object>> domainList, Integer substitution) {
+    val facade = new ArrayList<Map<String, Object>>();
+    for (val domain : domainList) {
+      facade.addAll(calculateDomainProbabilities(substitution, domain));
+    }
+    return facade;
+  }
+
+  private Integer getSubstitution(String aaChange) {
     val digits = aaChange.substring(1, aaChange.length() - 1);
     val substitution = tryParse(digits);
     return substitution;
   }
 
-  private void addProbability(final List<Map<String, Object>> facade, final Integer substitution,
-      final Map<String, Object> domain) {
+  private List<Map<String, Object>> calculateDomainProbabilities(Integer substitution, Map<String, Object> domain) {
+    val probabilities = new ArrayList<Map<String, Object>>();
     int start = Integer.parseInt(domain.get("seq_begin").toString());
     int end = Integer.parseInt(domain.get("seq_end").toString());
     int hmmBegin = Integer.parseInt(domain.get("hmm_begin").toString());
@@ -197,9 +195,10 @@ public class FathmmPredictor implements Closeable {
           .bind("hmm", domain.get("hmm"))
           .bind("residue", residue.get()).first();
       if (null != probability) {
-        facade.add(probability);
+        probabilities.add(probability);
       }
     }
+    return probabilities;
   }
 
   private static Optional<Integer> mapPosition(int seqStart, int seqEnd, int hmmBegin, String align, int substitution) {
@@ -217,8 +216,7 @@ public class FathmmPredictor implements Closeable {
   }
 
   private static Map<String, String> result(Map<String, Object> facade, Map<String, Object> probability,
-      String aaChange,
-      String weights) {
+      String aaChange, String weights) {
 
     float W = Float.parseFloat(facade.get(StringUtils.left(aaChange, 1)).toString());
     float M = Float.parseFloat(facade.get(StringUtils.right(aaChange, 1)).toString());
@@ -251,7 +249,7 @@ public class FathmmPredictor implements Closeable {
     return result;
   }
 
-  private Map<String, String> check(Map<String, Object> sequence, String aaChange) {
+  private Map<String, String> checkValues(Map<String, Object> sequence, String aaChange) {
 
     // Check null
     if (null == sequence) {

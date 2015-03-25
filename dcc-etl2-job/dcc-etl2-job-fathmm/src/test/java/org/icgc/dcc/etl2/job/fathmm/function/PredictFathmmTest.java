@@ -1,6 +1,10 @@
 package org.icgc.dcc.etl2.job.fathmm.function;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.AA_MUTATION;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.PREDICTION;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.SCORE;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.TRANSLATION_ID;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,12 +22,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class PredictFathmmTest {
 
-  private static final String AA_MUTATION = "aaMutation";
-  private static final String TRANSLATION_ID = "translationId";
-  private static final String PREDICTION = "Prediction";
-  private static final String SCORE = "Score";
   private static final double TOLERANCE = 0.1;
-
   private static final String JDBC_URL = "";
 
   private FathmmPredictor predictor;
