@@ -127,20 +127,48 @@ public class FathmmPredictor implements Closeable {
       return valueCheckResult;
     }
 
-    val weightQuery =
-        handle.createQuery("select disease, other from \"WEIGHTS\" where id=:wid  and type='" + weights + "'");
-
-    List<Map<String, Object>> domainList =
-        domainQuery.bind("sequenceId", sequence.get("id")).bind("substitution", substitution).list();
-
-    val facade = calculateaddProbabilities(domainList, substitution);
-    Collections.sort(facade, INFORMATION_COMPARATOR);
-
     // Phenotypes????
 
-    // //////////////////////////////////////////////////////////////////////////////
-    // Unweighted domain based prediction
-    // //////////////////////////////////////////////////////////////////////////////
+    // Try Unweighted domain based prediction
+    val domainPrediction = calculateDomainPrecition(sequence, substitution, aaChange, weights);
+    if (domainPrediction != null) {
+      return domainPrediction;
+    }
+
+    // Try Unweighted non-domain based prediction
+    val nonDomainPrediction = calculateNonDomainPrecition(sequence, substitution, aaChange, weights);
+    if (nonDomainPrediction != null) {
+      return nonDomainPrediction;
+    }
+
+    return newHashMap();
+  }
+
+  private Map<String, String> calculateNonDomainPrecition(Map<String, Object> sequence, int substitution,
+      String aaChange, String weights) {
+    val facade = unweightedProbabilityQuery
+        .bind("sequenceId", sequence.get("id").toString())
+        .bind("substitution", substitution).first();
+
+    if (null != facade) {
+      val weightQuery = createWeightQuery(weights);
+      val probability = weightQuery.bind("wid", facade.get("id")).first();
+
+      if (null != probability) {
+        return result(facade, probability, aaChange, weights);
+      }
+    }
+
+    return null;
+  }
+
+  private Map<String, String> calculateDomainPrecition(Map<String, Object> sequence, int substitution, String aaChange,
+      String weights) {
+    val weightQuery = createWeightQuery(weights);
+    List<Map<String, Object>> domainList =
+        domainQuery.bind("sequenceId", sequence.get("id")).bind("substitution", substitution).list();
+    val facade = calculateaddProbabilities(domainList, substitution);
+    Collections.sort(facade, INFORMATION_COMPARATOR);
     for (val x : facade) {
       String id = (String) (x.get("id"));
       val probability = weightQuery.bind("wid", id).first();
@@ -150,21 +178,11 @@ public class FathmmPredictor implements Closeable {
       }
     }
 
-    // //////////////////////////////////////////////////////////////////////////////
-    // Unweighted non-domain based prediction
-    // //////////////////////////////////////////////////////////////////////////////
-    val facade2 = unweightedProbabilityQuery
-        .bind("sequenceId", sequence.get("id").toString())
-        .bind("substitution", substitution).first();
+    return null;
+  }
 
-    if (null != facade2) {
-      val probability = weightQuery.bind("wid", facade2.get("id")).first();
-
-      if (null != probability) {
-        return result(facade2, probability, aaChange, weights);
-      }
-    }
-    return newHashMap();
+  private Query<Map<String, Object>> createWeightQuery(String weights) {
+    return handle.createQuery("select disease, other from \"WEIGHTS\" where id=:wid  and type='" + weights + "'");
   }
 
   private List<Map<String, Object>> calculateaddProbabilities(List<Map<String, Object>> domainList, Integer substitution) {
@@ -172,12 +190,14 @@ public class FathmmPredictor implements Closeable {
     for (val domain : domainList) {
       facade.addAll(calculateDomainProbabilities(substitution, domain));
     }
+
     return facade;
   }
 
   private Integer getSubstitution(String aaChange) {
     val digits = aaChange.substring(1, aaChange.length() - 1);
     val substitution = tryParse(digits);
+
     return substitution;
   }
 
@@ -197,6 +217,7 @@ public class FathmmPredictor implements Closeable {
         probabilities.add(probability);
       }
     }
+
     return probabilities;
   }
 
@@ -245,6 +266,7 @@ public class FathmmPredictor implements Closeable {
         result.put(PREDICTION, TOLERATED);
       }
     }
+
     return result;
   }
 
@@ -287,6 +309,7 @@ public class FathmmPredictor implements Closeable {
     if (!aaChange.substring(0, 1).equals(substring)) {
       return improperValues("Inconsistent Wild-Type Residue (Expected '" + substring + "')");
     }
+
     return null;
   }
 
@@ -297,6 +320,7 @@ public class FathmmPredictor implements Closeable {
   private static Map<String, String> improperValues(String issue) {
     Map<String, String> result = newHashMap();
     result.put("Warning", issue);
+
     return result;
   }
 
