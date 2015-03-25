@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.etl2.job.fathmm.core;
 
-import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.primitives.Ints.tryParse;
 import static java.util.regex.Pattern.compile;
@@ -29,7 +28,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import lombok.NonNull;
@@ -39,8 +40,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.Query;
-
-import com.google.common.collect.Iterables;
 
 /**
  * This is a java port for FatHMM using postgresql database
@@ -91,8 +90,7 @@ public class FathmmPredictor implements Closeable {
 
   public Map<String, String> predict(String translationId, String aaChange) {
     Map<String, String> result = null;
-    Map<String, Object> cache =
-        Iterables.getFirst(cacheQuery.bind("translationId", translationId).bind("aaMutation", aaChange).list(), null);
+    Map<String, Object> cache = cacheQuery.bind("translationId", translationId).bind("aaMutation", aaChange).first();
 
     if (cache != null) {
       result = newHashMap();
@@ -111,87 +109,53 @@ public class FathmmPredictor implements Closeable {
 
   // Calculate prediction via FATHMM database
   private Map<String, String> calculateFATHMM(String translationId, String aaChange, String weights) {
-    Map<String, String> result = newHashMap();
+
     val facade = new ArrayList<Map<String, Object>>();
-
-    // TODO: Cache this!!!
-    val weightQuery =
-        handle.createQuery("select * from \"WEIGHTS\" where id=:wid  and type='" + weights + "'");
-
-    Map<String, Object> sequence = getFirst(sequenceQuery.bind("translationId", translationId).list(), null);
+    val weightQuery = handle.createQuery("select * from \"WEIGHTS\" where id=:wid  and type='" + weights + "'");
+    val sequence = sequenceQuery.bind("translationId", translationId).first();
 
     // Check null
     if (null == sequence) {
-      result = newHashMap();
-      result.put("Warning", WARNING_NO_SEQUENCE_FOUND + " For " + aaChange);
-      return result;
+      return improperResult(WARNING_NO_SEQUENCE_FOUND + " For " + aaChange);
     }
 
     // Check aaChange formats
     String sequenceStr = sequence.get("sequence").toString();
 
     if (!isSubstitution(aaChange)) {
-      result = newHashMap();
-      result.put("Warning", "Invalid Substitution Format For " + aaChange);
-      return result;
+      return improperResult("Invalid Substitution Format For " + aaChange);
     }
 
     // The two letters must be different.
     if (left(aaChange, 1).equals(right(aaChange, 1))) {
-      result = newHashMap();
-      result.put("Warning", "Synonymous Mutation For " + aaChange);
-      return result;
+      return improperResult("Synonymous Mutation For " + aaChange);
     }
 
     val digits = aaChange.substring(1, aaChange.length() - 1);
     val substitution = tryParse(digits);
 
     if (substitution == null) {
-      result = newHashMap();
-      result.put("Warning", "Invalid Substitution Value For " + aaChange + " With Substituion: " + substitution);
-      return result;
+      return improperResult("Invalid Substitution Value For " + aaChange + " With Substituion: " + substitution);
     }
 
     // Digit(s) in the middle can not contain only 0(s).
     if (substitution == 0) {
-      result = newHashMap();
-      result.put("Warning", "Invalid Substitution Value For " + aaChange + " With Substituion: " + substitution);
-      return result;
+      return improperResult("Invalid Substitution Value For " + aaChange + " With Substituion: " + substitution);
     }
 
     if (substitution > sequenceStr.length()) {
-      result = newHashMap();
-      result.put("Warning", "Invalid Substitution Position For " + aaChange + " With Substituion: " + substitution);
-      return result;
+      return improperResult("Invalid Substitution Position For " + aaChange + " With Substituion: " + substitution);
     }
 
-    if (!aaChange.substring(0, 1).equals(sequenceStr.substring(substitution - 1, substitution))) {
-      result = newHashMap();
-      result.put(
-          "Warning",
-          "Inconsistent Wild-Type Residue (Expected '"
-              + sequenceStr.substring(substitution - 1, substitution) + "')");
-      return result;
+    val substring = sequenceStr.substring(substitution - 1, substitution);
+    if (!aaChange.substring(0, 1).equals(substring)) {
+      return improperResult("Inconsistent Wild-Type Residue (Expected '" + substring + "')");
     }
 
     val domainList = domainQuery.bind("sequenceId", sequence.get("id")).bind("substitution", substitution).list();
 
     for (val domain : domainList) {
-      int start = Integer.parseInt(domain.get("seq_begin").toString());
-      int end = Integer.parseInt(domain.get("seq_end").toString());
-      int hmmBegin = Integer.parseInt(domain.get("hmm_begin").toString());
-      String align = (String) domain.get("align");
-
-      String residue = mapPosition(start, end, hmmBegin, align, substitution);
-      if (null != residue) {
-        Map<String, Object> probability =
-            Iterables
-                .getFirst(probabilityQuery.bind("hmm", domain.get("hmm")).bind("residue", Integer.parseInt(residue))
-                    .list(), null);
-        if (null != probability) {
-          facade.add(probability);
-        }
-      }
+      addProbability(facade, substitution, domain);
     }
 
     // Sort facade
@@ -204,9 +168,9 @@ public class FathmmPredictor implements Closeable {
     // //////////////////////////////////////////////////////////////////////////////
     // Unweighted domain based prediction
     // //////////////////////////////////////////////////////////////////////////////
-    for (Map<String, Object> x : facade) {
+    for (val x : facade) {
       String id = (String) (x.get("id"));
-      Map<String, Object> probability = Iterables.getFirst(weightQuery.bind("wid", id).list(), null);
+      val probability = weightQuery.bind("wid", id).first();
 
       if (null != probability) {
         return result(x, probability, aaChange, weights);
@@ -216,13 +180,12 @@ public class FathmmPredictor implements Closeable {
     // //////////////////////////////////////////////////////////////////////////////
     // Unweighted non-domain based prediction
     // //////////////////////////////////////////////////////////////////////////////
-    Map<String, Object> facade2 = Iterables.getFirst(
-        unweightedProbabilityQuery
-            .bind("sequenceId", sequence.get("id").toString())
-            .bind("substitution", substitution).list(), null);
+    val facade2 = unweightedProbabilityQuery
+        .bind("sequenceId", sequence.get("id").toString())
+        .bind("substitution", substitution).first();
 
     if (null != facade2) {
-      Map<String, Object> probability = Iterables.getFirst(weightQuery.bind("wid", facade2.get("id")).list(), null);
+      val probability = weightQuery.bind("wid", facade2.get("id")).first();
 
       if (null != probability) {
         return result(facade2, probability, aaChange, weights);
@@ -231,24 +194,42 @@ public class FathmmPredictor implements Closeable {
     return newHashMap();
   }
 
-  private static String mapPosition(int seqStart, int seqEnd, int hmmBegin, String align, int substitution) {
-    if (substitution < seqStart || substitution > seqEnd) return null;
+  private void addProbability(final List<Map<String, Object>> facade, final Integer substitution,
+      final Map<String, Object> domain) {
+    int start = Integer.parseInt(domain.get("seq_begin").toString());
+    int end = Integer.parseInt(domain.get("seq_end").toString());
+    int hmmBegin = Integer.parseInt(domain.get("hmm_begin").toString());
+    String align = (String) domain.get("align");
 
+    val residue = mapPosition(start, end, hmmBegin, align, substitution);
+    if (residue.isPresent()) {
+      val probability = probabilityQuery
+          .bind("hmm", domain.get("hmm"))
+          .bind("residue", residue.get()).first();
+      if (null != probability) {
+        facade.add(probability);
+      }
+    }
+  }
+
+  private static Optional<Integer> mapPosition(int seqStart, int seqEnd, int hmmBegin, String align, int substitution) {
+    if (substitution < seqStart || substitution > seqEnd) return Optional.empty();
     int start = seqStart - 1;
     int end = hmmBegin - 1;
+
     for (char c : align.toCharArray()) {
       if (Character.isUpperCase(c) || Character.isLowerCase(c)) start++;
       if (Character.isUpperCase(c) || c == '-') end++;
-      if (start == substitution && Character.isUpperCase(c)) return String.valueOf(end);
+      if (start == substitution && Character.isUpperCase(c)) return Optional.of(end);
     }
-    return null;
+
+    return Optional.empty();
   }
 
   private static Map<String, String> result(Map<String, Object> facade, Map<String, Object> probability,
       String aaChange,
       String weights) {
 
-    Map<String, String> result = newHashMap();
     float W = Float.parseFloat(facade.get(StringUtils.left(aaChange, 1)).toString());
     float M = Float.parseFloat(facade.get(StringUtils.right(aaChange, 1)).toString());
     float D = Float.parseFloat(probability.get("disease").toString()) + 1.0f;
@@ -260,7 +241,7 @@ public class FathmmPredictor implements Closeable {
     // This is intended as well, the original script rounds before comparing against the threshold
     score = Math.floor(score * 100) / 100;
 
-    result = newHashMap();
+    Map<String, String> result = newHashMap();
     result.put("HMM", (String) facade.get("id"));
     result.put("Description", (String) facade.get("description"));
     result.put("Position", facade.get("position").toString());
@@ -282,6 +263,12 @@ public class FathmmPredictor implements Closeable {
 
   private static boolean isSubstitution(String aaChange) {
     return SUBSTITUTION_PATTERN.matcher(aaChange).matches();
+  }
+
+  private static Map<String, String> improperResult(String issue) {
+    Map<String, String> result = newHashMap();
+    result.put("Warning", issue);
+    return result;
   }
 
 }
