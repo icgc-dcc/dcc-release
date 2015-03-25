@@ -33,7 +33,7 @@ import lombok.val;
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.ConsequenceType;
 import org.icgc.dcc.etl2.job.fathmm.core.FathmmPredictor;
-import org.icgc.dcc.etl2.job.fathmm.util.FathmmDao;
+import org.icgc.dcc.etl2.job.fathmm.model.FathmmDao;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;

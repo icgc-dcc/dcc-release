@@ -13,7 +13,7 @@ import java.util.Map;
 import lombok.val;
 
 import org.icgc.dcc.etl2.job.fathmm.core.FathmmPredictor;
-import org.icgc.dcc.etl2.job.fathmm.util.FathmmDao;
+import org.icgc.dcc.etl2.job.fathmm.model.FathmmDao;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,7 +62,8 @@ public class PredictFathmmTest {
     return predictor.predict(translationIdStr, aaMutationStr);
   }
 
-  private Map<String, String> createFATHMM(String translationId, String aaMutation, String score, String prediction) {
+  private static Map<String, String> createFATHMM(String translationId, String aaMutation, String score,
+      String prediction) {
     val fathmm = ImmutableMap.<String, String> builder();
     fathmm.put(TRANSLATION_ID, translationId);
     fathmm.put(AA_MUTATION, aaMutation);

@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.fathmm.util;
+package org.icgc.dcc.etl2.job.fathmm.model;
 
 import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.AA_MUTATION;
 import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.TRANSLATION_ID;

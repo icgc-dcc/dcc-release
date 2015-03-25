@@ -40,7 +40,7 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.commons.lang3.StringUtils;
-import org.icgc.dcc.etl2.job.fathmm.util.FathmmDao;
+import org.icgc.dcc.etl2.job.fathmm.model.FathmmDao;
 
 /**
  * This is a java port for FatHMM using postgresql database

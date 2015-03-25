@@ -23,7 +23,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericProcessTask;
 import org.icgc.dcc.etl2.job.fathmm.function.PredictFathmm;
-import org.icgc.dcc.etl2.job.fathmm.util.FathmmDao;
+import org.icgc.dcc.etl2.job.fathmm.model.FathmmDao;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.BiMap;
