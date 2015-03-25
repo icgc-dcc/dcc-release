@@ -10,11 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import lombok.SneakyThrows;
 import lombok.val;
 
 import org.icgc.dcc.etl2.job.fathmm.core.FathmmPredictor;
-import org.junit.After;
+import org.icgc.dcc.etl2.job.fathmm.util.FathmmDao;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,7 +28,7 @@ public class PredictFathmmTest {
 
   @Before
   public void setUp() {
-    predictor = new FathmmPredictor(JDBC_URL);
+    predictor = new FathmmPredictor(new FathmmDao(JDBC_URL));
   }
 
   @Test
@@ -57,12 +56,6 @@ public class PredictFathmmTest {
       val resultScore = Double.parseDouble(result.get(SCORE));
       assertThat(Math.abs(resultScore - inputScore)).isLessThan(TOLERANCE);
     });
-  }
-
-  @After
-  @SneakyThrows
-  public void teardown() {
-    predictor.close();
   }
 
   private Map<String, String> predict(String translationIdStr, String aaMutationStr) {
