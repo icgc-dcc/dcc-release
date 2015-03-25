@@ -15,36 +15,33 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.core.function;
+package org.icgc.dcc.etl2.core.util;
+
+import java.util.concurrent.Callable;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.core.util.ObjectNodeFilter;
-import org.icgc.dcc.etl2.core.util.ObjectNodeFilter.FilterMode;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ForwardingTable;
+import com.google.common.collect.Table;
 
 @RequiredArgsConstructor
-public class FilterFields implements Function<ObjectNode, ObjectNode> {
+public class LazyTable<R, C, V> extends ForwardingTable<R, C, V> {
 
   @NonNull
-  private final ObjectNodeFilter filter;
+  private final Callable<Table<R, C, V>> factory;
 
-  public FilterFields(@NonNull FilterMode mode, String... fieldPaths) {
-    this(new ObjectNodeFilter(mode, fieldPaths));
-  }
+  transient Table<R, C, V> delegate;
 
   @Override
-  public ObjectNode call(ObjectNode row) throws Exception {
-    filter(row);
+  @SneakyThrows
+  protected synchronized Table<R, C, V> delegate() {
+    if (delegate == null) {
+      delegate = factory.call();
+    }
 
-    return row;
-  }
-
-  private void filter(ObjectNode row) {
-    filter.filter(row);
+    return delegate;
   }
 
 }

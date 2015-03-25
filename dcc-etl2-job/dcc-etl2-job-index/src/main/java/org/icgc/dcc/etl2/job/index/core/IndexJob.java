@@ -95,5 +95,6 @@ public class IndexJob implements Job {
     });
 
     jobContext.execute(tasks);
+    // jobContext.execute(new DonorCentricIndexTask());
   }
 }

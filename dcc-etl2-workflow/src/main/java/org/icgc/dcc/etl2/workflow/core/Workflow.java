@@ -20,6 +20,7 @@ import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.core.submission.SubmissionFileSystem;
 import org.icgc.dcc.etl2.core.submission.SubmissionMetadataService;
 import org.icgc.dcc.etl2.core.task.TaskExecutor;
+import org.icgc.dcc.etl2.core.util.LazyTable;
 import org.icgc.dcc.etl2.workflow.mail.Mailer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -94,9 +95,12 @@ public class Workflow {
   }
 
   private Table<String, String, List<Path>> resolveSubmissionFiles(WorkflowContext workflowContext) {
-    val metadata = submissionMetadata.getMetadata();
+    return new LazyTable<String, String, List<Path>>(() -> {
+      val metadata = submissionMetadata.getMetadata();
 
-    return submissionFileSystem.getFiles(workflowContext.getReleaseDir(), workflowContext.getProjectNames(), metadata);
+      return submissionFileSystem.getFiles(workflowContext.getReleaseDir(), workflowContext.getProjectNames(),
+          metadata);
+    });
   }
 
   private JobContext createJobContext(JobType type, WorkflowContext workflowContext,

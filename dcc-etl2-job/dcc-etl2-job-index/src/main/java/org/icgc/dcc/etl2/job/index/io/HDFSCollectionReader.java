@@ -18,6 +18,8 @@
 package org.icgc.dcc.etl2.job.index.io;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterators.filter;
+import static com.google.common.collect.Iterators.transform;
 import static org.icgc.dcc.etl2.core.util.MoreIterables.once;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.MAPPER;
 import static org.icgc.dcc.etl2.job.index.model.CollectionFieldAccessors.getDonorId;
@@ -30,7 +32,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.function.Function;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +50,7 @@ import org.icgc.dcc.etl2.job.index.util.CollectionFieldsFilterAdapter;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ForwardingIterator;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 
 @RequiredArgsConstructor
@@ -164,13 +165,11 @@ public class HDFSCollectionReader implements CollectionReader {
     return geneSetOntologies.build();
   }
 
-  @SneakyThrows
   private Iterable<ObjectNode> read(FileType fileType, CollectionFields fields) {
     return read(fileType, fields, row -> true);
   }
 
-  @SneakyThrows
-  private Iterable<ObjectNode> read(FileType fileType, CollectionFields fields, Function<ObjectNode, Boolean> rowFilter) {
+  private Iterable<ObjectNode> read(FileType fileType, CollectionFields fields, Predicate<ObjectNode> rowFilter) {
     val fieldFilter = new CollectionFieldsFilterAdapter(fields);
     val filePath = getFilePath(fileType);
     val inputStream = new FileGlobInputStream(fileSystem, filePath);
@@ -179,7 +178,8 @@ public class HDFSCollectionReader implements CollectionReader {
     return once(iterator);
   }
 
-  private Path getFilePath(FileType fileType) throws IOException {
+  @SneakyThrows
+  private Path getFilePath(FileType fileType) {
     val basePath = new Path(collectionDir, fileType.getDirName());
     checkState(fileSystem.exists(basePath), basePath);
 
@@ -206,65 +206,16 @@ public class HDFSCollectionReader implements CollectionReader {
     throw new IllegalArgumentException(collection + " not expected");
   }
 
+  @SneakyThrows
   private static Iterator<ObjectNode> lazyFilteredRead(InputStream inputStream, ObjectNodeFilter fieldFilter,
-      Function<ObjectNode, Boolean> rowFilter) throws IOException {
+      Predicate<ObjectNode> rowFilter) {
     val delegate = READER.<ObjectNode> readValues(inputStream);
-    return new ForwardingIterator<ObjectNode>() {
 
-      ObjectNode row;
+    // Filter rows
+    val filtered = filter(delegate, rowFilter);
 
-      @Override
-      @SneakyThrows
-      protected Iterator<ObjectNode> delegate() {
-        return delegate;
-      }
-
-      @Override
-      public boolean hasNext() {
-        while (true) {
-          if (!super.hasNext()) {
-            // Finished
-            return false;
-          }
-
-          val next = super.next();
-          if (isIncluded(next)) {
-            // Filtered
-            set(next);
-
-            return true;
-          }
-        }
-      }
-
-      @Override
-      public ObjectNode next() {
-        val next = unset();
-        filterFields(next);
-
-        return next;
-      }
-
-      void set(ObjectNode next) {
-        this.row = next;
-      }
-
-      ObjectNode unset() {
-        val next = this.row;
-        this.row = null; // Allow garbage collection
-
-        return next;
-      }
-
-      void filterFields(ObjectNode row) {
-        fieldFilter.filter(row);
-      }
-
-      boolean isIncluded(ObjectNode row) {
-        return rowFilter.apply(row);
-      }
-
-    };
+    // Filter fields
+    return transform(filtered, row -> fieldFilter.filter(row));
   }
 
 }
