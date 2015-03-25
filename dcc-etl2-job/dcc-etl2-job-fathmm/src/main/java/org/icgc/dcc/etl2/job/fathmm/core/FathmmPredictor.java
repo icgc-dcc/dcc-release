@@ -22,6 +22,13 @@ import static com.google.common.primitives.Ints.tryParse;
 import static java.util.regex.Pattern.compile;
 import static org.apache.commons.lang3.StringUtils.left;
 import static org.apache.commons.lang3.StringUtils.right;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.AA_MUTATION;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.DAMAGING;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.INHERITED;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.PREDICTION;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.SCORE;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.TOLERATED;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.TRANSLATION_ID;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -45,14 +52,6 @@ import org.skife.jdbi.v2.Query;
  * This is a java port for FatHMM using postgresql database
  */
 public class FathmmPredictor implements Closeable {
-
-  private static final String TOLERATED = "TOLERATED";
-  private static final String DAMAGING = "DAMAGING";
-  private static final String INHERITED = "INHERITED";
-  private static final String PREDICTION = "Prediction";
-  private static final String SCORE = "Score";
-  private static final String AA_MUTATION = "aaMutation";
-  private static final String TRANSLATION_ID = "translationId";
 
   /**
    * Constants.
