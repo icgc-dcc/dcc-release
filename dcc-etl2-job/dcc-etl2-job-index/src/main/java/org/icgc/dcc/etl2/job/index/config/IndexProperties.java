@@ -19,7 +19,6 @@ package org.icgc.dcc.etl2.job.index.config;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.Map;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,12 +31,6 @@ import lombok.experimental.Accessors;
 public class IndexProperties implements Serializable {
 
   /**
-   * The name of the release.
-   */
-  @NonNull
-  String releaseName;
-
-  /**
    * The output ES URI.
    */
   @NonNull
@@ -48,12 +41,6 @@ public class IndexProperties implements Serializable {
    */
   @NonNull
   String fsUri;
-
-  /**
-   * The output ESindex name.
-   */
-  @NonNull
-  String indexName;
 
   /**
    * The output archive dir.
@@ -71,10 +58,5 @@ public class IndexProperties implements Serializable {
    * Whether to export mutation VCF file.
    */
   boolean exportVCF;
-
-  /**
-   * Hadoop properties.
-   */
-  Map<String, String> hadoop;
 
 }

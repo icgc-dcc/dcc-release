@@ -15,39 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.core.task;
+package org.icgc.dcc.etl2.core.util;
 
-import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
-import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static lombok.AccessLevel.PRIVATE;
 
-import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import lombok.val;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-import org.icgc.dcc.common.core.util.Joiners;
+@NoArgsConstructor(access = PRIVATE)
+public final class Streams {
 
-public interface Task extends Serializable {
-
-  default String getName() {
-    return getName(this.getClass());
-  }
-
-  default TaskType getType() {
-    return TaskType.FILE_TYPE_PROJECT;
-  }
-
-  void execute(TaskContext taskContext);
-
-  static String getName(Class<? extends Task> taskClass, String... info) {
-    val className = UPPER_CAMEL.to(LOWER_HYPHEN, taskClass.getSimpleName());
-
-    return getName(className, info);
-  }
-
-  static String getName(String baseName, String... info) {
-    val joiner = Joiners.COLON;
-
-    return joiner.join(baseName, joiner.join(info));
+  @NonNull
+  public static <T, R> Collection<R> map(T[] values, Function<? super T, ? extends R> mapper) {
+    return Arrays.stream(values).map(mapper).collect(Collectors.toList());
   }
 
 }

@@ -63,6 +63,10 @@ public class IndexDocumentTask extends RemoteActionTask {
   @NonNull
   private final IndexProperties properties;
   @NonNull
+  private final String indexName;
+  @NonNull
+  private final String releaseName;
+  @NonNull
   private final DocumentType type;
 
   @Override
@@ -116,7 +120,7 @@ public class IndexDocumentTask extends RemoteActionTask {
     // Config
     val bufferSize = 8 * 1024;
 
-    val archiveName = String.format("%s-%s.tar.gz", properties.getIndexName(), type.getName());
+    val archiveName = String.format("%s-%s.tar.gz", indexName, type.getName());
     val archivePath = new Path(properties.getOutputDir(), archiveName);
     if (fileSystem.exists(archivePath)) {
       log.info("Removing archive '{}'...", archivePath);
@@ -127,7 +131,7 @@ public class IndexDocumentTask extends RemoteActionTask {
         new GZIPOutputStream(new BufferedOutputStream(fileSystem.create(archivePath), bufferSize));
 
     log.info("Creating tar archive writer for archive file '{}'...", archivePath);
-    return new TarArchiveDocumentWriter(properties.getIndexName(), archiveOutputStream);
+    return new TarArchiveDocumentWriter(indexName, archiveOutputStream);
   }
 
   protected DocumentWriter createVCFWriter(FileSystem fileSystem) throws IOException {
@@ -146,7 +150,7 @@ public class IndexDocumentTask extends RemoteActionTask {
         new GZIPOutputStream(new BufferedOutputStream(fileSystem.create(vcfPath), bufferSize));
 
     log.info("Creating VCF writer for path '{}'...", vcfPath);
-    return new MutationVCFDocumentWriter(properties.getReleaseName(), properties.getIndexName(),
+    return new MutationVCFDocumentWriter(releaseName, indexName,
         properties.getFastaFile(),
         vcfOutputStream, totalSsmTestedDonorCount);
   }
@@ -156,13 +160,13 @@ public class IndexDocumentTask extends RemoteActionTask {
     // be allowed to be executed. A value of 1 means 1 concurrent request is allowed to be executed while accumulating
     // new bulk requests.
     val concurrentRequests = 1; // 2014-08-26: Changed from 10 to 1 to reduce chance for OOM
-    return new ElasticSearchDocumentWriter(newTransportClient(properties.getEsUri()), properties.getIndexName(), type,
+    return new ElasticSearchDocumentWriter(newTransportClient(properties.getEsUri()), indexName, type,
         concurrentRequests);
   }
 
   protected DocumentProcessor createProcessor(DocumentType type, CollectionReader reader,
       Iterable<DocumentWriter> writers) {
-    val processor = new DocumentProcessor(properties.getIndexName(), type, reader);
+    val processor = new DocumentProcessor(indexName, type, reader);
 
     for (val writer : writers) {
       processor.addCallback(new DocumentWriterCallback(writer));

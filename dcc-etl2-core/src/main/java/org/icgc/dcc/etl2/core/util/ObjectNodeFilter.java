@@ -59,8 +59,10 @@ public class ObjectNodeFilter implements Serializable {
     this.index = indexFieldPaths(createFilterPaths(fieldPaths));
   }
 
-  public void filter(ObjectNode value) {
+  public ObjectNode filter(ObjectNode value) {
     filter(value, null);
+
+    return value;
   }
 
   private void filter(JsonNode value, String parentPath) {

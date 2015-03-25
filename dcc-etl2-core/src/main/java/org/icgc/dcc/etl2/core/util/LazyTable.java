@@ -15,39 +15,33 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.core.task;
+package org.icgc.dcc.etl2.core.util;
 
-import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
-import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import java.util.concurrent.Callable;
 
-import java.io.Serializable;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 
-import lombok.val;
+import com.google.common.collect.ForwardingTable;
+import com.google.common.collect.Table;
 
-import org.icgc.dcc.common.core.util.Joiners;
+@RequiredArgsConstructor
+public class LazyTable<R, C, V> extends ForwardingTable<R, C, V> {
 
-public interface Task extends Serializable {
+  @NonNull
+  private final Callable<Table<R, C, V>> factory;
 
-  default String getName() {
-    return getName(this.getClass());
-  }
+  transient Table<R, C, V> delegate;
 
-  default TaskType getType() {
-    return TaskType.FILE_TYPE_PROJECT;
-  }
+  @Override
+  @SneakyThrows
+  protected synchronized Table<R, C, V> delegate() {
+    if (delegate == null) {
+      delegate = factory.call();
+    }
 
-  void execute(TaskContext taskContext);
-
-  static String getName(Class<? extends Task> taskClass, String... info) {
-    val className = UPPER_CAMEL.to(LOWER_HYPHEN, taskClass.getSimpleName());
-
-    return getName(className, info);
-  }
-
-  static String getName(String baseName, String... info) {
-    val joiner = Joiners.COLON;
-
-    return joiner.join(baseName, joiner.join(info));
+    return delegate;
   }
 
 }

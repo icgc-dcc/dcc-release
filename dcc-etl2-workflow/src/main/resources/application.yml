@@ -57,6 +57,13 @@ mail:
       mail.smtp.host: smtp.oicr.on.ca
       mail.smtp.from: no-reply@oicr.on.ca
 
+index:
+  esUri: "es://***REMOVED***:9300"
+  fsUri: "***REMOVED***"
+  outputDir: /tmp
+  fastaFile: "/u/dcc_dev/dcc-etl/data/genome/GRCh37.75/GRCh37.75.fasta"
+  exportVCF: false
+
 ---
 
 ###################################################################################################

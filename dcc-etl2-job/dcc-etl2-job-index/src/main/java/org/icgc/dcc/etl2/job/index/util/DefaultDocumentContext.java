@@ -29,9 +29,9 @@ import static org.icgc.dcc.etl2.job.index.util.Fakes.createFakeGene;
 
 import java.util.Map;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Value;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,7 +48,7 @@ import com.google.common.collect.Multimap;
 /**
  * Default implementation of the {@link DocumentContext} abstraction.
  */
-@Value
+@Data
 @Slf4j
 public class DefaultDocumentContext implements DocumentContext {
 

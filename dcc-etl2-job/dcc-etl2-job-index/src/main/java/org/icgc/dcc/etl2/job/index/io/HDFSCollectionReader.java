@@ -18,12 +18,20 @@
 package org.icgc.dcc.etl2.job.index.io;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterators.filter;
+import static com.google.common.collect.Iterators.transform;
 import static org.icgc.dcc.etl2.core.util.MoreIterables.once;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.MAPPER;
+import static org.icgc.dcc.etl2.job.index.model.CollectionFieldAccessors.getDonorId;
+import static org.icgc.dcc.etl2.job.index.model.CollectionFieldAccessors.getObservationConsequenceGeneIds;
+import static org.icgc.dcc.etl2.job.index.model.CollectionFieldAccessors.getObservationMutationId;
+import static org.icgc.dcc.etl2.job.index.model.CollectionFields.collectionFields;
+import static org.icgc.dcc.etl2.job.index.transform.GeneGeneSetPivoter.pivotGenesGeneSets;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.Map;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +50,8 @@ import org.icgc.dcc.etl2.job.index.util.CollectionFieldsFilterAdapter;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ForwardingIterator;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
 
 @RequiredArgsConstructor
 public class HDFSCollectionReader implements CollectionReader {
@@ -84,12 +93,15 @@ public class HDFSCollectionReader implements CollectionReader {
 
   @Override
   public Iterable<ObjectNode> readGenesPivoted(CollectionFields fields) {
-    throw notReady();
+    val genes = readGenes(fields);
+
+    // TODO: This is somewhat of hack, but it was the most expeditious way to get the desired result
+    return pivotGenesGeneSets(genes, readGeneSetOntologies());
   }
 
   @Override
   public Iterable<ObjectNode> readGeneSets(CollectionFields fields) {
-    throw notReady();
+    return read(FileType.GENE_SET, fields);
   }
 
   @Override
@@ -99,17 +111,25 @@ public class HDFSCollectionReader implements CollectionReader {
 
   @Override
   public Iterable<ObjectNode> readObservationsByDonorId(String donorId, CollectionFields fields) {
-    throw notReady();
+    return read(FileType.OBSERVATION, fields, row -> getDonorId(row).equals(donorId));
   }
 
   @Override
   public Iterable<ObjectNode> readObservationsByGeneId(String geneId, CollectionFields fields) {
-    throw notReady();
+    return read(FileType.OBSERVATION, fields, row -> {
+      for (String observationGeneId : getObservationConsequenceGeneIds(row)) {
+        if (observationGeneId != null && observationGeneId.equals(geneId)) {
+          return true;
+        }
+      }
+
+      return false;
+    });
   }
 
   @Override
-  public Iterable<ObjectNode> readObservationsByMutationId(String mutationId, CollectionFields observationFields) {
-    throw notReady();
+  public Iterable<ObjectNode> readObservationsByMutationId(String mutationId, CollectionFields fields) {
+    return read(FileType.OBSERVATION, fields, row -> getObservationMutationId(row).equals(mutationId));
   }
 
   @Override
@@ -127,21 +147,43 @@ public class HDFSCollectionReader implements CollectionReader {
     // No-op
   }
 
-  @SneakyThrows
+  protected Map<String, String> readGeneSetOntologies() {
+    val geneSets = readGeneSets(collectionFields().includedFields("id", "go_term.ontology").build());
+
+    val geneSetOntologies = ImmutableMap.<String, String> builder();
+    for (val geneSet : geneSets) {
+      val goTerm = geneSet.path("go_term");
+
+      if (!goTerm.isMissingNode()) {
+        val id = geneSet.get("id").textValue();
+        val ontology = goTerm.get("ontology").textValue();
+
+        geneSetOntologies.put(id, ontology);
+      }
+    }
+
+    return geneSetOntologies.build();
+  }
+
   private Iterable<ObjectNode> read(FileType fileType, CollectionFields fields) {
+    return read(fileType, fields, row -> true);
+  }
+
+  private Iterable<ObjectNode> read(FileType fileType, CollectionFields fields, Predicate<ObjectNode> rowFilter) {
     val fieldFilter = new CollectionFieldsFilterAdapter(fields);
     val filePath = getFilePath(fileType);
     val inputStream = new FileGlobInputStream(fileSystem, filePath);
-    val iterator = lazyFilteredRead(inputStream, fieldFilter);
+    val iterator = lazyFilteredRead(inputStream, fieldFilter, rowFilter);
 
     return once(iterator);
   }
 
-  private Path getFilePath(FileType fileType) throws IOException {
-    val filePath = new Path(collectionDir, fileType.getDirName());
-    checkState(fileSystem.exists(filePath), filePath);
+  @SneakyThrows
+  private Path getFilePath(FileType fileType) {
+    val basePath = new Path(collectionDir, fileType.getDirName());
+    checkState(fileSystem.exists(basePath), basePath);
 
-    return filePath;
+    return fileType.isPartitioned() ? new Path(basePath, "*") : basePath;
   }
 
   private static FileType resolveFileType(ReleaseCollection collection) {
@@ -164,30 +206,16 @@ public class HDFSCollectionReader implements CollectionReader {
     throw new IllegalArgumentException(collection + " not expected");
   }
 
-  private static Iterator<ObjectNode> lazyFilteredRead(final InputStream inputStream, final ObjectNodeFilter fieldFilter)
-      throws IOException {
+  @SneakyThrows
+  private static Iterator<ObjectNode> lazyFilteredRead(InputStream inputStream, ObjectNodeFilter fieldFilter,
+      Predicate<ObjectNode> rowFilter) {
     val delegate = READER.<ObjectNode> readValues(inputStream);
-    return new ForwardingIterator<ObjectNode>() {
 
-      @Override
-      @SneakyThrows
-      protected Iterator<ObjectNode> delegate() {
-        return delegate;
-      }
+    // Filter rows
+    val filtered = filter(delegate, rowFilter);
 
-      @Override
-      public ObjectNode next() {
-        val row = delegate().next();
-        fieldFilter.filter(row);
-
-        return row;
-      }
-
-    };
-  }
-
-  private static UnsupportedOperationException notReady() {
-    throw new UnsupportedOperationException("HDFS collection suport not implemented!");
+    // Filter fields
+    return transform(filtered, row -> fieldFilter.filter(row));
   }
 
 }

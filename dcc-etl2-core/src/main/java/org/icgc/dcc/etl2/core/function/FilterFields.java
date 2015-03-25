@@ -17,18 +17,23 @@
  */
 package org.icgc.dcc.etl2.core.function;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.etl2.core.util.ObjectNodeFilter;
 import org.icgc.dcc.etl2.core.util.ObjectNodeFilter.FilterMode;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+@RequiredArgsConstructor
 public class FilterFields implements Function<ObjectNode, ObjectNode> {
 
+  @NonNull
   private final ObjectNodeFilter filter;
 
-  public FilterFields(FilterMode mode, String... fieldPaths) {
-    this.filter = new ObjectNodeFilter(mode, fieldPaths);
+  public FilterFields(@NonNull FilterMode mode, String... fieldPaths) {
+    this(new ObjectNodeFilter(mode, fieldPaths));
   }
 
   @Override

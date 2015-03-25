@@ -39,13 +39,12 @@ import lombok.val;
 import org.icgc.dcc.common.core.model.Entity;
 import org.icgc.dcc.common.core.model.IndexType;
 import org.icgc.dcc.common.core.model.ReleaseCollection;
-import org.icgc.dcc.etl2.job.index.core.Document;
-import org.icgc.dcc.etl2.job.index.core.DocumentContext;
 import org.icgc.dcc.etl2.job.index.core.DocumentTransform;
 import org.icgc.dcc.etl2.job.index.transform.DonorCentricDocumentTransform;
 import org.icgc.dcc.etl2.job.index.transform.DonorDocumentTransform;
 import org.icgc.dcc.etl2.job.index.transform.DonorTextDocumentTransform;
 import org.icgc.dcc.etl2.job.index.transform.GeneCentricDocumentTransform;
+import org.icgc.dcc.etl2.job.index.transform.GeneSetDocumentTransform;
 import org.icgc.dcc.etl2.job.index.transform.GeneSetTextDocumentTransform;
 import org.icgc.dcc.etl2.job.index.transform.GeneTextDocumentTransform;
 import org.icgc.dcc.etl2.job.index.transform.MutationCentricDocumentTransform;
@@ -53,7 +52,6 @@ import org.icgc.dcc.etl2.job.index.transform.MutationTextDocumentTransform;
 import org.icgc.dcc.etl2.job.index.transform.ObservationCentricDocumentTransform;
 import org.icgc.dcc.etl2.job.index.transform.ProjectTextDocumentTransform;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -83,15 +81,7 @@ public enum DocumentType {
       .name("gene-set")
       .entity(GENE_SET)
       .collection(GENE_SET_COLLECTION)
-      // .transform(new GeneSetDocumentTransform())
-      .transform(new DocumentTransform() {
-
-        @Override
-        public Document transformDocument(ObjectNode root, DocumentContext context) {
-          return null;
-
-        }
-      })
+      .transform(new GeneSetDocumentTransform())
       .statusInterval(1000)
       .batchSize(1000)
       .fields(
