@@ -17,14 +17,14 @@
  */
 package org.icgc.dcc.etl2.job.fathmm.model;
 
-/**
- * 
- */
-public class FathmmFields {
+import lombok.NoArgsConstructor;
 
-  public static final String TOLERATED = "TOLERATED";
-  public static final String DAMAGING = "DAMAGING";
+@NoArgsConstructor
+public final class FathmmConstants {
+
+  // TODO Move to a more appropriate location.
   public static final String INHERITED = "INHERITED";
+
   public static final String PREDICTION = "Prediction";
   public static final String SCORE = "Score";
   public static final String AA_MUTATION = "aaMutation";

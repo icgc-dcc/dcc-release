@@ -1,10 +1,10 @@
 package org.icgc.dcc.etl2.job.fathmm.function;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.AA_MUTATION;
-import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.PREDICTION;
-import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.SCORE;
-import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.TRANSLATION_ID;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmConstants.AA_MUTATION;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmConstants.PREDICTION;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmConstants.SCORE;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmConstants.TRANSLATION_ID;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.Map;
 import lombok.val;
 
 import org.icgc.dcc.etl2.job.fathmm.core.FathmmPredictor;
-import org.icgc.dcc.etl2.job.fathmm.model.FathmmDao;
+import org.icgc.dcc.etl2.job.fathmm.model.FathmmRepository;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,7 +28,7 @@ public class PredictFathmmTest {
 
   @Before
   public void setUp() {
-    predictor = new FathmmPredictor(new FathmmDao(JDBC_URL));
+    predictor = new FathmmPredictor(new FathmmRepository(JDBC_URL));
   }
 
   @Test
@@ -49,7 +49,7 @@ public class PredictFathmmTest {
     };
 
     inputs.stream().forEach(input -> {
-      val result = predict(input.get(TRANSLATION_ID), input.get(AA_MUTATION));
+      Map<String, String> result = predict(input.get(TRANSLATION_ID), input.get(AA_MUTATION));
       assertThat(result.get(PREDICTION)).isEqualTo(input.get(PREDICTION));
 
       val inputScore = Double.parseDouble(input.get(SCORE));

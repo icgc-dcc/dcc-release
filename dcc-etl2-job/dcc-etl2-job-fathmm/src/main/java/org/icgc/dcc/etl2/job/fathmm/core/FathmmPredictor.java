@@ -22,11 +22,11 @@ import static com.google.common.primitives.Ints.tryParse;
 import static java.util.regex.Pattern.compile;
 import static org.apache.commons.lang3.StringUtils.left;
 import static org.apache.commons.lang3.StringUtils.right;
-import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.DAMAGING;
-import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.INHERITED;
-import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.PREDICTION;
-import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.SCORE;
-import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.TOLERATED;
+import static org.icgc.dcc.common.core.fi.FathmmImpactCategory.DAMAGING;
+import static org.icgc.dcc.common.core.fi.FathmmImpactCategory.TOLERATED;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmConstants.INHERITED;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmConstants.PREDICTION;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmConstants.SCORE;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,7 +40,9 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.commons.lang3.StringUtils;
-import org.icgc.dcc.etl2.job.fathmm.model.FathmmDao;
+import org.icgc.dcc.etl2.job.fathmm.model.FathmmRepository;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * This is a java port for FatHMM using postgresql database
@@ -61,27 +63,30 @@ public class FathmmPredictor {
   };
 
   @NonNull
-  private final FathmmDao db;
+  private final FathmmRepository db;
 
-  public FathmmPredictor(@NonNull FathmmDao db) {
+  public FathmmPredictor(@NonNull FathmmRepository db) {
     this.db = db;
   }
 
   public Map<String, String> predict(String translationId, String aaChange) {
-    Map<String, String> result = newHashMap();
     val cache = db.getFromCache(translationId, aaChange);
 
     if (cache != null) {
       if (cache.get("score") != null) {
-        result.put(SCORE, cache.get("score").toString());
-        result.put(PREDICTION, cache.get("prediction").toString());
+        return new ImmutableMap.Builder<String, String>()
+            .put(SCORE, cache.get("score").toString())
+            .put(PREDICTION, cache.get("prediction").toString())
+            .build();
       }
     } else {
-      result = calculateFATHMM(translationId, aaChange, INHERITED);
+      val result = calculateFATHMM(translationId, aaChange, INHERITED);
       db.updateCache(translationId, aaChange, result.get(SCORE), result.get(PREDICTION));
+      return result;
+
     }
 
-    return result;
+    return newHashMap();
   }
 
   // Calculate prediction via FATHMM database
@@ -104,7 +109,7 @@ public class FathmmPredictor {
     }
 
     // Try Unweighted non-domain based prediction
-    val nonDomainPrediction = calculateNonDomainPrecition(sequence, substitution, aaChange, weights);
+    val nonDomainPrediction = calculateNonDomainPrediction(sequence, substitution, aaChange, weights);
     if (nonDomainPrediction != null) {
       return nonDomainPrediction;
     }
@@ -112,7 +117,7 @@ public class FathmmPredictor {
     return newHashMap();
   }
 
-  private Map<String, String> calculateNonDomainPrecition(Map<String, Object> sequence, int substitution,
+  private Map<String, String> calculateNonDomainPrediction(Map<String, Object> sequence, int substitution,
       String aaChange, String weights) {
     val facade = db.getUnweightedProbability(sequence, substitution);
 
@@ -209,7 +214,7 @@ public class FathmmPredictor {
     // This is intended as well, the original script rounds before comparing against the threshold
     score = Math.floor(score * 100) / 100;
 
-    Map<String, String> result = newHashMap();
+    val result = new ImmutableMap.Builder<String, String>();
     result.put("HMM", (String) facade.get("id"));
     result.put("Description", (String) facade.get("description"));
     result.put("Position", facade.get("position").toString());
@@ -221,13 +226,13 @@ public class FathmmPredictor {
 
     if (weights.equals(INHERITED)) {
       if (score <= -1.5f) {
-        result.put(PREDICTION, DAMAGING);
+        result.put(PREDICTION, DAMAGING.name());
       } else {
-        result.put(PREDICTION, TOLERATED);
+        result.put(PREDICTION, TOLERATED.name());
       }
     }
 
-    return result;
+    return result.build();
   }
 
   private Map<String, String> checkValues(Map<String, Object> sequence, String aaChange) {

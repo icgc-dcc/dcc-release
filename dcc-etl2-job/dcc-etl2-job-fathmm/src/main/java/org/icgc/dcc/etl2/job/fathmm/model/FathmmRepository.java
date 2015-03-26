@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.etl2.job.fathmm.model;
 
-import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.AA_MUTATION;
-import static org.icgc.dcc.etl2.job.fathmm.model.FathmmFields.TRANSLATION_ID;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmConstants.AA_MUTATION;
+import static org.icgc.dcc.etl2.job.fathmm.model.FathmmConstants.TRANSLATION_ID;
 
 import java.io.Closeable;
 import java.util.List;
@@ -35,7 +35,7 @@ import org.skife.jdbi.v2.Query;
 /**
  * This is a Data Access Object for FatHMM on postgresql database
  */
-public class FathmmDao implements Closeable {
+public class FathmmRepository implements Closeable {
 
   @NonNull
   private DBI dbi;
@@ -48,7 +48,7 @@ public class FathmmDao implements Closeable {
   private final Query<Map<String, Object>> probabilityQuery;
   private final Query<Map<String, Object>> unweightedProbabilityQuery;
 
-  public FathmmDao(@NonNull String fathmmPostgresqlUri) {
+  public FathmmRepository(@NonNull String fathmmPostgresqlUri) {
     this.handle = new DBI(fathmmPostgresqlUri).open();
 
     // @formatter:off

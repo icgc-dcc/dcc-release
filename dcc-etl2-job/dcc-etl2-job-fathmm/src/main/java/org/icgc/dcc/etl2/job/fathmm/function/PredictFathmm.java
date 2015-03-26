@@ -33,7 +33,7 @@ import lombok.val;
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.ConsequenceType;
 import org.icgc.dcc.etl2.job.fathmm.core.FathmmPredictor;
-import org.icgc.dcc.etl2.job.fathmm.model.FathmmDao;
+import org.icgc.dcc.etl2.job.fathmm.model.FathmmRepository;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -49,7 +49,7 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode> {
    * Configuration.
    */
   @NonNull
-  private final FathmmDao fathmmDao;
+  private final FathmmRepository fathmmDao;
   @NonNull
   private final BiMap<String, String> transcripts;
 
