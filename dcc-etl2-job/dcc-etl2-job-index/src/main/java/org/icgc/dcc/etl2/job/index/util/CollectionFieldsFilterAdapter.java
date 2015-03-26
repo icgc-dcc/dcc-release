@@ -22,23 +22,53 @@ import static org.icgc.dcc.etl2.core.util.ObjectNodeFilter.FilterMode.EXCLUDE;
 import static org.icgc.dcc.etl2.core.util.ObjectNodeFilter.FilterMode.INCLUDE;
 import lombok.NonNull;
 import lombok.ToString;
+import lombok.val;
 
+import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.etl2.core.util.ObjectNodeFilter;
 import org.icgc.dcc.etl2.job.index.model.CollectionFields;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableSet;
 
 @ToString
 public class CollectionFieldsFilterAdapter extends ObjectNodeFilter {
 
+  private final boolean mongoConvention;
+
   public CollectionFieldsFilterAdapter(@NonNull CollectionFields fields) {
-    super(getMode(fields), getPaths(fields));
+    super(getMode(fields), ImmutableSet.copyOf(getPaths(fields)));
+    this.mongoConvention = isMongoConvention(fields);
+  }
+
+  @Override
+  public ObjectNode filter(ObjectNode value) {
+    val filtered = super.filter(value);
+
+    // TODO: Remove after no Mongo usages. This is here for migration cleanup purposes.
+    if (mongoConvention) {
+      filtered.remove(FieldNames.MONGO_INTERNAL_ID);
+    }
+
+    return filtered;
   }
 
   private static Iterable<String> getPaths(CollectionFields fields) {
-    return getMode(fields) == EXCLUDE ? fields.getExcludedFields() : fields.getIncludedFields();
+    return getMode(fields) == INCLUDE ? fields.getIncludedFields() : fields.getExcludedFields();
   }
 
   private static FilterMode getMode(CollectionFields fields) {
-    return !isEmpty(fields.getExcludedFields()) ? EXCLUDE : INCLUDE;
+    return !isEmpty(fields.getIncludedFields()) ? INCLUDE : EXCLUDE;
+  }
+
+  /**
+   * "A projection cannot contain both include and exclude specifications, except for the exclusion of the _id field. In
+   * projections that explicitly include fields, the _id field is the only field that you can explicitly exclude."
+   * 
+   * @see http://docs.mongodb.org/manual/reference/method/db.collection.find/#db.collection.find
+   */
+  private boolean isMongoConvention(CollectionFields fields) {
+    return getMode(fields) == INCLUDE && !isEmpty(fields.getExcludedFields());
   }
 
 }

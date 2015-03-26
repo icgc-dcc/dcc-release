@@ -281,6 +281,7 @@ public enum DocumentType {
                           .includedFields(
                               // Foreign keys
                               "_mutation_id",
+                              "_donor_id", // TODO: New from ETL1! Needed due to lack of MongoDB
                               "consequence._gene_id",
 
                               // Data

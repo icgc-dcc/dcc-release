@@ -82,7 +82,7 @@ spring:
 spark:
    master: "spark://***REMOVED***:7077"
    properties:
-      spark.executor.memory: 1g
+      spark.executor.memory: 10g
       spark.cores.max: 100
 
 # Mongo

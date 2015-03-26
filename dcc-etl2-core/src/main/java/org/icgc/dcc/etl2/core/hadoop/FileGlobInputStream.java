@@ -84,7 +84,6 @@ public class FileGlobInputStream extends ForwardingInputStream {
 
   private static Collection<Path> getPaths(FileSystem fileSystem, Path pathPattern) throws IOException,
       FileNotFoundException {
-
     FileStatus[] matches = fileSystem.globStatus(pathPattern, HIDDEN_PATH_FILTER);
     val paths = Lists.<Path> newArrayList();
     for (val match : matches) {

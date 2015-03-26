@@ -17,8 +17,11 @@
  */
 package org.icgc.dcc.etl2.job.index.core;
 
-import static org.icgc.dcc.etl2.core.util.Streams.map;
 import static org.icgc.dcc.etl2.job.index.factory.TransportClientFactory.newTransportClient;
+
+import java.util.Collection;
+import java.util.Collections;
+
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +31,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
+import org.icgc.dcc.etl2.core.task.Task;
+import org.icgc.dcc.etl2.core.util.Streams;
 import org.icgc.dcc.etl2.job.index.config.IndexProperties;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
 import org.icgc.dcc.etl2.job.index.service.IndexService;
-import org.icgc.dcc.etl2.job.index.task.IndexDocumentTask;
+import org.icgc.dcc.etl2.job.index.task.DonorCentricIndexTask;
+import org.icgc.dcc.etl2.job.index.task.RemoteIndexTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -90,11 +96,20 @@ public class IndexJob implements Job {
   }
 
   private void write(JobContext jobContext, String indexName) {
-    val tasks = map(DocumentType.values(), type -> {
-      return new IndexDocumentTask(properties, indexName, jobContext.getReleaseName(), type);
-    });
+    val tasks = createStreamingTasks(jobContext, indexName);
 
     jobContext.execute(tasks);
-    // jobContext.execute(new DonorCentricIndexTask());
   }
+
+  private Collection<? extends Task> createStreamingTasks(JobContext jobContext, String indexName) {
+    return Collections.singletonList(new DonorCentricIndexTask());
+  }
+
+  @SuppressWarnings("unused")
+  private Collection<? extends Task> createRemoteTasks(JobContext jobContext, String indexName) {
+    return Streams.map(DocumentType.values(), type -> {
+      return new RemoteIndexTask(properties, indexName, jobContext.getReleaseName(), type);
+    });
+  }
+
 }

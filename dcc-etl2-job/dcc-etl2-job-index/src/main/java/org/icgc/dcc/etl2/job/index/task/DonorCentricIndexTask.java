@@ -19,44 +19,20 @@ package org.icgc.dcc.etl2.job.index.task;
 
 import static org.icgc.dcc.etl2.job.index.model.CollectionFieldAccessors.getDonorId;
 import static org.icgc.dcc.etl2.job.index.model.CollectionFieldAccessors.getObservationDonorId;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.Collections;
-
-import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.core.function.FilterFields;
-import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.index.core.CollectionReader;
-import org.icgc.dcc.etl2.job.index.core.Document;
-import org.icgc.dcc.etl2.job.index.core.DocumentContext;
-import org.icgc.dcc.etl2.job.index.io.HDFSCollectionReader;
-import org.icgc.dcc.etl2.job.index.model.CollectionFields;
+import org.icgc.dcc.etl2.job.index.function.DonorCentricRowTransform;
+import org.icgc.dcc.etl2.job.index.function.RowTransform;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
-import org.icgc.dcc.etl2.job.index.util.CollectionFieldsFilterAdapter;
-import org.icgc.dcc.etl2.job.index.util.DefaultDocumentContext;
-
-import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
 
-public class DonorCentricIndexTask extends GenericTask {
-
-  private final DocumentType type;
+public class DonorCentricIndexTask extends IndexTask {
 
   public DonorCentricIndexTask() {
-    super(DocumentType.DONOR_CENTRIC_TYPE.getName());
-    this.type = DocumentType.DONOR_CENTRIC_TYPE;
+    super(DocumentType.DONOR_CENTRIC_TYPE);
   }
 
   @Override
@@ -64,85 +40,25 @@ public class DonorCentricIndexTask extends GenericTask {
     val donors = readDonors(taskContext);
     val observations = readObservations(taskContext);
 
+    val output = transform(taskContext, donors, observations);
+    writeOutput(output, "indexer");
+  }
+
+  private JavaRDD<ObjectNode> transform(TaskContext taskContext,
+      JavaRDD<ObjectNode> donors, JavaRDD<ObjectNode> observations) {
     val donorPairs = donors.mapToPair(donor -> pair(getDonorId(donor), donor));
     val observationPairs = observations.groupBy(observation -> getObservationDonorId(observation));
-
     val donorObservationsPairs = donorPairs.leftOuterJoin(observationPairs);
+    val transformed = donorObservationsPairs.map(createTransform(taskContext));
 
-    donorObservationsPairs.map(createTransform(taskContext)).count();
+    return transformed;
   }
 
-  private JavaRDD<ObjectNode> readDonors(TaskContext taskContext) {
-    val fields = type.getFields().getDonorFields();
-    return filter(readInput(taskContext, FileType.DONOR), fields);
-  }
-
-  private JavaRDD<ObjectNode> readObservations(TaskContext taskContext) {
-    val fields = type.getFields().getObservationFields();
-    return filter(readInput(taskContext, FileType.OBSERVATION), fields);
-  }
-
-  private Transform createTransform(TaskContext taskContext) {
+  private RowTransform createTransform(TaskContext taskContext) {
     val collectionDir = taskContext.getJobContext().getWorkingDir();
     val fsUri = taskContext.getFileSystem().getUri();
 
-    return new Transform(type, collectionDir, fsUri);
-  }
-
-  private static JavaRDD<ObjectNode> filter(JavaRDD<ObjectNode> rdd, CollectionFields fields) {
-    return rdd.map(new FilterFields(new CollectionFieldsFilterAdapter(fields)));
-  }
-
-  private static Tuple2<String, ObjectNode> pair(String id, ObjectNode row) {
-    return new Tuple2<String, ObjectNode>(id, row);
-  }
-
-  @RequiredArgsConstructor
-  private static class Transform implements
-      Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, ObjectNode> {
-
-    private final DocumentType type;
-    private final String collectionDir;
-    private final URI fsUri;
-
-    private CollectionReader collectionReader;
-
-    @Override
-    public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
-      val donor = tuple._2._1;
-      val donorObservations = tuple._2._2;
-
-      val context = createDocumentContext(donorObservations);
-      val document = transform(donor, context);
-
-      return document.getSource();
-    }
-
-    private Document transform(ObjectNode donor, DocumentContext context) {
-      return type.getTransform().transformDocument(donor, context);
-    }
-
-    private DocumentContext createDocumentContext(Optional<Iterable<ObjectNode>> donorObservations) throws IOException {
-      return new DefaultDocumentContext("indexName", type, getCollectionReader()) {
-
-        @Override
-        public Iterable<ObjectNode> getObservationsByDonorId(String donorId) {
-          return donorObservations.or(Collections.emptyList());
-        }
-
-      };
-    }
-
-    private CollectionReader getCollectionReader() throws IOException {
-      if (collectionReader != null) {
-        val fileSystem = FileSystem.get(fsUri, new Configuration());
-        collectionReader = new HDFSCollectionReader(new Path(collectionDir), fileSystem);
-
-      }
-
-      return collectionReader;
-    }
-
+    return new DonorCentricRowTransform(collectionDir, fsUri);
   }
 
 }

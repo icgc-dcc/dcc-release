@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.etl2.job.index.util;
 
+import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 import static org.icgc.dcc.etl2.job.index.model.CollectionFieldAccessors.getDonorId;
 import static org.icgc.dcc.etl2.job.index.model.CollectionFieldAccessors.getGeneGeneSetId;
@@ -51,12 +52,6 @@ import com.google.common.collect.Multimap;
 @Data
 @Slf4j
 public class DefaultDocumentContext implements DocumentContext {
-
-  /**
-   * Index name under construction.
-   */
-  @NonNull
-  private final String indexName;
 
   /**
    * Document type under construction.
@@ -164,7 +159,13 @@ public class DefaultDocumentContext implements DocumentContext {
     val watch = createStarted();
     log.info("Resolving genes...");
     val genes = createMap();
+
+    int i = 0;
     for (val gene : readGenes()) {
+      if (++i % 1000 == 0) {
+        log.info("Resolved {} genes", formatCount(i));
+      }
+
       // Add "real" gene
       genes.put(getGeneId(gene), gene);
     }

@@ -47,8 +47,6 @@ public class DocumentProcessor {
    * Metadata.
    */
   @NonNull
-  protected final String indexName;
-  @NonNull
   protected final DocumentType type;
 
   /**
@@ -114,7 +112,7 @@ public class DocumentProcessor {
   }
 
   private DocumentContext createContext() {
-    return new DefaultDocumentContext(indexName, type, reader);
+    return new DefaultDocumentContext(type, reader);
   }
 
   protected Iterable<ObjectNode> readCollection() {
