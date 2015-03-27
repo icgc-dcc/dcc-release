@@ -57,7 +57,7 @@ public final class GeneGeneSetPivoter {
   private static ObjectNode pivotGeneGeneSets(ObjectNode gene, Map<String, String> geneSetOntologies) {
     val geneGeneSets = getGeneGeneSets(gene);
     if (!geneGeneSets.isMissingNode()) {
-      // Transform
+      // DonorCentricRowTransform
       for (val geneGeneSet : geneGeneSets) {
         val id = getGeneGeneSetId(geneGeneSet);
         val type = getGeneGeneSetType(geneGeneSet);

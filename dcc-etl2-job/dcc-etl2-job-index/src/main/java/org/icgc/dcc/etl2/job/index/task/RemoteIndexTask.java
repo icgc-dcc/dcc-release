@@ -51,7 +51,7 @@ import com.google.common.collect.ImmutableList;
 
 @Slf4j
 @RequiredArgsConstructor
-public class IndexDocumentTask extends RemoteActionTask {
+public class RemoteIndexTask extends RemoteActionTask {
 
   /**
    * See
@@ -166,7 +166,7 @@ public class IndexDocumentTask extends RemoteActionTask {
 
   protected DocumentProcessor createProcessor(DocumentType type, CollectionReader reader,
       Iterable<DocumentWriter> writers) {
-    val processor = new DocumentProcessor(indexName, type, reader);
+    val processor = new DocumentProcessor(type, reader);
 
     for (val writer : writers) {
       processor.addCallback(new DocumentWriterCallback(writer));

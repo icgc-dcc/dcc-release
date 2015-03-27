@@ -17,6 +17,7 @@ import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobSummary;
 import org.icgc.dcc.etl2.core.job.JobType;
+import org.icgc.dcc.etl2.core.submission.SubmissionFileSchema;
 import org.icgc.dcc.etl2.core.submission.SubmissionFileSystem;
 import org.icgc.dcc.etl2.core.submission.SubmissionMetadataService;
 import org.icgc.dcc.etl2.core.task.TaskExecutor;
@@ -96,7 +97,7 @@ public class Workflow {
 
   private Table<String, String, List<Path>> resolveSubmissionFiles(WorkflowContext workflowContext) {
     return new LazyTable<String, String, List<Path>>(() -> {
-      val metadata = submissionMetadata.getMetadata();
+      List<SubmissionFileSchema> metadata = submissionMetadata.getMetadata();
 
       return submissionFileSystem.getFiles(workflowContext.getReleaseDir(), workflowContext.getProjectNames(),
           metadata);

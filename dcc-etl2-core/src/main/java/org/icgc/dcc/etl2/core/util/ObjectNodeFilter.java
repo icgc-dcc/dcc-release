@@ -17,21 +17,19 @@
  */
 package org.icgc.dcc.etl2.core.util;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.Serializable;
-import java.util.Map;
 import java.util.Set;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
-import lombok.Value;
 import lombok.val;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 @ToString
@@ -45,18 +43,22 @@ public class ObjectNodeFilter implements Serializable {
   /**
    * Configuration.
    */
+  @Getter
   @NonNull
   private final FilterMode mode;
   @NonNull
-  private final Map<String, FilterPath> index;
+  private final Set<String> filterPaths;
+  @NonNull
+  private final Set<String> inferredFilterPaths;
 
-  public ObjectNodeFilter(@NonNull FilterMode mode, String... fieldPaths) {
-    this(mode, ImmutableSet.copyOf(fieldPaths));
+  public ObjectNodeFilter(@NonNull FilterMode mode, String... filterPaths) {
+    this(mode, ImmutableSet.copyOf(filterPaths));
   }
 
-  public ObjectNodeFilter(@NonNull FilterMode mode, @NonNull Iterable<String> fieldPaths) {
+  public ObjectNodeFilter(@NonNull FilterMode mode, @NonNull Set<String> filterPaths) {
     this.mode = mode;
-    this.index = indexFieldPaths(createFilterPaths(fieldPaths));
+    this.filterPaths = filterPaths;
+    this.inferredFilterPaths = mode == FilterMode.INCLUDE ? inferFilterPaths(filterPaths) : filterPaths;
   }
 
   public ObjectNode filter(ObjectNode value) {
@@ -65,96 +67,79 @@ public class ObjectNodeFilter implements Serializable {
     return value;
   }
 
-  private void filter(JsonNode value, String parentPath) {
+  private void filter(JsonNode value, String path) {
     if (value.isObject()) {
-      filterObject(value, parentPath);
+      filterObject(value, path);
     } else if (value.isArray()) {
-      filterArray(value, parentPath);
+      filterArray(value, path);
+    } else {
+      checkState(!value.isContainerNode());
     }
   }
 
-  private void filterObject(JsonNode value, String parentPath) {
+  private void filterObject(JsonNode value, String path) {
+    if (isSkipped(path)) {
+      return;
+    }
+
     val iterator = value.fields();
     while (iterator.hasNext()) {
       val field = iterator.next();
-
       val fieldName = field.getKey();
       val fieldValue = field.getValue();
-      val fieldPath = qualifyField(parentPath, fieldName);
+      val fieldPath = qualifyField(path, fieldName);
 
-      if (isRemoveableField(fieldPath)) {
-        val filterPath = index.get(fieldPath);
-        if (!fieldValue.isContainerNode() || filterPath.isLeaf()) {
-          iterator.remove();
-          continue;
-        }
+      if (isRemovable(fieldPath)) {
+        iterator.remove();
+      } else {
+        filter(fieldValue, fieldPath);
       }
-
-      filter(fieldValue, fieldPath);
     }
   }
 
-  private void filterArray(JsonNode value, String parentPath) {
+  private boolean isSkipped(String path) {
+    return filterPaths.contains(path) && mode == FilterMode.INCLUDE;
+  }
+
+  private boolean isRemovable(String fieldPath) {
+    val present = filterPaths.contains(fieldPath);
+
+    return mode == FilterMode.INCLUDE && !present || mode == FilterMode.EXCLUDE && present;
+  }
+
+  private void filterArray(JsonNode value, String path) {
     for (val element : value) {
-      filter(element, parentPath);
+      filter(element, path);
     }
   }
 
-  private static String qualifyField(String parentPath, String fieldName) {
-    return parentPath == null ? fieldName : parentPath + FIELD_PATH_SEPARATOR + fieldName;
-  }
-
-  private boolean isRemoveableField(String fieldPath) {
-    if (mode == FilterMode.INCLUDE) {
-      return !index.containsKey(fieldPath);
-    } else {
-      return index.containsKey(fieldPath);
-    }
-  }
-
-  private static Set<FilterPath> createFilterPaths(Iterable<String> fieldPaths) {
-    val filterPaths = Sets.<FilterPath> newHashSet();
-
-    for (val fieldName : fieldPaths) {
+  private static Set<String> inferFilterPaths(Iterable<String> filterPaths) {
+    val inferredPaths = Sets.<String> newHashSet();
+  
+    for (val fieldName : filterPaths) {
       String[] parts = fieldName.split("\\" + FIELD_PATH_SEPARATOR);
-
+  
       String path = null;
-      for (int i = 0; i < parts.length; i++) {
-        val leaf = i == parts.length - 1;
+      for (val part : parts) {
         if (path == null) {
-          path = parts[i];
+          path = part;
         } else {
-          path = qualifyField(path, parts[i]);
+          path = qualifyField(path, part);
         }
-
-        filterPaths.add(new FilterPath(path, leaf));
+  
+        inferredPaths.add(path);
       }
     }
-
-    return filterPaths;
+  
+    return inferredPaths;
   }
 
-  private static ImmutableMap<String, FilterPath> indexFieldPaths(Iterable<FilterPath> filterPaths) {
-    return Maps.uniqueIndex(filterPaths, new Function<FilterPath, String>() {
-
-      @Override
-      public String apply(FilterPath input) {
-        return input.getFieldPath();
-      }
-
-    });
+  private static String qualifyField(String path, String fieldName) {
+    return path == null ? fieldName : path + FIELD_PATH_SEPARATOR + fieldName;
   }
 
   public enum FilterMode {
     INCLUDE, EXCLUDE;
-  }
-
-  @Value
-  public static class FilterPath implements Serializable {
-
-    String fieldPath;
-    boolean leaf;
-
   }
 
 }

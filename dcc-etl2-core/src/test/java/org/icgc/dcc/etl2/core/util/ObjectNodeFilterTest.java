@@ -92,20 +92,60 @@ public class ObjectNodeFilterTest {
     // Verify
     assertThat(root).isEqualTo($(
       "{" +
-          "a: {" +
-            "b: 1," +
-            "c: [" +
-              "{" +
-                "d: 2" +
-              "}," +
-              "{" +
-                "d: 4" +
-              "}" +
-            "]" +
-          "} " +
-        "}"
+        "a: {" +
+          "b: 1," +
+          "c: [" +
+            "{" +
+              "d: 2" +
+            "}," +
+            "{" +
+              "d: 4" +
+            "}" +
+          "]" +
+        "} " +
+      "}"
     ));
     // @formatter:on
+  }
+
+  @Test
+  public void testExcludeNonLeafObjectFilter() {
+    // Apply all JsonPath filters
+    val root = $("{x:{y:1}}");
+    filter(root, FilterMode.EXCLUDE, "x");
+
+    // Verify
+    assertThat(root).isEqualTo($("{}"));
+  }
+
+  @Test
+  public void testIncludeNonLeafObjectFilter() {
+    // Apply all JsonPath filters
+    val root = $("{x:{y:1}}");
+    filter(root, FilterMode.INCLUDE, "x");
+
+    // Verify
+    assertThat(root).isEqualTo($("{x:{y:1}}"));
+  }
+
+  @Test
+  public void testExcludeLeafObjectFilter() {
+    // Apply all JsonPath filters
+    val root = $("{x:1,y:1}");
+    filter(root, FilterMode.EXCLUDE, "x");
+
+    // Verify
+    assertThat(root).isEqualTo($("{y:1}"));
+  }
+
+  @Test
+  public void testIncludeLeafObjectFilter() {
+    // Apply all JsonPath filters
+    val root = $("{x:1,y:1}");
+    filter(root, FilterMode.INCLUDE, "x");
+
+    // Verify
+    assertThat(root).isEqualTo($("{x:1}"));
   }
 
   private static void filter(JsonNode root, FilterMode mode, String... fieldNames) {

@@ -15,62 +15,48 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.core.task;
+package org.icgc.dcc.etl2.job.index.task;
 
 import lombok.val;
 
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.etl2.core.function.FilterFields;
 import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.util.ObjectNodeRDDs;
+import org.icgc.dcc.etl2.core.task.GenericTask;
+import org.icgc.dcc.etl2.core.task.TaskContext;
+import org.icgc.dcc.etl2.job.index.model.CollectionFields;
+import org.icgc.dcc.etl2.job.index.model.DocumentType;
+import org.icgc.dcc.etl2.job.index.util.CollectionFieldsFilterAdapter;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public abstract class GenericTask implements Task {
+public abstract class IndexTask extends GenericTask {
 
-  private final String name;
+  protected final DocumentType type;
 
-  public GenericTask(String name) {
-    this.name = Task.getName(this.getClass(), name);
+  public IndexTask(DocumentType type) {
+    super(type.getName());
+    this.type = type;
   }
 
-  public GenericTask() {
-    this.name = Task.getName(this.getClass());
+  protected JavaRDD<ObjectNode> readDonors(TaskContext taskContext) {
+    val fields = type.getFields().getDonorFields();
+    return filter(readInput(taskContext, FileType.DONOR), fields);
   }
 
-  @Override
-  public String getName() {
-    return name;
+  protected JavaRDD<ObjectNode> readObservations(TaskContext taskContext) {
+    val fields = type.getFields().getObservationFields();
+    return filter(readInput(taskContext, FileType.OBSERVATION), fields);
   }
 
-  protected JobConf createJobConf(TaskContext taskContext) {
-    val sparkContext = taskContext.getSparkContext();
-
-    return new JobConf(sparkContext.hadoopConfiguration());
+  protected static Tuple2<String, ObjectNode> pair(String id, ObjectNode row) {
+    return new Tuple2<String, ObjectNode>(id, row);
   }
 
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, FileType inputFileType) {
-    val conf = createJobConf(taskContext);
-
-    return readInput(taskContext, conf, inputFileType);
-  }
-
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType) {
-    val sparkContext = taskContext.getSparkContext();
-
-    return ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
-    // return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
-  }
-
-  protected void writeOutput(TaskContext taskContext, JavaRDD<ObjectNode> processed, FileType outputFileType) {
-    val outputPath = taskContext.getPath(outputFileType);
-
-    writeOutput(processed, outputPath);
-  }
-
-  protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath) {
-    ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath);
-    // ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);
+  private static JavaRDD<ObjectNode> filter(JavaRDD<ObjectNode> rdd, CollectionFields fields) {
+    return rdd.map(new FilterFields(new CollectionFieldsFilterAdapter(fields)));
   }
 
 }

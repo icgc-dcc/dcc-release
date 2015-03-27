@@ -29,13 +29,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public interface DocumentContext {
 
   /**
-   * Gets the name of the index under construction.
-   * 
-   * @return the type
-   */
-  String getIndexName();
-
-  /**
    * Gets the document type under construction.
    * 
    * @return the type

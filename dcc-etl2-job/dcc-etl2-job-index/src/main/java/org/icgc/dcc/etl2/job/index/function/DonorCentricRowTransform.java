@@ -15,62 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.core.task;
+package org.icgc.dcc.etl2.job.index.function;
 
-import lombok.val;
+import java.net.URI;
 
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.util.ObjectNodeRDDs;
+import org.icgc.dcc.etl2.job.index.core.DocumentContext;
+import org.icgc.dcc.etl2.job.index.model.DocumentType;
+import org.icgc.dcc.etl2.job.index.util.ForwardingDocumentContext;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public abstract class GenericTask implements Task {
+public class DonorCentricRowTransform extends RowTransform {
 
-  private final String name;
-
-  public GenericTask(String name) {
-    this.name = Task.getName(this.getClass(), name);
-  }
-
-  public GenericTask() {
-    this.name = Task.getName(this.getClass());
+  public DonorCentricRowTransform(String collectionDir, URI fsUri) {
+    super(DocumentType.DONOR_CENTRIC_TYPE, collectionDir, fsUri);
   }
 
   @Override
-  public String getName() {
-    return name;
-  }
+  protected DocumentContext createDocumentContext(Iterable<ObjectNode> donorObservations) {
+    return new ForwardingDocumentContext(getDocumentContext()) {
 
-  protected JobConf createJobConf(TaskContext taskContext) {
-    val sparkContext = taskContext.getSparkContext();
+      @Override
+      public Iterable<ObjectNode> getObservationsByDonorId(String donorId) {
+        return donorObservations;
+      }
 
-    return new JobConf(sparkContext.hadoopConfiguration());
-  }
-
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, FileType inputFileType) {
-    val conf = createJobConf(taskContext);
-
-    return readInput(taskContext, conf, inputFileType);
-  }
-
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType) {
-    val sparkContext = taskContext.getSparkContext();
-
-    return ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
-    // return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
-  }
-
-  protected void writeOutput(TaskContext taskContext, JavaRDD<ObjectNode> processed, FileType outputFileType) {
-    val outputPath = taskContext.getPath(outputFileType);
-
-    writeOutput(processed, outputPath);
-  }
-
-  protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath) {
-    ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath);
-    // ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);
+    };
   }
 
 }
