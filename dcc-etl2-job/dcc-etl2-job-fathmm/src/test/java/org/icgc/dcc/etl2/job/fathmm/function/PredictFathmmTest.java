@@ -1,5 +1,6 @@
 package org.icgc.dcc.etl2.job.fathmm.function;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.etl2.job.fathmm.model.FathmmConstants.AA_MUTATION;
 import static org.icgc.dcc.etl2.job.fathmm.model.FathmmConstants.PREDICTION;
@@ -22,7 +23,8 @@ import com.google.common.collect.ImmutableMap;
 public class PredictFathmmTest {
 
   private static final double TOLERANCE = 0.1;
-  private static final String JDBC_URL = "";
+  private static final String JDBC_URL = format("jdbc:h2:mem;MODE=MySQL;INIT=runscript from '%s'",
+      "src/test/resources/sql/fathmm.sql");
 
   private FathmmPredictor predictor;
 
