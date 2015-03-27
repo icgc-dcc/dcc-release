@@ -15,50 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.index.task;
+package org.icgc.dcc.etl2.job.index.function;
 
-import static org.icgc.dcc.etl2.job.index.model.CollectionFieldAccessors.getDonorId;
-import static org.icgc.dcc.etl2.job.index.model.CollectionFieldAccessors.getObservationDonorId;
-import lombok.val;
+import java.net.URI;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.index.function.DonorCentricRowTransform;
-import org.icgc.dcc.etl2.job.index.function.RowTransform;
+import org.icgc.dcc.etl2.job.index.core.DocumentContext;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
+import org.icgc.dcc.etl2.job.index.util.ForwardingDocumentContext;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class DonorCentricIndexTask extends IndexTask {
+public class GeneCentricRowTransform extends RowTransform {
 
-  public DonorCentricIndexTask() {
-    super(DocumentType.DONOR_CENTRIC_TYPE);
+  public GeneCentricRowTransform(String collectionDir, URI fsUri) {
+    super(DocumentType.GENE_CENTRIC_TYPE, collectionDir, fsUri);
   }
 
   @Override
-  public void execute(TaskContext taskContext) {
-    val donors = readDonors(taskContext);
-    val observations = readObservations(taskContext);
+  protected DocumentContext createDocumentContext(Iterable<ObjectNode> geneObservations) {
+    return new ForwardingDocumentContext(getDocumentContext()) {
 
-    val output = transform(taskContext, donors, observations);
-    writeOutput(output);
-  }
+      @Override
+      public Iterable<ObjectNode> getObservationsByGeneId(String geneId) {
+        return geneObservations;
+      }
 
-  private JavaRDD<ObjectNode> transform(TaskContext taskContext,
-      JavaRDD<ObjectNode> donors, JavaRDD<ObjectNode> observations) {
-    val donorPairs = donors.mapToPair(donor -> pair(getDonorId(donor), donor));
-    val observationPairs = observations.groupBy(observation -> getObservationDonorId(observation));
-    val donorObservationsPairs = donorPairs.leftOuterJoin(observationPairs);
-    val transformed = donorObservationsPairs.map(createTransform(taskContext));
-
-    return transformed;
-  }
-
-  private RowTransform createTransform(TaskContext taskContext) {
-    val collectionDir = taskContext.getJobContext().getWorkingDir();
-    val fsUri = taskContext.getFileSystem().getUri();
-
-    return new DonorCentricRowTransform(collectionDir, fsUri);
+    };
   }
 
 }

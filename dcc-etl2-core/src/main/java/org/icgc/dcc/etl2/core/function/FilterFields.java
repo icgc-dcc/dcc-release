@@ -19,6 +19,7 @@ package org.icgc.dcc.etl2.core.function;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.etl2.core.util.ObjectNodeFilter;
@@ -26,6 +27,7 @@ import org.icgc.dcc.etl2.core.util.ObjectNodeFilter.FilterMode;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+@Value
 @RequiredArgsConstructor
 public class FilterFields implements Function<ObjectNode, ObjectNode> {
 

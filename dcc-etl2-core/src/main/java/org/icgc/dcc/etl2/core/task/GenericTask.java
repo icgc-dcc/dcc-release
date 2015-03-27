@@ -55,10 +55,20 @@ public abstract class GenericTask implements Task {
     return readInput(taskContext, conf, inputFileType);
   }
 
+  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, FileType inputFileType, String path) {
+    val conf = createJobConf(taskContext);
+
+    return readInput(taskContext, conf, inputFileType, path);
+  }
+
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType) {
+    return readInput(taskContext, conf, inputFileType, "");
+  }
+
+  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType, String path) {
     val sparkContext = taskContext.getSparkContext();
 
-    return ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
+    return ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
     // return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
   }
 
