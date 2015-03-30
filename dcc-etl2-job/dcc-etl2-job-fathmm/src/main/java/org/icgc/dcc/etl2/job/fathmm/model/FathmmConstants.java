@@ -15,33 +15,19 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.fathmm.task;
+package org.icgc.dcc.etl2.job.fathmm.model;
 
-import lombok.NonNull;
+import lombok.NoArgsConstructor;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.task.GenericProcessTask;
-import org.icgc.dcc.etl2.job.fathmm.function.PredictFathmm;
-import org.icgc.dcc.etl2.job.fathmm.model.FathmmRepository;
+@NoArgsConstructor
+public final class FathmmConstants {
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.BiMap;
+  // TODO Move to a more appropriate location.
+  public static final String INHERITED = "INHERITED";
 
-public class PredictFathmmTask extends GenericProcessTask {
-
-  private final String jdbcUrl;
-  private final BiMap<String, String> transcripts;
-
-  public PredictFathmmTask(@NonNull String jdbcUrl, @NonNull BiMap<String, String> transcripts) {
-    super(FileType.OBSERVATION, FileType.OBSERVATION_FATHMM);
-    this.jdbcUrl = jdbcUrl;
-    this.transcripts = transcripts;
-  }
-
-  @Override
-  protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input.map(new PredictFathmm(new FathmmRepository(jdbcUrl), transcripts));
-  }
+  public static final String PREDICTION = "Prediction";
+  public static final String SCORE = "Score";
+  public static final String AA_MUTATION = "aaMutation";
+  public static final String TRANSLATION_ID = "translationId";
 
 }

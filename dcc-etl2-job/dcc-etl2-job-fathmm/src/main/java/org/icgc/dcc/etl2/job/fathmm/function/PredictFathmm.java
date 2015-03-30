@@ -33,6 +33,7 @@ import lombok.val;
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.ConsequenceType;
 import org.icgc.dcc.etl2.job.fathmm.core.FathmmPredictor;
+import org.icgc.dcc.etl2.job.fathmm.model.FathmmRepository;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -48,7 +49,7 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode> {
    * Configuration.
    */
   @NonNull
-  private final String jdbcUrl;
+  private final FathmmRepository fathmmRepository;
   @NonNull
   private final BiMap<String, String> transcripts;
 
@@ -81,32 +82,38 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode> {
           continue;
         }
 
-        val result = predict(translationIdStr, aaMutationStr);
-        if (!result.isEmpty() && result.get("Score") != null) {
-
+        val fathmmNode = calculateFATHMM(translationIdStr, aaMutationStr);
+        if (fathmmNode != null) {
           if (consequence.get(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION) == null) {
             ((ObjectNode) consequence).put(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION,
                 JsonNodeFactory.instance.objectNode());
           }
-
-          val fathmmNode = MAPPER.createObjectNode();
-          fathmmNode.put("score", result.get("Score"));
-          fathmmNode.put("prediction", result.get("Prediction"));
-          fathmmNode.put("algorithm", "fathmm");
-
           ((ObjectNode) consequence.get(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION)).put(
               "fathmm", fathmmNode);
         }
       }
     }
 
+    fathmmRepository.close();
     return observation;
+  }
+
+  private ObjectNode calculateFATHMM(String translationIdStr, String aaMutationStr) {
+    ObjectNode fathmmNode = null;
+    val result = predict(translationIdStr, aaMutationStr);
+    if (!result.isEmpty() && result.get("Score") != null) {
+      fathmmNode = MAPPER.createObjectNode();
+      fathmmNode.put("score", result.get("Score"));
+      fathmmNode.put("prediction", result.get("Prediction"));
+      fathmmNode.put("algorithm", "fathmm");
+    }
+
+    return fathmmNode;
   }
 
   private Map<String, String> predict(String translationIdStr, String aaMutationStr) {
     if (predictor == null) {
-      // TODO: Need to close this!
-      predictor = new FathmmPredictor(jdbcUrl);
+      predictor = new FathmmPredictor(fathmmRepository);
     }
 
     return predictor.predict(translationIdStr, aaMutationStr);
