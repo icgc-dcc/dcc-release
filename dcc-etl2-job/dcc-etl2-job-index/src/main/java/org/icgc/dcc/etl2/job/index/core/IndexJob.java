@@ -20,7 +20,6 @@ package org.icgc.dcc.etl2.job.index.core;
 import static org.icgc.dcc.etl2.job.index.factory.TransportClientFactory.newTransportClient;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -36,10 +35,12 @@ import org.icgc.dcc.etl2.core.util.Streams;
 import org.icgc.dcc.etl2.job.index.config.IndexProperties;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
 import org.icgc.dcc.etl2.job.index.service.IndexService;
-import org.icgc.dcc.etl2.job.index.task.DonorCentricIndexTask;
+import org.icgc.dcc.etl2.job.index.task.GeneCentricIndexTask;
 import org.icgc.dcc.etl2.job.index.task.RemoteIndexTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.google.common.collect.ImmutableList;
 
 @Slf4j
 @Component
@@ -102,7 +103,10 @@ public class IndexJob implements Job {
   }
 
   private Collection<? extends Task> createStreamingTasks(JobContext jobContext, String indexName) {
-    return Collections.singletonList(new DonorCentricIndexTask());
+    return ImmutableList.of(
+        new GeneCentricIndexTask()
+        // , new DonorCentricIndexTask()
+        );
   }
 
   @SuppressWarnings("unused")

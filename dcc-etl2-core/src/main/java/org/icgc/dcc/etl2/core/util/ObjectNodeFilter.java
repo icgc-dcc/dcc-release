@@ -102,7 +102,7 @@ public class ObjectNodeFilter implements Serializable {
   }
 
   private boolean isRemovable(String fieldPath) {
-    val present = filterPaths.contains(fieldPath);
+    val present = inferredFilterPaths.contains(fieldPath);
 
     return mode == FilterMode.INCLUDE && !present || mode == FilterMode.EXCLUDE && present;
   }
@@ -115,10 +115,10 @@ public class ObjectNodeFilter implements Serializable {
 
   private static Set<String> inferFilterPaths(Iterable<String> filterPaths) {
     val inferredPaths = Sets.<String> newHashSet();
-  
+
     for (val fieldName : filterPaths) {
       String[] parts = fieldName.split("\\" + FIELD_PATH_SEPARATOR);
-  
+
       String path = null;
       for (val part : parts) {
         if (path == null) {
@@ -126,11 +126,11 @@ public class ObjectNodeFilter implements Serializable {
         } else {
           path = qualifyField(path, part);
         }
-  
+
         inferredPaths.add(path);
       }
     }
-  
+
     return inferredPaths;
   }
 

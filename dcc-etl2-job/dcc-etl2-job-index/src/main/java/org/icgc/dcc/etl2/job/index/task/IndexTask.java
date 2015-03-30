@@ -41,21 +41,54 @@ public abstract class IndexTask extends GenericTask {
     this.type = type;
   }
 
+  protected JavaRDD<ObjectNode> readReleases(TaskContext taskContext) {
+    val fields = type.getFields().getReleaseFields();
+    return filterFields(readInput(taskContext, FileType.RELEASE), fields);
+  }
+
+  protected JavaRDD<ObjectNode> readProjects(TaskContext taskContext) {
+    val fields = type.getFields().getProjectFields();
+    return filterFields(readInput(taskContext, FileType.PROJECT), fields);
+  }
+
   protected JavaRDD<ObjectNode> readDonors(TaskContext taskContext) {
     val fields = type.getFields().getDonorFields();
-    return filter(readInput(taskContext, FileType.DONOR), fields);
+    return filterFields(readInput(taskContext, FileType.DONOR), fields);
+  }
+
+  protected JavaRDD<ObjectNode> readGenes(TaskContext taskContext) {
+    val fields = type.getFields().getGeneFields();
+    return filterFields(readInput(taskContext, FileType.GENE), fields);
+  }
+
+  protected JavaRDD<ObjectNode> readGeneSets(TaskContext taskContext) {
+    val fields = type.getFields().getGeneSetFields();
+    return filterFields(readInput(taskContext, FileType.GENE_SET), fields);
   }
 
   protected JavaRDD<ObjectNode> readObservations(TaskContext taskContext) {
     val fields = type.getFields().getObservationFields();
-    return filter(readInput(taskContext, FileType.OBSERVATION), fields);
+    return filterFields(readInput(taskContext, FileType.OBSERVATION, "/*"), fields);
+  }
+
+  protected JavaRDD<ObjectNode> readMutations(TaskContext taskContext) {
+    val fields = type.getFields().getMutationFields();
+    return filterFields(readInput(taskContext, FileType.MUTATION), fields);
+  }
+
+  protected void writeOutput(JavaRDD<ObjectNode> output) {
+    super.writeOutput(output, "indexer/" + type.getName());
   }
 
   protected static Tuple2<String, ObjectNode> pair(String id, ObjectNode row) {
     return new Tuple2<String, ObjectNode>(id, row);
   }
 
-  private static JavaRDD<ObjectNode> filter(JavaRDD<ObjectNode> rdd, CollectionFields fields) {
+  protected static Tuple2<String, Iterable<ObjectNode>> pair(String id, Iterable<ObjectNode> rows) {
+    return new Tuple2<String, Iterable<ObjectNode>>(id, rows);
+  }
+
+  private static JavaRDD<ObjectNode> filterFields(JavaRDD<ObjectNode> rdd, CollectionFields fields) {
     return rdd.map(new FilterFields(new CollectionFieldsFilterAdapter(fields)));
   }
 
