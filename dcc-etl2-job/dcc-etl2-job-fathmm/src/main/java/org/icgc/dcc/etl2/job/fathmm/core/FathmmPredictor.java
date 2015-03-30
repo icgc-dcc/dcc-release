@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.commons.lang3.StringUtils;
@@ -47,6 +48,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * This is a java port for FatHMM using postgresql database
  */
+@RequiredArgsConstructor
 public class FathmmPredictor {
 
   /**
@@ -64,10 +66,6 @@ public class FathmmPredictor {
 
   @NonNull
   private final FathmmRepository db;
-
-  public FathmmPredictor(@NonNull FathmmRepository db) {
-    this.db = db;
-  }
 
   public Map<String, String> predict(String translationId, String aaChange) {
     val cache = db.getFromCache(translationId, aaChange);
@@ -100,7 +98,9 @@ public class FathmmPredictor {
       return valueCheckResult;
     }
 
-    // Phenotypes????
+    // Phenotypes:
+    // Are not being used, so a section of the original FATHMM code has not been ported.
+    // See https://github.com/HAShihab/fathmm/blob/master/cgi-bin/fathmm.py#L40 if you're interested.
 
     // Try Unweighted domain based prediction
     val domainPrediction = calculateDomainPrecition(sequence, substitution, aaChange, weights);
@@ -119,7 +119,8 @@ public class FathmmPredictor {
 
   private Map<String, String> calculateNonDomainPrediction(Map<String, Object> sequence, int substitution,
       String aaChange, String weights) {
-    val facade = db.getUnweightedProbability(sequence, substitution);
+    val sequenceId = sequence.get("id").toString();
+    val facade = db.getUnweightedProbability(sequenceId, substitution);
 
     if (null != facade) {
       String id = (String) facade.get("id");
@@ -136,7 +137,8 @@ public class FathmmPredictor {
   private Map<String, String> calculateDomainPrecition(Map<String, Object> sequence, int substitution, String aaChange,
       String weights) {
 
-    List<Map<String, Object>> domainList = db.getDomains(sequence, substitution);
+    val sequenceId = sequence.get("id").toString();
+    val domainList = db.getDomains(sequenceId, substitution);
     val facade = calculateaddProbabilities(domainList, substitution);
     Collections.sort(facade, INFORMATION_COMPARATOR);
     for (val x : facade) {

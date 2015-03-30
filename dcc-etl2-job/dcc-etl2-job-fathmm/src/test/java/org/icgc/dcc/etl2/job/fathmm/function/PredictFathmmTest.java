@@ -45,8 +45,8 @@ public class PredictFathmmTest {
         add(createFATHMM("ENSP00000282388", "R211H", "0.6", "TOLERATED"));
         add(createFATHMM("ENSP00000262109", "A251V", "1.5", "TOLERATED"));
         add(createFATHMM("ENSP00000428635", "A157V", "1.47", "TOLERATED"));
-        add(createFATHMM("ENSP00000356972", "L293R", "-2.68", "DAMAGING"));
         add(createFATHMM("ENSP00000446447", "L195R", "-2.68", "DAMAGING"));
+        add(createFATHMM("ENSP00000356972", "L293R", "-2.68", "DAMAGING"));
       }
     };
 

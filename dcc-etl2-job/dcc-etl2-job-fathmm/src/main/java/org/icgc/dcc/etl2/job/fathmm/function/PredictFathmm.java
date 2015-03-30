@@ -49,7 +49,7 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode> {
    * Configuration.
    */
   @NonNull
-  private final FathmmRepository fathmmDao;
+  private final FathmmRepository fathmmRepository;
   @NonNull
   private final BiMap<String, String> transcripts;
 
@@ -94,7 +94,7 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode> {
       }
     }
 
-    fathmmDao.close();
+    fathmmRepository.close();
     return observation;
   }
 
@@ -113,7 +113,7 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode> {
 
   private Map<String, String> predict(String translationIdStr, String aaMutationStr) {
     if (predictor == null) {
-      predictor = new FathmmPredictor(fathmmDao);
+      predictor = new FathmmPredictor(fathmmRepository);
     }
 
     return predictor.predict(translationIdStr, aaMutationStr);

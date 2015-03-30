@@ -52,11 +52,11 @@ public class FathmmRepository implements Closeable {
     this.handle = new DBI(fathmmPostgresqlUri).open();
 
     // @formatter:off
-    this.cacheQuery                 = handle.createQuery("select * from \"DCC_CACHE\" where translation_id = :translationId and aa_mutation = :aaMutation");
-    this.sequenceQuery              = handle.createQuery("select a.* from \"SEQUENCE\" a, \"PROTEIN\" b where a.id = b.id and b.name = :translationId");
-    this.domainQuery                = handle.createQuery("select * from \"DOMAINS\" where id=:sequenceId and :substitution between seq_begin and seq_end order by score");
-    this.probabilityQuery           = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:hmm and a.position=:residue");
-    this.unweightedProbabilityQuery = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:sequenceId and a.position=:substitution");
+    this.cacheQuery                 = handle.createQuery("select * from DCC_CACHE where translation_id = :translationId and aa_mutation = :aaMutation");
+    this.sequenceQuery              = handle.createQuery("select a.* from SEQUENCE a, PROTEIN b where a.id = b.id and b.name = :translationId");
+    this.domainQuery                = handle.createQuery("select * from DOMAINS where id=:sequenceId and :substitution between seq_begin and seq_end order by score");
+    this.probabilityQuery           = handle.createQuery("select a.*, b.* from PROBABILITIES a, LIBRARY b where a.id=b.id and a.id=:hmm and a.position=:residue");
+    this.unweightedProbabilityQuery = handle.createQuery("select a.*, b.* from PROBABILITIES a, LIBRARY b where a.id=b.id and a.id=:sequenceId and a.position=:substitution");
     // @formatter:on
   }
 
@@ -66,43 +66,41 @@ public class FathmmRepository implements Closeable {
     handle.close();
   }
 
-  public Map<String, Object> getFromCache(String translationId, String aaChange) {
+  public Map<String, Object> getFromCache(@NonNull String translationId, @NonNull String aaChange) {
     val cache = cacheQuery.bind(TRANSLATION_ID, translationId).bind(AA_MUTATION, aaChange).first();
     return cache;
   }
 
-  public void updateCache(String translationId, String aaChange, String score, String prediction) {
-    handle.execute("insert into \"DCC_CACHE\" (translation_id,  aa_mutation, score, prediction) values (?,?,?,?)",
+  public void updateCache(@NonNull String translationId, @NonNull String aaChange, @NonNull String score,
+      @NonNull String prediction) {
+    handle.execute("insert into DCC_CACHE (translation_id,  aa_mutation, score, prediction) values (?,?,?,?)",
         translationId, aaChange, score, prediction);
   }
 
-  public Map<String, Object> getSequence(String translationId) {
+  public Map<String, Object> getSequence(@NonNull String translationId) {
     val sequence = sequenceQuery.bind(TRANSLATION_ID, translationId).first();
     return sequence;
   }
 
-  public Map<String, Object> getWeight(String id, String weights) {
+  public Map<String, Object> getWeight(@NonNull String weightId, @NonNull String weights) {
     val weightQuery = createWeightQuery(weights);
-    val probability = weightQuery.bind("wid", id).first();
+    val probability = weightQuery.bind("wid", weightId).first();
     return probability;
   }
 
-  public Map<String, Object> getUnweightedProbability(Map<String, Object> sequence,
-      int substitution) {
-    return unweightedProbabilityQuery
-        .bind("sequenceId", sequence.get("id").toString())
-        .bind("substitution", substitution).first();
+  public Map<String, Object> getUnweightedProbability(String sequenceId, int substitution) {
+    return unweightedProbabilityQuery.bind("sequenceId", sequenceId).bind("substitution", substitution).first();
   }
 
-  public List<Map<String, Object>> getDomains(Map<String, Object> sequence, int substitution) {
-    return domainQuery.bind("sequenceId", sequence.get("id")).bind("substitution", substitution).list();
+  public List<Map<String, Object>> getDomains(@NonNull String sequenceId, int substitution) {
+    return domainQuery.bind("sequenceId", sequenceId).bind("substitution", substitution).list();
   }
 
   private Query<Map<String, Object>> createWeightQuery(String weights) {
-    return handle.createQuery("select disease, other from \"WEIGHTS\" where id=:wid  and type='" + weights + "'");
+    return handle.createQuery("select disease, other from WEIGHTS where id=:wid and type=:type").bind("type", weights);
   }
 
-  public Map<String, Object> getProbability(String hmm, Integer residue) {
+  public Map<String, Object> getProbability(@NonNull String hmm, @NonNull Integer residue) {
     return probabilityQuery.bind("hmm", hmm).bind("residue", residue).first();
   }
 
