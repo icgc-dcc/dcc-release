@@ -29,7 +29,7 @@ import scala.Tuple2;
 public class PairIteratorFirstKey<K, V> implements FlatMapFunction<Iterator<Tuple2<K, V>>, K> {
 
   @Override
-  public Iterable<K> call(Iterator<Tuple2<K, V>> iterator) throws Exception {
+  public Iterable<K> call(Iterator<Tuple2<K, V>> iterator) {
     return singleton(getFirstKey(iterator));
   }
 

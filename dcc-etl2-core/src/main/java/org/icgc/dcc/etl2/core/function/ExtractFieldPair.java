@@ -36,7 +36,7 @@ public class ExtractFieldPair implements Function<ObjectNode, Tuple2<String, Str
   private final String valueFieldName;
 
   @Override
-  public Tuple2<String, String> call(ObjectNode row) throws Exception {
+  public Tuple2<String, String> call(ObjectNode row) {
     val key = row.get(keyFieldName).textValue();
     val value = row.get(valueFieldName).textValue();
 

@@ -30,7 +30,7 @@ public class RetainFields implements Function<ObjectNode, ObjectNode> {
   }
 
   @Override
-  public ObjectNode call(ObjectNode row) throws Exception {
+  public ObjectNode call(ObjectNode row) {
     // TODO: Deep copy required?
     return row.retain(fieldNames);
   }

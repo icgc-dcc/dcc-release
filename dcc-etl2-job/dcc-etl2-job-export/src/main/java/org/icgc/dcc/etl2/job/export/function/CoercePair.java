@@ -24,7 +24,7 @@ import scala.Tuple2;
 public class CoercePair<T> implements PairFunction<T, T, Void> {
 
   @Override
-  public Tuple2<T, Void> call(T key) throws Exception {
+  public Tuple2<T, Void> call(T key) {
     return new Tuple2<T, Void>(key, null);
   }
 

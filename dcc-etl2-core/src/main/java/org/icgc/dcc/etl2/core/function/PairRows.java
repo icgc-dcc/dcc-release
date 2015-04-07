@@ -38,8 +38,7 @@ public class PairRows implements PairFunction<Tuple2<String, Tuple2<ObjectNode, 
 
   @Override
   public Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> call(
-      Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
-
+      Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) {
     val association = tuple._2;
     val left = association._1;
     val key = Keys.getKey(left, fieldNames);
@@ -49,6 +48,7 @@ public class PairRows implements PairFunction<Tuple2<String, Tuple2<ObjectNode, 
 
   private Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> pair(String donorId,
       Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>> specimenSample) {
+
     return new Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>(donorId, specimenSample);
   }
 

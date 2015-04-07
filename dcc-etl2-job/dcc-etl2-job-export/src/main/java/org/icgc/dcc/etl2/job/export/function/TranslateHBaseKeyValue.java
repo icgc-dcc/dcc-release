@@ -33,7 +33,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class TranslateHBaseKeyValue implements PairFunction<ObjectNode, ImmutableBytesWritable, KeyValue> {
 
   @Override
-  public Tuple2<ImmutableBytesWritable, KeyValue> call(ObjectNode record) throws Exception {
+  public Tuple2<ImmutableBytesWritable, KeyValue> call(ObjectNode record) {
     val key = createKey(record);
     byte[] row = key.get();
     byte[] value = createValue(record);

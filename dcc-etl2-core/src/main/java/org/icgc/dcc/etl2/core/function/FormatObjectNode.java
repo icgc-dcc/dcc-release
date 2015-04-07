@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class FormatObjectNode implements Function<ObjectNode, String>, Serializable {
 
   @Override
-  public String call(ObjectNode row) throws Exception {
+  public String call(ObjectNode row) {
     return row.toString();
   }
 

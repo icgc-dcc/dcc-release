@@ -35,19 +35,16 @@ public class FlattenField implements FlatMapFunction<ObjectNode, ObjectNode> {
   private final String fieldName;
 
   @Override
-  public Iterable<ObjectNode> call(ObjectNode row) throws Exception {
+  public Iterable<ObjectNode> call(ObjectNode row) {
     val node = row.path(fieldName);
     if (!node.isArray()) {
       return singleton(row);
     }
-
     val array = (ArrayNode) row.remove(fieldName);
-
     val results = Lists.<ObjectNode> newArrayListWithCapacity(array.size());
     for (val element : array) {
       val flattened = row.deepCopy();
       flattened.put(fieldName, element);
-
       results.add(flattened);
     }
 

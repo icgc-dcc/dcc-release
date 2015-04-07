@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class ExtractKey implements Function<ObjectNode, String> {
 
   @Override
-  public String call(ObjectNode row) throws Exception {
+  public String call(ObjectNode row) {
     return getKey(row);
   }
 

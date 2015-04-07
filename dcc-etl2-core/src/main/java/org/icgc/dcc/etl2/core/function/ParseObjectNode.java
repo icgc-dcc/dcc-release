@@ -17,10 +17,13 @@
  */
 package org.icgc.dcc.etl2.core.function;
 
+import java.io.IOException;
+
 import lombok.RequiredArgsConstructor;
 
 import org.apache.spark.api.java.function.Function;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -28,12 +31,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class ParseObjectNode implements Function<String, ObjectNode> {
 
   /**
-   * Contants.
+   * Constants.
    */
   public static final ObjectMapper MAPPER = new ObjectMapper();
 
   @Override
-  public ObjectNode call(String row) throws Exception {
+  public ObjectNode call(String row) throws JsonProcessingException, IOException {
     return (ObjectNode) MAPPER.readTree(row);
   }
 

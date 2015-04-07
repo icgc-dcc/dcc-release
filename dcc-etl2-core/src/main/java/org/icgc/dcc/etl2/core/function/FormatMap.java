@@ -31,7 +31,7 @@ public class FormatMap implements Function<Map<String, String>, String>, Seriali
   private static final Joiner ROW_JOINER = TAB.useForNull("\\N");
 
   @Override
-  public String call(Map<String, String> row) throws Exception {
+  public String call(Map<String, String> row) {
     return ROW_JOINER.join(row.values());
   }
 
