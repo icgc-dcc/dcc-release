@@ -38,10 +38,9 @@ public class ProjectFields implements Function<ObjectNode, ObjectNode> {
 
   public ProjectFields(String... values) {
     val projections = Maps.<String, String> newHashMap();
-    for (int i = 0; i < values.length / 2; i += 2) {
+    for (int i = 0; i < values.length; i += 2) {
       val fieldName = values[i];
       val path = values[i + 1];
-
       projections.put(fieldName, path);
     }
 
@@ -49,13 +48,11 @@ public class ProjectFields implements Function<ObjectNode, ObjectNode> {
   }
 
   @Override
-  public ObjectNode call(ObjectNode row) throws Exception {
+  public ObjectNode call(ObjectNode row) {
     for (val entry : projections.entrySet()) {
       val fieldName = entry.getKey();
       val path = entry.getValue();
-
       val value = getPath(row, path);
-
       row.put(fieldName, value);
     }
 
