@@ -21,12 +21,18 @@ import org.apache.spark.api.java.function.Function;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.util.List;
+
 public class RetainFields implements Function<ObjectNode, ObjectNode> {
 
   private final String[] fieldNames;
 
   public RetainFields(String... fieldNames) {
     this.fieldNames = fieldNames;
+  }
+
+  public RetainFields(List<String> fieldNames) {
+    this.fieldNames = (String[]) fieldNames.toArray();
   }
 
   @Override
