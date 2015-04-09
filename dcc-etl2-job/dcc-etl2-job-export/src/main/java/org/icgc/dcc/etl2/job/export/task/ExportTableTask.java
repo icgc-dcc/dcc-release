@@ -41,14 +41,16 @@ import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.task.TaskType;
+import org.icgc.dcc.etl2.job.export.function.ExtractKey;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.model.ExportTables;
 import org.icgc.dcc.etl2.job.export.util.HFileLoadJobFactory;
 import org.icgc.dcc.etl2.job.export.util.HFileLoader;
 import org.icgc.dcc.etl2.job.export.util.HFileWriter;
 import org.icgc.dcc.etl2.job.export.util.HTableManager;
-import org.icgc.dcc.etl2.job.export.util.InputKeyResolver;
 import org.icgc.dcc.etl2.job.export.util.SplitKeyCalculator;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -89,8 +91,26 @@ public class ExportTableTask implements Task {
     val inputPath = getInputPath(taskContext);
     log.info("Got input path '{}'", inputPath);
 
+    log.info("Running the base export process...");
+    val baseExportProcessResult = new ExportTask(sparkContext, table).process(inputPath);
+    log.info("Finished running the base export process.");
+
+    log.info("Writing static export output files...");
+    exportStatic(fileSystem, sparkContext, inputPath, baseExportProcessResult);
+    log.info("Done writing static export output files...");
+
+    log.info("Writing dynamic export output files...");
+    exportDynamic(fileSystem, sparkContext, inputPath, baseExportProcessResult);
+    log.info("Done writing dynamic export output files...");
+
+    log.info("Finished exporting table '{}' in {}", table, watch);
+  }
+
+  private void exportDynamic(FileSystem fileSystem, JavaSparkContext sparkContext, Path inputPath,
+      JavaRDD<ObjectNode> baseExportProcessResult) {
+
     log.info("Resolving input keys...");
-    val keys = resolveInputKeys(sparkContext, inputPath);
+    val keys = baseExportProcessResult.map(new ExtractKey());
     log.info("Resolved input keys");
 
     log.info("Calculating input path split keys...");
@@ -110,25 +130,22 @@ public class ExportTableTask implements Task {
     log.info("Got HFile path: '{}'", hFilePath);
 
     log.info("Writting HFiles...");
-    writeHFiles(sparkContext, hFileLoadJob.getConfiguration(), inputPath, hTable, hFilePath);
+    writeHFiles(hFileLoadJob.getConfiguration(), baseExportProcessResult, hTable, hFilePath);
     log.info("Wrote HFiles");
 
     log.info("Loading HFiles...");
     loadHFiles(conf, fileSystem, hTable, hFilePath);
     log.info("Loaded HFiles");
+  }
 
-    log.info("Finished exporting table '{}' in {}", table, watch);
+  private void exportStatic(FileSystem fileSystem, JavaSparkContext sparkContext, Path inputPath,
+      JavaRDD<ObjectNode> baseExportProcessResult) {
+    // TODO write static files.
   }
 
   private static Path getInputPath(TaskContext taskContext) {
     // TODO: This is not a real input and should be decomposed to the upstream types
     return new Path(taskContext.getPath(FileType.EXPORT_INPUT));
-  }
-
-  private JavaRDD<String> resolveInputKeys(JavaSparkContext sparkContext, Path inputPath) {
-    val resolver = new InputKeyResolver(sparkContext);
-
-    return resolver.resolveKeys(inputPath);
   }
 
   private Iterable<String> calculateSplitKeys(long regionSize, Path inputPath, JavaRDD<String> keys) {
@@ -158,16 +175,14 @@ public class ExportTableTask implements Task {
     return factory.createJob(table);
   }
 
-  private static void writeHFiles(JavaSparkContext sparkContext, Configuration conf, Path inputPath, HTable table,
+  private static void writeHFiles(Configuration conf, JavaRDD<ObjectNode> input, HTable table,
       Path hFilePath) {
-    val writer = new HFileWriter(conf, table, sparkContext);
-
-    writer.writeHFiles(inputPath, hFilePath);
+    val writer = new HFileWriter(conf, table);
+    writer.writeHFiles(input, hFilePath);
   }
 
   private static void loadHFiles(Configuration conf, FileSystem fileSystem, HTable hTable, Path hFilePath) {
     val loader = new HFileLoader(conf, fileSystem);
-
     loader.loadHFiles(hTable, hFilePath);
   }
 

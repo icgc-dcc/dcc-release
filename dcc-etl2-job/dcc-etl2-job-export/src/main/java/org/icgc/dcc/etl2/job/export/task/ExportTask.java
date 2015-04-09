@@ -15,45 +15,46 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.export.util;
+package org.icgc.dcc.etl2.job.export.task;
 
-import java.io.Serializable;
+import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.ALL_FIELDS;
+import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.DONOR_FIELDS;
+import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.DONOR_FIELD_MAPPING;
+import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.SPECIMEN_FIELD_MAPPING;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
-
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.etl2.core.function.FlattenField;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
-import org.icgc.dcc.etl2.job.export.function.ExtractKey;
+import org.icgc.dcc.etl2.core.function.RenameFields;
+import org.icgc.dcc.etl2.core.function.RetainFields;
+import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
+import org.icgc.dcc.etl2.job.export.function.AddMissingSpecimen;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.icgc.dcc.etl2.job.export.model.ExportTable;
 
 @RequiredArgsConstructor
-public class InputKeyResolver implements Serializable {
+public class ExportTask {
 
-  /**
-   * State.
-   */
   @NonNull
   private final JavaSparkContext sparkContext;
+  @NonNull
+  private final ExportTable table;
 
-  public JavaRDD<String> resolveKeys(Path inputPath) {
-    val input = readInput(inputPath);
-
-    return resolve(input);
-  }
-
-  private JavaRDD<ObjectNode> readInput(Path inputPath) {
+  protected JavaRDD<ObjectNode> process(Path inputPath) {
     return sparkContext
         .textFile(inputPath.toString())
-        .map(new ParseObjectNode());
+        .map(new ParseObjectNode())
+        .map(new RetainFields(DONOR_FIELDS))
+        .map(new RenameFields(DONOR_FIELD_MAPPING))
+        .map(new AddDonorIdField())
+        .map(new AddMissingSpecimen())
+        .flatMap(new FlattenField("specimen"))
+        .map(new RetainFields(ALL_FIELDS))
+        .map(new RenameFields(SPECIMEN_FIELD_MAPPING));
   }
-
-  private JavaRDD<String> resolve(JavaRDD<ObjectNode> input) {
-    return input.map(new ExtractKey());
-  }
-
 }
