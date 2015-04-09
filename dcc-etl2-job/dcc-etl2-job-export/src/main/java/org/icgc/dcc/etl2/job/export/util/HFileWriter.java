@@ -30,8 +30,6 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.job.export.function.TranslateHBaseKeyValue;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -47,29 +45,9 @@ public class HFileWriter {
   @NonNull
   private final HTable table;
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final JavaSparkContext sparkContext;
-
-  public void writeHFiles(@NonNull Path inputPath, @NonNull Path hFilePath) {
-    val input = readInput(inputPath);
+  public void writeHFiles(@NonNull JavaRDD<ObjectNode> input, @NonNull Path hFilePath) {
     val processed = process(input);
     writeOutput(hFilePath, processed);
-  }
-
-  public void writeHFiles(@NonNull JavaRDD<ObjectNode> input, @NonNull Path hFilePath) {
-      val processed = process(input);
-      writeOutput(hFilePath, processed);
-  }
-
-  private JavaRDD<ObjectNode> readInput(Path inputPath) {
-    val input = sparkContext
-        .textFile(inputPath.toString())
-        .map(new ParseObjectNode());
-
-    return input;
   }
 
   @SneakyThrows

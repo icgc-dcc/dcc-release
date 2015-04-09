@@ -18,6 +18,7 @@
 package org.icgc.dcc.etl2.job.export.function;
 
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.etl2.job.export.model.Constants.DONOR_ID;
 import lombok.val;
 
 import org.apache.hadoop.hbase.KeyValue;
@@ -49,7 +50,7 @@ public class TranslateHBaseKeyValue implements PairFunction<ObjectNode, Immutabl
 
   private ImmutableBytesWritable createKey(ObjectNode record) {
     // TODO: Make configurable
-    val value = textValue(record, "id");
+    val value = textValue(record, DONOR_ID);
     val key = new ImmutableBytesWritable();
     key.set(Bytes.toBytes(value));
 

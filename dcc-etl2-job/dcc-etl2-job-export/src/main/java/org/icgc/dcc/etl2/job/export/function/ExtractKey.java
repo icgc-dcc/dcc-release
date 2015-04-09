@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.etl2.job.export.function;
 
+import static org.icgc.dcc.etl2.job.export.model.Constants.DONOR_ID;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 
 import org.apache.spark.api.java.function.Function;
@@ -31,7 +32,7 @@ public class ExtractKey implements Function<ObjectNode, String> {
   }
 
   private String getKey(ObjectNode row) {
-    return textValue(row, "id");
+    return textValue(row, DONOR_ID);
   }
 
 }

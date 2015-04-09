@@ -18,7 +18,7 @@
 package org.icgc.dcc.etl2.job.export.function;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.etl2.job.export.function.AddMissingSpecimen.EMPTY_SPECIMEN_VALUE;
+import static org.icgc.dcc.etl2.job.export.model.Constants.EMPTY_SPECIMEN_VALUE;
 import static org.icgc.dcc.etl2.test.util.TestJsonNodes.$;
 import lombok.val;
 

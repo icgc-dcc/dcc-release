@@ -21,9 +21,9 @@ import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldName
 import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.DONOR_FIELDS;
 import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.DONOR_FIELD_MAPPING;
 import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.SPECIMEN_FIELD_MAPPING;
-
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -33,9 +33,9 @@ import org.icgc.dcc.etl2.core.function.RenameFields;
 import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
 import org.icgc.dcc.etl2.job.export.function.AddMissingSpecimen;
+import org.icgc.dcc.etl2.job.export.model.ExportTable;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.icgc.dcc.etl2.job.export.model.ExportTable;
 
 @RequiredArgsConstructor
 public class ExportTask {
