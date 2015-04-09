@@ -55,10 +55,13 @@ public class HFileWriter {
 
   public void writeHFiles(@NonNull Path inputPath, @NonNull Path hFilePath) {
     val input = readInput(inputPath);
-
     val processed = process(input);
-
     writeOutput(hFilePath, processed);
+  }
+
+  public void writeHFiles(@NonNull JavaRDD<ObjectNode> input, @NonNull Path hFilePath) {
+      val processed = process(input);
+      writeOutput(hFilePath, processed);
   }
 
   private JavaRDD<ObjectNode> readInput(Path inputPath) {
@@ -79,12 +82,8 @@ public class HFileWriter {
   private void writeOutput(Path hFilePath, JavaPairRDD<ImmutableBytesWritable, KeyValue> processed) {
     processed.saveAsNewAPIHadoopFile(
         hFilePath.toString(),
-
-        // Key / value
         ImmutableBytesWritable.class, KeyValue.class,
-
-        HFileOutputFormat2.class,
-        conf);
+        HFileOutputFormat2.class, conf);
   }
 
 }
