@@ -128,7 +128,7 @@ public enum FileType {
 
   DONOR_GENE_OBSERVATION_SUMMARY(true),
 
-  EXPORT_INPUT(true);
+  EXPORT_INPUT(true), EXPORT_OUTPUT(true);
 
   @Getter
   private final boolean partitioned;
