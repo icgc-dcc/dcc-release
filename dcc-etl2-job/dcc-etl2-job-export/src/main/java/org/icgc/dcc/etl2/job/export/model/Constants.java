@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 
 public class Constants {
 
-  public static final String DONOR_ID_ = "donor_id";
+  public static final String DONOR_ID = "donor_id";
   public static final String ICGC_DONOR_ID = "icgc_donor_id";
   public static final String ICGC_DONOR_ID_PREFIX = "DO";
 

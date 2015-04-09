@@ -32,7 +32,7 @@ public class GroupByDonorId implements
 
   @Override
   public Tuple2<String, ObjectNode> call(ObjectNode row) throws Exception {
-    val donorId = textValue(row, Constants.DONOR_ID_);
+    val donorId = textValue(row, Constants.DONOR_ID);
     return new Tuple2<>(donorId, row);
   }
 
