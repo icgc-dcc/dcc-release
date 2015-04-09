@@ -20,15 +20,12 @@ package org.icgc.dcc.etl2.job.export.function;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-
+import static org.icgc.dcc.etl2.job.export.model.Constants.SPECIMEN_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.Constants.EMPTY_SPECIMEN_VALUE;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AddMissingSpecimen implements Function<ObjectNode, ObjectNode> {
 
-  // TODO find Field or make into Field.
-  private static final String SPECIMEN_FIELD_NAME = "specimen";
-  public static final String EMPTY_SPECIMEN_VALUE =
-      "[\"_specimen_id\":\"\",\"specimen_id\":\"\",\"specimen_type\":\"\",\"specimen_type_other\":\"\",\"specimen_interval\":\"\",\"specimen_donor_treatment_type\":\"\",\"specimen_donor_treatment_type_other\":\"\",\"specimen_processing\":\"\",\"specimen_processing_other\":\"\",\"specimen_storage\":\"\",\"specimen_storage_other\":\"\",\"tumour_confirmed\":\"\",\"specimen_biobank\":\"\",\"specimen_biobank_id\":\"\",\"specimen_available\":\"\",\"tumour_histological_type\":\"\",\"tumour_grading_system\":\"\",\"tumour_grade\":\"\",\"tumour_grade_supplemental\":\"\",\"tumour_stage_system\":\"\",\"tumour_stage\":\"\",\"tumour_stage_supplemental\":\"\",\"digital_image_of_stained_section\":\"\"]";
 
   @Override
   public ObjectNode call(ObjectNode row) {

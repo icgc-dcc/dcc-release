@@ -20,6 +20,8 @@ package org.icgc.dcc.etl2.job.export.function;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 import lombok.val;
 
+import static org.icgc.dcc.etl2.job.export.model.Constants.ICGC_DONOR_ID;
+import static org.icgc.dcc.etl2.job.export.model.Constants.ICGC_DONOR_ID_PREFIX;
 import org.apache.commons.lang.StringUtils;
 import org.apache.spark.api.java.function.Function;
 
@@ -28,11 +30,9 @@ import com.google.common.base.Preconditions;
 
 public class AddDonorIdField implements Function<ObjectNode, ObjectNode> {
 
-  private static final String DONOR_ID = "icgc_donor_id";
-  private static final String ICGC_DONOR_ID_PREFIX = "DO";
 
   private String extractDonorId(ObjectNode row) {
-    val donorIdValue = textValue(row, DONOR_ID);
+    val donorIdValue = textValue(row, ICGC_DONOR_ID);
     Preconditions.checkState(donorIdValue.startsWith(ICGC_DONOR_ID_PREFIX));
     val donorId = StringUtils.substringAfter(donorIdValue.trim(), ICGC_DONOR_ID_PREFIX);
     return donorId;
