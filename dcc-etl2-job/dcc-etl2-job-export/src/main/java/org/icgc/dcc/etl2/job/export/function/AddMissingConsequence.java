@@ -15,46 +15,27 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.export.task;
+package org.icgc.dcc.etl2.job.export.function;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.ALL_FIELDS;
-import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.DONOR_FIELDS;
-import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.DONOR_FIELD_MAPPING;
-import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.SPECIMEN_FIELD_MAPPING;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import static org.icgc.dcc.etl2.job.export.model.Constants.CONSEQUENCE_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.Constants.EMPTY_CONSEQUENCE_VALUE;
 
-import org.apache.hadoop.fs.Path;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.etl2.core.function.FlattenField;
-import org.icgc.dcc.etl2.core.function.ParseObjectNode;
-import org.icgc.dcc.etl2.core.function.RenameFields;
-import org.icgc.dcc.etl2.core.function.RetainFields;
-import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
-import org.icgc.dcc.etl2.job.export.function.AddMissingSpecimen;
-import org.icgc.dcc.etl2.job.export.model.ExportTable;
+import lombok.val;
+
+import org.apache.spark.api.java.function.Function;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@RequiredArgsConstructor
-public class ExportTask {
+public class AddMissingConsequence implements Function<ObjectNode, ObjectNode> {
 
-  @NonNull
-  private final JavaSparkContext sparkContext;
-  @NonNull
-  private final ExportTable table;
+  @Override
+  public ObjectNode call(ObjectNode row) {
+    val consequence = row.get(CONSEQUENCE_FIELD_NAME);
+    if (consequence == null || consequence.equals("")) {
+      row.put(CONSEQUENCE_FIELD_NAME, EMPTY_CONSEQUENCE_VALUE);
+    }
 
-  protected JavaRDD<ObjectNode> process(Path inputPath) {
-    return sparkContext
-        .textFile(inputPath.toString())
-        .map(new ParseObjectNode())
-        .map(new RetainFields(DONOR_FIELDS))
-        .map(new RenameFields(DONOR_FIELD_MAPPING))
-        .map(new AddDonorIdField())
-        .map(new AddMissingSpecimen())
-        .flatMap(new FlattenField("specimen"))
-        .map(new RetainFields(ALL_FIELDS))
-        .map(new RenameFields(SPECIMEN_FIELD_MAPPING));
+    return row;
   }
+
 }

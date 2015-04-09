@@ -92,7 +92,7 @@ public class ExportTableTask implements Task {
     log.info("Got input path '{}'", inputPath);
 
     log.info("Running the base export process...");
-    val baseExportProcessResult = new ExportTask(sparkContext, table).process(inputPath);
+    val baseExportProcessResult = new ExportClinicalTask(sparkContext, table).process(inputPath);
     log.info("Finished running the base export process.");
 
     log.info("Writing static export output files...");
