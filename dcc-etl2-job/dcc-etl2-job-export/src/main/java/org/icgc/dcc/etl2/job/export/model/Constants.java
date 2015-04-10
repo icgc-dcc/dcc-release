@@ -25,6 +25,7 @@ public class Constants {
   public static final String CNSM_TYPE_FIELD_VALUE = "cnsm";
   public static final String EXP_ARRAY_TYPE_FIELD_VALUE = "exp_array";
   public static final String EXP_SEQ_TYPE_FIELD_VALUE = "exp_seq";
+  public static final String JCN_TYPE_FIELD_VALUE = "jcn";
 
   public static final String SPECIMEN_FIELD_NAME = "specimen";
   public static final String CONSEQUENCE_FIELD_NAME = "consequence";
