@@ -22,7 +22,6 @@ import static org.icgc.dcc.etl2.core.util.ObjectNodes.getPath;
 import java.util.Map;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
@@ -30,11 +29,14 @@ import org.apache.spark.api.java.function.Function;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
-@RequiredArgsConstructor
 public class ProjectFields implements Function<ObjectNode, ObjectNode> {
 
   @NonNull
   private final Map<String, String> projections;
+
+  public ProjectFields(Map<String, String> values) {
+    this.projections = values;
+  }
 
   public ProjectFields(String... values) {
     val projections = Maps.<String, String> newHashMap();
@@ -49,6 +51,7 @@ public class ProjectFields implements Function<ObjectNode, ObjectNode> {
 
   @Override
   public ObjectNode call(ObjectNode row) {
+    row = row.retain(projections.keySet());
     for (val entry : projections.entrySet()) {
       val fieldName = entry.getKey();
       val path = entry.getValue();
