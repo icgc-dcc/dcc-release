@@ -26,7 +26,9 @@ public class Constants {
   public static final String ICGC_DONOR_ID = "icgc_donor_id";
   public static final String ICGC_DONOR_ID_PREFIX = "DO";
 
-  public static final String CNSM_TYPE = "CNSM";
+  public static final String CNSM_TYPE_FIELD_VALUE = "cnsm";
+  public static final String EXP_ARRAY_TYPE_FIELD_VALUE = "exp_array";
+  public static final String EXP_SEQ_TYPE_FIELD_VALUE = "exp_seq";
 
   public static final String SPECIMEN_FIELD_NAME = "specimen";
   public static final String CONSEQUENCE_FIELD_NAME = "consequence";
@@ -173,7 +175,7 @@ public class Constants {
     private static final List<String> ALL_FIELDS = Lists.newArrayList(
         Iterables.concat(OBSERVATION_FIELDS, CONSEQUENCE_FIELDS, FIELD_MAPPING.values()));
 
-    public static final Function<ObjectNode, Boolean> PRIMARY_TYPE_FILTER = new isType(CNSM_TYPE);
+    public static final Function<ObjectNode, Boolean> PRIMARY_TYPE_FILTER = new isType(CNSM_TYPE_FIELD_VALUE);
     public static final Function<ObjectNode, ObjectNode> PRIMARY_TYPE_FILTER_FIELDS = new RetainFields(
         OBSERVATION_FIELDS);
     public static final Function<ObjectNode, ObjectNode> PRIMARY_TYPE_RENAME_FIELDS = new RenameFields(
@@ -184,6 +186,106 @@ public class Constants {
     public static final Function<ObjectNode, ObjectNode> ALL_TYPE_FILTER_FIELDS = new RetainFields(ALL_FIELDS);
 
     public static final Function<ObjectNode, ObjectNode> SECONDARY_TYPE_RENAME_FIELDS = new Identity();
+
+  }
+
+  public static class ExpArrayDataFiledNames {
+
+    private static final List<String> FIRST_LEVEL_FIELDS = Arrays.asList(
+        "_donor_id",
+        "_project_id",
+        "_specimen_id",
+        "_sample_id",
+        "analyzed_sample_id",
+        "analysis_id",
+        "gene_model",
+        "gene_id",
+        "normalized_expression_value",
+        "fold_change",
+        "platform",
+        "experimental_protocol",
+        "normalization_algorithm",
+        "other_analysis_algorithm",
+        "raw_data_repository",
+        "raw_data_accession",
+        "reference_sample_type");
+
+    private static final ImmutableMap<String, String> FIELD_MAPPING = ImmutableMap.<String, String> builder()
+        .put("_donor_id", "icgc_donor_id")
+        .put("_project_id", "project_code")
+        .put("_specimen_id", "icgc_specimen_id")
+        .put("_sample_id", "icgc_sample_id")
+        .put("analyzed_sample_id", "submitted_sample_id")
+        .build();
+
+    // private static final List<String> ALL_FIELDS = Lists.newArrayList(
+    // Iterables.concat(FIRST_LEVEL_FIELDS, FIELD_MAPPING.values()));
+
+    public static final Function<ObjectNode, Boolean> PRIMARY_TYPE_FILTER = new isType(EXP_ARRAY_TYPE_FIELD_VALUE);
+
+    public static final Function<ObjectNode, ObjectNode> PRIMARY_TYPE_FILTER_FIELDS = new RetainFields(
+        FIRST_LEVEL_FIELDS);
+
+    public static final Function<ObjectNode, ObjectNode> PRIMARY_TYPE_RENAME_FIELDS = new RenameFields(
+        FIELD_MAPPING);
+
+    // public static final Function<ObjectNode, ObjectNode> SECONDARY_TYPE_ADD_MISSING = new Identity();
+    //
+    // public static final FlatMapFunction<ObjectNode, ObjectNode> SECONDARY_TYPE_FLATTEN = new IdentityFlatMap();
+    //
+    // public static final Function<ObjectNode, ObjectNode> ALL_TYPE_FILTER_FIELDS = new RetainFields(ALL_FIELDS);
+    //
+    // public static final Function<ObjectNode, ObjectNode> SECONDARY_TYPE_RENAME_FIELDS = new Identity();
+
+  }
+
+  public static class ExpArrayDataFiledNames {
+
+    private static final List<String> FIRST_LEVEL_FIELDS = Arrays.asList(
+        "_donor_id",
+        "_project_id",
+        "_specimen_id",
+        "_sample_id",
+        "analyzed_sample_id",
+        "analysis_id",
+        "gene_model",
+        "gene_id",
+        "normalized_expression_value",
+        "fold_change",
+        "platform",
+        "experimental_protocol",
+        "normalization_algorithm",
+        "other_analysis_algorithm",
+        "raw_data_repository",
+        "raw_data_accession",
+        "reference_sample_type");
+
+    private static final ImmutableMap<String, String> FIELD_MAPPING = ImmutableMap.<String, String> builder()
+        .put("_donor_id", "icgc_donor_id")
+        .put("_project_id", "project_code")
+        .put("_specimen_id", "icgc_specimen_id")
+        .put("_sample_id", "icgc_sample_id")
+        .put("analyzed_sample_id", "submitted_sample_id")
+        .build();
+
+    // private static final List<String> ALL_FIELDS = Lists.newArrayList(
+    // Iterables.concat(FIRST_LEVEL_FIELDS, FIELD_MAPPING.values()));
+
+    public static final Function<ObjectNode, Boolean> PRIMARY_TYPE_FILTER = new isType(EXP_ARRAY_TYPE_FIELD_VALUE);
+
+    public static final Function<ObjectNode, ObjectNode> PRIMARY_TYPE_FILTER_FIELDS = new RetainFields(
+        FIRST_LEVEL_FIELDS);
+
+    public static final Function<ObjectNode, ObjectNode> PRIMARY_TYPE_RENAME_FIELDS = new RenameFields(
+        FIELD_MAPPING);
+
+    // public static final Function<ObjectNode, ObjectNode> SECONDARY_TYPE_ADD_MISSING = new Identity();
+    //
+    // public static final FlatMapFunction<ObjectNode, ObjectNode> SECONDARY_TYPE_FLATTEN = new IdentityFlatMap();
+    //
+    // public static final Function<ObjectNode, ObjectNode> ALL_TYPE_FILTER_FIELDS = new RetainFields(ALL_FIELDS);
+    //
+    // public static final Function<ObjectNode, ObjectNode> SECONDARY_TYPE_RENAME_FIELDS = new Identity();
 
   }
 
