@@ -42,6 +42,7 @@ import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.task.TaskType;
 import org.icgc.dcc.etl2.job.export.function.ExtractKey;
+import org.icgc.dcc.etl2.job.export.model.ClinicalDataType;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.model.ExportTables;
 import org.icgc.dcc.etl2.job.export.util.HFileLoadJobFactory;
@@ -92,7 +93,7 @@ public class ExportTableTask implements Task {
     log.info("Got input path '{}'", inputPath);
 
     log.info("Running the base export process...");
-    val baseExportProcessResult = new ExportClinicalTask(sparkContext, table).process(inputPath);
+    val baseExportProcessResult = new ExportTask(sparkContext, table).process(inputPath, new ClinicalDataType());
     log.info("Finished running the base export process.");
 
     log.info("Writing static export output files...");

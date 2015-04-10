@@ -17,13 +17,6 @@
  */
 package org.icgc.dcc.etl2.job.export.task;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.ALL_TYPE_FILTER_FIELDS;
-import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.PRIMARY_TYPE_FILTER;
-import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.PRIMARY_TYPE_FILTER_FIELDS;
-import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.PRIMARY_TYPE_RENAME_FIELDS;
-import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.SECONDARY_TYPE_ADD_MISSING;
-import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.SECONDARY_TYPE_FLATTEN;
-import static org.icgc.dcc.etl2.job.export.model.Constants.ClinicalDataFieldNames.SECONDARY_TYPE_RENAME_FIELDS;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -32,30 +25,30 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
+import org.icgc.dcc.etl2.job.export.model.DataType;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @RequiredArgsConstructor
-public class ExportClinicalTask {
+public class ExportTask {
 
   @NonNull
   private final JavaSparkContext sparkContext;
   @NonNull
   private final ExportTable table;
 
-  protected JavaRDD<ObjectNode> process(Path inputPath) {
+  protected JavaRDD<ObjectNode> process(Path inputPath, DataType dataType) {
     return sparkContext
         .textFile(inputPath.toString())
         .map(new ParseObjectNode())
-        .filter(PRIMARY_TYPE_FILTER)
-        .map(PRIMARY_TYPE_FILTER_FIELDS)
-        .map(PRIMARY_TYPE_RENAME_FIELDS)
+        .filter(dataType.primaryTypeFilter())
+        .map(dataType.firstLevelProjectFields())
         .map(new AddDonorIdField())
-        .map(SECONDARY_TYPE_ADD_MISSING)
-        .flatMap(SECONDARY_TYPE_FLATTEN)
-        .map(ALL_TYPE_FILTER_FIELDS)
-        .map(SECONDARY_TYPE_RENAME_FIELDS);
+        .map(dataType.secondLevelAddMissing())
+        .flatMap(dataType.secondLevelFlatten())
+        .map(dataType.allLevelFilterFields())
+        .map(dataType.secondLevelRenameFields());
   }
 
 }
