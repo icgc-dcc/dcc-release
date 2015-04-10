@@ -25,8 +25,8 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
-import org.icgc.dcc.etl2.job.export.model.DataType;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
+import org.icgc.dcc.etl2.job.export.model.type.DataType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
