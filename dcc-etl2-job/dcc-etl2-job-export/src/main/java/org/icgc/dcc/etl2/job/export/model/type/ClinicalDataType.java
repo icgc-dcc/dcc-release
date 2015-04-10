@@ -37,6 +37,8 @@ import com.google.common.collect.Lists;
 
 public class ClinicalDataType implements DataType {
 
+  private static final String SECOND_LEVEL_FIELDNAME = SPECIMEN_FIELD_NAME;
+
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
       .put("_project_id", "project_code")
@@ -90,10 +92,9 @@ public class ClinicalDataType implements DataType {
       Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
           SECOND_LEVEL_PROJECTION.values()));
 
-  private static final String SECOND_LEVEL_FIELDNAME = SPECIMEN_FIELD_NAME;
-
   @Override
   public Function<ObjectNode, Boolean> primaryTypeFilter() {
+
     return new All();
   }
 
@@ -105,21 +106,25 @@ public class ClinicalDataType implements DataType {
 
   @Override
   public Function<ObjectNode, ObjectNode> allLevelFilterFields() {
+
     return new RetainFields(ALL_FIELDS);
   }
 
   @Override
   public Function<ObjectNode, ObjectNode> secondLevelRenameFields() {
+
     return new RenameFields(SECOND_LEVEL_PROJECTION);
   }
 
   @Override
   public FlatMapFunction<ObjectNode, ObjectNode> secondLevelFlatten() {
+
     return new FlattenField(SECOND_LEVEL_FIELDNAME);
   }
 
   @Override
   public Function<ObjectNode, ObjectNode> secondLevelAddMissing() {
+
     return new AddMissingSpecimen();
   }
 

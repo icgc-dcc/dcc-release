@@ -38,6 +38,7 @@ import com.google.common.collect.Lists;
 
 public class CNSMDataType implements DataType {
 
+  private static final String TYPE = CNSM_TYPE_FIELD_VALUE;
   private static final String SECOND_LEVEL_FIELDNAME = CONSEQUENCE_FIELD_NAME;
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
@@ -90,7 +91,8 @@ public class CNSMDataType implements DataType {
 
   @Override
   public Function<ObjectNode, Boolean> primaryTypeFilter() {
-    return new isType(CNSM_TYPE_FIELD_VALUE);
+
+    return new isType(TYPE);
   }
 
   @Override
@@ -101,21 +103,25 @@ public class CNSMDataType implements DataType {
 
   @Override
   public Function<ObjectNode, ObjectNode> allLevelFilterFields() {
+
     return new RetainFields(ALL_FIELDS);
   }
 
   @Override
   public Function<ObjectNode, ObjectNode> secondLevelRenameFields() {
+
     return new Identity();
   }
 
   @Override
   public FlatMapFunction<ObjectNode, ObjectNode> secondLevelFlatten() {
+
     return new FlattenField(SECOND_LEVEL_FIELDNAME);
   }
 
   @Override
   public Function<ObjectNode, ObjectNode> secondLevelAddMissing() {
+
     return new AddMissingConsequence();
   }
 
