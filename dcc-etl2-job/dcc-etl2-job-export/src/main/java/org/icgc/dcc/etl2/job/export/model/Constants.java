@@ -5,6 +5,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.etl2.core.function.FlattenField;
+import org.icgc.dcc.etl2.core.function.Identity;
+import org.icgc.dcc.etl2.core.function.RenameFields;
+import org.icgc.dcc.etl2.core.function.RetainFields;
+import org.icgc.dcc.etl2.job.export.function.AddMissingConsequence;
+import org.icgc.dcc.etl2.job.export.function.AddMissingSpecimen;
+import org.icgc.dcc.etl2.job.export.function.All;
+import org.icgc.dcc.etl2.job.export.function.isType;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -30,7 +41,7 @@ public class Constants {
 
   public static class ClinicalDataFieldNames {
 
-    public static final List<String> DONOR_FIELDS = Arrays.asList(
+    private static final List<String> DONOR_FIELDS = Arrays.asList(
         "_donor_id",
         "_project_id",
         "donor_id",
@@ -50,7 +61,7 @@ public class Constants {
         "donor_interval_of_last_followup",
         "specimen");
 
-    public static final List<String> SPECIMEN_FIELDS = Arrays.asList(
+    private static final List<String> SPECIMEN_FIELDS = Arrays.asList(
         "_specimen_id",
         "specimen_id",
         "specimen_type",
@@ -77,25 +88,37 @@ public class Constants {
         "percentage_cellularity",
         "level_of_cellularity");
 
-    public static final ImmutableMap<String, String> DONOR_FIELD_MAPPING = ImmutableMap.<String, String> builder()
+    private static final ImmutableMap<String, String> DONOR_FIELD_MAPPING = ImmutableMap.<String, String> builder()
         .put("_donor_id", "icgc_donor_id")
         .put("_project_id", "project_code")
         .put("donor_id", "submitted_donor_id")
         .build();
 
-    public static final ImmutableMap<String, String> SPECIMEN_FIELD_MAPPING = ImmutableMap.<String, String> builder()
+    private static final ImmutableMap<String, String> SPECIMEN_FIELD_MAPPING = ImmutableMap.<String, String> builder()
         .put("_specimen_id", "icgc_specimen_id")
         .put("specimen_id", "submitted_specimen_id")
         .build();
 
-    public static final List<String> ALL_FIELDS = Lists.newArrayList(
+    private static final List<String> ALL_FIELDS = Lists.newArrayList(
         Iterables.concat(DONOR_FIELDS, SPECIMEN_FIELDS, DONOR_FIELD_MAPPING.values(), SPECIMEN_FIELD_MAPPING.values()));
+
+    public static final Function<ObjectNode, Boolean> PRIMARY_TYPE_FILTER = new All();
+    public static final Function<ObjectNode, ObjectNode> PRIMARY_TYPE_FILTER_FIELDS = new RetainFields(DONOR_FIELDS);
+    public static final Function<ObjectNode, ObjectNode> PRIMARY_TYPE_RENAME_FIELDS = new RenameFields(
+        DONOR_FIELD_MAPPING);
+    public static final Function<ObjectNode, ObjectNode> SECONDARY_TYPE_ADD_MISSING = new AddMissingSpecimen();
+
+    public static final FlattenField SECONDARY_TYPE_FLATTEN = new FlattenField(SPECIMEN_FIELD_NAME);
+    public static final Function<ObjectNode, ObjectNode> ALL_TYPE_FILTER_FIELDS = new RetainFields(ALL_FIELDS);
+
+    public static final Function<ObjectNode, ObjectNode> SECONDARY_TYPE_RENAME_FIELDS = new RenameFields(
+        SPECIMEN_FIELD_MAPPING);
 
   }
 
   public static class CNSMDataFiledNames {
 
-    public static final List<String> OBSERVATION_FIELDS = Arrays.asList(
+    private static final List<String> OBSERVATION_FIELDS = Arrays.asList(
         "_donor_id",
         "_project_id",
         "_specimen_id",
@@ -132,12 +155,12 @@ public class Constants {
         "raw_data_repository",
         "raw_data_accession");
 
-    public static final List<String> CONSEQUENCE_FIELDS = Arrays.asList(
+    private static final List<String> CONSEQUENCE_FIELDS = Arrays.asList(
         "gene_affected",
         "transcript_affected",
         "gene_build_version");
 
-    public static final ImmutableMap<String, String> FIELD_MAPPING = ImmutableMap.<String, String> builder()
+    private static final ImmutableMap<String, String> FIELD_MAPPING = ImmutableMap.<String, String> builder()
         .put("_donor_id", "icgc_donor_id")
         .put("_project_id", "project_code")
         .put("_specimen_id", "icgc_specimen_id")
@@ -147,8 +170,20 @@ public class Constants {
         .put("matched_sample_id", "submitted_matched_sample_id")
         .build();
 
-    public static final List<String> ALL_FIELDS = Lists.newArrayList(
+    private static final List<String> ALL_FIELDS = Lists.newArrayList(
         Iterables.concat(OBSERVATION_FIELDS, CONSEQUENCE_FIELDS, FIELD_MAPPING.values()));
+
+    public static final Function<ObjectNode, Boolean> PRIMARY_TYPE_FILTER = new isType(CNSM_TYPE);
+    public static final Function<ObjectNode, ObjectNode> PRIMARY_TYPE_FILTER_FIELDS = new RetainFields(
+        OBSERVATION_FIELDS);
+    public static final Function<ObjectNode, ObjectNode> PRIMARY_TYPE_RENAME_FIELDS = new RenameFields(
+        FIELD_MAPPING);
+    public static final Function<ObjectNode, ObjectNode> SECONDARY_TYPE_ADD_MISSING = new AddMissingConsequence();
+
+    public static final FlattenField SECONDARY_TYPE_FLATTEN = new FlattenField(CONSEQUENCE_FIELD_NAME);
+    public static final Function<ObjectNode, ObjectNode> ALL_TYPE_FILTER_FIELDS = new RetainFields(ALL_FIELDS);
+
+    public static final Function<ObjectNode, ObjectNode> SECONDARY_TYPE_RENAME_FIELDS = new Identity();
 
   }
 

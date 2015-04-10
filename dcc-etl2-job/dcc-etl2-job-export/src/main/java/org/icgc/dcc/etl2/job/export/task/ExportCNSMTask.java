@@ -17,23 +17,21 @@
  */
 package org.icgc.dcc.etl2.job.export.task;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.CNSMDataFiledNames.*;
-import static org.icgc.dcc.etl2.job.export.model.Constants.CNSM_TYPE;
-import static org.icgc.dcc.etl2.job.export.model.Constants.CONSEQUENCE_FIELD_NAME;
-
+import static org.icgc.dcc.etl2.job.export.model.Constants.CNSMDataFiledNames.ALL_TYPE_FILTER_FIELDS;
+import static org.icgc.dcc.etl2.job.export.model.Constants.CNSMDataFiledNames.PRIMARY_TYPE_FILTER;
+import static org.icgc.dcc.etl2.job.export.model.Constants.CNSMDataFiledNames.PRIMARY_TYPE_FILTER_FIELDS;
+import static org.icgc.dcc.etl2.job.export.model.Constants.CNSMDataFiledNames.PRIMARY_TYPE_RENAME_FIELDS;
+import static org.icgc.dcc.etl2.job.export.model.Constants.CNSMDataFiledNames.SECONDARY_TYPE_ADD_MISSING;
+import static org.icgc.dcc.etl2.job.export.model.Constants.CNSMDataFiledNames.SECONDARY_TYPE_FLATTEN;
+import static org.icgc.dcc.etl2.job.export.model.Constants.CNSMDataFiledNames.SECONDARY_TYPE_RENAME_FIELDS;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.etl2.core.function.FlattenField;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
-import org.icgc.dcc.etl2.core.function.RenameFields;
-import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
-import org.icgc.dcc.etl2.job.export.function.AddMissingConsequence;
-import org.icgc.dcc.etl2.job.export.function.isType;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -50,12 +48,13 @@ public class ExportCNSMTask {
     return sparkContext
         .textFile(inputPath.toString())
         .map(new ParseObjectNode())
-        .filter(new isType(CNSM_TYPE))
-        .map(new RetainFields(OBSERVATION_FIELDS))
-        .map(new RenameFields(FIELD_MAPPING))
+        .filter(PRIMARY_TYPE_FILTER)
+        .map(PRIMARY_TYPE_FILTER_FIELDS)
+        .map(PRIMARY_TYPE_RENAME_FIELDS)
         .map(new AddDonorIdField())
-        .map(new AddMissingConsequence())
-        .flatMap(new FlattenField(CONSEQUENCE_FIELD_NAME))
-        .map(new RetainFields(ALL_FIELDS));
+        .map(SECONDARY_TYPE_ADD_MISSING)
+        .flatMap(SECONDARY_TYPE_FLATTEN)
+        .map(ALL_TYPE_FILTER_FIELDS)
+        .map(SECONDARY_TYPE_RENAME_FIELDS);
   }
 }
