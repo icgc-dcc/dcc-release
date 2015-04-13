@@ -29,6 +29,8 @@ public class Constants {
   public static final String METH_ARRAY_TYPE_FIELD_VALUE = "meth_array";
   public static final String METH_SEQ_TYPE_FIELD_VALUE = "meth_seq";
   public static final String MIRNA_SEQ_TYPE_FIELD_VALUE = "mirna_seq";
+  public static final String PEXP_TYPE_FIELD_VALUE = "pexp";
+  public static final String STSM_TYPE_FIELD_VALUE = "stsm";
 
   public static final String SPECIMEN_FIELD_NAME = "specimen";
   public static final String CONSEQUENCE_FIELD_NAME = "consequence";
