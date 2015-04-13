@@ -38,7 +38,7 @@ public class ExportTask {
   @NonNull
   private final ExportTable table;
 
-  protected JavaRDD<ObjectNode> process(Path inputPath, DataType dataType) {
+  protected JavaRDD<ObjectNode> process(@NonNull Path inputPath, @NonNull DataType dataType) {
     return sparkContext
         .textFile(inputPath.toString())
         .map(new ParseObjectNode())
