@@ -15,17 +15,35 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.export.function;
+package org.icgc.dcc.etl2.core.function;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.EMPTY_SPECIMEN_VALUE;
-import static org.icgc.dcc.etl2.job.export.model.Constants.SPECIMEN_FIELD_NAME;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 
-import org.icgc.dcc.etl2.core.function.AddMissingField;
+import org.apache.spark.api.java.function.Function;
 
-public class AddMissingSpecimen extends AddMissingField {
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-  public AddMissingSpecimen() {
-    super(SPECIMEN_FIELD_NAME, EMPTY_SPECIMEN_VALUE);
+/*
+ * This function will add a default value if the provided field is missing or empty. 
+ */
+@RequiredArgsConstructor
+public class AddMissingField implements Function<ObjectNode, ObjectNode> {
+
+  @NonNull
+  private final String fieldName;
+  @NonNull
+  private final String value;
+
+  @Override
+  public ObjectNode call(ObjectNode row) {
+    val field = row.get(fieldName);
+    if (field == null || field.equals("")) {
+      row.put(fieldName, value);
+    }
+
+    return row;
   }
 
 }

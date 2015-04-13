@@ -37,6 +37,7 @@ public class Constants {
   public static final String PEXP_TYPE_FIELD_VALUE = "pexp";
   public static final String STSM_TYPE_FIELD_VALUE = "stsm";
 
+  public static final String SAMPLE_FIELD_NAME = "sample";
   public static final String SPECIMEN_FIELD_NAME = "specimen";
   public static final String OBSERVATION_FIELD_NAME = "observation";
   public static final String CONSEQUENCE_FIELD_NAME = "consequence";
@@ -46,6 +47,7 @@ public class Constants {
 
   public static final String EMPTY_CONSEQUENCE_VALUE = "";
   public static final String EMPTY_OBSERVATION_VALUE = "";
+  public static final String EMPTY_SAMPLE_VALUE = "";
 
   public static class CNSMDataFiledNames {
 

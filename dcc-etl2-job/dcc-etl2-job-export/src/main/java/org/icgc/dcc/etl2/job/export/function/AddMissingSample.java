@@ -17,15 +17,15 @@
  */
 package org.icgc.dcc.etl2.job.export.function;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.EMPTY_SPECIMEN_VALUE;
-import static org.icgc.dcc.etl2.job.export.model.Constants.SPECIMEN_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.Constants.EMPTY_SAMPLE_VALUE;
+import static org.icgc.dcc.etl2.job.export.model.Constants.SAMPLE_FIELD_NAME;
 
 import org.icgc.dcc.etl2.core.function.AddMissingField;
 
-public class AddMissingSpecimen extends AddMissingField {
+public class AddMissingSample extends AddMissingField {
 
-  public AddMissingSpecimen() {
-    super(SPECIMEN_FIELD_NAME, EMPTY_SPECIMEN_VALUE);
+  public AddMissingSample() {
+    super(SAMPLE_FIELD_NAME, EMPTY_SAMPLE_VALUE);
   }
 
 }

@@ -19,22 +19,13 @@ package org.icgc.dcc.etl2.job.export.function;
 
 import static org.icgc.dcc.etl2.job.export.model.Constants.EMPTY_OBSERVATION_VALUE;
 import static org.icgc.dcc.etl2.job.export.model.Constants.OBSERVATION_FIELD_NAME;
-import lombok.val;
 
-import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.etl2.core.function.AddMissingField;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+public class AddMissingObservation extends AddMissingField {
 
-public class AddMissingObservation implements Function<ObjectNode, ObjectNode> {
-
-  @Override
-  public ObjectNode call(ObjectNode row) {
-    val specimen = row.get(OBSERVATION_FIELD_NAME);
-    if (specimen == null || specimen.equals("")) {
-      row.put(OBSERVATION_FIELD_NAME, EMPTY_OBSERVATION_VALUE);
-    }
-
-    return row;
+  public AddMissingObservation() {
+    super(OBSERVATION_FIELD_NAME, EMPTY_OBSERVATION_VALUE);
   }
 
 }

@@ -20,22 +20,12 @@ package org.icgc.dcc.etl2.job.export.function;
 import static org.icgc.dcc.etl2.job.export.model.Constants.CONSEQUENCE_FIELD_NAME;
 import static org.icgc.dcc.etl2.job.export.model.Constants.EMPTY_CONSEQUENCE_VALUE;
 
-import lombok.val;
+import org.icgc.dcc.etl2.core.function.AddMissingField;
 
-import org.apache.spark.api.java.function.Function;
+public class AddMissingConsequence extends AddMissingField {
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class AddMissingConsequence implements Function<ObjectNode, ObjectNode> {
-
-  @Override
-  public ObjectNode call(ObjectNode row) {
-    val consequence = row.get(CONSEQUENCE_FIELD_NAME);
-    if (consequence == null || consequence.equals("")) {
-      row.put(CONSEQUENCE_FIELD_NAME, EMPTY_CONSEQUENCE_VALUE);
-    }
-
-    return row;
+  public AddMissingConsequence() {
+    super(CONSEQUENCE_FIELD_NAME, EMPTY_CONSEQUENCE_VALUE);
   }
 
 }
