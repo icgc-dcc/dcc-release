@@ -21,6 +21,11 @@ public class Constants {
   public static final String DONOR_ID = "donor_id";
   public static final String ICGC_DONOR_ID = "icgc_donor_id";
   public static final String ICGC_DONOR_ID_PREFIX = "DO";
+  public static final String MARKING_FIELD_VALUE = "marking";
+
+  public static final String OPEN_FIELD_VALUE = "OPEN";
+  public static final String CONTROLLED_FIELD_VALUE = "CONTROLLED";
+  public static final String MASKED_FIELD_VALUE = "MASKED";
 
   public static final String CNSM_TYPE_FIELD_VALUE = "cnsm";
   public static final String EXP_ARRAY_TYPE_FIELD_VALUE = "exp_array";
@@ -33,12 +38,14 @@ public class Constants {
   public static final String STSM_TYPE_FIELD_VALUE = "stsm";
 
   public static final String SPECIMEN_FIELD_NAME = "specimen";
+  public static final String OBSERVATION_FIELD_NAME = "observation";
   public static final String CONSEQUENCE_FIELD_NAME = "consequence";
 
   public static final String EMPTY_SPECIMEN_VALUE =
       "[\"_specimen_id\":\"\",\"specimen_id\":\"\",\"specimen_type\":\"\",\"specimen_type_other\":\"\",\"specimen_interval\":\"\",\"specimen_donor_treatment_type\":\"\",\"specimen_donor_treatment_type_other\":\"\",\"specimen_processing\":\"\",\"specimen_processing_other\":\"\",\"specimen_storage\":\"\",\"specimen_storage_other\":\"\",\"tumour_confirmed\":\"\",\"specimen_biobank\":\"\",\"specimen_biobank_id\":\"\",\"specimen_available\":\"\",\"tumour_histological_type\":\"\",\"tumour_grading_system\":\"\",\"tumour_grade\":\"\",\"tumour_grade_supplemental\":\"\",\"tumour_stage_system\":\"\",\"tumour_stage\":\"\",\"tumour_stage_supplemental\":\"\",\"digital_image_of_stained_section\":\"\"]";
 
   public static final String EMPTY_CONSEQUENCE_VALUE = "";
+  public static final String EMPTY_OBSERVATION_VALUE = "";
 
   public static class CNSMDataFiledNames {
 
