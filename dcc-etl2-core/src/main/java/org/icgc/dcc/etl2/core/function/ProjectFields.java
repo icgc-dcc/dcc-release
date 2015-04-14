@@ -17,8 +17,6 @@
  */
 package org.icgc.dcc.etl2.core.function;
 
-import static org.icgc.dcc.etl2.core.util.ObjectNodes.getPath;
-
 import java.util.Map;
 
 import lombok.NonNull;
@@ -51,15 +49,18 @@ public class ProjectFields implements Function<ObjectNode, ObjectNode> {
 
   @Override
   public ObjectNode call(ObjectNode row) {
-    row = row.retain(projections.keySet());
-    for (val entry : projections.entrySet()) {
+    val newRow = row.objectNode();
+    val fields = row.fields();
+    while (fields.hasNext()) {
+      val entry = fields.next();
       val fieldName = entry.getKey();
-      val path = entry.getValue();
-      val value = getPath(row, path);
-      row.put(fieldName, value);
+      val value = entry.getValue();
+      if (projections.containsKey(fieldName)) {
+        newRow.put(projections.get(fieldName), value);
+      }
     }
 
-    return row;
+    return newRow;
   }
 
 }
