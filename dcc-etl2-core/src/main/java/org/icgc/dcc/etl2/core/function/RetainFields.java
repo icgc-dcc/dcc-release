@@ -17,8 +17,9 @@
  */
 package org.icgc.dcc.etl2.core.function;
 
+import java.util.List;
+
 import org.apache.spark.api.java.function.Function;
-import org.assertj.core.util.Iterables;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -30,8 +31,8 @@ public class RetainFields implements Function<ObjectNode, ObjectNode> {
     this.fieldNames = fieldNames;
   }
 
-  public RetainFields(Iterable<String> fieldNames) {
-    this.fieldNames = Iterables.toArray(fieldNames);
+  public RetainFields(List<String> fieldNames) {
+    this.fieldNames = fieldNames.toArray(new String[fieldNames.size()]);
   }
 
   @Override

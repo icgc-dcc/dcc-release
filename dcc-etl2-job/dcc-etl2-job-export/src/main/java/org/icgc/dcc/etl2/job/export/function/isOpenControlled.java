@@ -1,7 +1,7 @@
 package org.icgc.dcc.etl2.job.export.function;
 
 import static org.icgc.dcc.etl2.job.export.model.Constants.CONTROLLED_FIELD_VALUE;
-import static org.icgc.dcc.etl2.job.export.model.Constants.OBSERVATION_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.Constants.MARKING_FIELD_VALUE;
 import static org.icgc.dcc.etl2.job.export.model.Constants.OPEN_FIELD_VALUE;
 import lombok.val;
 
@@ -13,12 +13,8 @@ public class isOpenControlled implements Function<ObjectNode, Boolean> {
 
   @Override
   public Boolean call(ObjectNode row) {
-    val observationValue = row.get(OBSERVATION_FIELD_NAME);
-    if (observationValue.isNull() || observationValue.isMissingNode()) {
-      return false;
-    }
-    val markingValue = observationValue.get(OBSERVATION_FIELD_NAME);
-    if (markingValue.isNull() || markingValue.isMissingNode()) {
+    val markingValue = row.get(MARKING_FIELD_VALUE);
+    if (markingValue == null || markingValue.isNull() || markingValue.isMissingNode()) {
       return false;
     }
 

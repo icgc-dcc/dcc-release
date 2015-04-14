@@ -28,6 +28,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.FlattenField;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
+import org.icgc.dcc.etl2.core.function.PullUpField;
 import org.icgc.dcc.etl2.core.function.RenameFields;
 import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
@@ -38,6 +39,7 @@ import org.icgc.dcc.etl2.job.export.function.isOpenControlled;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 @RequiredArgsConstructor
 public class SSMOpenDataType {
@@ -106,22 +108,31 @@ public class SSMOpenDataType {
       .put("gene_build_version", "gene_build_version")
       .build();
 
-  protected JavaRDD<ObjectNode> process(Path inputPath) {
-    return sparkContext
-        .textFile(inputPath.toString())
+  public JavaRDD<ObjectNode> process(Path inputPath) {
+    return process(sparkContext.textFile(inputPath.toString()));
+  }
+
+  public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
+    return input
         .map(new ParseObjectNode())
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())
         .map(new AddMissingObservation())
         .flatMap(new FlattenField(OBSERVATION_FIELD_NAME))
+        .map(new PullUpField(OBSERVATION_FIELD_NAME))
         .filter(new isOpenControlled())
-        .map(new RetainFields(Iterables.concat(FIRST_LEVEL_PROJECTION.values(), SECOND_LEVEL_PROJECTION.keySet())))
+        .map(
+            new RetainFields(Lists.newArrayList((Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
+                SECOND_LEVEL_PROJECTION.keySet())))))
         .map(new RenameFields(SECOND_LEVEL_PROJECTION))
         .map(new AddMissingConsequence())
         .flatMap(new FlattenField(CONSEQUENCE_FIELD_NAME))
+        .map(new PullUpField(CONSEQUENCE_FIELD_NAME))
         .map(
-            new RetainFields(Iterables.concat(FIRST_LEVEL_PROJECTION.values(), SECOND_LEVEL_PROJECTION.values(),
-                THIRD_LEVEL_PROJECTION.keySet())))
+            new RetainFields(Lists.newArrayList((Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
+                SECOND_LEVEL_PROJECTION.values(),
+                THIRD_LEVEL_PROJECTION.keySet())))))
         .map(new RenameFields(THIRD_LEVEL_PROJECTION));
   }
+
 }
