@@ -14,11 +14,7 @@ public class isOpenMasked implements Function<ObjectNode, Boolean> {
 
   @Override
   public Boolean call(ObjectNode row) {
-    val observationValue = row.get(OBSERVATION_FIELD_NAME);
-    if (observationValue.isNull() || observationValue.isMissingNode()) {
-      return false;
-    }
-    val markingValue = observationValue.get(MARKING_FIELD_VALUE);
+    val markingValue = row.get(MARKING_FIELD_VALUE);
     if (markingValue == null || markingValue.isNull() || markingValue.isMissingNode()) {
       return false;
     }

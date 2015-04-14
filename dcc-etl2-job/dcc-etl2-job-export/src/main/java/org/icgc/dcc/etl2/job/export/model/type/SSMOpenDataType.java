@@ -34,7 +34,7 @@ import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
 import org.icgc.dcc.etl2.job.export.function.AddMissingConsequence;
 import org.icgc.dcc.etl2.job.export.function.AddMissingObservation;
-import org.icgc.dcc.etl2.job.export.function.isOpenControlled;
+import org.icgc.dcc.etl2.job.export.function.isOpenMasked;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
@@ -60,12 +60,12 @@ public class SSMOpenDataType {
       .put("reference_genome_allele", "reference_genome_allele")
       .put("mutated_from_allele", "mutated_from_allele")
       .put("mutated_to_allele", "mutated_to_allele")
-      .put("consequence", "consequences")
-      .put("observation", "observations")
+      .put("consequence", "consequence")
+      .put("observation", "observation")
       .build();
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
-      .put("donor_id", "donor_id") // the newly added donor_id
+      .put("donor_id", "donor_id")
 
       .put("_specimen_id", "icgc_specimen_id")
       .put("_sample_id", "icgc_sample_id")
@@ -120,7 +120,7 @@ public class SSMOpenDataType {
         .map(new AddMissingObservation())
         .flatMap(new FlattenField(OBSERVATION_FIELD_NAME))
         .map(new PullUpField(OBSERVATION_FIELD_NAME))
-        .filter(new isOpenControlled())
+        .filter(new isOpenMasked())
         .map(
             new RetainFields(Lists.newArrayList((Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
                 SECOND_LEVEL_PROJECTION.keySet())))))
@@ -134,5 +134,4 @@ public class SSMOpenDataType {
                 THIRD_LEVEL_PROJECTION.keySet())))))
         .map(new RenameFields(THIRD_LEVEL_PROJECTION));
   }
-
 }
