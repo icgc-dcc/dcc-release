@@ -19,7 +19,6 @@ package org.icgc.dcc.etl2.job.stage.util;
 
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatPercent;
-import static org.icgc.dcc.etl2.core.function.ParseObjectNode.MAPPER;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 
 import java.util.Iterator;
@@ -37,6 +36,7 @@ import org.icgc.dcc.etl2.core.submission.SubmissionFiles;
 
 import scala.Tuple2;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
@@ -48,6 +48,7 @@ public class ParseFileSplitIterator implements Iterator<ObjectNode> {
    * Constants.
    */
   private static final int LINE_STATUS_COUNT = 10 * 1000 * 1000;
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   /**
    * Dependencies.

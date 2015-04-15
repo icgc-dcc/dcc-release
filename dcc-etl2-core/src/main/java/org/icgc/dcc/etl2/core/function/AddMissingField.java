@@ -17,8 +17,11 @@
  */
 package org.icgc.dcc.etl2.core.function;
 
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.toEmptyJsonValue;
+
+import java.util.Set;
+
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
@@ -28,13 +31,22 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 /*
  * This function will add a default value if the provided field is missing or empty. 
  */
-@RequiredArgsConstructor
 public class AddMissingField implements Function<ObjectNode, ObjectNode> {
 
   @NonNull
   private final String fieldName;
   @NonNull
   private final String value;
+
+  public AddMissingField(String fieldName, String value) {
+    this.fieldName = fieldName;
+    this.value = value;
+  }
+
+  public AddMissingField(String fieldName, Set<String> fields) {
+    this.fieldName = fieldName;
+    this.value = toEmptyJsonValue(fields);
+  }
 
   @Override
   public ObjectNode call(ObjectNode row) {

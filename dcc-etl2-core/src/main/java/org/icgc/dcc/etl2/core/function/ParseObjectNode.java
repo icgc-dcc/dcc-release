@@ -33,7 +33,7 @@ public class ParseObjectNode implements Function<String, ObjectNode> {
   /**
    * Constants.
    */
-  public static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @Override
   public ObjectNode call(String row) throws JsonProcessingException, IOException {
