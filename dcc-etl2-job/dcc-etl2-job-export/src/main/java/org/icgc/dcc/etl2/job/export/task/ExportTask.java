@@ -23,8 +23,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.etl2.core.function.ParseObjectNode;
-import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.model.type.DataType;
 
@@ -39,16 +37,7 @@ public class ExportTask {
   private final ExportTable table;
 
   protected JavaRDD<ObjectNode> process(@NonNull Path inputPath, @NonNull DataType dataType) {
-    return sparkContext
-        .textFile(inputPath.toString())
-        .map(new ParseObjectNode())
-        .filter(dataType.primaryTypeFilter())
-        .map(dataType.firstLevelProjectFields())
-        .map(new AddDonorIdField())
-        .map(dataType.secondLevelAddMissing())
-        .flatMap(dataType.secondLevelFlatten())
-        .map(dataType.allLevelFilterFields())
-        .map(dataType.secondLevelRenameFields());
+    return dataType.process(inputPath);
   }
 
 }

@@ -18,17 +18,30 @@
 package org.icgc.dcc.etl2.job.export.function;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.etl2.job.export.model.Constants.EMPTY_SPECIMEN_VALUE;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.toEmptyJsonValue;
+import static org.icgc.dcc.etl2.job.export.model.Constants.SPECIMEN_FIELD_NAME;
 import static org.icgc.dcc.etl2.test.util.TestJsonNodes.$;
 import lombok.val;
 
+import org.icgc.dcc.etl2.core.function.AddMissingField;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableMap;
 
 public class AddMissingSpecimenTest {
 
+  private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
+      // .put("donor_id", "donor_id")
+      .put("gene_affected", "gene_affected")
+      .put("transcript_affected", "transcript_affected")
+      .put("gene_build_version", "gene_build_version")
+      .build();
+
+  private static final String EMPTY_SPECIMEN_VALUE = toEmptyJsonValue(SECOND_LEVEL_PROJECTION.keySet());
+
   @Test
   public void testAddDonorIdField() throws Exception {
-    val addMissingSpecimen = new AddMissingSpecimen();
+    val addMissingSpecimen = new AddMissingField(SPECIMEN_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet());
     val input = $("{icgc_donor_id: 'DO5', y: 2}");
     val actual = addMissingSpecimen.call(input);
     val expectedJson = String.format("{icgc_donor_id: 'DO5', y: 2, specimen: '%s'}", EMPTY_SPECIMEN_VALUE);

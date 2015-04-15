@@ -2,7 +2,6 @@ package org.icgc.dcc.etl2.job.export.function;
 
 import static org.icgc.dcc.etl2.job.export.model.Constants.MARKING_FIELD_VALUE;
 import static org.icgc.dcc.etl2.job.export.model.Constants.MASKED_FIELD_VALUE;
-import static org.icgc.dcc.etl2.job.export.model.Constants.OBSERVATION_FIELD_NAME;
 import static org.icgc.dcc.etl2.job.export.model.Constants.OPEN_FIELD_VALUE;
 import lombok.val;
 

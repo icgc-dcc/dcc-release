@@ -18,17 +18,20 @@
 package org.icgc.dcc.etl2.job.export.model.type;
 
 import static org.icgc.dcc.etl2.job.export.model.Constants.CONSEQUENCE_FIELD_NAME;
-import static org.icgc.dcc.etl2.job.export.model.Constants.PEXP_TYPE_FIELD_VALUE;
+import static org.icgc.dcc.etl2.job.export.model.Constants.STSM_TYPE_FIELD_VALUE;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-
-import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.api.java.function.Function;
+import org.apache.hadoop.fs.Path;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.etl2.core.function.AddMissingField;
 import org.icgc.dcc.etl2.core.function.FlattenField;
+import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
-import org.icgc.dcc.etl2.core.function.RenameFields;
+import org.icgc.dcc.etl2.core.function.PullUpField;
 import org.icgc.dcc.etl2.core.function.RetainFields;
-import org.icgc.dcc.etl2.job.export.function.AddMissingConsequence;
+import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
 import org.icgc.dcc.etl2.job.export.function.isType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -36,10 +39,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+@RequiredArgsConstructor
 public class STSMDataType implements DataType {
 
-  private static final String TYPE = PEXP_TYPE_FIELD_VALUE;
-  private static final String SECOND_LEVEL_FIELDNAME = CONSEQUENCE_FIELD_NAME;
+  @NonNull
+  private final JavaSparkContext sparkContext;
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
@@ -86,6 +90,7 @@ public class STSMDataType implements DataType {
       .build();
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
+      .put("donor_id", "donor_id")
       .put("gene_affected_by_bkpt_from", "gene_affected_by_bkpt_from")
       .put("gene_affected_by_bkpt_to", "gene_affected_by_bkpt_to")
       .put("transcript_affected_by_bkpt_from", "transcript_affected_by_bkpt_from")
@@ -95,44 +100,22 @@ public class STSMDataType implements DataType {
       .put("gene_build_version", "gene_build_version")
       .build();
 
-  private static final List<String> ALL_FIELDS = Lists.newArrayList(
-      Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
-          SECOND_LEVEL_PROJECTION.values()));
-
-  @Override
-  public Function<ObjectNode, Boolean> primaryTypeFilter() {
-
-    return new isType(TYPE);
+  public JavaRDD<ObjectNode> process(Path inputPath) {
+    return process(sparkContext.textFile(inputPath.toString()));
   }
 
-  @Override
-  public Function<ObjectNode, ObjectNode> firstLevelProjectFields() {
-
-    return new ProjectFields(FIRST_LEVEL_PROJECTION);
-  }
-
-  @Override
-  public Function<ObjectNode, ObjectNode> allLevelFilterFields() {
-
-    return new RetainFields(ALL_FIELDS);
-  }
-
-  @Override
-  public Function<ObjectNode, ObjectNode> secondLevelRenameFields() {
-
-    return new RenameFields(SECOND_LEVEL_PROJECTION);
-  }
-
-  @Override
-  public FlatMapFunction<ObjectNode, ObjectNode> secondLevelFlatten() {
-
-    return new FlattenField(SECOND_LEVEL_FIELDNAME);
-  }
-
-  @Override
-  public Function<ObjectNode, ObjectNode> secondLevelAddMissing() {
-
-    return new AddMissingConsequence();
+  public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
+    return input
+        .map(new ParseObjectNode())
+        .filter(new isType(STSM_TYPE_FIELD_VALUE))
+        .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
+        .map(new AddDonorIdField())
+        .map(new AddMissingField(CONSEQUENCE_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet()))
+        .flatMap(new FlattenField(CONSEQUENCE_FIELD_NAME))
+        .map(new PullUpField(CONSEQUENCE_FIELD_NAME))
+        .map(
+            new RetainFields(Lists.newArrayList((Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
+                SECOND_LEVEL_PROJECTION.keySet())))));
   }
 
 }

@@ -18,15 +18,16 @@
 package org.icgc.dcc.etl2.job.export.model.type;
 
 import static org.icgc.dcc.etl2.job.export.model.Constants.METH_ARRAY_TYPE_FIELD_VALUE;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-
-import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.core.function.Identity;
-import org.icgc.dcc.etl2.core.function.IdentityFlatMap;
+import org.apache.hadoop.fs.Path;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
 import org.icgc.dcc.etl2.core.function.RetainFields;
+import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
 import org.icgc.dcc.etl2.job.export.function.isType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,9 +35,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+@RequiredArgsConstructor
 public class MethArrayDataType implements DataType {
 
-  private static final String TYPE = METH_ARRAY_TYPE_FIELD_VALUE;
+  @NonNull
+  private final JavaSparkContext sparkContext;
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
@@ -53,7 +56,7 @@ public class MethArrayDataType implements DataType {
       .put("unmethylated_probe_intensity", "unmethylated_probe_intensity")
       .put("verification_status", "verification_status")
       .put("verification_platform", "verification_platform")
-      .put("fraction_wg_cpg_sites_covered", "fraction_wg_cpg_sites_covered")
+      .put("fraction_wgw_cpg_sites_covered", "fraction_wg_cpg_sites_covered")
       .put("conversion_rate", "conversion_rate")
       .put("experimental_protocol", "experimental_protocol")
       .put("other_analysis_algorithm", "other_analysis_algorithm")
@@ -62,46 +65,22 @@ public class MethArrayDataType implements DataType {
       .build();
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
+      .put("donor_id", "donor_id")
       .build();
 
-  private static final List<String> ALL_FIELDS = Lists.newArrayList(
-      Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
-          SECOND_LEVEL_PROJECTION.values()));
-
-  @Override
-  public Function<ObjectNode, Boolean> primaryTypeFilter() {
-
-    return new isType(TYPE);
+  public JavaRDD<ObjectNode> process(Path inputPath) {
+    return process(sparkContext.textFile(inputPath.toString()));
   }
 
-  @Override
-  public Function<ObjectNode, ObjectNode> firstLevelProjectFields() {
-
-    return new ProjectFields(FIRST_LEVEL_PROJECTION);
-  }
-
-  @Override
-  public Function<ObjectNode, ObjectNode> allLevelFilterFields() {
-
-    return new RetainFields(ALL_FIELDS);
-  }
-
-  @Override
-  public Function<ObjectNode, ObjectNode> secondLevelRenameFields() {
-
-    return new Identity();
-  }
-
-  @Override
-  public FlatMapFunction<ObjectNode, ObjectNode> secondLevelFlatten() {
-
-    return new IdentityFlatMap();
-  }
-
-  @Override
-  public Function<ObjectNode, ObjectNode> secondLevelAddMissing() {
-
-    return new Identity();
+  public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
+    return input
+        .map(new ParseObjectNode())
+        .filter(new isType(METH_ARRAY_TYPE_FIELD_VALUE))
+        .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
+        .map(new AddDonorIdField())
+        .map(
+            new RetainFields(Lists.newArrayList((Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
+                SECOND_LEVEL_PROJECTION.keySet())))));
   }
 
 }

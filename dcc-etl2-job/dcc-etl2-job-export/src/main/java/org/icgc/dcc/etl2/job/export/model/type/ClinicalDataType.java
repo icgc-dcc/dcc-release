@@ -18,26 +18,31 @@
 package org.icgc.dcc.etl2.job.export.model.type;
 
 import static org.icgc.dcc.etl2.job.export.model.Constants.SPECIMEN_FIELD_NAME;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-
-import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.api.java.function.Function;
+import org.apache.hadoop.fs.Path;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.etl2.core.function.AddMissingField;
 import org.icgc.dcc.etl2.core.function.FlattenField;
+import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
+import org.icgc.dcc.etl2.core.function.PullUpField;
 import org.icgc.dcc.etl2.core.function.RenameFields;
 import org.icgc.dcc.etl2.core.function.RetainFields;
-import org.icgc.dcc.etl2.job.export.function.AddMissingSpecimen;
-import org.icgc.dcc.etl2.job.export.function.All;
+import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+@RequiredArgsConstructor
 public class ClinicalDataType implements DataType {
 
-  private static final String SECOND_LEVEL_FIELDNAME = SPECIMEN_FIELD_NAME;
+  @NonNull
+  private final JavaSparkContext sparkContext;
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
@@ -57,10 +62,11 @@ public class ClinicalDataType implements DataType {
       .put("donor_tumour_stage_at_diagnosis_supplemental", "donor_tumour_stage_at_diagnosis_supplemental")
       .put("donor_survival_time", "donor_survival_time")
       .put("donor_interval_of_last_followup", "donor_interval_of_last_followup")
-      .put("specimen", "specimens")
+      .put("specimen", "specimen")
       .build();
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
+      .put("donor_id", "donor_id")
       .put("_specimen_id", "icgc_specimen_id")
       .put("specimen_id", "submitted_specimen_id")
       .put("specimen_type", "specimen_type")
@@ -88,44 +94,22 @@ public class ClinicalDataType implements DataType {
       .put("level_of_cellularity", "level_of_cellularity")
       .build();
 
-  private static final List<String> ALL_FIELDS = Lists.newArrayList(
-      Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
-          SECOND_LEVEL_PROJECTION.values()));
-
-  @Override
-  public Function<ObjectNode, Boolean> primaryTypeFilter() {
-
-    return new All();
+  public JavaRDD<ObjectNode> process(Path inputPath) {
+    return process(sparkContext.textFile(inputPath.toString()));
   }
 
-  @Override
-  public Function<ObjectNode, ObjectNode> firstLevelProjectFields() {
-
-    return new ProjectFields(FIRST_LEVEL_PROJECTION);
-  }
-
-  @Override
-  public Function<ObjectNode, ObjectNode> allLevelFilterFields() {
-
-    return new RetainFields(ALL_FIELDS);
-  }
-
-  @Override
-  public Function<ObjectNode, ObjectNode> secondLevelRenameFields() {
-
-    return new RenameFields(SECOND_LEVEL_PROJECTION);
-  }
-
-  @Override
-  public FlatMapFunction<ObjectNode, ObjectNode> secondLevelFlatten() {
-
-    return new FlattenField(SECOND_LEVEL_FIELDNAME);
-  }
-
-  @Override
-  public Function<ObjectNode, ObjectNode> secondLevelAddMissing() {
-
-    return new AddMissingSpecimen();
+  public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
+    return input
+        .map(new ParseObjectNode())
+        .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
+        .map(new AddDonorIdField())
+        .map(new AddMissingField(SPECIMEN_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet()))
+        .flatMap(new FlattenField(SPECIMEN_FIELD_NAME))
+        .map(new PullUpField(SPECIMEN_FIELD_NAME))
+        .map(
+            new RetainFields(Lists.newArrayList((Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
+                SECOND_LEVEL_PROJECTION.keySet())))))
+        .map(new RenameFields(SECOND_LEVEL_PROJECTION));
   }
 
 }

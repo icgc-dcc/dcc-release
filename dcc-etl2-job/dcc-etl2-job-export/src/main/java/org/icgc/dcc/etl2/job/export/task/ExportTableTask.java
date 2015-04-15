@@ -22,11 +22,7 @@ import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 
 import java.util.UUID;
 
-import lombok.Cleanup;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
@@ -45,11 +41,7 @@ import org.icgc.dcc.etl2.job.export.function.ExtractKey;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.model.ExportTables;
 import org.icgc.dcc.etl2.job.export.model.type.ClinicalDataType;
-import org.icgc.dcc.etl2.job.export.util.HFileLoadJobFactory;
-import org.icgc.dcc.etl2.job.export.util.HFileLoader;
-import org.icgc.dcc.etl2.job.export.util.HFileWriter;
-import org.icgc.dcc.etl2.job.export.util.HTableManager;
-import org.icgc.dcc.etl2.job.export.util.SplitKeyCalculator;
+import org.icgc.dcc.etl2.job.export.util.*;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -93,7 +85,8 @@ public class ExportTableTask implements Task {
     log.info("Got input path '{}'", inputPath);
 
     log.info("Running the base export process...");
-    val baseExportProcessResult = new ExportTask(sparkContext, table).process(inputPath, new ClinicalDataType());
+    val baseExportProcessResult =
+        new ExportTask(sparkContext, table).process(inputPath, new ClinicalDataType(taskContext.getSparkContext()));
     log.info("Finished running the base export process.");
 
     log.info("Writing static export output files...");

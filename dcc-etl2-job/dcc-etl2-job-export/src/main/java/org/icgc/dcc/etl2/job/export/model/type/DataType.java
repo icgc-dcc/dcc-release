@@ -17,23 +17,15 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.api.java.function.Function;
+import org.apache.hadoop.fs.Path;
+import org.apache.spark.api.java.JavaRDD;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface DataType {
 
-  Function<ObjectNode, Boolean> primaryTypeFilter();
+  JavaRDD<ObjectNode> process(Path inputPath);
 
-  Function<ObjectNode, ObjectNode> firstLevelProjectFields();
-
-  Function<ObjectNode, ObjectNode> allLevelFilterFields();
-
-  Function<ObjectNode, ObjectNode> secondLevelRenameFields();
-
-  FlatMapFunction<ObjectNode, ObjectNode> secondLevelFlatten();
-
-  Function<ObjectNode, ObjectNode> secondLevelAddMissing();
+  JavaRDD<ObjectNode> process(JavaRDD<String> input);
 
 }
