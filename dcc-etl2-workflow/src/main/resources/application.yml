@@ -11,7 +11,7 @@
 dcc:
    submission:
       url: http://***REMOVED***/ws
-      dictionaryVersion: 0.10a
+      dictionaryVersion: 0.11c
    identifier:
       url: http://hcache-dcc.oicr.on.ca:5391
 
