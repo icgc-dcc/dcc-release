@@ -20,6 +20,7 @@ public class Constants {
   public static final String STSM_TYPE_FIELD_VALUE = "stsm";
 
   public static final String SAMPLE_FIELD_NAME = "sample";
+  public static final String EXPOSURE_FIELD_NAME = "exposure";
   public static final String SPECIMEN_FIELD_NAME = "specimen";
   public static final String OBSERVATION_FIELD_NAME = "observation";
   public static final String CONSEQUENCE_FIELD_NAME = "consequence";
