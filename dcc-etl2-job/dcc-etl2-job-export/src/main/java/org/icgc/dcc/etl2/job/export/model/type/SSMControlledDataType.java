@@ -33,7 +33,7 @@ import org.icgc.dcc.etl2.core.function.PullUpField;
 import org.icgc.dcc.etl2.core.function.RenameFields;
 import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
-import org.icgc.dcc.etl2.job.export.function.isOpenControlled;
+import org.icgc.dcc.etl2.job.export.function.IsOpenControlled;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
@@ -119,7 +119,7 @@ public class SSMControlledDataType implements DataType {
         .map(new AddMissingField(OBSERVATION_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet()))
         .flatMap(new FlattenField(OBSERVATION_FIELD_NAME))
         .map(new PullUpField(OBSERVATION_FIELD_NAME))
-        .filter(new isOpenControlled())
+        .filter(new IsOpenControlled())
         .map(
             new RetainFields(Lists.newArrayList((Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
                 SECOND_LEVEL_PROJECTION.keySet())))))

@@ -6,12 +6,12 @@ import org.apache.spark.api.java.function.Function;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class isType implements Function<ObjectNode, Boolean> {
+public class IsType implements Function<ObjectNode, Boolean> {
 
   @NonNull
   private final String type;
 
-  public isType(String type) {
+  public IsType(String type) {
     this.type = type;
   }
 

@@ -9,7 +9,7 @@ import org.apache.spark.api.java.function.Function;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class isOpenControlled implements Function<ObjectNode, Boolean> {
+public class IsOpenControlled implements Function<ObjectNode, Boolean> {
 
   @Override
   public Boolean call(ObjectNode row) {
