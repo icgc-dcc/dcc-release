@@ -62,7 +62,7 @@ public class ClinicalDataType implements DataType {
       .put("donor_tumour_stage_at_diagnosis_supplemental", "donor_tumour_stage_at_diagnosis_supplemental")
       .put("donor_survival_time", "donor_survival_time")
       .put("donor_interval_of_last_followup", "donor_interval_of_last_followup")
-      .put("specimen", "specimen")
+      .put(SPECIMEN_FIELD_NAME, SPECIMEN_FIELD_NAME)
       .build();
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
@@ -94,10 +94,12 @@ public class ClinicalDataType implements DataType {
       .put("level_of_cellularity", "level_of_cellularity")
       .build();
 
+  @Override
   public JavaRDD<ObjectNode> process(Path inputPath) {
     return process(sparkContext.textFile(inputPath.toString()));
   }
 
+  @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())

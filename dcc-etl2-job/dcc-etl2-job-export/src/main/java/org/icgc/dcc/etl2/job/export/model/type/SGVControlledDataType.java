@@ -88,10 +88,12 @@ public class SGVControlledDataType implements DataType {
       .put("transcript_affected", "transcript_affected")
       .build();
 
+  @Override
   public JavaRDD<ObjectNode> process(Path inputPath) {
     return process(sparkContext.textFile(inputPath.toString()));
   }
 
+  @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())

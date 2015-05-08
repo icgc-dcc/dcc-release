@@ -65,17 +65,14 @@ public class SSMControlledDataType implements DataType {
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("donor_id", "donor_id")
-
       .put("_specimen_id", "icgc_specimen_id")
       .put("_sample_id", "icgc_sample_id")
       .put("_matched_sample_id", "matched_icgc_sample_id")
       .put("analyzed_sample_id", "submitted_sample_id")
       .put("matched_sample_id", "submitted_matched_sample_id")
-
       .put("control_genotype", "control_genotype")
       .put("tumour_genotype", "tumour_genotype")
       .put("expressed_allele", "expressed_allele")
-
       .put("quality_score", "quality_score")
       .put("probability", "probability")
       .put("total_read_count", "total_read_count")
@@ -84,7 +81,6 @@ public class SSMControlledDataType implements DataType {
       .put("verification_platform", "verification_platform")
       .put("biological_validation_status", "biological_validation_status")
       .put("biological_validation_platform", "biological_validation_platform")
-
       .put("platform", "platform")
       .put("experimental_protocol", "experimental_protocol")
       .put("sequencing_strategy", "sequencing_strategy")
@@ -107,10 +103,12 @@ public class SSMControlledDataType implements DataType {
       .put("gene_build_version", "gene_build_version")
       .build();
 
+  @Override
   public JavaRDD<ObjectNode> process(Path inputPath) {
     return process(sparkContext.textFile(inputPath.toString()));
   }
 
+  @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())

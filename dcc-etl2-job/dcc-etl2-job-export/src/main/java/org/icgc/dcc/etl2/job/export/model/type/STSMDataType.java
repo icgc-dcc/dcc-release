@@ -100,10 +100,12 @@ public class STSMDataType implements DataType {
       .put("gene_build_version", "gene_build_version")
       .build();
 
+  @Override
   public JavaRDD<ObjectNode> process(Path inputPath) {
     return process(sparkContext.textFile(inputPath.toString()));
   }
 
+  @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())

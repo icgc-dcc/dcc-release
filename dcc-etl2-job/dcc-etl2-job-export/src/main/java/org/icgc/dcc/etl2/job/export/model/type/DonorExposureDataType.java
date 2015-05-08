@@ -47,7 +47,7 @@ public class DonorExposureDataType implements DataType {
       .put("_donor_id", "icgc_donor_id")
       .put("_project_id", "project_code")
       .put("donor_id", "submitted_donor_id")
-      .put("exposure", "exposure")
+      .put(EXPOSURE_FIELD_NAME, EXPOSURE_FIELD_NAME)
       .build();
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()

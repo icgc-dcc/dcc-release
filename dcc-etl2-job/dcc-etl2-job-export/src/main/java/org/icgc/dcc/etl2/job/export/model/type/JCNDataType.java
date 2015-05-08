@@ -90,10 +90,12 @@ public class JCNDataType implements DataType {
       .put("donor_id", "donor_id")
       .build();
 
+  @Override
   public JavaRDD<ObjectNode> process(Path inputPath) {
     return process(sparkContext.textFile(inputPath.toString()));
   }
 
+  @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
