@@ -123,17 +123,17 @@ public class ExportTableTask implements Task {
     val hTable = prepareHTable(conf, splitKeys);
     log.info("Prepared export table: {}", table);
 
-    log.info("Creating load job...");
-    val hFileLoadJob = createHFileLoadJob(conf, hTable);
-    log.info("Created load job: {}", hFileLoadJob);
-
     log.info("Getting HFile path...");
     val hFilePath = getHFilePath(fileSystem, hTable);
     log.info("Got HFile path: '{}'", hFilePath);
 
-    log.info("Writting HFiles...");
-    writeHFiles(hFileLoadJob.getConfiguration(), baseExportProcessResult, hTable, hFilePath);
+    log.info("Writing HFiles...");
+    writeHFiles(conf, baseExportProcessResult, hTable, hFilePath);
     log.info("Wrote HFiles");
+
+    log.info("Creating load job...");
+    val hFileLoadJob = createHFileLoadJob(conf, hTable);
+    log.info("Created load job: {}", hFileLoadJob);
 
     log.info("Loading HFiles...");
     loadHFiles(conf, fileSystem, hTable, hFilePath);
