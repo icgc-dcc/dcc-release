@@ -22,7 +22,11 @@ import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 
 import java.util.UUID;
 
-import lombok.*;
+import lombok.Cleanup;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
@@ -41,7 +45,11 @@ import org.icgc.dcc.etl2.job.export.function.ExtractKey;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.model.ExportTables;
 import org.icgc.dcc.etl2.job.export.model.type.ClinicalDataType;
-import org.icgc.dcc.etl2.job.export.util.*;
+import org.icgc.dcc.etl2.job.export.util.HFileLoadJobFactory;
+import org.icgc.dcc.etl2.job.export.util.HFileLoader;
+import org.icgc.dcc.etl2.job.export.util.HFileWriter;
+import org.icgc.dcc.etl2.job.export.util.HTableManager;
+import org.icgc.dcc.etl2.job.export.util.SplitKeyCalculator;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -108,7 +116,7 @@ public class ExportTableTask implements Task {
     log.info("Resolved input keys");
 
     log.info("Calculating input path split keys...");
-    val splitKeys = calculateSplitKeys(regionSize, inputPath, keys);
+    val splitKeys = calculateSplitKeys(regionSize, keys);
     log.info("Calculated {} input path split keys: {}", formatCount(splitKeys), splitKeys);
 
     log.info("Preparing export table '{}'...", table);
@@ -142,10 +150,10 @@ public class ExportTableTask implements Task {
     return new Path(taskContext.getPath(FileType.EXPORT_INPUT));
   }
 
-  private Iterable<String> calculateSplitKeys(long regionSize, Path inputPath, JavaRDD<String> keys) {
+  private Iterable<String> calculateSplitKeys(long regionSize, JavaRDD<String> keys) {
     val calculator = new SplitKeyCalculator(conf);
 
-    return calculator.calculateSplitKeys(inputPath, keys, regionSize);
+    return calculator.calculateSplitKeys(keys, regionSize);
   }
 
   @SneakyThrows

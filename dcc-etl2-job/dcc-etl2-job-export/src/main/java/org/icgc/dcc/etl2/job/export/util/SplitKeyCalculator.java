@@ -17,16 +17,12 @@
  */
 package org.icgc.dcc.etl2.job.export.util;
 
-import java.io.IOException;
-
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.job.export.function.CoercePair;
 import org.icgc.dcc.etl2.job.export.function.PairIteratorFirstKey;
@@ -41,10 +37,8 @@ public class SplitKeyCalculator {
   private final Configuration conf;
 
   @SneakyThrows
-  public Iterable<String> calculateSplitKeys(@NonNull Path inputPath, @NonNull JavaRDD<String> keys, long regionSize) {
-    val fileSystem = inputPath.getFileSystem(conf);
-    val fileLength = getFileLength(inputPath, fileSystem);
-    val splitsCount = calculateSplitCount(regionSize, fileLength);
+  public Iterable<String> calculateSplitKeys(@NonNull JavaRDD<String> keys, long regionSize) {
+    val splitsCount = calculateSplitCount(regionSize, keys.count());
 
     return calculateSplitKeys(keys, splitsCount);
   }
@@ -59,14 +53,8 @@ public class SplitKeyCalculator {
         .collect();
   }
 
-  private static long getFileLength(Path inputPath, FileSystem fileSystem) throws IOException {
-    val summary = fileSystem.getContentSummary(inputPath);
-
-    return summary.getLength();
-  }
-
-  private static int calculateSplitCount(long regionSize, final long fileLength) {
-    return (int) (fileLength / regionSize) + 1;
+  private static int calculateSplitCount(long regionSize, final long count) {
+    return (int) (count / regionSize) + 1;
   }
 
 }
