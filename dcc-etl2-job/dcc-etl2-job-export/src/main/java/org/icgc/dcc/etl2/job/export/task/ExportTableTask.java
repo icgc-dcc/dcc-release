@@ -23,7 +23,6 @@ import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 import java.util.List;
 import java.util.UUID;
 
-import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -33,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.spark.api.java.JavaRDD;
@@ -42,14 +40,16 @@ import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.task.TaskType;
+import org.icgc.dcc.etl2.job.export.function.Count;
+import org.icgc.dcc.etl2.job.export.function.EncodeRowKey;
 import org.icgc.dcc.etl2.job.export.function.ExtractDonorId;
+import org.icgc.dcc.etl2.job.export.function.PairWithOne;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.model.type.ClinicalDataType;
 import org.icgc.dcc.etl2.job.export.util.HFileLoadJobFactory;
 import org.icgc.dcc.etl2.job.export.util.HFileLoader;
 import org.icgc.dcc.etl2.job.export.util.HFileWriter;
 import org.icgc.dcc.etl2.job.export.util.HTableManager;
-import org.icgc.dcc.etl2.job.export.util.SplitKeyCalculator;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -152,20 +152,18 @@ public class ExportTableTask implements Task {
   }
 
   private List<byte[]> calculateSplitKeys(JavaRDD<String> keys) {
-    val calculator = new SplitKeyCalculator(conf);
 
-    return calculator.calculateSplitKeys(keys);
+    return keys
+        .mapToPair(new PairWithOne())
+        .reduceByKey(new Count())
+        .map(new EncodeRowKey()).collect();
   }
 
   @SneakyThrows
   private HTable prepareHTable(Configuration conf, List<byte[]> splitKeys) {
-    @Cleanup
-    val admin = new HBaseAdmin(conf);
-    val manager = new HTableManager(admin);
-
+    val manager = new HTableManager(conf);
     log.info("Ensuring table...");
     val htable = manager.ensureTable(table.name(), splitKeys);
-
     log.info("Listing tables...");
     manager.listTables();
 

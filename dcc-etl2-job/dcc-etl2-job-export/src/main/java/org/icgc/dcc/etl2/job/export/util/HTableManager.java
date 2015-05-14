@@ -17,11 +17,12 @@
  */
 package org.icgc.dcc.etl2.job.export.util;
 
-import static org.icgc.dcc.etl2.job.export.model.ExportTables.META_BLOCK_SIZE;
-import static org.icgc.dcc.etl2.job.export.model.ExportTables.META_SIZE_INFO_FAMILY;
-import static org.icgc.dcc.etl2.job.export.model.ExportTables.META_TYPE_INFO_FAMILY;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.DATA_BLOCK_SIZE;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.DATA_CONTENT_FAMILY;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.MAX_DATA_FILE_SIZE;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.NUM_REGIONS;
 
+import java.io.IOException;
 import java.util.List;
 
 import lombok.NonNull;
@@ -30,9 +31,11 @@ import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.TableExistsException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
@@ -60,59 +63,24 @@ public class HTableManager {
    * Dependencies.
    */
   @NonNull
-  private final HBaseAdmin admin;
+  private final Configuration conf;
 
   @SneakyThrows
   public HTable ensureTable(@NonNull String tableName, @NonNull List<byte[]> splitKeys) {
-    val withSnappyCompression = false;
-
+    val admin = new HBaseAdmin(conf);
     if (!admin.tableExists(tableName)) {
-      val compressionType = withSnappyCompression ? Algorithm.SNAPPY : Algorithm.NONE;
-      val descriptor = createTableDescriptor(tableName, compressionType);
-
-      admin.createTable(descriptor);
+      createDataTable(tableName, calculateBoundaries(splitKeys), conf, true);
     }
 
-    return new HTable(admin.getConfiguration(), tableName);
+    return new HTable(conf, tableName);
   }
 
   @SneakyThrows
   public void listTables() {
+    val admin = new HBaseAdmin(conf);
     for (val table : admin.listTables()) {
       log.info("{}", table);
     }
-  }
-
-  private HTableDescriptor createTableDescriptor(String tableName, Algorithm compressionType) {
-    val typeColumnFamily = createTypeColumnFamily(compressionType);
-    val sizeColumnFamily = createSizeColumnFamily(compressionType);
-    val table = new HTableDescriptor(TableName.valueOf(tableName));
-    table.addFamily(typeColumnFamily);
-    table.addFamily(sizeColumnFamily);
-
-    return table;
-  }
-
-  private HColumnDescriptor createSizeColumnFamily(Algorithm compressionType) {
-
-    return createColumnFamily(compressionType, META_SIZE_INFO_FAMILY);
-  }
-
-  private HColumnDescriptor createTypeColumnFamily(Algorithm compressionType) {
-
-    return createColumnFamily(compressionType, META_TYPE_INFO_FAMILY);
-  }
-
-  private HColumnDescriptor createColumnFamily(Algorithm compressionType, byte[] familyName) {
-    val column = new HColumnDescriptor(familyName);
-    column.setBlockCacheEnabled(true);
-    column.setInMemory(true);
-    column.setBlocksize(META_BLOCK_SIZE);
-    column.setBloomFilterType(BloomType.ROWCOL);
-    column.setCompressionType(compressionType);
-    column.setMaxVersions(1);
-
-    return column;
   }
 
   public static byte[] encodedRowKey(int donorId, long index) {
@@ -151,8 +119,55 @@ public class HTableManager {
       val index = splitPoint - range.lowerEndpoint();
       val split = HTableManager.encodedRowKey(donorId, index);
       builder.add(split);
-    } 
+    }
 
     return builder.build();
+  }
+
+  public static void createDataTable(String tablename) throws IOException {
+    createDataTable(tablename, ImmutableList.<byte[]> of(),
+        HBaseConfiguration.create());
+  }
+
+  public static void createDataTable(String tablename, Configuration conf)
+      throws IOException {
+    createDataTable(tablename, ImmutableList.<byte[]> of(), conf, true);
+  }
+
+  public static void createDataTable(String tablename, Configuration conf,
+      boolean withSnappyCompression) throws IOException {
+    createDataTable(tablename, ImmutableList.<byte[]> of(), conf,
+        withSnappyCompression);
+  }
+
+  public static void createDataTable(String tablename,
+      List<byte[]> boundaries, Configuration conf) throws IOException {
+    createDataTable(tablename, boundaries, conf, true);
+  }
+
+  public static void createDataTable(String tablename,
+      List<byte[]> boundaries, Configuration conf,
+      boolean withSnappyCompression) throws IOException {
+    HBaseAdmin admin = new HBaseAdmin(conf);
+    try {
+      if (!admin.tableExists(tablename)) {
+        byte[][] splits = new byte[boundaries.size()][];
+        HTableDescriptor descriptor = new HTableDescriptor(tablename);
+        HColumnDescriptor dataSchema = new HColumnDescriptor(
+            DATA_CONTENT_FAMILY);
+        dataSchema.setBlockCacheEnabled(false);
+        dataSchema.setBlocksize(DATA_BLOCK_SIZE);
+        dataSchema.setBloomFilterType(BloomType.ROW);
+        if (withSnappyCompression) dataSchema.setCompressionType(Algorithm.SNAPPY);
+        dataSchema.setMaxVersions(1);
+        descriptor.addFamily(dataSchema);
+        descriptor.setMaxFileSize(MAX_DATA_FILE_SIZE);
+        admin.createTable(descriptor, boundaries.toArray(splits));
+      }
+    } catch (TableExistsException e) {
+      log.warn("already created... (skip)", e);
+    } finally {
+      admin.close();
+    }
   }
 }
