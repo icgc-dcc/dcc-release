@@ -17,22 +17,15 @@
  */
 package org.icgc.dcc.etl2.job.export.function;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.DONOR_ID;
-import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import org.apache.spark.api.java.function.PairFunction;
 
-import org.apache.spark.api.java.function.Function;
+import scala.Tuple2;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class ExtractKey implements Function<ObjectNode, String> {
+public class PairWithOne implements PairFunction<String, String, Integer> {
 
   @Override
-  public String call(ObjectNode row) {
-    return getKey(row);
-  }
-
-  private String getKey(ObjectNode row) {
-    return textValue(row, DONOR_ID);
+  public Tuple2<String, Integer> call(String s) {
+    return new Tuple2<String, Integer>(s, 1);
   }
 
 }

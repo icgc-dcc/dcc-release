@@ -20,6 +20,7 @@ package org.icgc.dcc.etl2.job.export.task;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 
+import java.util.List;
 import java.util.UUID;
 
 import lombok.Cleanup;
@@ -41,9 +42,8 @@ import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.task.TaskType;
-import org.icgc.dcc.etl2.job.export.function.ExtractKey;
+import org.icgc.dcc.etl2.job.export.function.ExtractDonorId;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
-import org.icgc.dcc.etl2.job.export.model.ExportTables;
 import org.icgc.dcc.etl2.job.export.model.type.ClinicalDataType;
 import org.icgc.dcc.etl2.job.export.util.HFileLoadJobFactory;
 import org.icgc.dcc.etl2.job.export.util.HFileLoader;
@@ -60,7 +60,8 @@ public class ExportTableTask implements Task {
   /**
    * Constants.
    */
-  private static final Path HFILE_DIR_PATH = new Path("/tmp");
+  private static final Path HFILE_DIR_PATH = new Path("/tmp/exporter/tmp/hfile");
+  private static final Path STATIC_OUTPUT_DIR = new Path("/tmp/exporter/tmp/static");
 
   /**
    * Configuration.
@@ -69,8 +70,6 @@ public class ExportTableTask implements Task {
   private final ExportTable table;
   @NonNull
   private final Configuration conf;
-  // TODO: Correct this value and externalize
-  private final long regionSize = ExportTables.MAX_DATA_FILE_SIZE;
 
   @Override
   public String getName() {
@@ -112,11 +111,11 @@ public class ExportTableTask implements Task {
       JavaRDD<ObjectNode> baseExportProcessResult) {
 
     log.info("Resolving input keys...");
-    val keys = baseExportProcessResult.map(new ExtractKey());
+    val keys = baseExportProcessResult.map(new ExtractDonorId());
     log.info("Resolved input keys");
 
     log.info("Calculating input path split keys...");
-    val splitKeys = calculateSplitKeys(regionSize, keys);
+    val splitKeys = calculateSplitKeys(keys);
     log.info("Calculated {} input path split keys: {}", formatCount(splitKeys), splitKeys);
 
     log.info("Preparing export table '{}'...", table);
@@ -143,6 +142,8 @@ public class ExportTableTask implements Task {
   private void exportStatic(FileSystem fileSystem, JavaSparkContext sparkContext, Path inputPath,
       JavaRDD<ObjectNode> baseExportProcessResult) {
     // TODO write static files.
+    val staticOutputFile = STATIC_OUTPUT_DIR.toString() + "/clinical";
+    baseExportProcessResult.coalesce(1, true).saveAsTextFile(staticOutputFile);
   }
 
   private static Path getInputPath(TaskContext taskContext) {
@@ -150,14 +151,14 @@ public class ExportTableTask implements Task {
     return new Path(taskContext.getPath(FileType.EXPORT_INPUT));
   }
 
-  private Iterable<String> calculateSplitKeys(long regionSize, JavaRDD<String> keys) {
+  private List<byte[]> calculateSplitKeys(JavaRDD<String> keys) {
     val calculator = new SplitKeyCalculator(conf);
 
-    return calculator.calculateSplitKeys(keys, regionSize);
+    return calculator.calculateSplitKeys(keys);
   }
 
   @SneakyThrows
-  private HTable prepareHTable(Configuration conf, Iterable<String> splitKeys) {
+  private HTable prepareHTable(Configuration conf, List<byte[]> splitKeys) {
     @Cleanup
     val admin = new HBaseAdmin(conf);
     val manager = new HTableManager(admin);

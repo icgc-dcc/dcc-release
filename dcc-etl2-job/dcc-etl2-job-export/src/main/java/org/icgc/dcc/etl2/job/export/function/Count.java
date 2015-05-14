@@ -15,37 +15,15 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.export.util;
+package org.icgc.dcc.etl2.job.export.function;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.job.export.function.Count;
-import org.icgc.dcc.etl2.job.export.function.EncodeRowKey;
-import org.icgc.dcc.etl2.job.export.function.PairWithOne;
+import org.apache.spark.api.java.function.Function2;
 
-import java.util.List;
+public class Count implements Function2<Integer, Integer, Integer> {
 
-
-@RequiredArgsConstructor
-public class SplitKeyCalculator {
-
-  /**
-   * Configuration
-   */
-  @NonNull
-  private final Configuration conf;
-
-  @SneakyThrows
-  public List<byte[]> calculateSplitKeys(@NonNull JavaRDD<String> keys) {
-    val compositeKeys = keys
-            .mapToPair(new PairWithOne())
-            .reduceByKey(new Count())
-            .map(new EncodeRowKey()).collect();
-
-    return HTableManager.calculateBoundaries(compositeKeys);
+  @Override
+  public Integer call(Integer i1, Integer i2) {
+    return i1 + i2;
   }
+
 }

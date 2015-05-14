@@ -15,37 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.export.util;
+package org.icgc.dcc.etl2.job.export.function;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.job.export.function.Count;
-import org.icgc.dcc.etl2.job.export.function.EncodeRowKey;
-import org.icgc.dcc.etl2.job.export.function.PairWithOne;
+import static org.icgc.dcc.etl2.job.export.model.Constants.DONOR_ID;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 
-import java.util.List;
+import org.apache.spark.api.java.function.Function;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@RequiredArgsConstructor
-public class SplitKeyCalculator {
+public class ExtractDonorId implements Function<ObjectNode, String> {
 
-  /**
-   * Configuration
-   */
-  @NonNull
-  private final Configuration conf;
-
-  @SneakyThrows
-  public List<byte[]> calculateSplitKeys(@NonNull JavaRDD<String> keys) {
-    val compositeKeys = keys
-            .mapToPair(new PairWithOne())
-            .reduceByKey(new Count())
-            .map(new EncodeRowKey()).collect();
-
-    return HTableManager.calculateBoundaries(compositeKeys);
+  @Override
+  public String call(ObjectNode row) {
+    return getKey(row);
   }
+
+  private String getKey(ObjectNode row) {
+    return textValue(row, DONOR_ID);
+  }
+
 }

@@ -20,6 +20,10 @@ package org.icgc.dcc.etl2.job.export.util;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.META_BLOCK_SIZE;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.META_SIZE_INFO_FAMILY;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.META_TYPE_INFO_FAMILY;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.NUM_REGIONS;
+
+import java.util.List;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -33,6 +37,13 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.regionserver.BloomType;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.icgc.dcc.etl2.job.export.model.CompositeRowKey;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Range;
+import com.google.common.collect.TreeRangeMap;
+import com.google.common.primitives.UnsignedBytes;
 
 /**
  * See:
@@ -52,7 +63,7 @@ public class HTableManager {
   private final HBaseAdmin admin;
 
   @SneakyThrows
-  public HTable ensureTable(@NonNull String tableName, @NonNull Iterable<String> splitKeys) {
+  public HTable ensureTable(@NonNull String tableName, @NonNull List<byte[]> splitKeys) {
     val withSnappyCompression = false;
 
     if (!admin.tableExists(tableName)) {
@@ -75,7 +86,6 @@ public class HTableManager {
   private HTableDescriptor createTableDescriptor(String tableName, Algorithm compressionType) {
     val typeColumnFamily = createTypeColumnFamily(compressionType);
     val sizeColumnFamily = createSizeColumnFamily(compressionType);
-
     val table = new HTableDescriptor(TableName.valueOf(tableName));
     table.addFamily(typeColumnFamily);
     table.addFamily(sizeColumnFamily);
@@ -84,10 +94,12 @@ public class HTableManager {
   }
 
   private HColumnDescriptor createSizeColumnFamily(Algorithm compressionType) {
+
     return createColumnFamily(compressionType, META_SIZE_INFO_FAMILY);
   }
 
   private HColumnDescriptor createTypeColumnFamily(Algorithm compressionType) {
+
     return createColumnFamily(compressionType, META_TYPE_INFO_FAMILY);
   }
 
@@ -103,4 +115,44 @@ public class HTableManager {
     return column;
   }
 
+  public static byte[] encodedRowKey(int donorId, long index) {
+
+    return Bytes.add(Bytes.toBytes(donorId), Bytes.toBytes(index));
+  }
+
+  public static CompositeRowKey decodeRowKey(byte[] encodedRowKey) {
+    int donorId = Bytes.toInt(encodedRowKey, 0);
+    long index = Bytes.toLong(encodedRowKey, 4);
+
+    return new CompositeRowKey(donorId, index);
+  }
+
+  public static List<byte[]> calculateBoundaries(List<byte[]> keys) {
+    long total = 0;
+    val keysPerRS = total / NUM_REGIONS + 1;
+    val rangeMap = TreeRangeMap.<Long, CompositeRowKey> create();
+    val builder = ImmutableList.<byte[]> builder();
+
+    keys.sort(UnsignedBytes.lexicographicalComparator());
+
+    for (val rowKey : keys) {
+      val key = HTableManager.decodeRowKey(rowKey);
+      val openRange = total;
+      total = total + key.getIndex();
+      rangeMap.put(Range.openClosed(openRange, total), key);
+    }
+
+    for (int i = 1; i < NUM_REGIONS; ++i) {
+      val splitPoint = i * keysPerRS;
+      val rangeEntry = rangeMap.getEntry(splitPoint);
+      if (rangeEntry == null) break;
+      val range = rangeEntry.getKey();
+      val donorId = rangeEntry.getValue().getDonorId();
+      val index = splitPoint - range.lowerEndpoint();
+      val split = HTableManager.encodedRowKey(donorId, index);
+      builder.add(split);
+    } 
+
+    return builder.build();
+  }
 }

@@ -30,6 +30,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = PRIVATE)
 public final class ExportTables {
 
+  public static final int NUM_REGIONS = 10;
+
   /**
    * Data table.
    */
@@ -47,5 +49,34 @@ public final class ExportTables {
   public static final String HEADER_SEPARATOR = ",";
   public static final int META_BLOCK_SIZE = 65536;
   public static final byte[] META_SIZE_INFO_FAMILY = new byte[] { 's' };
+
+  public static final String TABLENAME_SEPARATOR = ".";
+  public static final byte[] TSV_DELIMITER = new byte[] { '\t' };
+  public static final long MAX_TAR_ENTRY_SIZE_IN_BYTES = 3221225472L;
+  public static final byte[] END_OF_LINE = new byte[] { 10 }; // LF character
+
+  // ARCHIVE Table
+  public static final String ARCHIVE_TABLE_NAME = "downloader_archive";
+
+  public static final String ARCHIVE_CURRENT_RELEASE = "CURRENT";
+  public static final byte[] ARCHIVE_SYSTEM_KEY = new byte[] { '.', 'M', 'E',
+      'T', 'A', '.' };
+  public static final byte[] ARCHIVE_DOWNLOAD_COUNTER_COLUMN = new byte[] { 't' };
+
+  public static final byte[] ARCHIVE_STATS_INFO_FAMILY = new byte[] { 's' };
+  public static final byte[] ARCHIVE_JOB_INFO_FAMILY = new byte[] { 'j' };
+  public static final byte[] ARCHIVE_JOB_INFO_SYSTEM_COLUMN_PREFIX = new byte[] {
+      's', ':' };
+  public static final byte[] ARCHIVE_JOB_INFO_CLIENT_COLUMN_PREFIX = new byte[] {
+      'c', ':' };
+  public static final byte[] ARCHIVE_ACTIVE_JOB_FAMILY = new byte[] { 'a' };
+  public static final byte[] ARCHIVE_ACTIVE_DOWNLOAD_COUNTER_COLUMN = new byte[] { 'd' };
+
+  public static final int DONOR_ID_SIZE_IN_BYTES = 8;
+  public static final int DONOR_ID_LINE_IN_BYTES = 8;
+
+  public static final byte[] POSTFIX_ALL = new byte[] { '*' };
+
+  public static final String ICGC_DONOR_ID_PREFIX = "DO";
 
 }
