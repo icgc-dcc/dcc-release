@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.List;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -56,18 +55,22 @@ import com.google.common.primitives.UnsignedBytes;
  * </pre>
  */
 @Slf4j
-@RequiredArgsConstructor
 public class HTableManager {
 
   /**
    * Dependencies.
    */
-  @NonNull
   private final Configuration conf;
+  private final HBaseAdmin admin;
+
+  @SneakyThrows
+  public HTableManager(Configuration conf) {
+    this.conf = conf;
+    this.admin = new HBaseAdmin(conf);
+  }
 
   @SneakyThrows
   public HTable ensureTable(@NonNull String tableName, @NonNull List<byte[]> splitKeys) {
-    val admin = new HBaseAdmin(conf);
     if (!admin.tableExists(tableName)) {
       createDataTable(tableName, calculateBoundaries(splitKeys), conf, true);
     }
@@ -76,8 +79,22 @@ public class HTableManager {
   }
 
   @SneakyThrows
+  public HTable getTable(@NonNull String tableName) {
+    if (!admin.tableExists(tableName)) {
+      throw new IOException("table not found.");
+    }
+
+    return new HTable(conf, tableName);
+  }
+
+  @SneakyThrows
+  public boolean existsTable(@NonNull String tableName) {
+
+    return admin.tableExists(tableName);
+  }
+
+  @SneakyThrows
   public void listTables() {
-    val admin = new HBaseAdmin(conf);
     for (val table : admin.listTables()) {
       log.info("{}", table);
     }

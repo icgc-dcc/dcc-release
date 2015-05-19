@@ -19,7 +19,6 @@ package org.icgc.dcc.etl2.job.export.task;
 
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
-
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -105,12 +104,8 @@ public class ExportTableTask implements Task {
   private void exportDynamic(FileSystem fileSystem, JavaSparkContext sparkContext, Path inputPath,
       JavaRDD<ObjectNode> baseExportProcessResult) {
 
-    log.info("Resolving input keys...");
-    val keys = baseExportProcessResult.map(new ExtractDonorId());
-    log.info("Resolved input keys");
-
     log.info("Preparing export table '{}'...", table);
-    val hTable = prepareHTable(conf, keys);
+    val hTable = prepareHTable(conf, baseExportProcessResult);
     log.info("Prepared export table: {}", table);
 
     val hFileManager = new HFileManager(conf, fileSystem);
@@ -141,16 +136,22 @@ public class ExportTableTask implements Task {
   }
 
   @SneakyThrows
-  private HTable prepareHTable(Configuration conf, JavaRDD<String> keys) {
-    log.info("Calculating input path split keys...");
+  private HTable prepareHTable(Configuration conf, JavaRDD<ObjectNode> keys) {
+    log.info("Ensuring table...");
+    val manager = new HTableManager(conf);
+    
+    if (manager.existsTable(table.name())) {
+      log.info("Table exists...");
+      return manager.getTable(table.name());
+    }
+
+    log.info("Calculating split keys...");
     val splitKeys = keys
+        .map(new ExtractDonorId())
         .mapToPair(new PairWithOne())
         .reduceByKey(new Count())
         .map(new EncodeRowKey()).collect();
     log.info("Calculated {} input path split keys: {}", formatCount(splitKeys), splitKeys);
-    
-    log.info("Ensuring table...");
-    val manager = new HTableManager(conf);
     val htable = manager.ensureTable(table.name(), splitKeys);
     log.info("Listing tables...");
     manager.listTables();
