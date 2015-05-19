@@ -96,8 +96,7 @@ public class HTableManager {
   }
 
   public static List<byte[]> calculateBoundaries(List<byte[]> keys) {
-    long total = 0;
-    val keysPerRS = total / NUM_REGIONS + 1;
+    long current = 0;
     val rangeMap = TreeRangeMap.<Long, CompositeRowKey> create();
     val builder = ImmutableList.<byte[]> builder();
 
@@ -105,11 +104,12 @@ public class HTableManager {
 
     for (val rowKey : keys) {
       val key = HTableManager.decodeRowKey(rowKey);
-      val openRange = total;
-      total = total + key.getIndex();
-      rangeMap.put(Range.openClosed(openRange, total), key);
+      val splitStart = current;
+      current = current + key.getIndex();
+      rangeMap.put(Range.openClosed(splitStart, current), key);
     }
 
+    val keysPerRS = current / NUM_REGIONS + 1;
     for (int i = 1; i < NUM_REGIONS; ++i) {
       val splitPoint = i * keysPerRS;
       val rangeEntry = rangeMap.getEntry(splitPoint);
@@ -124,35 +124,30 @@ public class HTableManager {
     return builder.build();
   }
 
-  public static void createDataTable(String tablename) throws IOException {
-    createDataTable(tablename, ImmutableList.<byte[]> of(),
-        HBaseConfiguration.create());
+  public static void createDataTable(String tableName) throws IOException {
+    createDataTable(tableName, ImmutableList.<byte[]> of(),
+        HBaseConfiguration.create(), true);
   }
 
-  public static void createDataTable(String tablename, Configuration conf)
+  public static void createDataTable(String tableName, Configuration conf)
       throws IOException {
-    createDataTable(tablename, ImmutableList.<byte[]> of(), conf, true);
+    createDataTable(tableName, ImmutableList.<byte[]> of(), conf, true);
   }
 
-  public static void createDataTable(String tablename, Configuration conf,
+  public static void createDataTable(String tableName, Configuration conf,
       boolean withSnappyCompression) throws IOException {
-    createDataTable(tablename, ImmutableList.<byte[]> of(), conf,
+    createDataTable(tableName, ImmutableList.<byte[]> of(), conf,
         withSnappyCompression);
   }
 
-  public static void createDataTable(String tablename,
-      List<byte[]> boundaries, Configuration conf) throws IOException {
-    createDataTable(tablename, boundaries, conf, true);
-  }
-
-  public static void createDataTable(String tablename,
+  public static void createDataTable(String tableName,
       List<byte[]> boundaries, Configuration conf,
       boolean withSnappyCompression) throws IOException {
     HBaseAdmin admin = new HBaseAdmin(conf);
     try {
-      if (!admin.tableExists(tablename)) {
+      if (!admin.tableExists(tableName)) {
         byte[][] splits = new byte[boundaries.size()][];
-        HTableDescriptor descriptor = new HTableDescriptor(tablename);
+        HTableDescriptor descriptor = new HTableDescriptor(tableName);
         HColumnDescriptor dataSchema = new HColumnDescriptor(
             DATA_CONTENT_FAMILY);
         dataSchema.setBlockCacheEnabled(false);
