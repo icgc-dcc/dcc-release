@@ -140,6 +140,7 @@ public class HTableManager {
         withSnappyCompression);
   }
 
+  @SuppressWarnings("deprecation")
   public static void createDataTable(String tableName,
       List<byte[]> boundaries, Configuration conf,
       boolean withSnappyCompression) throws IOException {

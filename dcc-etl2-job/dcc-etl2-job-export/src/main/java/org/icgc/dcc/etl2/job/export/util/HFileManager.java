@@ -30,31 +30,76 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.etl2.job.export.function.TranslateHBaseKeyValue;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @RequiredArgsConstructor
-public class HFileLoader {
+public class HFileManager {
 
   /**
    * Constants.
    */
+  private static final Path HFILE_DIR_PATH = new Path("/tmp/exporter/tmp/hfile");
   private static final FsPermission rwx = new FsPermission("777");
 
   /**
-   * Dependencies.
+   * Configuration
    */
   @NonNull
   private final Configuration conf;
   @NonNull
   private final FileSystem fileSystem;
 
-  @SneakyThrows
-  public void loadHFiles(@NonNull HTable table, @NonNull Path hFilePath) {
-    prepare(hFilePath);
+  public void writeHFiles(@NonNull JavaRDD<ObjectNode> input, @NonNull HTable htable) {
+    val hFilesPath = getHFilesPath(fileSystem, htable);
+    val processed = process(input, htable);
+    writeOutput(hFilesPath, processed);
+  }
 
-    load(table, hFilePath);
+  @SneakyThrows
+  private JavaPairRDD<ImmutableBytesWritable, KeyValue> process(@NonNull JavaRDD<ObjectNode> input,
+      @NonNull HTable htable) {
+
+    // JavaPairRDD<ObjectNode, Long> a = input.zipWithIndex();
+    // val b = a.mapToPair(new TranslateHBaseKeyValue3());
+    // val c = b.sortByKey(true).coalesce(10, true);
+    // val groupedDonors = baseExportProcessResult.mapToPair(new GroupByDonorId());
+    // val donors = groupedDonors.keys();
+
+    return input
+        .mapToPair(new TranslateHBaseKeyValue())
+        .partitionBy(new HFilePartitioner(conf, htable.getStartKeys()));
+  }
+
+  private void writeOutput(Path hFilePath, JavaPairRDD<ImmutableBytesWritable, KeyValue> processed) {
+    processed.saveAsNewAPIHadoopFile(
+        hFilePath.toString(),
+        ImmutableBytesWritable.class, KeyValue.class,
+        HFileOutputFormat2.class, conf);
+  }
+
+  private static Path getHFilesPath(FileSystem fileSystem, HTable hTable) {
+    val htableName = new String(hTable.getTableName());
+    val hFilePath = new Path(HFILE_DIR_PATH, htableName);
+
+    return fileSystem.makeQualified(hFilePath);
+  }
+
+  @SneakyThrows
+  public void loadHFiles(@NonNull HTable htable) {
+    val hFilesPath = getHFilesPath(fileSystem, htable);
+    prepare(hFilesPath);
+
+    load(htable, hFilesPath);
   }
 
   private void prepare(Path hFilePath) throws FileNotFoundException, IOException {
@@ -75,7 +120,6 @@ public class HFileLoader {
 
   private void load(HTable table, Path hFilePath) throws Exception, TableNotFoundException, IOException {
     val loader = new LoadIncrementalHFiles(conf);
-
     loader.doBulkLoad(hFilePath, table);
   }
 

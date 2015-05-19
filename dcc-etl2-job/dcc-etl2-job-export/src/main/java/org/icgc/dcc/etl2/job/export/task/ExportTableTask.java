@@ -20,9 +20,6 @@ package org.icgc.dcc.etl2.job.export.task;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 
-import java.util.List;
-import java.util.UUID;
-
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -47,8 +44,7 @@ import org.icgc.dcc.etl2.job.export.function.PairWithOne;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.model.type.ClinicalDataType;
 import org.icgc.dcc.etl2.job.export.util.HFileLoadJobFactory;
-import org.icgc.dcc.etl2.job.export.util.HFileLoader;
-import org.icgc.dcc.etl2.job.export.util.HFileWriter;
+import org.icgc.dcc.etl2.job.export.util.HFileManager;
 import org.icgc.dcc.etl2.job.export.util.HTableManager;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -60,7 +56,6 @@ public class ExportTableTask implements Task {
   /**
    * Constants.
    */
-  private static final Path HFILE_DIR_PATH = new Path("/tmp/exporter/tmp/hfile");
   private static final Path STATIC_OUTPUT_DIR = new Path("/tmp/exporter/tmp/static");
 
   /**
@@ -114,20 +109,14 @@ public class ExportTableTask implements Task {
     val keys = baseExportProcessResult.map(new ExtractDonorId());
     log.info("Resolved input keys");
 
-    log.info("Calculating input path split keys...");
-    val splitKeys = calculateSplitKeys(keys);
-    log.info("Calculated {} input path split keys: {}", formatCount(splitKeys), splitKeys);
-
     log.info("Preparing export table '{}'...", table);
-    val hTable = prepareHTable(conf, splitKeys);
+    val hTable = prepareHTable(conf, keys);
     log.info("Prepared export table: {}", table);
 
-    log.info("Getting HFile path...");
-    val hFilePath = getHFilePath(fileSystem, hTable);
-    log.info("Got HFile path: '{}'", hFilePath);
+    val hFileManager = new HFileManager(conf, fileSystem);
 
     log.info("Writing HFiles...");
-    writeHFiles(conf, baseExportProcessResult, hTable, hFilePath);
+    hFileManager.writeHFiles(baseExportProcessResult, hTable);
     log.info("Wrote HFiles");
 
     log.info("Creating load job...");
@@ -135,7 +124,7 @@ public class ExportTableTask implements Task {
     log.info("Created load job: {}", hFileLoadJob);
 
     log.info("Loading HFiles...");
-    loadHFiles(conf, fileSystem, hTable, hFilePath);
+    hFileManager.loadHFiles(hTable);
     log.info("Loaded HFiles");
   }
 
@@ -151,18 +140,17 @@ public class ExportTableTask implements Task {
     return new Path(taskContext.getPath(FileType.EXPORT_INPUT));
   }
 
-  private List<byte[]> calculateSplitKeys(JavaRDD<String> keys) {
-
-    return keys
+  @SneakyThrows
+  private HTable prepareHTable(Configuration conf, JavaRDD<String> keys) {
+    log.info("Calculating input path split keys...");
+    val splitKeys = keys
         .mapToPair(new PairWithOne())
         .reduceByKey(new Count())
         .map(new EncodeRowKey()).collect();
-  }
-
-  @SneakyThrows
-  private HTable prepareHTable(Configuration conf, List<byte[]> splitKeys) {
-    val manager = new HTableManager(conf);
+    log.info("Calculated {} input path split keys: {}", formatCount(splitKeys), splitKeys);
+    
     log.info("Ensuring table...");
+    val manager = new HTableManager(conf);
     val htable = manager.ensureTable(table.name(), splitKeys);
     log.info("Listing tables...");
     manager.listTables();
@@ -174,24 +162,6 @@ public class ExportTableTask implements Task {
     val factory = new HFileLoadJobFactory(conf);
 
     return factory.createJob(table);
-  }
-
-  private static void writeHFiles(Configuration conf, JavaRDD<ObjectNode> input, HTable table,
-      Path hFilePath) {
-    val writer = new HFileWriter(conf, table);
-    writer.writeHFiles(input, hFilePath);
-  }
-
-  private static void loadHFiles(Configuration conf, FileSystem fileSystem, HTable hTable, Path hFilePath) {
-    val loader = new HFileLoader(conf, fileSystem);
-    loader.loadHFiles(hTable, hFilePath);
-  }
-
-  private static Path getHFilePath(FileSystem fileSystem, HTable hTable) {
-    val hFileName = new String(hTable.getTableName()) + "_" + UUID.randomUUID();
-    val hFilePath = new Path(HFILE_DIR_PATH, hFileName);
-
-    return fileSystem.makeQualified(hFilePath);
   }
 
 }
