@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.SAMPLE_FIELD_NAME;
-import static org.icgc.dcc.etl2.job.export.model.Constants.SPECIMEN_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.SAMPLE_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.SPECIMEN_FIELD_NAME;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 

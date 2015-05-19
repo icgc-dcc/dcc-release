@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.etl2.job.export.function;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.DONOR_ID;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.DONOR_ID;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 
 import org.apache.spark.api.java.function.Function;

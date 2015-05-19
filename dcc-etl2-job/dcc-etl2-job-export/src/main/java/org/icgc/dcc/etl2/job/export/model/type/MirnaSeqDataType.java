@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.METH_SEQ_TYPE_FIELD_VALUE;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.METH_SEQ_TYPE_FIELD_VALUE;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 

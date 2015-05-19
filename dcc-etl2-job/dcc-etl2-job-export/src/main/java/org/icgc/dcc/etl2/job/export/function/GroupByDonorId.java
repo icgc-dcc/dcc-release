@@ -22,7 +22,7 @@ import lombok.val;
 
 import org.apache.spark.api.java.function.PairFunction;
 
-import org.icgc.dcc.etl2.job.export.model.Constants;
+import org.icgc.dcc.etl2.job.export.model.type.Constants;
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;

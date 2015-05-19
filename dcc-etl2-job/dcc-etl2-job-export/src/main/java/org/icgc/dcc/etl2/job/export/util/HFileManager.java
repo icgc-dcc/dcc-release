@@ -23,6 +23,7 @@ import java.io.IOException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import org.apache.hadoop.conf.Configuration;
@@ -36,12 +37,14 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.job.export.function.TranslateHBaseKeyValue;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+@Slf4j
 @RequiredArgsConstructor
 public class HFileManager {
 
@@ -99,6 +102,10 @@ public class HFileManager {
     val hFilesPath = getHFilesPath(fileSystem, htable);
     prepare(hFilesPath);
 
+    log.info("Creating load job...");
+    val hFileLoadJob = createHFileLoadJob(conf, htable);
+    log.info("Created load job: {}", hFileLoadJob);
+
     load(htable, hFilesPath);
   }
 
@@ -131,6 +138,12 @@ public class HFileManager {
     val splitDir = new Path(hFile, "_tmp");
 
     return splitDir;
+  }
+
+  private Job createHFileLoadJob(Configuration conf, HTable table) {
+    val factory = new HFileLoadJobFactory(conf);
+
+    return factory.createJob(table);
   }
 
 }

@@ -1,8 +1,8 @@
 package org.icgc.dcc.etl2.job.export.function;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.MARKING_FIELD_VALUE;
-import static org.icgc.dcc.etl2.job.export.model.Constants.MASKED_FIELD_VALUE;
-import static org.icgc.dcc.etl2.job.export.model.Constants.OPEN_FIELD_VALUE;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.MARKING_FIELD_VALUE;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.MASKED_FIELD_VALUE;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.OPEN_FIELD_VALUE;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;

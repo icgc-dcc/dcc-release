@@ -1,4 +1,4 @@
-package org.icgc.dcc.etl2.job.export.model;
+package org.icgc.dcc.etl2.job.export.model.type;
 
 public class Constants {
 

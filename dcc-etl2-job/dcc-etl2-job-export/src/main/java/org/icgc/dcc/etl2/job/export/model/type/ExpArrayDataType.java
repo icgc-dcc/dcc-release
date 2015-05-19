@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.EXP_ARRAY_TYPE_FIELD_VALUE;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.EXP_ARRAY_TYPE_FIELD_VALUE;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 

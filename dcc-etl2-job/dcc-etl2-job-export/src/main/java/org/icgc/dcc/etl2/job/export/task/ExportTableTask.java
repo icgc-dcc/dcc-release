@@ -95,39 +95,27 @@ public class ExportTableTask implements Task {
     log.info("Done writing static export output files...");
 
     log.info("Writing dynamic export output files...");
-    exportDynamic(fileSystem, sparkContext, inputPath, baseExportProcessResult);
+    exportDynamic(fileSystem, baseExportProcessResult);
     log.info("Done writing dynamic export output files...");
 
     log.info("Finished exporting table '{}' in {}", table, watch);
   }
 
-  private void exportDynamic(FileSystem fileSystem, JavaSparkContext sparkContext, Path inputPath,
-      JavaRDD<ObjectNode> baseExportProcessResult) {
-
+  private void exportDynamic(FileSystem fileSystem, JavaRDD<ObjectNode> input) {
     log.info("Preparing export table '{}'...", table);
-    val hTable = prepareHTable(conf, baseExportProcessResult);
+    val hTable = prepareHTable(conf, input, table.name());
     log.info("Prepared export table: {}", table);
 
-    val hFileManager = new HFileManager(conf, fileSystem);
-
-    log.info("Writing HFiles...");
-    hFileManager.writeHFiles(baseExportProcessResult, hTable);
-    log.info("Wrote HFiles");
-
-    log.info("Creating load job...");
-    val hFileLoadJob = createHFileLoadJob(conf, hTable);
-    log.info("Created load job: {}", hFileLoadJob);
-
-    log.info("Loading HFiles...");
-    hFileManager.loadHFiles(hTable);
-    log.info("Loaded HFiles");
+    log.info("Processing HFiles...");
+    processHFiles(conf, fileSystem, input, hTable);
+    log.info("Finished processing HFiles...");
   }
 
   private void exportStatic(FileSystem fileSystem, JavaSparkContext sparkContext, Path inputPath,
-      JavaRDD<ObjectNode> baseExportProcessResult) {
+      JavaRDD<ObjectNode> input) {
     // TODO write static files.
     val staticOutputFile = STATIC_OUTPUT_DIR.toString() + "/clinical";
-    baseExportProcessResult.coalesce(1, true).saveAsTextFile(staticOutputFile);
+    input.coalesce(1, true).saveAsTextFile(staticOutputFile);
   }
 
   private static Path getInputPath(TaskContext taskContext) {
@@ -136,13 +124,13 @@ public class ExportTableTask implements Task {
   }
 
   @SneakyThrows
-  private HTable prepareHTable(Configuration conf, JavaRDD<ObjectNode> keys) {
+  private static HTable prepareHTable(Configuration conf, JavaRDD<ObjectNode> keys, String tableName) {
     log.info("Ensuring table...");
     val manager = new HTableManager(conf);
     
-    if (manager.existsTable(table.name())) {
+    if (manager.existsTable(tableName)) {
       log.info("Table exists...");
-      return manager.getTable(table.name());
+      return manager.getTable(tableName);
     }
 
     log.info("Calculating split keys...");
@@ -152,17 +140,25 @@ public class ExportTableTask implements Task {
         .reduceByKey(new Count())
         .map(new EncodeRowKey()).collect();
     log.info("Calculated {} input path split keys: {}", formatCount(splitKeys), splitKeys);
-    val htable = manager.ensureTable(table.name(), splitKeys);
+    val htable = manager.ensureTable(tableName, splitKeys);
+    
     log.info("Listing tables...");
     manager.listTables();
 
     return htable;
   }
 
-  private Job createHFileLoadJob(Configuration conf, HTable table) {
-    val factory = new HFileLoadJobFactory(conf);
+  @SneakyThrows
+  private static void processHFiles(Configuration conf, FileSystem fileSystem, JavaRDD<ObjectNode> input, HTable hTable) {
+    val hFileManager = new HFileManager(conf, fileSystem);
 
-    return factory.createJob(table);
+    log.info("Writing HFiles...");
+    hFileManager.writeHFiles(input, hTable);
+    log.info("Wrote HFiles");
+
+    log.info("Loading HFiles...");
+    hFileManager.loadHFiles(hTable);
+    log.info("Loaded HFiles");
   }
 
 }

@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.FAMILY_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.FAMILY_FIELD_NAME;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 

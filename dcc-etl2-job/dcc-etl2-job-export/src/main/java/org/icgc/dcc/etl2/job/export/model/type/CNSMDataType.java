@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.Constants.CNSM_TYPE_FIELD_VALUE;
-import static org.icgc.dcc.etl2.job.export.model.Constants.CONSEQUENCE_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.CNSM_TYPE_FIELD_VALUE;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.CONSEQUENCE_FIELD_NAME;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
