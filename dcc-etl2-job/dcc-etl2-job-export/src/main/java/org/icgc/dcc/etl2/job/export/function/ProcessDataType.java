@@ -49,7 +49,8 @@ public class ProcessDataType implements
     long now = System.currentTimeMillis();
     val fields = row.fieldNames();
     while (fields.hasNext()) {
-      Object cellValue = fields.next();
+      val field = fields.next();
+      Object cellValue = row.get(field);
       if (cellValue == null) continue;
       String value = (String) cellValue;
       if (value.trim().isEmpty()) continue;
