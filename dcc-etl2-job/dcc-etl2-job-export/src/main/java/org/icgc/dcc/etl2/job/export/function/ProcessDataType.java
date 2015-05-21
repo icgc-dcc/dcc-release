@@ -43,12 +43,13 @@ public class ProcessDataType implements
     String donorId = getKey(row);
     byte[] rowKey = HTableManager.encodedRowKey(Integer.valueOf(donorId), index);
 
-    byte i = 0;
+    byte i = -1;
     long totalBytes = 0;
     val kvs = Lists.<KeyValue> newArrayList();
     long now = System.currentTimeMillis();
     val fields = row.fieldNames();
     while (fields.hasNext()) {
+      i++;
       val field = fields.next();
       Object cellValue = row.get(field);
       if (cellValue == null) continue;
@@ -58,7 +59,6 @@ public class ProcessDataType implements
       KeyValue kv = new KeyValue(rowKey, DATA_CONTENT_FAMILY, new byte[] { i }, now, bytes);
       totalBytes = totalBytes + bytes.length;
       kvs.add(kv);
-      i++;
     }
 
     KeyValue[] kv = kvs.toArray(new KeyValue[kvs.size()]);

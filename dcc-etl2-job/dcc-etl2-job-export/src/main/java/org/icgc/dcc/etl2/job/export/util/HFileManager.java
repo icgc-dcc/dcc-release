@@ -145,7 +145,6 @@ public class HFileManager {
   }
 
   private Writer createWriter(String donorId) throws IOException {
-
     Path destPath = new Path(HFILE_DIR_PATH, Bytes.toString(DATA_CONTENT_FAMILY));
     val writer = HFile
         .getWriterFactory(conf, new CacheConfig(conf))
