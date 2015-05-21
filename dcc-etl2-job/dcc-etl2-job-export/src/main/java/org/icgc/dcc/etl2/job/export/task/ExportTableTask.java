@@ -20,6 +20,7 @@ package org.icgc.dcc.etl2.job.export.task;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 
 import java.util.List;
+import java.util.Map;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -119,7 +120,7 @@ public class ExportTableTask implements Task {
     log.info("Finished processing HFiles...");
   }
 
-  private JavaPairRDD<String, Tuple3<KeyValue[], Long, Integer>> prepareData(JavaRDD<ObjectNode> input) {
+  private JavaPairRDD<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> prepareData(JavaRDD<ObjectNode> input) {
     return input
         .zipWithIndex()
         .mapToPair(new ProcessDataType())
@@ -139,7 +140,8 @@ public class ExportTableTask implements Task {
   }
 
   @SneakyThrows
-  private static HTable prepareHTable(Configuration conf, JavaPairRDD<String, Tuple3<KeyValue[], Long, Integer>> input,
+  private static HTable prepareHTable(Configuration conf,
+      JavaPairRDD<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> input,
       String tableName) {
     log.info("Ensuring table...");
     val manager = new HTableManager(conf);
@@ -165,11 +167,11 @@ public class ExportTableTask implements Task {
 
   @SneakyThrows
   private static void processHFiles(Configuration conf, FileSystem fileSystem,
-      JavaPairRDD<String, Tuple3<KeyValue[], Long, Integer>> input, HTable hTable) {
+      JavaPairRDD<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> processedInput, HTable hTable) {
     val hFileManager = new HFileManager(conf, fileSystem);
 
     log.info("Writing HFiles...");
-    hFileManager.writeHFiles(input, hTable);
+    hFileManager.writeHFiles(processedInput, hTable);
     log.info("Wrote HFiles");
 
     log.info("Loading HFiles...");

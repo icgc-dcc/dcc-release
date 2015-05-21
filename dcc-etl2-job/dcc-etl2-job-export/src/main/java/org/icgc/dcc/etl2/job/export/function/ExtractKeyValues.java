@@ -17,15 +17,21 @@
  */
 package org.icgc.dcc.etl2.job.export.function;
 
+import java.util.Map;
+
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.spark.api.java.function.Function;
+
 import scala.Tuple2;
 import scala.Tuple3;
 
+public class ExtractKeyValues implements
+    Function<Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>>, Map<byte[], KeyValue[]>> {
 
-public class ExtractKeyValues implements Function<Tuple2<String, Tuple3<KeyValue[], Long, Integer>>, KeyValue[]> {
   @Override
-  public KeyValue[] call(Tuple2<String, Tuple3<KeyValue[], Long, Integer>> tuple) throws Exception {
+  public Map<byte[], KeyValue[]> call(Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> tuple)
+      throws Exception {
+
     return tuple._2()._1();
   }
 

@@ -21,13 +21,14 @@ import static org.icgc.dcc.etl2.job.export.model.ExportTables.DATA_CONTENT_FAMIL
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
+import java.util.Map;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -47,22 +48,23 @@ import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.icgc.dcc.etl2.job.export.function.ExtractKeyValues;
+import org.apache.spark.api.java.function.VoidFunction;
 
+import scala.Tuple2;
 import scala.Tuple3;
 
-@Slf4j
+@Slf4j 
 @RequiredArgsConstructor
 public class HFileManager {
 
   /**
-   * Constants.
+   * Constants. 
    */
   private static final Path HFILE_DIR_PATH = new Path("/tmp/exporter/tmp/hfile");
   private static final FsPermission rwx = new FsPermission("777");
   private static int BLOCKSIZE = 5 * 1048576;
   public static Algorithm COMPRESSION = Compression.Algorithm.SNAPPY;
-
+ 
   /**
    * Configuration
    */
@@ -71,21 +73,11 @@ public class HFileManager {
   @NonNull
   private final FileSystem fileSystem;
 
-  public void writeHFiles(@NonNull JavaPairRDD<String, Tuple3<KeyValue[], Long, Integer>> input, @NonNull HTable htable)
+  public void writeHFiles(@NonNull JavaPairRDD<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> processedInput,
+      @NonNull HTable hTable)
       throws IOException {
-    val hFilesPath = getHFilesPath(fileSystem, htable);
-    List<KeyValue[]> keyValues = input.map(new ExtractKeyValues()).collect();
-    writeOutput(hFilesPath, keyValues);
-  }
-
-  private void writeOutput(Path hFilePath, List<KeyValue[]> processed) throws IOException {
-    Writer writer = createWriter(hFilePath.toString());
-    for (KeyValue[] donorKeyValues : processed) {
-      for (KeyValue kv : donorKeyValues) {
-        writer.append(kv);
-      }
-    }
-    writer.close();
+    val hFilesPath = getHFilesPath(fileSystem, hTable);
+    processedInput.foreach(new HFileWriter(hFilesPath));
   }
 
   private static Path getHFilesPath(FileSystem fileSystem, HTable hTable) {
@@ -144,17 +136,50 @@ public class HFileManager {
     return factory.createJob(table);
   }
 
-  private Writer createWriter(String donorId) throws IOException {
-    Path destPath = new Path(HFILE_DIR_PATH, Bytes.toString(DATA_CONTENT_FAMILY));
-    val writer = HFile
-        .getWriterFactory(conf, new CacheConfig(conf))
-        .withPath(fileSystem, new Path(destPath, donorId))
-        .withComparator(KeyValue.COMPARATOR)
-        .withFileContext(
-            new HFileContextBuilder().withBlockSize(BLOCKSIZE)
-                .withCompression(COMPRESSION).build()).create();
+  @RequiredArgsConstructor
+  private class HFileWriter implements VoidFunction<Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>>> {
 
-    return writer;
+    @NonNull
+    private final Path hfilesPath;
+
+    @Override
+    public void call(Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> tuple) throws Exception {
+      val donorId = tuple._1();
+      val data = tuple._2()._1().values();
+      writeOutput(donorId, data);
+    }
+
+    private Writer createWriter(String donorId) throws IOException {
+      Path destPath = new Path(HFILE_DIR_PATH, Bytes.toString(DATA_CONTENT_FAMILY));
+      val writer = HFile
+              .getWriterFactory(conf, new CacheConfig(conf))
+              .withPath(fileSystem, new Path(destPath, donorId))
+              .withComparator(KeyValue.COMPARATOR)
+              .withFileContext(
+                      new HFileContextBuilder().withBlockSize(BLOCKSIZE)
+                              .withCompression(COMPRESSION).build()).create();
+
+      return writer; 
+    }
+
+    private void closeWriter(Writer writer) {
+      if (writer != null) {
+        try {
+          writer.close();
+        } catch (IOException e) {
+          log.error("Fail to close the HFile writer", e);
+        }
+      }
+    }
+
+    private void writeOutput(String donorId, Collection<KeyValue[]> processed) throws IOException {
+      Writer writer = createWriter(donorId);
+      for (val collection : processed) {
+        for (val kv : collection) {
+          writer.append(kv);
+        }
+      }
+      closeWriter(writer);
+    }
   }
-
 }

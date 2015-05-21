@@ -20,6 +20,10 @@ package org.icgc.dcc.etl2.job.export.function;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.DATA_CONTENT_FAMILY;
 import static org.icgc.dcc.etl2.job.export.model.type.Constants.DONOR_ID;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 import lombok.val;
 
 import org.apache.hadoop.hbase.KeyValue;
@@ -34,15 +38,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 public class ProcessDataType implements
-    PairFunction<Tuple2<ObjectNode, Long>, String, Tuple3<KeyValue[], Long, Integer>> {
+    PairFunction<Tuple2<ObjectNode, Long>, String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> {
 
   @Override
-  public Tuple2<String, Tuple3<KeyValue[], Long, Integer>> call(Tuple2<ObjectNode, Long> tuple) throws Exception {
+  public Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> call(Tuple2<ObjectNode, Long> tuple)
+      throws Exception {
     long index = tuple._2();
     ObjectNode row = tuple._1();
     String donorId = getKey(row);
     byte[] rowKey = HTableManager.encodedRowKey(Integer.valueOf(donorId), index);
-
     byte i = -1;
     long totalBytes = 0;
     val kvs = Lists.<KeyValue> newArrayList();
@@ -62,11 +66,15 @@ public class ProcessDataType implements
     }
 
     KeyValue[] kv = kvs.toArray(new KeyValue[kvs.size()]);
-    val data = new Tuple3<KeyValue[], Long, Integer>(kv, totalBytes, 1);
-    return new Tuple2<String, Tuple3<KeyValue[], Long, Integer>>(donorId, data);
+    Map<byte[], KeyValue[]> data = new TreeMap<byte[], KeyValue[]>();
+    data.put(rowKey, kv);
+    val tuple3 = new Tuple3<Map<byte[], KeyValue[]>, Long, Integer>(data, totalBytes, 1);
+
+    return new Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>>(donorId, tuple3);
   }
 
   private String getKey(ObjectNode row) {
+
     return textValue(row, DONOR_ID);
   }
 }

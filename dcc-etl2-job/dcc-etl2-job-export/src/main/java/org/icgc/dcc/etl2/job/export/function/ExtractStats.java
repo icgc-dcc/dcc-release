@@ -17,19 +17,23 @@
  */
 package org.icgc.dcc.etl2.job.export.function;
 
+import java.util.Map;
+
 import lombok.val;
+
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.spark.api.java.function.Function;
+
 import scala.Tuple2;
-import scala.Tuple3;
+import scala.Tuple3; 
 
-
-public class ExtractStats implements Function<Tuple2<String, Tuple3<KeyValue[], Long, Integer>>, Tuple3<String, Long, Integer>> {
+public class ExtractStats implements Function<Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>>, Tuple3<String, Long, Integer>> {
 
   @Override 
-  public Tuple3<String, Long, Integer> call(Tuple2<String, Tuple3<KeyValue[], Long, Integer>> tuple) throws Exception {
+  public Tuple3<String, Long, Integer> call(Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> tuple) throws Exception {
     val donorId = tuple._1();
     val tuple3 = tuple._2();
+    
     return new Tuple3<String, Long, Integer>(donorId, tuple3._2(), tuple3._3());
   }
 }
