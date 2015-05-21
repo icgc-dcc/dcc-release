@@ -17,14 +17,17 @@
  */
 package org.icgc.dcc.etl2.job.export.util;
 
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.DATA_CONTENT_FAMILY;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -34,15 +37,19 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
+import org.apache.hadoop.hbase.io.compress.Compression;
+import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
+import org.apache.hadoop.hbase.io.hfile.CacheConfig;
+import org.apache.hadoop.hbase.io.hfile.HFile;
+import org.apache.hadoop.hbase.io.hfile.HFile.Writer;
+import org.apache.hadoop.hbase.io.hfile.HFileContextBuilder;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.job.export.function.TranslateHBaseKeyValue;
+import org.icgc.dcc.etl2.job.export.function.ExtractKeyValues;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import scala.Tuple3;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -53,6 +60,8 @@ public class HFileManager {
    */
   private static final Path HFILE_DIR_PATH = new Path("/tmp/exporter/tmp/hfile");
   private static final FsPermission rwx = new FsPermission("777");
+  private static int BLOCKSIZE = 5 * 1048576;
+  public static Algorithm COMPRESSION = Compression.Algorithm.SNAPPY;
 
   /**
    * Configuration
@@ -62,32 +71,21 @@ public class HFileManager {
   @NonNull
   private final FileSystem fileSystem;
 
-  public void writeHFiles(@NonNull JavaRDD<ObjectNode> input, @NonNull HTable htable) {
+  public void writeHFiles(@NonNull JavaPairRDD<String, Tuple3<KeyValue[], Long, Integer>> input, @NonNull HTable htable)
+      throws IOException {
     val hFilesPath = getHFilesPath(fileSystem, htable);
-    val processed = process(input, htable);
-    writeOutput(hFilesPath, processed);
+    List<KeyValue[]> keyValues = input.map(new ExtractKeyValues()).collect();
+    writeOutput(hFilesPath, keyValues);
   }
 
-  @SneakyThrows
-  private JavaPairRDD<ImmutableBytesWritable, KeyValue> process(@NonNull JavaRDD<ObjectNode> input,
-      @NonNull HTable htable) {
-
-    // JavaPairRDD<ObjectNode, Long> a = input.zipWithIndex();
-    // val b = a.mapToPair(new TranslateHBaseKeyValue3());
-    // val c = b.sortByKey(true).coalesce(10, true);
-    // val groupedDonors = baseExportProcessResult.mapToPair(new GroupByDonorId());
-    // val donors = groupedDonors.keys();
-
-    return input
-        .mapToPair(new TranslateHBaseKeyValue())
-        .partitionBy(new HFilePartitioner(conf, htable.getStartKeys()));
-  }
-
-  private void writeOutput(Path hFilePath, JavaPairRDD<ImmutableBytesWritable, KeyValue> processed) {
-    processed.saveAsNewAPIHadoopFile(
-        hFilePath.toString(),
-        ImmutableBytesWritable.class, KeyValue.class,
-        HFileOutputFormat2.class, conf);
+  private void writeOutput(Path hFilePath, List<KeyValue[]> processed) throws IOException {
+    Writer writer = createWriter(hFilePath.toString());
+    for (KeyValue[] donorKeyValues : processed) {
+      for (KeyValue kv : donorKeyValues) {
+        writer.append(kv);
+      }
+    }
+    writer.close();
   }
 
   private static Path getHFilesPath(FileSystem fileSystem, HTable hTable) {
@@ -144,6 +142,20 @@ public class HFileManager {
     val factory = new HFileLoadJobFactory(conf);
 
     return factory.createJob(table);
+  }
+
+  private Writer createWriter(String donorId) throws IOException {
+
+    Path destPath = new Path(HFILE_DIR_PATH, Bytes.toString(DATA_CONTENT_FAMILY));
+    val writer = HFile
+        .getWriterFactory(conf, new CacheConfig(conf))
+        .withPath(fileSystem, new Path(destPath, donorId))
+        .withComparator(KeyValue.COMPARATOR)
+        .withFileContext(
+            new HFileContextBuilder().withBlockSize(BLOCKSIZE)
+                .withCompression(COMPRESSION).build()).create();
+
+    return writer;
   }
 
 }

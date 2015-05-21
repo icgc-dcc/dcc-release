@@ -24,6 +24,7 @@ import static org.icgc.dcc.etl2.job.export.model.ExportTables.NUM_REGIONS;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -41,6 +42,8 @@ import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.icgc.dcc.etl2.job.export.model.CompositeRowKey;
+
+import scala.Tuple3;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
@@ -70,8 +73,10 @@ public class HTableManager {
   }
 
   @SneakyThrows
-  public HTable ensureTable(@NonNull String tableName, @NonNull List<byte[]> splitKeys) {
+  public HTable ensureTable(@NonNull String tableName, @NonNull List<Tuple3<String, Long, Integer>> stats) {
     if (!admin.tableExists(tableName)) {
+      val splitKeys =
+          stats.stream().map(stat -> encodedRowKey(Integer.valueOf(stat._1()), stat._3())).collect(Collectors.toList());
       createDataTable(tableName, calculateBoundaries(splitKeys), conf, true);
     }
 
@@ -100,16 +105,16 @@ public class HTableManager {
     }
   }
 
-  public static byte[] encodedRowKey(int donorId, long index) {
+  public static byte[] encodedRowKey(int donorId, long sum) {
 
-    return Bytes.add(Bytes.toBytes(donorId), Bytes.toBytes(index));
+    return Bytes.add(Bytes.toBytes(donorId), Bytes.toBytes(sum));
   }
 
   public static CompositeRowKey decodeRowKey(byte[] encodedRowKey) {
     int donorId = Bytes.toInt(encodedRowKey, 0);
-    long index = Bytes.toLong(encodedRowKey, 4);
+    long sum = Bytes.toLong(encodedRowKey, 4);
 
-    return new CompositeRowKey(donorId, index);
+    return new CompositeRowKey(donorId, sum);
   }
 
   public static List<byte[]> calculateBoundaries(List<byte[]> keys) {
@@ -120,7 +125,7 @@ public class HTableManager {
     keys.sort(UnsignedBytes.lexicographicalComparator());
 
     for (val rowKey : keys) {
-      val key = HTableManager.decodeRowKey(rowKey);
+      val key = decodeRowKey(rowKey);
       val splitStart = current;
       current = current + key.getIndex();
       rangeMap.put(Range.openClosed(splitStart, current), key);
@@ -133,8 +138,8 @@ public class HTableManager {
       if (rangeEntry == null) break;
       val range = rangeEntry.getKey();
       val donorId = rangeEntry.getValue().getDonorId();
-      val index = splitPoint - range.lowerEndpoint();
-      val split = HTableManager.encodedRowKey(donorId, index);
+      val sum = splitPoint - range.lowerEndpoint();
+      val split = HTableManager.encodedRowKey(donorId, sum);
       builder.add(split);
     }
 

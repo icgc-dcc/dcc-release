@@ -17,8 +17,10 @@
  */
 package org.icgc.dcc.etl2.job.export.task;
 
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
+
+import java.util.List;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -28,23 +30,24 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.mapreduce.Job;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.task.TaskType;
-import org.icgc.dcc.etl2.job.export.function.Count;
-import org.icgc.dcc.etl2.job.export.function.EncodeRowKey;
-import org.icgc.dcc.etl2.job.export.function.ExtractDonorId;
-import org.icgc.dcc.etl2.job.export.function.PairWithOne;
+import org.icgc.dcc.etl2.job.export.function.ExtractStats;
+import org.icgc.dcc.etl2.job.export.function.ProcessDataType;
+import org.icgc.dcc.etl2.job.export.function.SumDataType;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.model.type.ClinicalDataType;
-import org.icgc.dcc.etl2.job.export.util.HFileLoadJobFactory;
 import org.icgc.dcc.etl2.job.export.util.HFileManager;
 import org.icgc.dcc.etl2.job.export.util.HTableManager;
+
+import scala.Tuple3;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -102,13 +105,25 @@ public class ExportTableTask implements Task {
   }
 
   private void exportDynamic(FileSystem fileSystem, JavaRDD<ObjectNode> input) {
+
     log.info("Preparing export table '{}'...", table);
-    val hTable = prepareHTable(conf, input, table.name());
+    val processedInput = prepareData(input);
+    log.info("Prepared export table: {}", table);
+
+    log.info("Preparing export table '{}'...", table);
+    val hTable = prepareHTable(conf, processedInput, table.name());
     log.info("Prepared export table: {}", table);
 
     log.info("Processing HFiles...");
-    processHFiles(conf, fileSystem, input, hTable);
+    processHFiles(conf, fileSystem, processedInput, hTable);
     log.info("Finished processing HFiles...");
+  }
+
+  private JavaPairRDD<String, Tuple3<KeyValue[], Long, Integer>> prepareData(JavaRDD<ObjectNode> input) {
+    return input
+        .zipWithIndex()
+        .mapToPair(new ProcessDataType())
+        .reduceByKey(new SumDataType());
   }
 
   private void exportStatic(FileSystem fileSystem, JavaSparkContext sparkContext, Path inputPath,
@@ -124,24 +139,24 @@ public class ExportTableTask implements Task {
   }
 
   @SneakyThrows
-  private static HTable prepareHTable(Configuration conf, JavaRDD<ObjectNode> keys, String tableName) {
+  private static HTable prepareHTable(Configuration conf, JavaPairRDD<String, Tuple3<KeyValue[], Long, Integer>> input,
+      String tableName) {
     log.info("Ensuring table...");
     val manager = new HTableManager(conf);
-    
+
     if (manager.existsTable(tableName)) {
       log.info("Table exists...");
       return manager.getTable(tableName);
     }
 
-    log.info("Calculating split keys...");
-    val splitKeys = keys
-        .map(new ExtractDonorId())
-        .mapToPair(new PairWithOne())
-        .reduceByKey(new Count())
-        .map(new EncodeRowKey()).collect();
-    log.info("Calculated {} input path split keys: {}", formatCount(splitKeys), splitKeys);
-    val htable = manager.ensureTable(tableName, splitKeys);
-    
+    log.info("Calculating statistics about data...");
+    List<Tuple3<String, Long, Integer>> stats = input.map(new ExtractStats()).collect();
+    log.info("Calculated statistics");
+    stats.stream().forEach(
+        stat -> log.info("Donor {} has size {} and {} observation.", stat._1(), stat._2(), stat._3()));
+    log.info("preparing table...");
+    val htable = manager.ensureTable(tableName, stats);
+
     log.info("Listing tables...");
     manager.listTables();
 
@@ -149,7 +164,8 @@ public class ExportTableTask implements Task {
   }
 
   @SneakyThrows
-  private static void processHFiles(Configuration conf, FileSystem fileSystem, JavaRDD<ObjectNode> input, HTable hTable) {
+  private static void processHFiles(Configuration conf, FileSystem fileSystem,
+      JavaPairRDD<String, Tuple3<KeyValue[], Long, Integer>> input, HTable hTable) {
     val hFileManager = new HFileManager(conf, fileSystem);
 
     log.info("Writing HFiles...");

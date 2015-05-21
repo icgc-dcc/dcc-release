@@ -17,15 +17,55 @@
  */
 package org.icgc.dcc.etl2.job.export.function;
 
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.DATA_CONTENT_FAMILY;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.DONOR_ID;
+import lombok.val;
+
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.spark.api.java.function.PairFunction;
+import org.icgc.dcc.etl2.job.export.util.HTableManager;
 
 import scala.Tuple2;
+import scala.Tuple3;
 
-public class PairWithOne implements PairFunction<String, String, Integer> {
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
+
+public class ProcessDataType implements
+    PairFunction<Tuple2<ObjectNode, Long>, String, Tuple3<KeyValue[], Long, Integer>> {
 
   @Override
-  public Tuple2<String, Integer> call(String s) {
-    return new Tuple2<String, Integer>(s, 1);
+  public Tuple2<String, Tuple3<KeyValue[], Long, Integer>> call(Tuple2<ObjectNode, Long> tuple) throws Exception {
+    long index = tuple._2();
+    ObjectNode row = tuple._1();
+    String donorId = getKey(row);
+    byte[] rowKey = HTableManager.encodedRowKey(Integer.valueOf(donorId), index);
+
+    byte i = 0;
+    long totalBytes = 0;
+    val kvs = Lists.<KeyValue> newArrayList();
+    long now = System.currentTimeMillis();
+    val fields = row.fieldNames();
+    while (fields.hasNext()) {
+      Object cellValue = fields.next();
+      if (cellValue == null) continue;
+      String value = (String) cellValue;
+      if (value.trim().isEmpty()) continue;
+      byte[] bytes = Bytes.toBytes(value);
+      KeyValue kv = new KeyValue(rowKey, DATA_CONTENT_FAMILY, new byte[] { i }, now, bytes);
+      totalBytes = totalBytes + bytes.length;
+      kvs.add(kv);
+      i++;
+    }
+
+    KeyValue[] kv = kvs.toArray(new KeyValue[kvs.size()]);
+    val data = new Tuple3<KeyValue[], Long, Integer>(kv, totalBytes, 1);
+    return new Tuple2<String, Tuple3<KeyValue[], Long, Integer>>(donorId, data);
   }
 
+  private String getKey(ObjectNode row) {
+    return textValue(row, DONOR_ID);
+  }
 }
