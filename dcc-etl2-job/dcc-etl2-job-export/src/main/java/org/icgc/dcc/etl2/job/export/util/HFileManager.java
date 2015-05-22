@@ -17,11 +17,10 @@
  */
 package org.icgc.dcc.etl2.job.export.util;
 
-import static org.icgc.dcc.etl2.job.export.model.ExportTables.DATA_CONTENT_FAMILY;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Map;
 
 import lombok.NonNull;
@@ -34,12 +33,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.io.compress.Compression;
-import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.io.hfile.HFile.Writer;
@@ -53,18 +49,10 @@ import org.apache.spark.api.java.function.VoidFunction;
 import scala.Tuple2;
 import scala.Tuple3;
 
-@Slf4j 
+@Slf4j
 @RequiredArgsConstructor
 public class HFileManager {
 
-  /**
-   * Constants. 
-   */
-  private static final Path HFILE_DIR_PATH = new Path("/tmp/exporter/tmp/hfile");
-  private static final FsPermission rwx = new FsPermission("777");
-  private static int BLOCKSIZE = 5 * 1048576;
-  public static Algorithm COMPRESSION = Compression.Algorithm.SNAPPY;
- 
   /**
    * Configuration
    */
@@ -81,22 +69,22 @@ public class HFileManager {
   }
 
   private static Path getHFilesPath(FileSystem fileSystem, HTable hTable) {
-    val htableName = new String(hTable.getTableName());
-    val hFilePath = new Path(HFILE_DIR_PATH, htableName);
+    val htableName = Bytes.toString(hTable.getTableName());
+    val hFilePath = new Path(TMP_HFILE_ROOT, htableName);
 
     return fileSystem.makeQualified(hFilePath);
   }
 
   @SneakyThrows
   public void loadHFiles(@NonNull HTable htable) {
-    val hFilesPath = getHFilesPath(fileSystem, htable);
-    prepare(hFilesPath);
+    val hFilesDirPath = getHFilesPath(fileSystem, htable);
+    prepare(hFilesDirPath);
 
     log.info("Creating load job...");
     val hFileLoadJob = createHFileLoadJob(conf, htable);
     log.info("Created load job: {}", hFileLoadJob);
 
-    load(htable, hFilesPath);
+    load(htable, hFilesDirPath);
   }
 
   private void prepare(Path hFilePath) throws FileNotFoundException, IOException {
@@ -115,9 +103,9 @@ public class HFileManager {
     }
   }
 
-  private void load(HTable table, Path hFilePath) throws Exception, TableNotFoundException, IOException {
+  private void load(HTable table, Path hFilesDirPath) throws Exception, TableNotFoundException, IOException {
     val loader = new LoadIncrementalHFiles(conf);
-    loader.doBulkLoad(hFilePath, table);
+    loader.doBulkLoad(hFilesDirPath, table);
   }
 
   private static Path getHFileSplitDir(Path hFile) {
@@ -145,12 +133,12 @@ public class HFileManager {
     @Override
     public void call(Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> tuple) throws Exception {
       val donorId = tuple._1();
-      val data = tuple._2()._1().values();
-      writeOutput(donorId, data);
+      val data = tuple._2()._1();
+      writeOutput(donorId, data); 
     }
 
     private Writer createWriter(String donorId) throws IOException {
-      Path destPath = new Path(HFILE_DIR_PATH, Bytes.toString(DATA_CONTENT_FAMILY));
+      Path destPath = new Path(TMP_HFILE_ROOT, Bytes.toString(DATA_CONTENT_FAMILY));
       val writer = HFile
               .getWriterFactory(conf, new CacheConfig(conf))
               .withPath(fileSystem, new Path(destPath, donorId))
@@ -159,7 +147,7 @@ public class HFileManager {
                       new HFileContextBuilder().withBlockSize(BLOCKSIZE)
                               .withCompression(COMPRESSION).build()).create();
 
-      return writer; 
+      return writer;
     }
 
     private void closeWriter(Writer writer) {
@@ -172,11 +160,12 @@ public class HFileManager {
       }
     }
 
-    private void writeOutput(String donorId, Collection<KeyValue[]> processed) throws IOException {
+    private void writeOutput(String donorId, Map<byte[], KeyValue[]> processed) throws IOException {
       Writer writer = createWriter(donorId);
-      for (val collection : processed) {
-        for (val kv : collection) {
-          writer.append(kv);
+      for (val row : processed.keySet()) {
+        val cells = processed.get(row);
+        for (val cell : cells) {
+          writer.append(cell);
         }
       }
       closeWriter(writer);

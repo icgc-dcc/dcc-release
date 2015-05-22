@@ -95,7 +95,7 @@ public class ExportJobTest extends BaseExportJobTest {
     job.execute(jobContext);
 
     // Verify
-    val tableName = ExportTable.export_output.name();
+    val tableName = ExportTable.Clinical.name();
     val table = hbase.getTable(tableName);
     val rowCount = hbase.getRowCount(tableName);
     assertThat(rowCount).isEqualTo(1);

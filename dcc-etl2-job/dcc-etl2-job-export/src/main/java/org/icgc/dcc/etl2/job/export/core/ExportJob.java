@@ -60,7 +60,6 @@ public class ExportJob implements Job {
   @Override
   public void execute(@NonNull JobContext jobContext) {
     val exportTasks = createExportTasks();
-
     jobContext.execute(exportTasks);
   }
 

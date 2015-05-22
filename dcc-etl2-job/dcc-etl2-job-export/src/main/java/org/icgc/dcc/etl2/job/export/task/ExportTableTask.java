@@ -18,8 +18,8 @@
 package org.icgc.dcc.etl2.job.export.task;
 
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.TMP_STATIC_ROOT;
 
-import java.util.List;
 import java.util.Map;
 
 import lombok.NonNull;
@@ -44,7 +44,7 @@ import org.icgc.dcc.etl2.job.export.function.ExtractStats;
 import org.icgc.dcc.etl2.job.export.function.ProcessDataType;
 import org.icgc.dcc.etl2.job.export.function.SumDataType;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
-import org.icgc.dcc.etl2.job.export.model.type.ClinicalDataType;
+import org.icgc.dcc.etl2.job.export.model.type.DataType;
 import org.icgc.dcc.etl2.job.export.util.HFileManager;
 import org.icgc.dcc.etl2.job.export.util.HTableManager;
 
@@ -55,11 +55,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @Slf4j
 @RequiredArgsConstructor
 public class ExportTableTask implements Task {
-
-  /**
-   * Constants.
-   */
-  private static final Path STATIC_OUTPUT_DIR = new Path("/tmp/exporter/tmp/static");
 
   /**
    * Configuration.
@@ -84,22 +79,23 @@ public class ExportTableTask implements Task {
     val watch = createStarted();
     val fileSystem = taskContext.getFileSystem();
     val sparkContext = taskContext.getSparkContext();
+    val dataType = createDataTypeInstance(table.name(), sparkContext);
+    log.info("Processing data type {} ...", dataType.getClass().getName());
 
     log.info("Getting input path...");
     val inputPath = getInputPath(taskContext);
     log.info("Got input path '{}'", inputPath);
 
-    log.info("Running the base export process...");
-    val baseExportProcessResult =
-        new ExportTask(sparkContext, table).process(inputPath, new ClinicalDataType(taskContext.getSparkContext()));
+    log.info("Running the base export process for data type...");
+    val dataTypeProcessResult = new ExportTask(sparkContext, table).process(inputPath, dataType);
     log.info("Finished running the base export process.");
 
     log.info("Writing static export output files...");
-    exportStatic(fileSystem, sparkContext, inputPath, baseExportProcessResult);
+    exportStatic(fileSystem, sparkContext, table.name(), dataTypeProcessResult);
     log.info("Done writing static export output files...");
 
     log.info("Writing dynamic export output files...");
-    exportDynamic(fileSystem, baseExportProcessResult);
+    exportDynamic(fileSystem, dataTypeProcessResult);
     log.info("Done writing dynamic export output files...");
 
     log.info("Finished exporting table '{}' in {}", table, watch);
@@ -107,9 +103,9 @@ public class ExportTableTask implements Task {
 
   private void exportDynamic(FileSystem fileSystem, JavaRDD<ObjectNode> input) {
 
-    log.info("Preparing export table '{}'...", table);
+    log.info("Preparing data for '{}'...", table);
     val processedInput = prepareData(input);
-    log.info("Prepared export table: {}", table);
+    log.info("Finished preparing data for '{}'", table);
 
     log.info("Preparing export table '{}'...", table);
     val hTable = prepareHTable(conf, processedInput, table.name());
@@ -127,10 +123,10 @@ public class ExportTableTask implements Task {
         .reduceByKey(new SumDataType());
   }
 
-  private void exportStatic(FileSystem fileSystem, JavaSparkContext sparkContext, Path inputPath,
+  private void exportStatic(FileSystem fileSystem, JavaSparkContext sparkContext, String tableName,
       JavaRDD<ObjectNode> input) {
     // TODO write static files.
-    val staticOutputFile = STATIC_OUTPUT_DIR.toString() + "/clinical";
+    val staticOutputFile = TMP_STATIC_ROOT + tableName;
     input.coalesce(1, true).saveAsTextFile(staticOutputFile);
   }
 
@@ -152,11 +148,11 @@ public class ExportTableTask implements Task {
     }
 
     log.info("Calculating statistics about data...");
-    List<Tuple3<String, Long, Integer>> stats = input.map(new ExtractStats()).collect();
-    log.info("Calculated statistics");
+    val stats = input.map(new ExtractStats()).collect();
+    log.info("Finished calculating statistics...");
     stats.stream().forEach(
         stat -> log.info("Donor {} has size {} and {} observation.", stat._1(), stat._2(), stat._3()));
-    log.info("preparing table...");
+    log.info("Preparing table...");
     val htable = manager.ensureTable(tableName, stats);
 
     log.info("Listing tables...");
@@ -177,6 +173,16 @@ public class ExportTableTask implements Task {
     log.info("Loading HFiles...");
     hFileManager.loadHFiles(hTable);
     log.info("Loaded HFiles");
+  }
+
+  @SneakyThrows
+  private DataType createDataTypeInstance(String tableName, JavaSparkContext sparkContext) {
+    val packageName = "org.icgc.dcc.etl2.job.export.model.type";
+    val className = packageName + "." + tableName + "DataType";
+    val clazz = Class.forName(className);
+    val constructor = clazz.getConstructor(JavaSparkContext.class);
+    val instance = constructor.newInstance(sparkContext);
+    return (DataType) instance;
   }
 
 }

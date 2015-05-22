@@ -75,9 +75,14 @@ public class HTableManager {
   @SneakyThrows
   public HTable ensureTable(@NonNull String tableName, @NonNull List<Tuple3<String, Long, Integer>> stats) {
     if (!admin.tableExists(tableName)) {
+      log.info("Calculating split keys...");
       val splitKeys =
           stats.stream().map(stat -> encodedRowKey(Integer.valueOf(stat._1()), stat._3())).collect(Collectors.toList());
+      log.info("Finished calculating split keys...");
+
+      log.info("Creating table...");
       createDataTable(tableName, calculateBoundaries(splitKeys), conf, true);
+      log.info("Finished creating table...");
     }
 
     return new HTable(conf, tableName);

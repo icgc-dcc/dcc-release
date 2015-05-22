@@ -18,27 +18,38 @@
 package org.icgc.dcc.etl2.job.export.model;
 
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.etl2.job.export.model.ExportTableType.DATA;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
 
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor(access = PRIVATE)
 public enum ExportTable {
 
-  // TODO: Add all the tables that currently get exported
-  export_output(DATA);
-
-  @NonNull
-  private final ExportTableType type;
+  Clinical,
+  CNSM,
+  Donor,
+  DonorExposure,
+  DonorFamily,
+  DonorTherapy,
+  ExpArray,
+  ExpSeq,
+  JCN,
+  MethArray,
+  MethSeq,
+  MirnaSeq,
+  PExp,
+  Sample,
+  SGVControlled,
+  Specimen,
+  SSMControlled,
+  SSMOpen,
+  STSM;
 
   public static Stream<ExportTable> stream() {
     return Arrays.stream(values());
   }
-
 }
