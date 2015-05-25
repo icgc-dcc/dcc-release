@@ -18,12 +18,16 @@
 package org.icgc.dcc.etl2.job.export.model.type;
 
 import static org.icgc.dcc.etl2.job.export.model.type.Constants.PEXP_TYPE_FIELD_VALUE;
+
+import java.util.Set;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.assertj.core.util.Sets;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
 import org.icgc.dcc.etl2.core.function.RetainFields;
@@ -33,7 +37,6 @@ import org.icgc.dcc.etl2.job.export.function.IsType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 @RequiredArgsConstructor
 public class PExpDataType implements DataType {
@@ -77,9 +80,12 @@ public class PExpDataType implements DataType {
         .filter(new IsType(PEXP_TYPE_FIELD_VALUE))
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())
-        .map(
-            new RetainFields(Lists.newArrayList((Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
-                SECOND_LEVEL_PROJECTION.keySet())))));
+        .map(new RetainFields(getFields()));
+  }
+
+  @Override
+  public Set<String> getFields() {
+    return Sets.newHashSet(Iterables.concat(FIRST_LEVEL_PROJECTION.values(), SECOND_LEVEL_PROJECTION.keySet()));
   }
 
 }

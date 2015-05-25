@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.etl2.core.function;
 
-import java.util.List;
+import java.util.Set;
 
 import org.apache.spark.api.java.function.Function;
 
@@ -31,7 +31,7 @@ public class RetainFields implements Function<ObjectNode, ObjectNode> {
     this.fieldNames = fieldNames;
   }
 
-  public RetainFields(List<String> fieldNames) {
+  public RetainFields(Set<String> fieldNames) {
     this.fieldNames = fieldNames.toArray(new String[fieldNames.size()]);
   }
 

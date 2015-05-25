@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
+import java.util.Set;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 
@@ -27,5 +29,7 @@ public interface DataType {
   JavaRDD<ObjectNode> process(Path inputPath);
 
   JavaRDD<ObjectNode> process(JavaRDD<String> input);
+
+  Set<String> getFields();
 
 }

@@ -19,12 +19,16 @@ package org.icgc.dcc.etl2.job.export.model.type;
 
 import static org.icgc.dcc.etl2.job.export.model.type.Constants.SAMPLE_FIELD_NAME;
 import static org.icgc.dcc.etl2.job.export.model.type.Constants.SPECIMEN_FIELD_NAME;
+
+import java.util.Set;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.assertj.core.util.Sets;
 import org.icgc.dcc.etl2.core.function.AddMissingField;
 import org.icgc.dcc.etl2.core.function.FlattenField;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
@@ -37,7 +41,6 @@ import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 @RequiredArgsConstructor
 public class SampleDataType implements DataType {
@@ -82,17 +85,22 @@ public class SampleDataType implements DataType {
         .map(new AddMissingField(SPECIMEN_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet()))
         .flatMap(new FlattenField(SPECIMEN_FIELD_NAME))
         .map(new PullUpField(SPECIMEN_FIELD_NAME))
-        .map(
-            new RetainFields(Lists.newArrayList((Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
-                SECOND_LEVEL_PROJECTION.keySet())))))
+        .map(new RetainFields(getFirstLevelFields()))
         .map(new RenameFields(SECOND_LEVEL_PROJECTION))
         .map(new AddMissingField(SAMPLE_FIELD_NAME, THIRD_LEVEL_PROJECTION.keySet()))
         .flatMap(new FlattenField(SAMPLE_FIELD_NAME))
         .map(new PullUpField(SAMPLE_FIELD_NAME))
-        .map(
-            new RetainFields(Lists.newArrayList((Iterables.concat(FIRST_LEVEL_PROJECTION.values(),
-                SECOND_LEVEL_PROJECTION.values(),
-                THIRD_LEVEL_PROJECTION.keySet())))))
+        .map(new RetainFields(getFields()))
         .map(new RenameFields(THIRD_LEVEL_PROJECTION));
   }
+
+  private Set<String> getFirstLevelFields() {
+    return Sets.newHashSet(Iterables.concat(FIRST_LEVEL_PROJECTION.values(), SECOND_LEVEL_PROJECTION.keySet()));
+  }
+
+  @Override
+  public Set<String> getFields() {
+    return Sets.newHashSet(Iterables.concat(getFirstLevelFields(), THIRD_LEVEL_PROJECTION.keySet()));
+  }
+
 }
