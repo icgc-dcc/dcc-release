@@ -17,57 +17,80 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Set;
+
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
-@Slf4j
 public class DataTypesTest {
 
-  public static final String INPUT_PATH = "src/test/resources/fixtures/loader";
-  SparkConf sparkConf;
+  public static final String INPUT_PATH = "src/test/resources/fixtures/loader/";
+
+  private SparkConf sparkConf;
 
   @Before
   public void setUp() {
-    val sparkConf = new SparkConf().setAppName("test").setMaster("local");
+    this.sparkConf = new SparkConf().setAppName("test").setMaster("local");
     sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
     sparkConf.set("spark.kryo.registrator", "org.icgc.dcc.etl2.core.util.CustomKryoRegistrator");
     sparkConf.set("spark.task.maxFailures", "0");
-
+    // to be able to run tests sequentially.
+    sparkConf.set("spark.driver.allowMultipleContexts", "true");
   }
 
   @Test
-  public void testSSMControlledDataType() {
+  public void testNoConsequenceClinicalDataType() {
     JavaSparkContext jsc = new JavaSparkContext(sparkConf);
-    val dataType = new SSMControlledDataType(jsc);
-    val input = readFile(jsc, INPUT_PATH + "/ssm/ALL-US/part-000000.json");
+    val dataType = new ClinicalDataType(jsc);
+    val input = jsc.textFile(INPUT_PATH + "clinical_nc.json");
     val output = dataType.process(input);
-    output(output);
+    val result = output.collect();
+
+    assertThat(result.size()).isEqualTo(1);
+    val json = result.get(0);
+
+    assert (areEqual(getFieldNames(json), dataType.getFields()));
+
+    output.foreach(line -> System.out.println(line.toString()));
   }
 
   @Test
-  public void testSSMOpenDataType() {
+  public void testMultiConsequenceClinicalDataType() {
     JavaSparkContext jsc = new JavaSparkContext(sparkConf);
-    val dataType = new SSMOpenDataType(jsc);
-    val input = readFile(jsc, INPUT_PATH + "/ssm/ALL-US/part-000000.json");
+    val dataType = new ClinicalDataType(jsc);
+    val input = jsc.textFile(INPUT_PATH + "clinical_mc.json");
     val output = dataType.process(input);
-    output(output);
+    val result = output.collect();
+
+    assertThat(result.size()).isEqualTo(2);
+    val json = result.get(0);
+
+    assert (areEqual(getFieldNames(json), dataType.getFields()));
+
+    output.foreach(line -> System.out.println(line.toString()));
   }
 
-  private void output(JavaRDD<ObjectNode> results) {
-    log.info("{}", results.count());
-    results.foreach(result -> log.info("{}", result.toString()));
+  private Set<String> getFieldNames(ObjectNode json) {
+    val result = ImmutableSet.<String> builder();
+    val itr = json.fieldNames();
+    while (itr.hasNext()) {
+      result.add(itr.next());
+    }
+    return result.build();
   }
 
-  private JavaRDD<String> readFile(JavaSparkContext jsc, String path) {
-    return jsc.textFile(path);
+  private boolean areEqual(Set<String> a, Set<String> b) {
+    return Sets.difference(a, b).isEmpty();
   }
 
 }
