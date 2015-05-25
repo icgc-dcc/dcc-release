@@ -51,7 +51,7 @@ public class AddMissingField implements Function<ObjectNode, ObjectNode> {
   @Override
   public ObjectNode call(ObjectNode row) {
     val field = row.get(fieldName);
-    if (field == null || field.equals("")) {
+    if (field == null || field.size() == 0) {
       row.put(fieldName, value);
     }
 
