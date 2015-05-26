@@ -24,7 +24,9 @@ import java.util.Set;
 import lombok.val;
 
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,6 +39,7 @@ public class DataTypesTest {
   public static final String INPUT_PATH = "src/test/resources/fixtures/loader/";
 
   private SparkConf sparkConf;
+  private JavaSparkContext jsc;
 
   @Before
   public void setUp() {
@@ -46,38 +49,109 @@ public class DataTypesTest {
     sparkConf.set("spark.task.maxFailures", "0");
     // to be able to run tests sequentially.
     sparkConf.set("spark.driver.allowMultipleContexts", "true");
+    this.jsc = new JavaSparkContext(sparkConf);
+  }
+
+  @After
+  public void tearDown() {
+    if (jsc != null) {
+      jsc.sc().stop();
+    }
   }
 
   @Test
   public void testNoConsequenceClinicalDataType() {
-    JavaSparkContext jsc = new JavaSparkContext(sparkConf);
     val dataType = new ClinicalDataType(jsc);
     val input = jsc.textFile(INPUT_PATH + "clinical_nc.json");
     val output = dataType.process(input);
-    val result = output.collect();
-
-    assertThat(result.size()).isEqualTo(1);
-    val json = result.get(0);
-
-    assert (areEqual(getFieldNames(json), dataType.getFields()));
-
     output.foreach(line -> System.out.println(line.toString()));
+
+    val result = output.collect();
+    val json = result.get(0);
+    assertThat(result.size()).isEqualTo(1);
+    assert (areEqual(getFieldNames(json), dataType.getFields()));
   }
 
   @Test
   public void testMultiConsequenceClinicalDataType() {
-    JavaSparkContext jsc = new JavaSparkContext(sparkConf);
     val dataType = new ClinicalDataType(jsc);
     val input = jsc.textFile(INPUT_PATH + "clinical_mc.json");
     val output = dataType.process(input);
-    val result = output.collect();
-
-    assertThat(result.size()).isEqualTo(2);
-    val json = result.get(0);
-
-    assert (areEqual(getFieldNames(json), dataType.getFields()));
-
     output.foreach(line -> System.out.println(line.toString()));
+
+    val result = output.collect();
+    val json = result.get(0);
+    assertThat(result.size()).isEqualTo(2);
+    assert (areEqual(getFieldNames(json), dataType.getFields()));
+  }
+
+  @Test
+  public void testMultiConsequenceSSMControlledDataType() {
+    val dataType = new SSMControlledDataType(jsc);
+    val input = readFile(jsc, INPUT_PATH + "ssm_controlled_mc.json");
+    val output = dataType.process(input);
+    output.foreach(line -> System.out.println(line.toString()));
+
+    val result = output.collect();
+    val json = result.get(0);
+    assertThat(result.size()).isEqualTo(2);
+    assert (areEqual(getFieldNames(json), dataType.getFields()));
+  }
+
+  @Test
+  public void testNoConsequenceSSMControlledDataType() {
+    val dataType = new SSMControlledDataType(jsc);
+    val input = readFile(jsc, INPUT_PATH + "ssm_controlled_nc.json");
+    val output = dataType.process(input);
+    output.foreach(line -> System.out.println(line.toString()));
+
+    val result = output.collect();
+    val json = result.get(0);
+    assertThat(result.size()).isEqualTo(1);
+    assert (areEqual(getFieldNames(json), dataType.getFields()));
+  }
+
+  @Test
+  public void testNoConsequenceSSMOpenDataType() {
+    val dataType = new SSMOpenDataType(jsc);
+    val input = readFile(jsc, INPUT_PATH + "ssm_open_nc.json");
+    val output = dataType.process(input);
+    output.foreach(line -> System.out.println(line.toString()));
+
+    val result = output.collect();
+    val json = result.get(0);
+    assertThat(result.size()).isEqualTo(1);
+    assert (areEqual(getFieldNames(json), dataType.getFields()));
+  }
+
+  @Test
+  public void testMultiConsequenceSSMOpenDataType() {
+    val dataType = new SSMOpenDataType(jsc);
+    val input = readFile(jsc, INPUT_PATH + "ssm_open_mc.json");
+    val output = dataType.process(input);
+    output.foreach(line -> System.out.println(line.toString()));
+
+    val result = output.collect();
+    val json = result.get(0);
+    assertThat(result.size()).isEqualTo(2);
+    assert (areEqual(getFieldNames(json), dataType.getFields()));
+  }
+
+  @Test
+  public void testNoConsequenceSGVControlledDataType() {
+    val dataType = new SGVControlledDataType(jsc);
+    val input = readFile(jsc, INPUT_PATH + "sgv_nc.json");
+    val output = dataType.process(input);
+    output.foreach(line -> System.out.println(line.toString()));
+
+    val result = output.collect();
+    val json = result.get(0);
+    assertThat(result.size()).isEqualTo(1);
+    assert (areEqual(getFieldNames(json), dataType.getFields()));
+  }
+
+  private JavaRDD<String> readFile(JavaSparkContext jsc, String path) {
+    return jsc.textFile(path);
   }
 
   private Set<String> getFieldNames(ObjectNode json) {
