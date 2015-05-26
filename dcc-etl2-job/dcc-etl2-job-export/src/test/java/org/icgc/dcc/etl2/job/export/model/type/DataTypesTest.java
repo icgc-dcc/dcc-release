@@ -23,9 +23,9 @@ import java.util.Set;
 
 import lombok.val;
 
-import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.etl2.test.job.AbstractJobTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,35 +34,26 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-public class DataTypesTest {
+public class DataTypesTest extends AbstractJobTest {
 
-  public static final String INPUT_PATH = "src/test/resources/fixtures/loader/";
+  public static final String INPUT_PATH = "src/test/resources/fixtures/data/";
 
-  private SparkConf sparkConf;
-  private JavaSparkContext jsc;
-
+  @Override
   @Before
   public void setUp() {
-    this.sparkConf = new SparkConf().setAppName("test").setMaster("local");
-    sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
-    sparkConf.set("spark.kryo.registrator", "org.icgc.dcc.etl2.core.util.CustomKryoRegistrator");
-    sparkConf.set("spark.task.maxFailures", "0");
-    // to be able to run tests sequentially.
-    sparkConf.set("spark.driver.allowMultipleContexts", "true");
-    this.jsc = new JavaSparkContext(sparkConf);
+    super.setUp();
   }
 
+  @Override
   @After
-  public void tearDown() {
-    if (jsc != null) {
-      jsc.sc().stop();
-    }
+  public void shutDown() {
+    super.shutDown();
   }
 
   @Test
   public void testNoConsequenceClinicalDataType() {
-    val dataType = new ClinicalDataType(jsc);
-    val input = jsc.textFile(INPUT_PATH + "clinical_nc.json");
+    val dataType = new ClinicalDataType(sparkContext);
+    val input = sparkContext.textFile(INPUT_PATH + "clinical_nc.json");
     val output = dataType.process(input);
     output.foreach(line -> System.out.println(line.toString()));
 
@@ -74,8 +65,8 @@ public class DataTypesTest {
 
   @Test
   public void testMultiConsequenceClinicalDataType() {
-    val dataType = new ClinicalDataType(jsc);
-    val input = jsc.textFile(INPUT_PATH + "clinical_mc.json");
+    val dataType = new ClinicalDataType(sparkContext);
+    val input = sparkContext.textFile(INPUT_PATH + "clinical_mc.json");
     val output = dataType.process(input);
     output.foreach(line -> System.out.println(line.toString()));
 
@@ -87,8 +78,8 @@ public class DataTypesTest {
 
   @Test
   public void testMultiConsequenceSSMControlledDataType() {
-    val dataType = new SSMControlledDataType(jsc);
-    val input = readFile(jsc, INPUT_PATH + "ssm_controlled_mc.json");
+    val dataType = new SSMControlledDataType(sparkContext);
+    val input = readFile(sparkContext, INPUT_PATH + "ssm_controlled_mc.json");
     val output = dataType.process(input);
     output.foreach(line -> System.out.println(line.toString()));
 
@@ -100,8 +91,8 @@ public class DataTypesTest {
 
   @Test
   public void testNoConsequenceSSMControlledDataType() {
-    val dataType = new SSMControlledDataType(jsc);
-    val input = readFile(jsc, INPUT_PATH + "ssm_controlled_nc.json");
+    val dataType = new SSMControlledDataType(sparkContext);
+    val input = readFile(sparkContext, INPUT_PATH + "ssm_controlled_nc.json");
     val output = dataType.process(input);
     output.foreach(line -> System.out.println(line.toString()));
 
@@ -113,8 +104,8 @@ public class DataTypesTest {
 
   @Test
   public void testNoConsequenceSSMOpenDataType() {
-    val dataType = new SSMOpenDataType(jsc);
-    val input = readFile(jsc, INPUT_PATH + "ssm_open_nc.json");
+    val dataType = new SSMOpenDataType(sparkContext);
+    val input = readFile(sparkContext, INPUT_PATH + "ssm_open_nc.json");
     val output = dataType.process(input);
     output.foreach(line -> System.out.println(line.toString()));
 
@@ -126,8 +117,8 @@ public class DataTypesTest {
 
   @Test
   public void testMultiConsequenceSSMOpenDataType() {
-    val dataType = new SSMOpenDataType(jsc);
-    val input = readFile(jsc, INPUT_PATH + "ssm_open_mc.json");
+    val dataType = new SSMOpenDataType(sparkContext);
+    val input = readFile(sparkContext, INPUT_PATH + "ssm_open_mc.json");
     val output = dataType.process(input);
     output.foreach(line -> System.out.println(line.toString()));
 
@@ -139,8 +130,8 @@ public class DataTypesTest {
 
   @Test
   public void testNoConsequenceSGVControlledDataType() {
-    val dataType = new SGVControlledDataType(jsc);
-    val input = readFile(jsc, INPUT_PATH + "sgv_nc.json");
+    val dataType = new SGVControlledDataType(sparkContext);
+    val input = readFile(sparkContext, INPUT_PATH + "sgv_nc.json");
     val output = dataType.process(input);
     output.foreach(line -> System.out.println(line.toString()));
 
@@ -150,8 +141,8 @@ public class DataTypesTest {
     assert (areEqual(getFieldNames(json), dataType.getFields()));
   }
 
-  private JavaRDD<String> readFile(JavaSparkContext jsc, String path) {
-    return jsc.textFile(path);
+  private JavaRDD<String> readFile(JavaSparkContext sparkContext, String path) {
+    return sparkContext.textFile(path);
   }
 
   private Set<String> getFieldNames(ObjectNode json) {
