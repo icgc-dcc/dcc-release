@@ -21,10 +21,9 @@ import static org.icgc.dcc.etl2.job.export.model.type.Constants.SPECIMEN_FIELD_N
 
 import java.util.Set;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.AddMissingField;
 import org.icgc.dcc.etl2.core.function.FlattenField;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
@@ -40,15 +39,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 @RequiredArgsConstructor
-public class ClinicalDataType extends DataType {
+public class ClinicalDataType implements DataType {
 
   private final String DATA_TYPE_FOLDER = "donor";
-
-  @NonNull
-  JavaSparkContext sparkContext;
-
-  @NonNull
-  String inputPath;
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
@@ -101,7 +94,7 @@ public class ClinicalDataType extends DataType {
       .build();
 
   @Override
-  protected JavaRDD<ObjectNode> processData(JavaRDD<String> input) {
+  public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
@@ -119,7 +112,7 @@ public class ClinicalDataType extends DataType {
   }
 
   @Override
-  protected String getTypeDirectoryName() {
+  public String getTypeDirectoryName() {
     return DATA_TYPE_FOLDER;
   }
 

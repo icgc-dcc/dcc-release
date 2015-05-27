@@ -17,10 +17,12 @@
  */
 package org.icgc.dcc.etl2.job.export.task;
 
+import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.TMP_STATIC_ROOT;
 
 import java.util.Map;
+import java.util.Set;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +32,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.assertj.core.util.Sets;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.core.task.TaskContext;
@@ -79,12 +85,17 @@ public class ExportTableTask implements Task {
     val fileSystem = taskContext.getFileSystem();
     val javaSparkContext = taskContext.getSparkContext();
     val inputPath = taskContext.getPath(FileType.EXPORT_INPUT);
-
-    val dataType = createDataTypeInstance(table.name(), javaSparkContext, inputPath);
+    log.info("Input path {} ...", inputPath);
+    val dataType = createDataTypeInstance(table.name());
     log.info("Processing data type {} ...", dataType.getClass().getName());
 
+    val dataTypeDirectoryName = dataType.getTypeDirectoryName();
+    val files = getInputfiles(fileSystem, inputPath, dataTypeDirectoryName);
+    val inputPaths = COMMA.join(files);
+    val input = javaSparkContext.textFile(inputPaths);
+
     log.info("Running the base export process for data type...");
-    JavaRDD<ObjectNode> dataTypeProcessResult = dataType.process();
+    val dataTypeProcessResult = dataType.process(input);
     log.info("Finished running the base export process.");
 
     log.info("Writing static export output files...");
@@ -168,12 +179,24 @@ public class ExportTableTask implements Task {
   }
 
   @SneakyThrows
-  private DataType createDataTypeInstance(String tableName, JavaSparkContext sparkContext, String inputPath) {
+  private Set<String> getInputfiles(FileSystem fs, String inputPath, String dataTypeDirectoryName) {
+    Set<String> results = Sets.newHashSet();
+    RemoteIterator<LocatedFileStatus> fileStatusListIterator =
+        fs.listFiles(new Path(inputPath, dataTypeDirectoryName), true);
+    while (fileStatusListIterator.hasNext()) {
+      LocatedFileStatus fileStatus = fileStatusListIterator.next();
+      results.add(fileStatus.getPath().toString());
+    }
+    return results;
+  }
+
+  @SneakyThrows
+  private DataType createDataTypeInstance(String tableName) {
     val packageName = "org.icgc.dcc.etl2.job.export.model.type";
     val className = packageName + "." + tableName + "DataType";
     val clazz = Class.forName(className);
-    val constructor = clazz.getConstructor(JavaSparkContext.class, String.class);
-    val instance = constructor.newInstance(sparkContext, inputPath);
+    val constructor = clazz.getConstructor();
+    val instance = constructor.newInstance();
     return (DataType) instance;
   }
 

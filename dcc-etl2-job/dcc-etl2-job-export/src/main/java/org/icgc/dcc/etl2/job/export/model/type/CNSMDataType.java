@@ -22,12 +22,9 @@ import static org.icgc.dcc.etl2.job.export.model.type.Constants.CONSEQUENCE_FIEL
 
 import java.util.Set;
 
-import com.google.common.collect.Sets;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.AddMissingField;
 import org.icgc.dcc.etl2.core.function.FlattenField;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
@@ -40,17 +37,12 @@ import org.icgc.dcc.etl2.job.export.function.IsType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 @RequiredArgsConstructor
-public class CNSMDataType extends DataType {
+public class CNSMDataType implements DataType {
 
   private final String DATA_TYPE_FOLDER = "cnsm";
-
-  @NonNull
-  JavaSparkContext sparkContext;
-
-  @NonNull
-  String inputPath;
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
@@ -98,7 +90,7 @@ public class CNSMDataType extends DataType {
       .build();
 
   @Override
-  protected JavaRDD<ObjectNode> processData(JavaRDD<String> input) {
+  public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
         .filter(new IsType(CNSM_TYPE_FIELD_VALUE))
@@ -116,7 +108,7 @@ public class CNSMDataType extends DataType {
   }
 
   @Override
-  protected String getTypeDirectoryName() {
+  public String getTypeDirectoryName() {
     return DATA_TYPE_FOLDER;
   }
 

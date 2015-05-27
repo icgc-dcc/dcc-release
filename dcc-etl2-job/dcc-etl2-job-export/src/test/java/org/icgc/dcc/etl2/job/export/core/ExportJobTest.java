@@ -32,29 +32,42 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.DefaultJobContext;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
+import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.model.ExportTables;
+import org.icgc.dcc.etl2.job.export.test.hbase.EmbeddedHBase;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
+import com.google.common.util.concurrent.MoreExecutors;
 
 @Slf4j
-public class ExportJobTest extends BaseExportJobTest {
+public class ExportJobTest {
 
   /**
    * Constants.
    */
   private static final String TEST_FIXTURES_DIR = "src/test/resources/fixtures";
   private static final String INPUT_DIR = TEST_FIXTURES_DIR + "/export_input";
+
+  /**
+   * Collaborators.
+   */
+  EmbeddedHBase hbase;
 
   /**
    * Class under test.
@@ -66,39 +79,67 @@ public class ExportJobTest extends BaseExportJobTest {
    */
   Configuration config;
   Path hadoopWorkingDir;
+  JavaSparkContext sparkContext;
+  TaskExecutor taskExecutor;
+  FileSystem fileSystem;
+  File workingDir;
 
-  @Override
+  /**
+   * State.
+   */
+  @Rule
+  public TemporaryFolder tmp = new TemporaryFolder();
+
+  @SneakyThrows
   @Before
   public void setUp() {
-    super.setUp();
+    this.hbase = new EmbeddedHBase();
+    log.info("> Starting embedded HBase...");
+    hbase.startUp();
+    log.info("< Started embedded HBase");
 
     this.config = hbase.getConfig();
-    this.hadoopWorkingDir = new Path("/", super.workingDir.getName());
+
+    this.workingDir = tmp.newFolder("working");
+    this.hadoopWorkingDir = new Path("/", this.workingDir.getName());
 
     // FIXME: Needed since HBase context is configured after the base class's sparkContext and we need HDFS
+    val sparkConf = new SparkConf().setAppName("test").setMaster("local");
+    sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+    sparkConf.set("spark.kryo.registrator", "org.icgc.dcc.etl2.core.util.CustomKryoRegistrator");
+    sparkConf.set("spark.task.maxFailures", "0");
+    this.sparkContext = new JavaSparkContext(sparkConf);
+
     val sparkConfig = sparkContext.hadoopConfiguration();
     setDefaultUri(sparkConfig, getDefaultUri(config));
 
     this.job = new ExportJob(config);
+
+    this.fileSystem = FileSystem.get(this.config);
+    val executor = MoreExecutors.sameThreadExecutor();
+    this.taskExecutor = new TaskExecutor(executor, sparkContext, fileSystem);
   }
 
-  @Override
   @After
   public void shutDown() {
-    super.shutDown();
+    sparkContext.stop();
+    sparkContext = null;
+    System.clearProperty("spark.master.port");
   }
 
   @Test
   @SneakyThrows
   public void testExportHFiles() {
-    val projectNames = ImmutableList.of("All-US", "EOPC-DE", "PRAD-CA");
 
-    log.info("Using input dir {}", INPUT_DIR);
+    val inputDirectory = new File(INPUT_DIR);
 
-    given(new File(INPUT_DIR));
-    copyFiles();
+    log.info("Using data from '{}'", inputDirectory.getAbsolutePath());
 
-    val jobContext = createJobContext(job.getType(), projectNames);
+    // given();
+    // super.workingDir.getAbsolutePath()
+    copyFiles(new Path(inputDirectory.getAbsolutePath()), new Path("/", this.hadoopWorkingDir + "/export_input"));
+
+    val jobContext = createJobContext(job.getType());
     job.execute(jobContext);
 
     val tableName = ExportTable.Clinical.name();
@@ -120,13 +161,17 @@ public class ExportJobTest extends BaseExportJobTest {
     assertThat(actualBytes).isEqualTo(expectedBytes);
   }
 
-  private void copyFiles() throws IOException {
-    // TODO: Generalize
-    val fileSystem = FileSystem.get(config);
-    fileSystem.copyFromLocalFile(new Path(super.workingDir.getAbsolutePath()), hadoopWorkingDir);
+  private void copyFiles(Path source, Path target) throws IOException {
+    fileSystem.copyFromLocalFile(source, target);
+
+    // Verify
+    RemoteIterator<LocatedFileStatus> fileStatusListIterator = fileSystem.listFiles(target, true);
+    while (fileStatusListIterator.hasNext()) {
+      LocatedFileStatus fileStatus = fileStatusListIterator.next();
+      log.info(fileStatus.getPath().toString());
+    }
   }
 
-  @Override
   @SuppressWarnings("unchecked")
   protected JobContext createJobContext(JobType type) {
     return new DefaultJobContext(type, "ICGC18", of(""), "/dev/null", hadoopWorkingDir.toString(), mock(Table.class),
