@@ -19,17 +19,32 @@ package org.icgc.dcc.etl2.job.export.model.type;
 
 import java.util.Set;
 
+import lombok.val;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public interface DataType {
+public abstract class DataType {
 
-  JavaRDD<ObjectNode> process(Path inputPath);
+  JavaSparkContext sparkContext;
+  String inputPath;
 
-  JavaRDD<ObjectNode> process(JavaRDD<String> input);
+  public JavaRDD<ObjectNode> process() {
+    val input = sparkContext.textFile(getInputPath());
+    return processData(input);
+  }
 
-  Set<String> getFields();
+  private String getInputPath() {
+    return new Path(inputPath, getTypeDirectoryName()).getName();
+  }
+
+  abstract protected JavaRDD<ObjectNode> processData(JavaRDD<String> input);
+
+  abstract protected Set<String> getFields();
+
+  abstract protected String getTypeDirectoryName();
 
 }

@@ -52,9 +52,9 @@ public class DataTypesTest extends AbstractJobTest {
 
   @Test
   public void testNoConsequenceClinicalDataType() {
-    val dataType = new ClinicalDataType(sparkContext);
+    val dataType = new ClinicalDataType(sparkContext, "dummy");
     val input = sparkContext.textFile(INPUT_PATH + "clinical_nc.json");
-    val output = dataType.process(input);
+    val output = dataType.processData(input);
     output.foreach(line -> System.out.println(line.toString()));
 
     val result = output.collect();
@@ -65,9 +65,9 @@ public class DataTypesTest extends AbstractJobTest {
 
   @Test
   public void testMultiConsequenceClinicalDataType() {
-    val dataType = new ClinicalDataType(sparkContext);
+    val dataType = new ClinicalDataType(sparkContext, "dummy");
     val input = sparkContext.textFile(INPUT_PATH + "clinical_mc.json");
-    val output = dataType.process(input);
+    val output = dataType.processData(input);
     output.foreach(line -> System.out.println(line.toString()));
 
     val result = output.collect();
@@ -78,9 +78,9 @@ public class DataTypesTest extends AbstractJobTest {
 
   @Test
   public void testMultiConsequenceSSMControlledDataType() {
-    val dataType = new SSMControlledDataType(sparkContext);
+    val dataType = new SSMControlledDataType(sparkContext, "dummy");
     val input = readFile(sparkContext, INPUT_PATH + "ssm_controlled_mc.json");
-    val output = dataType.process(input);
+    val output = dataType.processData(input);
     output.foreach(line -> System.out.println(line.toString()));
 
     val result = output.collect();
@@ -91,9 +91,9 @@ public class DataTypesTest extends AbstractJobTest {
 
   @Test
   public void testNoConsequenceSSMControlledDataType() {
-    val dataType = new SSMControlledDataType(sparkContext);
+    val dataType = new SSMControlledDataType(sparkContext, "dummy");
     val input = readFile(sparkContext, INPUT_PATH + "ssm_controlled_nc.json");
-    val output = dataType.process(input);
+    val output = dataType.processData(input);
     output.foreach(line -> System.out.println(line.toString()));
 
     val result = output.collect();
@@ -104,9 +104,9 @@ public class DataTypesTest extends AbstractJobTest {
 
   @Test
   public void testNoConsequenceSSMOpenDataType() {
-    val dataType = new SSMOpenDataType(sparkContext);
+    val dataType = new SSMOpenDataType(sparkContext, "dummy");
     val input = readFile(sparkContext, INPUT_PATH + "ssm_open_nc.json");
-    val output = dataType.process(input);
+    val output = dataType.processData(input);
     output.foreach(line -> System.out.println(line.toString()));
 
     val result = output.collect();
@@ -117,9 +117,9 @@ public class DataTypesTest extends AbstractJobTest {
 
   @Test
   public void testMultiConsequenceSSMOpenDataType() {
-    val dataType = new SSMOpenDataType(sparkContext);
+    val dataType = new SSMOpenDataType(sparkContext, "dummy");
     val input = readFile(sparkContext, INPUT_PATH + "ssm_open_mc.json");
-    val output = dataType.process(input);
+    val output = dataType.processData(input);
     output.foreach(line -> System.out.println(line.toString()));
 
     val result = output.collect();
@@ -130,9 +130,9 @@ public class DataTypesTest extends AbstractJobTest {
 
   @Test
   public void testNoConsequenceSGVControlledDataType() {
-    val dataType = new SGVControlledDataType(sparkContext);
+    val dataType = new SGVControlledDataType(sparkContext, "dummy");
     val input = readFile(sparkContext, INPUT_PATH + "sgv_nc.json");
-    val output = dataType.process(input);
+    val output = dataType.processData(input);
     output.foreach(line -> System.out.println(line.toString()));
 
     val result = output.collect();

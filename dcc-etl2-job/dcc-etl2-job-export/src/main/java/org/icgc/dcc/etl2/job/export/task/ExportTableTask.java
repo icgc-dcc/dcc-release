@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -78,20 +77,18 @@ public class ExportTableTask implements Task {
   public void execute(@NonNull TaskContext taskContext) {
     val watch = createStarted();
     val fileSystem = taskContext.getFileSystem();
-    val sparkContext = taskContext.getSparkContext();
-    val dataType = createDataTypeInstance(table.name(), sparkContext);
+    val javaSparkContext = taskContext.getSparkContext();
+    val inputPath = taskContext.getPath(FileType.EXPORT_INPUT);
+
+    val dataType = createDataTypeInstance(table.name(), javaSparkContext, inputPath);
     log.info("Processing data type {} ...", dataType.getClass().getName());
 
-    log.info("Getting input path...");
-    val inputPath = getInputPath(taskContext);
-    log.info("Got input path '{}'", inputPath);
-
     log.info("Running the base export process for data type...");
-    val dataTypeProcessResult = new ExportTask(sparkContext, table).process(inputPath, dataType);
+    JavaRDD<ObjectNode> dataTypeProcessResult = dataType.process();
     log.info("Finished running the base export process.");
 
     log.info("Writing static export output files...");
-    exportStatic(fileSystem, sparkContext, table.name(), dataTypeProcessResult);
+    exportStatic(fileSystem, javaSparkContext, table.name(), dataTypeProcessResult);
     log.info("Done writing static export output files...");
 
     log.info("Writing dynamic export output files...");
@@ -128,11 +125,6 @@ public class ExportTableTask implements Task {
     // TODO write static files.
     val staticOutputFile = TMP_STATIC_ROOT + tableName;
     input.coalesce(1, true).saveAsTextFile(staticOutputFile);
-  }
-
-  private static Path getInputPath(TaskContext taskContext) {
-    // TODO: This is not a real input and should be decomposed to the upstream types
-    return new Path(taskContext.getPath(FileType.EXPORT_INPUT));
   }
 
   @SneakyThrows
@@ -176,12 +168,12 @@ public class ExportTableTask implements Task {
   }
 
   @SneakyThrows
-  private DataType createDataTypeInstance(String tableName, JavaSparkContext sparkContext) {
+  private DataType createDataTypeInstance(String tableName, JavaSparkContext sparkContext, String inputPath) {
     val packageName = "org.icgc.dcc.etl2.job.export.model.type";
     val className = packageName + "." + tableName + "DataType";
     val clazz = Class.forName(className);
-    val constructor = clazz.getConstructor(JavaSparkContext.class);
-    val instance = constructor.newInstance(sparkContext);
+    val constructor = clazz.getConstructor(JavaSparkContext.class, String.class);
+    val instance = constructor.newInstance(sparkContext, inputPath);
     return (DataType) instance;
   }
 

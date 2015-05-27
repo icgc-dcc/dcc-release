@@ -115,10 +115,10 @@ public class TaskExecutor {
   }
 
   private void prepareSubmission(Task task) {
-    val interupt = true;
+    val interrupt = true;
     val description = "Task of type " + task.getType();
 
-    sparkContext.setJobGroup(task.getName(), description, interupt);
+    sparkContext.setJobGroup(task.getName(), description, interrupt);
   }
 
   private TaskContext createTaskContext(JobContext jobContext, Optional<String> projectName) {

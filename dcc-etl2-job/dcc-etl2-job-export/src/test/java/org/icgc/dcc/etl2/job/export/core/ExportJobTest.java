@@ -23,6 +23,7 @@ import static org.apache.hadoop.fs.FileSystem.setDefaultUri;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.io.File;
 import java.io.IOException;
 
 import lombok.SneakyThrows;
@@ -35,7 +36,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.icgc.dcc.etl2.core.job.DefaultJobContext;
-import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
@@ -44,11 +44,26 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 
 @Slf4j
 public class ExportJobTest extends BaseExportJobTest {
 
+  /**
+   * Constants.
+   */
+  private static final String TEST_FIXTURES_DIR = "src/test/resources/fixtures";
+  private static final String INPUT_DIR = TEST_FIXTURES_DIR + "/export_input";
+
+  /**
+   * Class under test.
+   */
+  ExportJob job;
+
+  /**
+   * Configuration
+   */
   Configuration config;
   Path hadoopWorkingDir;
 
@@ -63,6 +78,8 @@ public class ExportJobTest extends BaseExportJobTest {
     // FIXME: Needed since HBase context is configured after the base class's sparkContext and we need HDFS
     val sparkConfig = sparkContext.hadoopConfiguration();
     setDefaultUri(sparkConfig, getDefaultUri(config));
+
+    this.job = new ExportJob(config);
   }
 
   @Override
@@ -74,38 +91,27 @@ public class ExportJobTest extends BaseExportJobTest {
   @Test
   @SneakyThrows
   public void testExportHFiles() {
-    // Test data
-    val id = "DO1";
-    val row = row("{id: '" + id + "', data: 1}");
-    val rows = of(row);
+    val projectNames = ImmutableList.of("All-US", "EOPC-DE", "PRAD-CA");
 
-    // Setup
-    val job = new ExportJob(config);
-    val jobContext = createJobContext(job.getType());
+    log.info("Using input dir {}", INPUT_DIR);
 
-    // Simulate exporter input dynamically
-    given(inputFile()
-        .fileType(FileType.EXPORT_INPUT)
-        .rows(rows));
-
+    given(new File(INPUT_DIR));
     copyFiles();
 
-    // Exercise
-    log.info("Testing...");
+    val jobContext = createJobContext(job.getType(), projectNames);
     job.execute(jobContext);
 
-    // Verify
     val tableName = ExportTable.Clinical.name();
     val table = hbase.getTable(tableName);
     val rowCount = hbase.getRowCount(tableName);
     assertThat(rowCount).isEqualTo(1);
 
-    val get = new Get(Bytes.toBytes(id));
+    val get = new Get(Bytes.toBytes(1));
     get.addFamily(ExportTables.META_TYPE_INFO_FAMILY);
     val result = table.get(get);
     assertThat(result.isEmpty()).isFalse();
 
-    byte[] expectedBytes = Bytes.toBytes(row.toString());
+    byte[] expectedBytes = Bytes.toBytes("");
 
     byte[] family = ExportTables.META_TYPE_INFO_FAMILY;
     byte[] qualifier = ExportTables.META_TYPE_HEADER;
