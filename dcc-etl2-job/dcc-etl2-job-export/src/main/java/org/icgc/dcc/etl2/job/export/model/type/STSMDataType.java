@@ -22,11 +22,9 @@ import static org.icgc.dcc.etl2.job.export.model.type.Constants.STSM_TYPE_FIELD_
 
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.AddMissingField;
@@ -41,9 +39,12 @@ import org.icgc.dcc.etl2.job.export.function.IsType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 @RequiredArgsConstructor
 public class STSMDataType implements DataType {
+
+  private final String DATA_TYPE_FOLDER = "stsm";
 
   @NonNull
   private final JavaSparkContext sparkContext;
@@ -104,11 +105,6 @@ public class STSMDataType implements DataType {
       .build();
 
   @Override
-  public JavaRDD<ObjectNode> process(Path inputPath) {
-    return process(sparkContext.textFile(inputPath.toString()));
-  }
-
-  @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
@@ -124,6 +120,11 @@ public class STSMDataType implements DataType {
   @Override
   public Set<String> getFields() {
     return Sets.newHashSet(Iterables.concat(FIRST_LEVEL_PROJECTION.values(), SECOND_LEVEL_PROJECTION.keySet()));
+  }
+
+  @Override
+  public String getTypeDirectoryName() {
+    return DATA_TYPE_FOLDER;
   }
 
 }

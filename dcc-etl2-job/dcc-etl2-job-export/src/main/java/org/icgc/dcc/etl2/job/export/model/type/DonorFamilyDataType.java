@@ -21,11 +21,9 @@ import static org.icgc.dcc.etl2.job.export.model.type.Constants.FAMILY_FIELD_NAM
 
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.FlattenField;
@@ -39,9 +37,12 @@ import org.icgc.dcc.etl2.job.export.function.IsNonEmpty;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 @RequiredArgsConstructor
 public class DonorFamilyDataType implements DataType {
+
+  private final String DATA_TYPE_FOLDER = "donor";
 
   @NonNull
   private final JavaSparkContext sparkContext;
@@ -65,11 +66,6 @@ public class DonorFamilyDataType implements DataType {
       .build();
 
   @Override
-  public JavaRDD<ObjectNode> process(Path inputPath) {
-    return process(sparkContext.textFile(inputPath.toString()));
-  }
-
-  @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
@@ -86,4 +82,8 @@ public class DonorFamilyDataType implements DataType {
     return Sets.newHashSet(Iterables.concat(FIRST_LEVEL_PROJECTION.values(), SECOND_LEVEL_PROJECTION.keySet()));
   }
 
+  @Override
+  public String getTypeDirectoryName() {
+    return DATA_TYPE_FOLDER;
+  }
 }

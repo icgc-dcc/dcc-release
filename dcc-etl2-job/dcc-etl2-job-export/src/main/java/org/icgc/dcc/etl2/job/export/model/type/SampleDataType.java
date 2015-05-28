@@ -22,11 +22,9 @@ import static org.icgc.dcc.etl2.job.export.model.type.Constants.SPECIMEN_FIELD_N
 
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.AddMissingField;
@@ -41,9 +39,12 @@ import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 @RequiredArgsConstructor
 public class SampleDataType implements DataType {
+
+  private final String DATA_TYPE_FOLDER = "sample";
 
   @NonNull
   private final JavaSparkContext sparkContext;
@@ -72,11 +73,6 @@ public class SampleDataType implements DataType {
       .build();
 
   @Override
-  public JavaRDD<ObjectNode> process(Path inputPath) {
-    return process(sparkContext.textFile(inputPath.toString()));
-  }
-
-  @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
@@ -101,6 +97,11 @@ public class SampleDataType implements DataType {
   @Override
   public Set<String> getFields() {
     return Sets.newHashSet(Iterables.concat(getFirstLevelFields(), THIRD_LEVEL_PROJECTION.keySet()));
+  }
+
+  @Override
+  public String getTypeDirectoryName() {
+    return DATA_TYPE_FOLDER;
   }
 
 }
