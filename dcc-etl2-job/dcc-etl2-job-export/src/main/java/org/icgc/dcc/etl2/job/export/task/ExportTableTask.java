@@ -90,6 +90,11 @@ public class ExportTableTask implements Task {
 
     val dataTypeDirectoryName = dataType.getTypeDirectoryName();
     val files = getFilePaths(fileSystem, new Path(inputPath, dataTypeDirectoryName));
+
+    if (files.isEmpty()) {
+      log.info("No files found to process for data type {} ...", dataType.getClass().getName());
+      return;
+    }
     val inputPaths = COMMA.join(files);
     val input = javaSparkContext.textFile(inputPaths);
 
