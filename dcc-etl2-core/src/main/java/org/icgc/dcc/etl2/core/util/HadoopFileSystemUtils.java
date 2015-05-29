@@ -18,6 +18,7 @@
 package org.icgc.dcc.etl2.core.util;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
@@ -57,13 +58,17 @@ public class HadoopFileSystemUtils {
     return results;
   }
 
-  @SneakyThrows
   private static List<LocatedFileStatus> getFiles(FileSystem fileSystem, Path target, boolean recusre) {
     val results = Lists.<LocatedFileStatus> newArrayList();
-    RemoteIterator<LocatedFileStatus> fileStatusListIterator = fileSystem.listFiles(target, true);
-    while (fileStatusListIterator.hasNext()) {
-      LocatedFileStatus fileStatus = fileStatusListIterator.next();
-      results.add(fileStatus);
+    RemoteIterator<LocatedFileStatus> fileStatusListIterator = null;
+    try {
+      fileStatusListIterator = fileSystem.listFiles(target, true);
+      while (fileStatusListIterator.hasNext()) {
+        LocatedFileStatus fileStatus = fileStatusListIterator.next();
+        results.add(fileStatus);
+      }
+    } catch (IOException e) {
+      log.info("Error retriving files in path '{}'", target);
     }
     return results;
   }
