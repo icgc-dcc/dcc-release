@@ -61,6 +61,11 @@ import com.google.common.primitives.UnsignedBytes;
 public class HTableManager {
 
   /**
+   * Constants
+   */
+  private final boolean USE_SNAPPY = false;
+
+  /**
    * Dependencies.
    */
   private final Configuration conf;
@@ -81,7 +86,7 @@ public class HTableManager {
       log.info("Finished calculating split keys...");
 
       log.info("Creating table...");
-      createDataTable(tableName, calculateBoundaries(splitKeys), conf, true);
+      createDataTable(tableName, calculateBoundaries(splitKeys), conf, USE_SNAPPY);
       log.info("Finished creating table...");
     }
 
