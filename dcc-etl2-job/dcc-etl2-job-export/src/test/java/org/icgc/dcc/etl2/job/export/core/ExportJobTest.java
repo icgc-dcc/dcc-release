@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.of;
 import static org.apache.hadoop.fs.FileSystem.getDefaultUri;
 import static org.apache.hadoop.fs.FileSystem.setDefaultUri;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.walkPath;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
@@ -32,9 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.spark.SparkConf;
@@ -59,6 +58,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 public class ExportJobTest {
 
   /**
+   * 
    * Constants.
    */
   private static final String TEST_FIXTURES_DIR = "src/test/resources/fixtures";
@@ -163,13 +163,7 @@ public class ExportJobTest {
 
   private void copyFiles(Path source, Path target) throws IOException {
     fileSystem.copyFromLocalFile(source, target);
-
-    // Verify
-    RemoteIterator<LocatedFileStatus> fileStatusListIterator = fileSystem.listFiles(target, true);
-    while (fileStatusListIterator.hasNext()) {
-      LocatedFileStatus fileStatus = fileStatusListIterator.next();
-      log.info(fileStatus.getPath().toString());
-    }
+    walkPath(fileSystem, target);
   }
 
   @SuppressWarnings("unchecked")

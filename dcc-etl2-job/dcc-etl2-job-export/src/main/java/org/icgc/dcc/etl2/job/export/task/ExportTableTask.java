@@ -18,11 +18,12 @@
 package org.icgc.dcc.etl2.job.export.task;
 
 import static org.icgc.dcc.common.core.util.Joiners.COMMA;
+import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.getFilePaths;
+import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.walkPath;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.TMP_STATIC_ROOT;
 
 import java.util.Map;
-import java.util.Set;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -32,15 +33,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.assertj.core.util.Sets;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.core.task.TaskContext;
@@ -90,7 +88,7 @@ public class ExportTableTask implements Task {
     log.info("Processing data type {} ...", dataType.getClass().getName());
 
     val dataTypeDirectoryName = dataType.getTypeDirectoryName();
-    val files = getInputfiles(fileSystem, inputPath, dataTypeDirectoryName);
+    val files = getFilePaths(fileSystem, new Path(inputPath, dataTypeDirectoryName));
     val inputPaths = COMMA.join(files);
     val input = javaSparkContext.textFile(inputPaths);
 
@@ -136,6 +134,7 @@ public class ExportTableTask implements Task {
     // TODO write static files.
     val staticOutputFile = TMP_STATIC_ROOT + tableName;
     input.coalesce(1, true).saveAsTextFile(staticOutputFile);
+    walkPath(fileSystem, new Path(TMP_STATIC_ROOT));
   }
 
   @SneakyThrows
@@ -176,18 +175,6 @@ public class ExportTableTask implements Task {
     log.info("Loading HFiles...");
     hFileManager.loadHFiles(hTable);
     log.info("Loaded HFiles");
-  }
-
-  @SneakyThrows
-  private Set<String> getInputfiles(FileSystem fs, String inputPath, String dataTypeDirectoryName) {
-    Set<String> results = Sets.newHashSet();
-    RemoteIterator<LocatedFileStatus> fileStatusListIterator =
-        fs.listFiles(new Path(inputPath, dataTypeDirectoryName), true);
-    while (fileStatusListIterator.hasNext()) {
-      LocatedFileStatus fileStatus = fileStatusListIterator.next();
-      results.add(fileStatus.getPath().toString());
-    }
-    return results;
   }
 
   @SneakyThrows
