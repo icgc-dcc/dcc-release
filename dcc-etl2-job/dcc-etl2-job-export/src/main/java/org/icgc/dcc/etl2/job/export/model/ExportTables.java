@@ -62,15 +62,15 @@ public final class ExportTables {
   /**
    * Paths
    */
-  public static final String ROOT = "/tmp/download";
-  public static final String ROOT_OUT_STATIC = ROOT + "/static";
-  public static final String TMP = ROOT + "/tmp";
-  public static final String TMP_DYNAMIC_ROOT = TMP + "/dynamic";
-  public static final String TMP_HFILE_ROOT = TMP + "/hfile";
-  public static final String TMP_STATIC_ROOT = TMP + "/static";
-  public static final String TMP_BUCKET_ROOT = TMP + "/bucket";
-  public static final String TMP_INDEX = TMP + "/fullindex";
-  public static final String OUT_DYNAMIC = ROOT + "/dynamic/";
+  public static final String ROOT = "/tmp/download/";
+  public static final String ROOT_OUT_STATIC = ROOT + "static/";
+  public static final String TMP = ROOT + "tmp/";
+  public static final String TMP_DYNAMIC_ROOT = TMP + "dynamic/";
+  public static final String TMP_HFILE_ROOT = TMP + "hfile/";
+  public static final String TMP_STATIC_ROOT = TMP + "static/";
+  public static final String TMP_BUCKET_ROOT = TMP + "bucket/";
+  public static final String TMP_INDEX = TMP + "fullindex/";
+  public static final String OUT_DYNAMIC = ROOT + "dynamic/";
 
   /**
    * Misc.
