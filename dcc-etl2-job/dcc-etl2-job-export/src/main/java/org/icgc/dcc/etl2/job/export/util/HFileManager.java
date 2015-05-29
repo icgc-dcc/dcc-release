@@ -17,10 +17,12 @@
  */
 package org.icgc.dcc.etl2.job.export.util;
 
+import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.getFilePaths;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
@@ -66,7 +68,14 @@ public class HFileManager {
       @NonNull HTable hTable)
       throws IOException {
     val hFilesPath = getHFilesPath(fileSystem, hTable);
-    processedInput.foreach(new HFileWriter(hFilesPath));
+    val fsUri = fileSystem.getUri().toString();
+    processedInput.foreach(new HFileWriter(hFilesPath.toString(), fsUri));
+
+    // Verify
+    val files = getFilePaths(fileSystem, hFilesPath);
+    for (val file : files) {
+      log.info(file);
+    }
   }
 
   private static Path getHFilesPath(FileSystem fileSystem, HTable hTable) {
@@ -126,10 +135,13 @@ public class HFileManager {
   }
 
   @RequiredArgsConstructor
-  private class HFileWriter implements VoidFunction<Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>>> {
+  private static class HFileWriter implements VoidFunction<Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>>> {
 
     @NonNull
-    private final Path hfilesPath;
+    private final String hfilesPath;
+    
+    @NonNull
+    private final String fsUri;
 
     @Override
     public void call(Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> tuple) throws Exception {
@@ -138,15 +150,18 @@ public class HFileManager {
       writeOutput(donorId, data); 
     }
 
+    @SneakyThrows
     private Writer createWriter(String donorId) throws IOException {
-      Path destPath = new Path(TMP_HFILE_ROOT, Bytes.toString(DATA_CONTENT_FAMILY));
+      Path destPath = new Path(hfilesPath, Bytes.toString(DATA_CONTENT_FAMILY));
+      Configuration conf = new Configuration();
+      FileSystem fileSystem = FileSystem.get(new URI(fsUri), new Configuration());
       val writer = HFile
               .getWriterFactory(conf, new CacheConfig(conf))
               .withPath(fileSystem, new Path(destPath, donorId))
               .withComparator(KeyValue.COMPARATOR)
               .withFileContext(
                       new HFileContextBuilder().withBlockSize(BLOCKSIZE)
-                              .withCompression(COMPRESSION).build()).create();
+                              .build()).create();
 
       return writer;
     }
