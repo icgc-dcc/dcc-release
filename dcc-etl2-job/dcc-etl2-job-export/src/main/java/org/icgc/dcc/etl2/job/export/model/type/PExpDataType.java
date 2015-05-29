@@ -21,11 +21,9 @@ import static org.icgc.dcc.etl2.job.export.model.type.Constants.PEXP_TYPE_FIELD_
 
 import java.util.Set;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
 import org.icgc.dcc.etl2.core.function.RetainFields;
@@ -41,9 +39,6 @@ import com.google.common.collect.Sets;
 public class PExpDataType implements DataType {
 
   private final String DATA_TYPE_FOLDER = "pexp";
-
-  @NonNull
-  private final JavaSparkContext sparkContext;
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")

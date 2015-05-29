@@ -19,11 +19,9 @@ package org.icgc.dcc.etl2.job.export.model.type;
 
 import java.util.Set;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
@@ -36,9 +34,6 @@ import com.google.common.collect.Sets;
 public class DonorDataType implements DataType {
 
   private final String DATA_TYPE_FOLDER = "donor";
-
-  @NonNull
-  private final JavaSparkContext sparkContext;
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")

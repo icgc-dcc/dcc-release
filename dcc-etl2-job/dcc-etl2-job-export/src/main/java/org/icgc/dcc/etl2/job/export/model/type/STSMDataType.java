@@ -22,11 +22,9 @@ import static org.icgc.dcc.etl2.job.export.model.type.Constants.STSM_TYPE_FIELD_
 
 import java.util.Set;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.function.AddMissingField;
 import org.icgc.dcc.etl2.core.function.FlattenField;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
@@ -45,9 +43,6 @@ import com.google.common.collect.Sets;
 public class STSMDataType implements DataType {
 
   private final String DATA_TYPE_FOLDER = "stsm";
-
-  @NonNull
-  private final JavaSparkContext sparkContext;
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
