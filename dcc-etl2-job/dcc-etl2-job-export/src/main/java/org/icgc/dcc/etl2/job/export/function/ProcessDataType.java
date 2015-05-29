@@ -21,10 +21,12 @@ import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.DATA_CONTENT_FAMILY;
 import static org.icgc.dcc.etl2.job.export.model.type.Constants.DONOR_ID;
 
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.TreeMap;
 
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -37,11 +39,12 @@ import scala.Tuple3;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
+@Slf4j
 public class ProcessDataType implements
-    PairFunction<Tuple2<ObjectNode, Long>, String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> {
+    PairFunction<Tuple2<ObjectNode, Long>, String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> {
 
   @Override
-  public Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> call(Tuple2<ObjectNode, Long> tuple)
+  public Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> call(Tuple2<ObjectNode, Long> tuple)
       throws Exception {
     long index = tuple._2();
     ObjectNode row = tuple._1();
@@ -52,13 +55,16 @@ public class ProcessDataType implements
     val kvs = Lists.<KeyValue> newArrayList();
     long now = System.currentTimeMillis();
     val fields = row.fieldNames();
+    log.info("row: '{}'", row);
     while (fields.hasNext()) {
       i++;
       val field = fields.next();
-      Object cellValue = row.get(field);
-      if (cellValue == null) continue;
-      String value = (String) cellValue;
-      if (value.trim().isEmpty()) continue;
+      val cellValue = row.get(field);
+      if (cellValue == null || cellValue.isNull()) {
+        continue;
+      }
+      String value = cellValue.textValue();
+      if (value == null || value.trim().isEmpty()) continue;
       byte[] bytes = Bytes.toBytes(value);
       KeyValue kv = new KeyValue(rowKey, DATA_CONTENT_FAMILY, new byte[] { i }, now, bytes);
       totalBytes = totalBytes + bytes.length;
@@ -66,11 +72,11 @@ public class ProcessDataType implements
     }
 
     KeyValue[] kv = kvs.toArray(new KeyValue[kvs.size()]);
-    Map<byte[], KeyValue[]> data = new TreeMap<byte[], KeyValue[]>();
-    data.put(rowKey, kv);
-    val tuple3 = new Tuple3<Map<byte[], KeyValue[]>, Long, Integer>(data, totalBytes, 1);
+    Map<ByteBuffer, KeyValue[]> data = new TreeMap<ByteBuffer, KeyValue[]>();
+    data.put(ByteBuffer.wrap(rowKey), kv);
+    val tuple3 = new Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>(data, totalBytes, 1);
 
-    return new Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>>(donorId, tuple3);
+    return new Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>>(donorId, tuple3);
   }
 
   private String getKey(ObjectNode row) {

@@ -19,10 +19,11 @@ package org.icgc.dcc.etl2.job.export.task;
 
 import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.getFilePaths;
-import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.walkPath;
+import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.readFile;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.TMP_STATIC_ROOT;
 
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 import lombok.NonNull;
@@ -122,7 +123,7 @@ public class ExportTableTask implements Task {
     log.info("Finished processing HFiles...");
   }
 
-  private JavaPairRDD<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> prepareData(JavaRDD<ObjectNode> input) {
+  private JavaPairRDD<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> prepareData(JavaRDD<ObjectNode> input) {
     return input
         .zipWithIndex()
         .mapToPair(new ProcessDataType())
@@ -131,15 +132,23 @@ public class ExportTableTask implements Task {
 
   private void exportStatic(FileSystem fileSystem, JavaSparkContext sparkContext, String tableName,
       JavaRDD<ObjectNode> input) {
-    // TODO write static files.
     val staticOutputFile = TMP_STATIC_ROOT + tableName;
     input.coalesce(1, true).saveAsTextFile(staticOutputFile);
-    walkPath(fileSystem, new Path(TMP_STATIC_ROOT));
+
+    // Verify
+    val files = getFilePaths(fileSystem, new Path(staticOutputFile));
+    for (val file : files) {
+      log.info(file);
+      val contents = readFile(fileSystem, new Path(file));
+      for (val line : contents) {
+        log.info(line);
+      }
+    }
   }
 
   @SneakyThrows
   private static HTable prepareHTable(Configuration conf,
-      JavaPairRDD<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> input,
+      JavaPairRDD<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> input,
       String tableName) {
     log.info("Ensuring table...");
     val manager = new HTableManager(conf);
@@ -165,7 +174,7 @@ public class ExportTableTask implements Task {
 
   @SneakyThrows
   private static void processHFiles(Configuration conf, FileSystem fileSystem,
-      JavaPairRDD<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> processedInput, HTable hTable) {
+      JavaPairRDD<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> processedInput, HTable hTable) {
     val hFileManager = new HFileManager(conf, fileSystem);
 
     log.info("Writing HFiles...");

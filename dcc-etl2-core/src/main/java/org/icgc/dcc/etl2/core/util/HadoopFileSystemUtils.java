@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.etl2.core.util;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.List;
 
 import lombok.SneakyThrows;
@@ -34,16 +36,19 @@ import com.google.common.collect.Lists;
 public class HadoopFileSystemUtils {
 
   @SneakyThrows
-  public static void walkPath(FileSystem fileSystem, Path inputPath) {
+  public static void viewFileContents(FileSystem fileSystem, Path inputPath) {
     val files = getFiles(fileSystem, inputPath, true);
     for (val file : files) {
-      log.info(file.getPath().toString());
+      val contents = readFile(fileSystem, file.getPath());
+      for (val line : contents) {
+        log.info(line);
+      }
     }
   }
 
   @SneakyThrows
   public static List<String> getFilePaths(FileSystem fileSystem, Path inputPath) {
-    List<String> results = Lists.<String> newArrayList();
+    val results = Lists.<String> newArrayList();
     val files = getFiles(fileSystem, inputPath, true);
     for (val file : files) {
       results.add(file.getPath().toString());
@@ -59,6 +64,19 @@ public class HadoopFileSystemUtils {
     while (fileStatusListIterator.hasNext()) {
       LocatedFileStatus fileStatus = fileStatusListIterator.next();
       results.add(fileStatus);
+    }
+    return results;
+  }
+
+  @SneakyThrows
+  public static List<String> readFile(FileSystem fileSystem, Path inputPath) {
+    val results = Lists.<String> newArrayList();
+    BufferedReader br = new BufferedReader(new InputStreamReader(fileSystem.open(inputPath)));
+    String line;
+    line = br.readLine();
+    while (line != null) {
+      line = br.readLine();
+      results.add(line);
     }
     return results;
   }

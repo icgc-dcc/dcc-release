@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.etl2.job.export.function;
 
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 import lombok.val;
@@ -27,10 +28,10 @@ import org.apache.spark.api.java.function.Function;
 import scala.Tuple2;
 import scala.Tuple3; 
 
-public class ExtractStats implements Function<Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>>, Tuple3<String, Long, Integer>> {
+public class ExtractStats implements Function<Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>>, Tuple3<String, Long, Integer>> {
 
   @Override 
-  public Tuple3<String, Long, Integer> call(Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> tuple) throws Exception {
+  public Tuple3<String, Long, Integer> call(Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> tuple) throws Exception {
     val donorId = tuple._1();
     val tuple3 = tuple._2();
     

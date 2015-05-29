@@ -21,6 +21,7 @@ import static org.icgc.dcc.etl2.job.export.model.ExportTables.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 import lombok.NonNull;
@@ -61,7 +62,7 @@ public class HFileManager {
   @NonNull
   private final FileSystem fileSystem;
 
-  public void writeHFiles(@NonNull JavaPairRDD<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> processedInput,
+  public void writeHFiles(@NonNull JavaPairRDD<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> processedInput,
       @NonNull HTable hTable)
       throws IOException {
     val hFilesPath = getHFilesPath(fileSystem, hTable);
@@ -125,13 +126,13 @@ public class HFileManager {
   }
 
   @RequiredArgsConstructor
-  private class HFileWriter implements VoidFunction<Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>>> {
+  private class HFileWriter implements VoidFunction<Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>>> {
 
     @NonNull
     private final Path hfilesPath;
 
     @Override
-    public void call(Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>> tuple) throws Exception {
+    public void call(Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> tuple) throws Exception {
       val donorId = tuple._1();
       val data = tuple._2()._1();
       writeOutput(donorId, data); 
@@ -160,7 +161,7 @@ public class HFileManager {
       }
     }
 
-    private void writeOutput(String donorId, Map<byte[], KeyValue[]> processed) throws IOException {
+    private void writeOutput(String donorId, Map<ByteBuffer, KeyValue[]> processed) throws IOException {
       Writer writer = createWriter(donorId);
       for (val row : processed.keySet()) {
         val cells = processed.get(row);
