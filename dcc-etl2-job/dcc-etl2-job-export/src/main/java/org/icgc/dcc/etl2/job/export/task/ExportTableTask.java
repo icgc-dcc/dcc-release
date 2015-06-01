@@ -21,7 +21,8 @@ import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.getFilePaths;
 import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.readFile;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
-import static org.icgc.dcc.etl2.job.export.model.ExportTables.TMP_STATIC_ROOT;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.getStaticFileOutput;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.getTableName;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -39,7 +40,6 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.core.task.TaskContext;
@@ -55,6 +55,8 @@ import org.icgc.dcc.etl2.job.export.util.HTableManager;
 import scala.Tuple3;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+//TODO Currently the list of projects and list of data types are not integrated in processing.
 
 @Slf4j
 @RequiredArgsConstructor
@@ -83,6 +85,12 @@ public class ExportTableTask implements Task {
     val watch = createStarted();
     val fileSystem = taskContext.getFileSystem();
     val javaSparkContext = taskContext.getSparkContext();
+    val jobContext = taskContext.getJobContext();
+
+    val releaseName = jobContext.getReleaseName();
+    log.info("Release name '{}' ...", releaseName);
+    val tableName = getTableName(table.name(), releaseName);
+    log.info("table name '{}' ...", tableName);
     val inputPath = taskContext.getPath(FileType.EXPORT_INPUT);
     log.info("Input path {} ...", inputPath);
     val dataType = createDataTypeInstance(table.name());
@@ -90,11 +98,11 @@ public class ExportTableTask implements Task {
 
     val dataTypeDirectoryName = dataType.getTypeDirectoryName();
     val files = getFilePaths(fileSystem, new Path(inputPath, dataTypeDirectoryName));
-
     if (files.isEmpty()) {
       log.info("No files found to process for data type {} ...", dataType.getClass().getName());
       return;
     }
+
     val inputPaths = COMMA.join(files);
     val input = javaSparkContext.textFile(inputPaths);
 
@@ -103,25 +111,27 @@ public class ExportTableTask implements Task {
     log.info("Finished running the base export process.");
 
     log.info("Writing static export output files...");
-    exportStatic(fileSystem, javaSparkContext, table.name(), dataTypeProcessResult);
+    val staticOutputFile = getStaticFileOutput(tableName);
+    exportStatic(dataTypeProcessResult, staticOutputFile);
+    verifyFileExistence(fileSystem, staticOutputFile);
     log.info("Done writing static export output files...");
 
     log.info("Writing dynamic export output files...");
-    exportDynamic(fileSystem, dataTypeProcessResult);
+    exportDynamic(fileSystem, dataTypeProcessResult, tableName);
     log.info("Done writing dynamic export output files...");
 
     log.info("Finished exporting table '{}' in {}", table, watch);
   }
 
-  private void exportDynamic(FileSystem fileSystem, JavaRDD<ObjectNode> input) {
+  private void exportDynamic(FileSystem fileSystem, JavaRDD<ObjectNode> input, String tableName) {
 
-    log.info("Preparing data for '{}'...", table);
+    log.info("Preparing data for '{}'...", tableName);
     val processedInput = prepareData(input);
-    log.info("Finished preparing data for '{}'", table);
+    log.info("Finished preparing data for '{}'", tableName);
 
-    log.info("Preparing export table '{}'...", table);
-    val hTable = prepareHTable(conf, processedInput, table.name());
-    log.info("Prepared export table: {}", table);
+    log.info("Preparing export table '{}'...", tableName);
+    val hTable = prepareHTable(conf, processedInput, tableName);
+    log.info("Prepared export table: {}", tableName);
 
     log.info("Processing HFiles...");
     processHFiles(conf, fileSystem, processedInput, hTable);
@@ -135,13 +145,12 @@ public class ExportTableTask implements Task {
         .reduceByKey(new SumDataType());
   }
 
-  private void exportStatic(FileSystem fileSystem, JavaSparkContext sparkContext, String tableName,
-      JavaRDD<ObjectNode> input) {
-    val staticOutputFile = TMP_STATIC_ROOT + tableName;
+  private void exportStatic(JavaRDD<ObjectNode> input, String staticOutputFile) {
     input.coalesce(1, true).saveAsTextFile(staticOutputFile);
+  }
 
-    // Verify
-    val files = getFilePaths(fileSystem, new Path(staticOutputFile));
+  private void verifyFileExistence(FileSystem fileSystem, final java.lang.String outputFile) {
+    val files = getFilePaths(fileSystem, new Path(outputFile));
     for (val file : files) {
       log.info(file);
       val contents = readFile(fileSystem, new Path(file));

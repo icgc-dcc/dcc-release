@@ -80,4 +80,12 @@ public final class ExportTables {
   public static int BLOCKSIZE = 5 * 1048576;
   public static Algorithm COMPRESSION = Compression.Algorithm.SNAPPY;
 
+  public static String getStaticFileOutput(String tableName) {
+    return TMP_STATIC_ROOT + tableName;
+  }
+
+  public static String getTableName(String tableName, String release) {
+    return tableName + "-" + release;
+  }
+
 }

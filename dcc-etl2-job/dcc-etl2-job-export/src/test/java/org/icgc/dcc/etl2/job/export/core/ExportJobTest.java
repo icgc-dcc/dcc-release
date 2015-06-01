@@ -17,15 +17,18 @@
  */
 package org.icgc.dcc.etl2.job.export.core;
 
-import static com.google.common.collect.ImmutableList.of;
 import static org.apache.hadoop.fs.FileSystem.getDefaultUri;
 import static org.apache.hadoop.fs.FileSystem.setDefaultUri;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.getFilePaths;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.DATA_CONTENT_FAMILY;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.getStaticFileOutput;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.getTableName;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -34,6 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.DefaultJobContext;
@@ -48,6 +54,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -124,23 +131,33 @@ public class ExportJobTest {
     System.clearProperty("spark.master.port");
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   @SneakyThrows
   public void testExportHFiles() {
-
     val inputDirectory = new File(INPUT_DIR);
-
+    copyFiles(new Path(inputDirectory.getAbsolutePath()), new Path("/", this.hadoopWorkingDir + "/export_input"));
     log.info("Using data from '{}'", inputDirectory.getAbsolutePath());
 
-    copyFiles(new Path(inputDirectory.getAbsolutePath()), new Path("/", this.hadoopWorkingDir + "/export_input"));
-
-    val jobContext = createJobContext(job.getType());
+    val projectNames = ImmutableList.of("All-US", "EOPC-DE", "PRAD-CA");
+    String releaseName = "ICGC18";
+    val jobContext = createJobContext(job.getType(), releaseName, projectNames, hadoopWorkingDir.toString());
     job.execute(jobContext);
 
-    val tableName = ExportTable.Clinical.name();
+    val tableName = getTableName(ExportTable.Clinical.name(), releaseName);
+    val staticOutputFile = getStaticFileOutput(tableName);
     // val table = hbase.getTable(tableName);
     val rowCount = hbase.getRowCount(tableName);
     assertThat(rowCount).isEqualTo(15);
+
+    val scanner = hbase.scanTable(tableName, DATA_CONTENT_FAMILY);
+
+    for (Result result = scanner.next(); (result != null); result = scanner.next()) {
+      for (KeyValue keyValue : result.list()) {
+        log.info("Qualifier : " + keyValue.getKeyString() + " : Value : "
+            + Bytes.toString(keyValue.getValue()));
+      }
+    }
 
     // val get = new Get(Bytes.toBytes(1));
     // get.addFamily(ExportTables.DATA_CONTENT_FAMILY);
@@ -158,15 +175,14 @@ public class ExportJobTest {
 
   private void copyFiles(Path source, Path target) throws IOException {
     fileSystem.copyFromLocalFile(source, target);
-    // Verify
+    // TODO Remove verification
     val files = getFilePaths(fileSystem, target);
     files.forEach(log::info);
   }
 
   @SuppressWarnings("unchecked")
-  private JobContext createJobContext(JobType type) {
-    return new DefaultJobContext(type, "ICGC18", of(""), "/dev/null", hadoopWorkingDir.toString(), mock(Table.class),
+  private JobContext createJobContext(JobType type, String release, List<String> projects, String workingDir) {
+    return new DefaultJobContext(type, release, projects, "/dev/null", workingDir, mock(Table.class),
         taskExecutor);
   }
-
 }

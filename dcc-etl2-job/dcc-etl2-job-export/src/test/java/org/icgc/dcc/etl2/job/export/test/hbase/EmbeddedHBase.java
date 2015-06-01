@@ -27,6 +27,8 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -69,6 +71,16 @@ public class EmbeddedHBase {
   @SneakyThrows
   public int getRowCount(String tableName) {
     return utility.countRows(getTable(tableName));
+  }
+
+  @SneakyThrows
+  public ResultScanner scanTable(String tableName, byte[] family) {
+    HTable table = getTable(tableName);
+    Scan scan = new Scan();
+    scan.addFamily(family);
+    ResultScanner scanner = table.getScanner(scan);
+
+    return scanner;
   }
 
   private Configuration createConfiguration() {

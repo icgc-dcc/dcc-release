@@ -104,7 +104,6 @@ public class HTableManager {
 
   @SneakyThrows
   public boolean existsTable(@NonNull String tableName) {
-
     return admin.tableExists(tableName);
   }
 
@@ -116,7 +115,6 @@ public class HTableManager {
   }
 
   public static byte[] encodedRowKey(int donorId, long sum) {
-
     return Bytes.add(Bytes.toBytes(donorId), Bytes.toBytes(sum));
   }
 
@@ -172,16 +170,17 @@ public class HTableManager {
         withSnappyCompression);
   }
 
+  @SneakyThrows
   @SuppressWarnings("deprecation")
   private static void createDataTable(String tableName,
       List<byte[]> boundaries, Configuration conf,
-      boolean withSnappyCompression) throws IOException {
+      boolean withSnappyCompression) {
     try (HBaseAdmin admin = new HBaseAdmin(conf)) {
       if (!admin.tableExists(tableName)) {
         byte[][] splits = new byte[boundaries.size()][];
         HTableDescriptor descriptor = new HTableDescriptor(tableName);
         HColumnDescriptor dataSchema = new HColumnDescriptor(
-                DATA_CONTENT_FAMILY);
+            DATA_CONTENT_FAMILY);
         dataSchema.setBlockCacheEnabled(false);
         dataSchema.setBlocksize(DATA_BLOCK_SIZE);
         dataSchema.setBloomFilterType(BloomType.ROW);
@@ -192,7 +191,7 @@ public class HTableManager {
         admin.createTable(descriptor, boundaries.toArray(splits));
       }
     } catch (TableExistsException e) {
-      log.warn("already created... (skip)", e);
+      log.warn("already created table '{}', skipping, {}", tableName, e);
     }
   }
 }
