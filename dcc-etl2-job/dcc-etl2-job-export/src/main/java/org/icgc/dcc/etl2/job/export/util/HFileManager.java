@@ -69,7 +69,7 @@ public class HFileManager {
     val fsUri = fileSystem.getUri().toString();
     processedInput.foreach(new HFileWriter(hFilesPath.toString(), fsUri));
 
-    // Verify
+    // TODO: Remove verification
     val files = getFilePaths(fileSystem, hFilesPath);
     files.forEach(log::info);
   }

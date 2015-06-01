@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.type.Constants.MIRNA_SEQ_TYPE_FIELD_VALUE;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.MIRNA_SEQ_TYPE_FIELD_NAME;
 
 import java.util.Set;
 
@@ -80,7 +80,7 @@ public class MethSeqDataType implements DataType {
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
-        .filter(new IsType(MIRNA_SEQ_TYPE_FIELD_VALUE))
+        .filter(new IsType(MIRNA_SEQ_TYPE_FIELD_NAME))
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())
         .map(new RetainFields(getFields()));

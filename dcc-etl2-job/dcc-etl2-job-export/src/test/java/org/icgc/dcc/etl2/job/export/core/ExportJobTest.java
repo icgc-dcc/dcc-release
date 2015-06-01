@@ -146,7 +146,6 @@ public class ExportJobTest {
 
     val tableName = getTableName(ExportTable.Clinical.name(), releaseName);
     val staticOutputFile = getStaticFileOutput(tableName);
-    // val table = hbase.getTable(tableName);
     val rowCount = hbase.getRowCount(tableName);
     assertThat(rowCount).isEqualTo(15);
 

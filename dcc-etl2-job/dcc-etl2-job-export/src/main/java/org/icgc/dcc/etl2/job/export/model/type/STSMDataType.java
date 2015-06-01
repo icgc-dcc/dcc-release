@@ -18,7 +18,7 @@
 package org.icgc.dcc.etl2.job.export.model.type;
 
 import static org.icgc.dcc.etl2.job.export.model.type.Constants.CONSEQUENCE_FIELD_NAME;
-import static org.icgc.dcc.etl2.job.export.model.type.Constants.STSM_TYPE_FIELD_VALUE;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.STSM_TYPE_FIELD_NAME;
 
 import java.util.Set;
 
@@ -103,7 +103,7 @@ public class STSMDataType implements DataType {
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
-        .filter(new IsType(STSM_TYPE_FIELD_VALUE))
+        .filter(new IsType(STSM_TYPE_FIELD_NAME))
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())
         .map(new AddMissingField(CONSEQUENCE_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet()))

@@ -12,9 +12,9 @@ public class IsOpenMasked implements Function<ObjectNode, Boolean> {
 
   @Override
   public Boolean call(ObjectNode row) {
-    val markingValue = row.get(MARKING_FIELD_VALUE);
+    val markingValue = row.get(MARKING_FIELD_NAME);
 
     return !(markingValue == null || markingValue.isNull() || markingValue.isMissingNode())
-        && (markingValue.asText().equals(OPEN_FIELD_VALUE) || markingValue.asText().equals(MASKED_FIELD_VALUE));
+        && (markingValue.asText().equals(OPEN_FIELD_NAME) || markingValue.asText().equals(MASKED_FIELD_NAME));
   }
 }
