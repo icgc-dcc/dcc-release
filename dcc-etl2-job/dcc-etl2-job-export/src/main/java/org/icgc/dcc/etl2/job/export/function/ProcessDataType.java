@@ -63,7 +63,7 @@ public class ProcessDataType implements
       if (cellValue == null || cellValue.isNull()) {
         continue;
       }
-      String value = cellValue.textValue();
+      String value = cellValue.asText();
       if (value == null || value.trim().isEmpty()) continue;
       val bytes = Bytes.toBytes(value);
       val kv = new KeyValue(rowKey, DATA_CONTENT_FAMILY, new byte[] { i }, now, bytes);
