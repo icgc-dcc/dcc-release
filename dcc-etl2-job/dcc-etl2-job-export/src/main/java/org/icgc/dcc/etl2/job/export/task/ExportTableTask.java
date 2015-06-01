@@ -149,7 +149,7 @@ public class ExportTableTask implements Task {
     input.coalesce(1, true).saveAsTextFile(staticOutputFile);
   }
 
-  private void verifyFileExistence(FileSystem fileSystem, final java.lang.String outputFile) {
+  private static void verifyFileExistence(FileSystem fileSystem, final String outputFile) {
     val files = getFilePaths(fileSystem, new Path(outputFile));
     for (val file : files) {
       log.info(file);

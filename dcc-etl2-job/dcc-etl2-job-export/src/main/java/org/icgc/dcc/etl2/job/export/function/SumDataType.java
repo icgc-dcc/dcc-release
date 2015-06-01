@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.TreeMap;
 
+import lombok.val;
+
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.spark.api.java.function.Function2;
 
@@ -20,8 +22,8 @@ public class SumDataType
     Map<ByteBuffer, KeyValue[]> data = new TreeMap<>();
     data.putAll(tuple1._1());
     data.putAll(tuple2._1());
-    long totalSize = tuple1._2() + tuple2._2();
-    int sum = tuple1._3() + tuple2._3();
+    val totalSize = tuple1._2() + tuple2._2();
+    val sum = tuple1._3() + tuple2._3();
 
     return new Tuple3<>(data, totalSize, sum);
   }

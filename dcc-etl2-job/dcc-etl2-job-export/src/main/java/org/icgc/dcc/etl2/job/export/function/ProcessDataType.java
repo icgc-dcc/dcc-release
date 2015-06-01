@@ -46,14 +46,14 @@ public class ProcessDataType implements
   @Override
   public Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> call(Tuple2<ObjectNode, Long> tuple)
       throws Exception {
-    long index = tuple._2();
-    ObjectNode row = tuple._1();
-    String donorId = getKey(row);
-    byte[] rowKey = HTableManager.encodedRowKey(Integer.valueOf(donorId), index);
+    val index = tuple._2();
+    val row = tuple._1();
+    val donorId = getKey(row);
+    val rowKey = HTableManager.encodedRowKey(Integer.valueOf(donorId), index);
     byte i = -1;
     long totalBytes = 0;
     val kvs = Lists.<KeyValue> newArrayList();
-    long now = System.currentTimeMillis();
+    val now = System.currentTimeMillis();
     val fields = row.fieldNames();
     log.info("row: '{}'", row);
     while (fields.hasNext()) {
@@ -65,18 +65,17 @@ public class ProcessDataType implements
       }
       String value = cellValue.textValue();
       if (value == null || value.trim().isEmpty()) continue;
-      byte[] bytes = Bytes.toBytes(value);
-      KeyValue kv = new KeyValue(rowKey, DATA_CONTENT_FAMILY, new byte[] { i }, now, bytes);
+      val bytes = Bytes.toBytes(value);
+      val kv = new KeyValue(rowKey, DATA_CONTENT_FAMILY, new byte[] { i }, now, bytes);
       totalBytes = totalBytes + bytes.length;
       kvs.add(kv);
     }
 
-    KeyValue[] kv = kvs.toArray(new KeyValue[kvs.size()]);
-    Map<ByteBuffer, KeyValue[]> data = new TreeMap<>();
+    val kv = kvs.toArray(new KeyValue[kvs.size()]);
+    Map<ByteBuffer, KeyValue[]> data = new TreeMap<ByteBuffer, KeyValue[]>();
     data.put(ByteBuffer.wrap(rowKey), kv);
-    val tuple3 = new Tuple3<>(data, totalBytes, 1);
 
-    return new Tuple2<>(donorId, tuple3);
+    return new Tuple2<>(donorId, new Tuple3<>(data, totalBytes, 1));
   }
 
   private String getKey(ObjectNode row) {
