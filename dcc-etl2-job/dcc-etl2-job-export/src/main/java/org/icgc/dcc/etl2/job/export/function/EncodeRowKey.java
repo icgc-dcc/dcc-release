@@ -7,7 +7,7 @@ import org.icgc.dcc.etl2.job.export.util.HTableManager;
 
 import scala.Tuple2;
 
-public class EncodeRowKey implements Function<Tuple2<String, Integer>, byte[]> {
+class EncodeRowKey implements Function<Tuple2<String, Integer>, byte[]> {
 
   @Override
   public byte[] call(Tuple2<String, Integer> tuple) throws Exception {

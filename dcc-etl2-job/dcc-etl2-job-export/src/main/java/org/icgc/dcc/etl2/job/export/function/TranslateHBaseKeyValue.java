@@ -31,7 +31,7 @@ import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class TranslateHBaseKeyValue implements PairFunction<ObjectNode, ImmutableBytesWritable, KeyValue> {
+class TranslateHBaseKeyValue implements PairFunction<ObjectNode, ImmutableBytesWritable, KeyValue> {
 
   @Override
   public Tuple2<ImmutableBytesWritable, KeyValue> call(ObjectNode record) {
@@ -66,7 +66,7 @@ public class TranslateHBaseKeyValue implements PairFunction<ObjectNode, Immutabl
   }
 
   private Tuple2<ImmutableBytesWritable, KeyValue> createTuple(ImmutableBytesWritable key, KeyValue keyValue) {
-    return new Tuple2<ImmutableBytesWritable, KeyValue>(key, keyValue);
+    return new Tuple2<>(key, keyValue);
   }
 
 }

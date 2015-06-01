@@ -16,11 +16,10 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.icgc.dcc.etl2.job.export.util;
-
+ 
 import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.getFilePaths;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.*;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -37,7 +36,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.io.hfile.HFile;
@@ -73,9 +71,7 @@ public class HFileManager {
 
     // Verify
     val files = getFilePaths(fileSystem, hFilesPath);
-    for (val file : files) {
-      log.info(file);
-    }
+    files.forEach(log::info);
   }
 
   private static Path getHFilesPath(FileSystem fileSystem, HTable hTable) {
@@ -97,7 +93,8 @@ public class HFileManager {
     load(htable, hFilesDirPath);
   }
 
-  private void prepare(Path hFilePath) throws FileNotFoundException, IOException {
+  @SneakyThrows
+  private void prepare(Path hFilePath) {
     // Prepare HFiles for incremental load
     FileStatus[] hFiles = fileSystem.listStatus(hFilePath);
 
@@ -113,7 +110,8 @@ public class HFileManager {
     }
   }
 
-  private void load(HTable table, Path hFilesDirPath) throws Exception, TableNotFoundException, IOException {
+  @SneakyThrows
+  private void load(HTable table, Path hFilesDirPath) {
     val loader = new LoadIncrementalHFiles(conf);
     loader.doBulkLoad(hFilesDirPath, table);
   }
@@ -123,9 +121,8 @@ public class HFileManager {
     // set permissions correctly. This is a workaround for unsecured HBase. It should not
     // be necessary for SecureBulkLoadEndpoint (see https://issues.apache.org/jira/browse/HBASE-8495
     // and http://comments.gmane.org/gmane.comp.java.hadoop.hbase.user/44273)
-    val splitDir = new Path(hFile, "_tmp");
 
-    return splitDir;
+    return new Path(hFile, "_tmp");
   }
 
   private Job createHFileLoadJob(Configuration conf, HTable table) {
@@ -144,7 +141,8 @@ public class HFileManager {
     private final String fsUri;
 
     @Override
-    public void call(Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> tuple) throws Exception {
+    @SneakyThrows
+    public void call(Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> tuple) {
       val donorId = tuple._1();
       val data = tuple._2()._1();
       writeOutput(donorId, data); 
@@ -155,15 +153,14 @@ public class HFileManager {
       Path destPath = new Path(hfilesPath, Bytes.toString(DATA_CONTENT_FAMILY));
       Configuration conf = new Configuration();
       FileSystem fileSystem = FileSystem.get(new URI(fsUri), new Configuration());
-      val writer = HFile
+
+      return HFile
               .getWriterFactory(conf, new CacheConfig(conf))
               .withPath(fileSystem, new Path(destPath, donorId))
               .withComparator(KeyValue.COMPARATOR)
               .withFileContext(
                       new HFileContextBuilder().withBlockSize(BLOCKSIZE)
                               .build()).create();
-
-      return writer;
     }
 
     private void closeWriter(Writer writer) {
@@ -176,7 +173,8 @@ public class HFileManager {
       }
     }
 
-    private void writeOutput(String donorId, Map<ByteBuffer, KeyValue[]> processed) throws IOException {
+    @SneakyThrows
+    private void writeOutput(String donorId, Map<ByteBuffer, KeyValue[]> processed) {
       Writer writer = createWriter(donorId);
       for (val row : processed.keySet()) {
         val cells = processed.get(row);

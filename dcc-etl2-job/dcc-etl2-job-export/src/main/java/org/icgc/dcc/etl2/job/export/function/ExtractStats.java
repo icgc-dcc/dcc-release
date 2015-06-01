@@ -35,6 +35,6 @@ public class ExtractStats implements Function<Tuple2<String, Tuple3<Map<ByteBuff
     val donorId = tuple._1();
     val tuple3 = tuple._2();
     
-    return new Tuple3<String, Long, Integer>(donorId, tuple3._2(), tuple3._3());
+    return new Tuple3<>(donorId, tuple3._2(), tuple3._3());
   }
 }

@@ -145,9 +145,7 @@ public class ExportTableTask implements Task {
     for (val file : files) {
       log.info(file);
       val contents = readFile(fileSystem, new Path(file));
-      for (val line : contents) {
-        log.info(line);
-      }
+      contents.forEach(log::info);
     }
   }
 

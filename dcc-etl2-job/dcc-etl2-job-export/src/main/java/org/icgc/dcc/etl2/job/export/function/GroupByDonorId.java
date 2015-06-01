@@ -27,7 +27,7 @@ import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class GroupByDonorId implements
+class GroupByDonorId implements
     PairFunction<ObjectNode, String, ObjectNode> {
 
   @Override

@@ -20,6 +20,6 @@ package org.icgc.dcc.etl2.job.export.model;
 public enum ExportTableType {
 
   META,
-  DATA;
+  DATA
 
 }

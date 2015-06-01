@@ -72,11 +72,11 @@ public class ProcessDataType implements
     }
 
     KeyValue[] kv = kvs.toArray(new KeyValue[kvs.size()]);
-    Map<ByteBuffer, KeyValue[]> data = new TreeMap<ByteBuffer, KeyValue[]>();
+    Map<ByteBuffer, KeyValue[]> data = new TreeMap<>();
     data.put(ByteBuffer.wrap(rowKey), kv);
-    val tuple3 = new Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>(data, totalBytes, 1);
+    val tuple3 = new Tuple3<>(data, totalBytes, 1);
 
-    return new Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>>(donorId, tuple3);
+    return new Tuple2<>(donorId, tuple3);
   }
 
   private String getKey(ObjectNode row) {

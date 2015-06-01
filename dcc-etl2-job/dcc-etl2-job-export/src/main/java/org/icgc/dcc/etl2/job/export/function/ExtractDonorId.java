@@ -24,7 +24,7 @@ import org.apache.spark.api.java.function.Function;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ExtractDonorId implements Function<ObjectNode, String> {
+class ExtractDonorId implements Function<ObjectNode, String> {
 
   @Override
   public String call(ObjectNode row) {

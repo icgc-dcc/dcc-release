@@ -63,7 +63,7 @@ public class HTableManager {
   /**
    * Constants
    */
-  private final boolean USE_SNAPPY = false;
+  private static final boolean USE_SNAPPY = false;
 
   /**
    * Dependencies.
@@ -120,14 +120,14 @@ public class HTableManager {
     return Bytes.add(Bytes.toBytes(donorId), Bytes.toBytes(sum));
   }
 
-  public static CompositeRowKey decodeRowKey(byte[] encodedRowKey) {
+  private static CompositeRowKey decodeRowKey(byte[] encodedRowKey) {
     int donorId = Bytes.toInt(encodedRowKey, 0);
     long sum = Bytes.toLong(encodedRowKey, 4);
 
     return new CompositeRowKey(donorId, sum);
   }
 
-  public static List<byte[]> calculateBoundaries(List<byte[]> keys) {
+  private static List<byte[]> calculateBoundaries(List<byte[]> keys) {
     long current = 0;
     val rangeMap = TreeRangeMap.<Long, CompositeRowKey> create();
     val builder = ImmutableList.<byte[]> builder();
@@ -173,16 +173,15 @@ public class HTableManager {
   }
 
   @SuppressWarnings("deprecation")
-  public static void createDataTable(String tableName,
+  private static void createDataTable(String tableName,
       List<byte[]> boundaries, Configuration conf,
       boolean withSnappyCompression) throws IOException {
-    HBaseAdmin admin = new HBaseAdmin(conf);
-    try {
+    try (HBaseAdmin admin = new HBaseAdmin(conf)) {
       if (!admin.tableExists(tableName)) {
         byte[][] splits = new byte[boundaries.size()][];
         HTableDescriptor descriptor = new HTableDescriptor(tableName);
         HColumnDescriptor dataSchema = new HColumnDescriptor(
-            DATA_CONTENT_FAMILY);
+                DATA_CONTENT_FAMILY);
         dataSchema.setBlockCacheEnabled(false);
         dataSchema.setBlocksize(DATA_BLOCK_SIZE);
         dataSchema.setBloomFilterType(BloomType.ROW);
@@ -194,8 +193,6 @@ public class HTableManager {
       }
     } catch (TableExistsException e) {
       log.warn("already created... (skip)", e);
-    } finally {
-      admin.close();
     }
   }
 }

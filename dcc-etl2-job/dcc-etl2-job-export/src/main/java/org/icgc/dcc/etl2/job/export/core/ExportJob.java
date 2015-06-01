@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class ExportJob implements Job {
+class ExportJob implements Job {
 
   /**
    * Dependencies.

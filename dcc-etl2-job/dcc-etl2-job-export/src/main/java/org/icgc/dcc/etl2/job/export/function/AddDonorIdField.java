@@ -34,8 +34,7 @@ public class AddDonorIdField implements Function<ObjectNode, ObjectNode> {
   private String extractDonorId(ObjectNode row) {
     val donorIdValue = textValue(row, ICGC_DONOR_ID);
     Preconditions.checkState(donorIdValue.startsWith(ICGC_DONOR_ID_PREFIX));
-    val donorId = StringUtils.substringAfter(donorIdValue.trim(), ICGC_DONOR_ID_PREFIX);
-    return donorId;
+    return StringUtils.substringAfter(donorIdValue.trim(), ICGC_DONOR_ID_PREFIX);
   }
 
   @Override

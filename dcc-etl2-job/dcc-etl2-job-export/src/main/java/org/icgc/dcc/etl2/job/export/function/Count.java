@@ -19,7 +19,7 @@ package org.icgc.dcc.etl2.job.export.function;
 
 import org.apache.spark.api.java.function.Function2;
 
-public class Count implements Function2<Integer, Integer, Integer> {
+class Count implements Function2<Integer, Integer, Integer> {
 
   @Override
   public Integer call(Integer i1, Integer i2) {

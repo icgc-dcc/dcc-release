@@ -64,22 +64,22 @@ public class ExportJobTest {
   /**
    * Collaborators.
    */
-  EmbeddedHBase hbase;
+  private EmbeddedHBase hbase;
 
   /**
    * Class under test.
    */
-  ExportJob job;
+  private ExportJob job;
 
   /**
    * Configuration
    */
-  Configuration config;
-  Path hadoopWorkingDir;
-  JavaSparkContext sparkContext;
-  TaskExecutor taskExecutor;
-  FileSystem fileSystem;
-  File workingDir;
+  private Configuration config;
+  private Path hadoopWorkingDir;
+  private JavaSparkContext sparkContext;
+  private TaskExecutor taskExecutor;
+  private FileSystem fileSystem;
+  private File workingDir;
 
   /**
    * State.
@@ -138,7 +138,7 @@ public class ExportJobTest {
     job.execute(jobContext);
 
     val tableName = ExportTable.Clinical.name();
-    val table = hbase.getTable(tableName);
+    // val table = hbase.getTable(tableName);
     val rowCount = hbase.getRowCount(tableName);
     assertThat(rowCount).isEqualTo(15);
 
@@ -160,13 +160,11 @@ public class ExportJobTest {
     fileSystem.copyFromLocalFile(source, target);
     // Verify
     val files = getFilePaths(fileSystem, target);
-    for (val file : files) {
-      log.info(file);
-    }
+    files.forEach(log::info);
   }
 
   @SuppressWarnings("unchecked")
-  protected JobContext createJobContext(JobType type) {
+  private JobContext createJobContext(JobType type) {
     return new DefaultJobContext(type, "ICGC18", of(""), "/dev/null", hadoopWorkingDir.toString(), mock(Table.class),
         taskExecutor);
   }

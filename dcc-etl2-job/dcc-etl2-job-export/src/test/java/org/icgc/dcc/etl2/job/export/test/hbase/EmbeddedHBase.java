@@ -20,7 +20,6 @@ package org.icgc.dcc.etl2.job.export.test.hbase;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
@@ -74,9 +73,8 @@ public class EmbeddedHBase {
 
   private Configuration createConfiguration() {
     log.info("Creating configuation...'");
-    val config = HBaseConfiguration.create();
 
-    return config;
+    return HBaseConfiguration.create();
   }
 
 }

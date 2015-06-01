@@ -19,9 +19,6 @@ public class IsNonEmpty implements Function<ObjectNode, Boolean> {
   @Override
   public Boolean call(ObjectNode row) {
     val value = row.get(fieldName);
-    if (value == null || value.isNull() || value.isMissingNode()) {
-      return false;
-    }
-    return true;
+    return !(value == null || value.isNull() || value.isMissingNode());
   }
 }

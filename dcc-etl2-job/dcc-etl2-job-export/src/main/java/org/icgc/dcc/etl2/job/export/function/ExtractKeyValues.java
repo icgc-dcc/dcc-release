@@ -25,7 +25,7 @@ import org.apache.spark.api.java.function.Function;
 import scala.Tuple2;
 import scala.Tuple3;
 
-public class ExtractKeyValues implements
+class ExtractKeyValues implements
     Function<Tuple2<String, Tuple3<Map<byte[], KeyValue[]>, Long, Integer>>, Map<byte[], KeyValue[]>> {
 
   @Override

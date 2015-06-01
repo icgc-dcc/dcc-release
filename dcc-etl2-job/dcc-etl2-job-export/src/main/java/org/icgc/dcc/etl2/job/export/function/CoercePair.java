@@ -21,11 +21,11 @@ import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
 
-public class CoercePair<T> implements PairFunction<T, T, Void> {
+class CoercePair<T> implements PairFunction<T, T, Void> {
 
   @Override
   public Tuple2<T, Void> call(T key) {
-    return new Tuple2<T, Void>(key, null);
+    return new Tuple2<>(key, null);
   }
 
 }

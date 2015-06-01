@@ -26,8 +26,6 @@ import lombok.val;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.test.job.AbstractJobTest;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -36,19 +34,7 @@ import com.google.common.collect.Sets;
 
 public class DataTypesTest extends AbstractJobTest {
 
-  public static final String INPUT_PATH = "src/test/resources/fixtures/data/";
-
-  @Override
-  @Before
-  public void setUp() {
-    super.setUp();
-  }
-
-  @Override
-  @After
-  public void shutDown() {
-    super.shutDown();
-  }
+  private static final String INPUT_PATH = "src/test/resources/fixtures/data/";
 
   @Test
   public void testNoConsequenceClinicalDataType() {
