@@ -17,28 +17,26 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.type.Constants.EXPOSURE_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.SPECIMEN_FIELD_NAME;
 
 import java.util.Set;
 
-import lombok.RequiredArgsConstructor;
-
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.etl2.core.function.AddMissingField;
 import org.icgc.dcc.etl2.core.function.FlattenField;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
 import org.icgc.dcc.etl2.core.function.PullUpField;
+import org.icgc.dcc.etl2.core.function.RenameFields;
 import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
-import org.icgc.dcc.etl2.job.export.function.IsNonEmpty;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-@RequiredArgsConstructor
-public class DonorExposureDataType implements DataType {
+public class Clinical implements Type {
 
   private final String DATA_TYPE_FOLDER = "donor";
 
@@ -46,17 +44,50 @@ public class DonorExposureDataType implements DataType {
       .put("_donor_id", "icgc_donor_id")
       .put("_project_id", "project_code")
       .put("donor_id", "submitted_donor_id")
-      .put(EXPOSURE_FIELD_NAME, EXPOSURE_FIELD_NAME)
+      .put("donor_sex", "donor_sex")
+      .put("donor_vital_status", "donor_vital_status")
+      .put("disease_status_last_followup", "disease_status_last_followup")
+      .put("donor_relapse_type", "donor_relapse_type")
+      .put("donor_age_at_diagnosis", "donor_age_at_diagnosis")
+      .put("donor_age_at_enrollment", "donor_age_at_enrollment")
+      .put("donor_age_at_last_followup", "donor_age_at_last_followup")
+      .put("donor_relapse_interval", "donor_relapse_interval")
+      .put("donor_diagnosis_icd10", "donor_diagnosis_icd10")
+      .put("donor_tumour_staging_system_at_diagnosis", "donor_tumour_staging_system_at_diagnosis")
+      .put("donor_tumour_stage_at_diagnosis", "donor_tumour_stage_at_diagnosis")
+      .put("donor_tumour_stage_at_diagnosis_supplemental", "donor_tumour_stage_at_diagnosis_supplemental")
+      .put("donor_survival_time", "donor_survival_time")
+      .put("donor_interval_of_last_followup", "donor_interval_of_last_followup")
+      .put(SPECIMEN_FIELD_NAME, SPECIMEN_FIELD_NAME)
       .build();
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("donor_id", "donor_id")
-      .put("exposure_type", "exposure_type")
-      .put("exposure_intensity", "exposure_intensity")
-      .put("tobacco_smoking_history_indicator", "tobacco_smoking_history_indicator")
-      .put("tobacco_smoking_intensity", "tobacco_smoking_intensity")
-      .put("alcohol_history", "alcohol_history")
-      .put("alcohol_history_intensity", "alcohol_history_intensity")
+      .put("_specimen_id", "icgc_specimen_id")
+      .put("specimen_id", "submitted_specimen_id")
+      .put("specimen_type", "specimen_type")
+      .put("specimen_type_other", "specimen_type_other")
+      .put("specimen_interval", "specimen_interval")
+      .put("specimen_donor_treatment_type", "specimen_donor_treatment_type")
+      .put("specimen_donor_treatment_type_other", "specimen_donor_treatment_type_other")
+      .put("specimen_processing", "specimen_processing")
+      .put("specimen_processing_other", "specimen_processing_other")
+      .put("specimen_storage", "specimen_storage")
+      .put("specimen_storage_other", "specimen_storage_other")
+      .put("tumour_confirmed", "tumour_confirmed")
+      .put("specimen_biobank", "specimen_biobank")
+      .put("specimen_biobank_id", "specimen_biobank_id")
+      .put("specimen_available", "specimen_available")
+      .put("tumour_histological_type", "tumour_histological_type")
+      .put("tumour_grading_system", "tumour_grading_system")
+      .put("tumour_grade", "tumour_grade")
+      .put("tumour_grade_supplemental", "tumour_grade_supplemental")
+      .put("tumour_stage_system", "tumour_stage_system")
+      .put("tumour_stage", "tumour_stage")
+      .put("tumour_stage_supplemental", "tumour_stage_supplemental")
+      .put("digital_image_of_stained_section", "digital_image_of_stained_section")
+      .put("percentage_cellularity", "percentage_cellularity")
+      .put("level_of_cellularity", "level_of_cellularity")
       .build();
 
   @Override
@@ -65,10 +96,11 @@ public class DonorExposureDataType implements DataType {
         .map(new ParseObjectNode())
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())
-        .filter(new IsNonEmpty(EXPOSURE_FIELD_NAME))
-        .flatMap(new FlattenField(EXPOSURE_FIELD_NAME))
-        .map(new PullUpField(EXPOSURE_FIELD_NAME))
-        .map(new RetainFields(getFields()));
+        .map(new AddMissingField(SPECIMEN_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet()))
+        .flatMap(new FlattenField(SPECIMEN_FIELD_NAME))
+        .map(new PullUpField(SPECIMEN_FIELD_NAME))
+        .map(new RetainFields(getFields()))
+        .map(new RenameFields(SECOND_LEVEL_PROJECTION));
   }
 
   @Override
@@ -80,4 +112,5 @@ public class DonorExposureDataType implements DataType {
   public String getTypeDirectoryName() {
     return DATA_TYPE_FOLDER;
   }
+
 }

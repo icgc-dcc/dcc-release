@@ -17,78 +17,78 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.type.Constants.MIRNA_SEQ_TYPE_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.SAMPLE_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.SPECIMEN_FIELD_NAME;
 
 import java.util.Set;
 
-import lombok.RequiredArgsConstructor;
-
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.etl2.core.function.AddMissingField;
+import org.icgc.dcc.etl2.core.function.FlattenField;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
+import org.icgc.dcc.etl2.core.function.PullUpField;
+import org.icgc.dcc.etl2.core.function.RenameFields;
 import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
-import org.icgc.dcc.etl2.job.export.function.IsType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-@RequiredArgsConstructor
-public class MethSeqDataType implements DataType {
+public class Sample implements Type {
 
-  private final String DATA_TYPE_FOLDER = "meth_seq";
+  private final String DATA_TYPE_FOLDER = "sample";
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
       .put("_project_id", "project_code")
-      .put("_specimen_id", "icgc_specimen_id")
-      .put("_sample_id", "icgc_sample_id")
-      .put("analyzed_sample_id", "submitted_sample_id,")
-      .put("analysis_id", "analysis_id")
-      .put("mirna_db", "mirna_db")
-      .put("mirna_id", "mirna_id")
-      .put("normalized_read_count", "normalized_read_count")
-      .put("raw_read_count", "raw_read_count")
-      .put("fold_change", "fold_change")
-      .put("is_isomir", "is_isomir")
-      .put("chromosome", "chromosome")
-      .put("chromosome_start", "chromosome_start")
-      .put("chromosome_end", "chromosome_end")
-      .put("chromosome_strand", "chromosome_strand")
-      .put("assembly_version", "assembly_version")
-      .put("verification_status", "verification_status")
-      .put("verification_platform", "verification_platform")
-      .put("sequencing_platform", "sequencing_platform")
-      .put("total_read_count", "total_read_count")
-      .put("experimental_protocol", "experimental_protocol")
-      .put("reference_sample_type", "reference_sample_type")
-      .put("alignment_algorithm", "alignment_algorithm")
-      .put("normalization_algorithm", "normalization_algorithm")
-      .put("other_analysis_algorithm", "other_analysis_algorithm")
-      .put("sequencing_strategy", "sequencing_strategy")
-      .put("raw_data_repository", "raw_data_repository")
-      .put("raw_data_accession", "raw_data_accession")
+      .put("donor_id", "submitted_donor_id")
+      .put(SPECIMEN_FIELD_NAME, SPECIMEN_FIELD_NAME)
       .build();
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("donor_id", "donor_id")
+      .put("_specimen_id", "icgc_specimen_id")
+      .put("specimen_id", "submitted_specimen_id")
+      .put(SAMPLE_FIELD_NAME, SAMPLE_FIELD_NAME)
+      .build();
+
+  private static final ImmutableMap<String, String> THIRD_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
+      .put("_sample_id", "icgc_sample_id")
+      .put("analyzed_sample_id", "submitted_sample_id")
+      .put("analyzed_sample_interval", "analyzed_sample_interval")
+      .put("percentage_cellularity", "percentage_cellularity")
+      .put("level_of_cellularity", "level_of_cellularity")
+      .put("study", "study")
       .build();
 
   @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
-        .filter(new IsType(MIRNA_SEQ_TYPE_FIELD_NAME))
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())
-        .map(new RetainFields(getFields()));
+        .map(new AddMissingField(SPECIMEN_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet()))
+        .flatMap(new FlattenField(SPECIMEN_FIELD_NAME))
+        .map(new PullUpField(SPECIMEN_FIELD_NAME))
+        .map(new RetainFields(getFirstLevelFields()))
+        .map(new RenameFields(SECOND_LEVEL_PROJECTION))
+        .map(new AddMissingField(SAMPLE_FIELD_NAME, THIRD_LEVEL_PROJECTION.keySet()))
+        .flatMap(new FlattenField(SAMPLE_FIELD_NAME))
+        .map(new PullUpField(SAMPLE_FIELD_NAME))
+        .map(new RetainFields(getFields()))
+        .map(new RenameFields(THIRD_LEVEL_PROJECTION));
+  }
+
+  private Set<String> getFirstLevelFields() {
+    return Sets.newHashSet(Iterables.concat(FIRST_LEVEL_PROJECTION.values(), SECOND_LEVEL_PROJECTION.keySet()));
   }
 
   @Override
   public Set<String> getFields() {
-    return Sets.newHashSet(Iterables.concat(FIRST_LEVEL_PROJECTION.values(), SECOND_LEVEL_PROJECTION.keySet()));
+    return Sets.newHashSet(Iterables.concat(getFirstLevelFields(), THIRD_LEVEL_PROJECTION.keySet()));
   }
 
   @Override

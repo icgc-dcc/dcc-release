@@ -17,15 +17,17 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.type.Constants.METH_SEQ_TYPE_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.CNSM_TYPE_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.CONSEQUENCE_FIELD_NAME;
 
 import java.util.Set;
 
-import lombok.RequiredArgsConstructor;
-
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.etl2.core.function.AddMissingField;
+import org.icgc.dcc.etl2.core.function.FlattenField;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
+import org.icgc.dcc.etl2.core.function.PullUpField;
 import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
 import org.icgc.dcc.etl2.job.export.function.IsType;
@@ -35,51 +37,65 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-@RequiredArgsConstructor
-public class MirnaSeqDataType implements DataType {
+public class CNSM implements Type {
 
-  private final String DATA_TYPE_FOLDER = "mirna_seq";
+  private final String DATA_TYPE_FOLDER = "cnsm";
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
       .put("_project_id", "project_code")
       .put("_specimen_id", "icgc_specimen_id")
       .put("_sample_id", "icgc_sample_id")
-      .put("analyzed_sample_id", "submitted_sample_id,")
-      .put("analysis_id", "analysis_id")
+      .put("_matched_sample_id", "matched_icgc_sample_id")
+      .put("analyzed_sample_id", "submitted_sample_id")
+      .put("matched_sample_id", "submitted_matched_sample_id")
+      .put("mutation_type", "mutation_type")
+      .put("copy_number", "copy_number")
+      .put("segment_mean", "segment_mean")
+      .put("segment_median", "segment_median")
       .put("chromosome", "chromosome")
       .put("chromosome_start", "chromosome_start")
       .put("chromosome_end", "chromosome_end")
-      .put("chromosome_strand", "chromosome_strand")
       .put("assembly_version", "assembly_version")
-      .put("methylation_ratio", "methylation_ratio")
-      .put("methylated_read_count", "methylated_read_count")
-      .put("unmethylated_read_count", "unmethylated_read_count")
+      .put("chromosome_start_range", "chromosome_start_range")
+      .put("chromosome_end_range", "chromosome_end_range")
+      .put("start_probe_id", "start_probe_id")
+      .put("end_probe_id", "end_probe_id")
+      .put("sequencing_strategy", "sequencing_strategy")
+      .put("quality_score", "quality_score")
+      .put("probability", "probability")
+      .put("is_annotated", "is_annotated")
       .put("verification_status", "verification_status")
       .put("verification_platform", "verification_platform")
-      .put("sequencing_platform", "sequencing_platform")
-      .put("fraction_wg_cpg_sites_covered", "fraction_wg_cpg_sites_covered")
-      .put("conversion_rate", "conversion_rate")
+      .put("consequence", "consequences")
+      .put("platform", "platform")
       .put("experimental_protocol", "experimental_protocol")
-      .put("sequencing_strategy", "sequencing_strategy")
-      .put("base_quality_score_threshold", "base_quality_score_threshold")
+      .put("base_calling_algorithm", "base_calling_algorithm")
       .put("alignment_algorithm", "alignment_algorithm")
+      .put("variation_calling_algorithm", "variation_calling_algorithm")
       .put("other_analysis_algorithm", "other_analysis_algorithm")
+      .put("seq_coverage", "seq_coverage")
       .put("raw_data_repository", "raw_data_repository")
       .put("raw_data_accession", "raw_data_accession")
       .build();
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("donor_id", "donor_id")
+      .put("gene_affected", "gene_affected")
+      .put("transcript_affected", "transcript_affected")
+      .put("gene_build_version", "gene_build_version")
       .build();
 
   @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
-        .filter(new IsType(METH_SEQ_TYPE_FIELD_NAME))
+        .filter(new IsType(CNSM_TYPE_FIELD_NAME))
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())
+        .map(new AddMissingField(CONSEQUENCE_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet()))
+        .flatMap(new FlattenField(CONSEQUENCE_FIELD_NAME))
+        .map(new PullUpField(CONSEQUENCE_FIELD_NAME))
         .map(new RetainFields(getFields()));
   }
 

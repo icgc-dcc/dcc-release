@@ -21,8 +21,6 @@ import static org.icgc.dcc.etl2.job.export.model.type.Constants.SPECIMEN_FIELD_N
 
 import java.util.Set;
 
-import lombok.RequiredArgsConstructor;
-
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.function.AddMissingField;
 import org.icgc.dcc.etl2.core.function.FlattenField;
@@ -38,35 +36,21 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-@RequiredArgsConstructor
-public class ClinicalDataType implements DataType {
+public class Specimen implements Type {
 
-  private final String DATA_TYPE_FOLDER = "donor";
+  private final String DATA_TYPE_FOLDER = "specimen";
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
       .put("_project_id", "project_code")
       .put("donor_id", "submitted_donor_id")
-      .put("donor_sex", "donor_sex")
-      .put("donor_vital_status", "donor_vital_status")
-      .put("disease_status_last_followup", "disease_status_last_followup")
-      .put("donor_relapse_type", "donor_relapse_type")
-      .put("donor_age_at_diagnosis", "donor_age_at_diagnosis")
-      .put("donor_age_at_enrollment", "donor_age_at_enrollment")
-      .put("donor_age_at_last_followup", "donor_age_at_last_followup")
-      .put("donor_relapse_interval", "donor_relapse_interval")
-      .put("donor_diagnosis_icd10", "donor_diagnosis_icd10")
-      .put("donor_tumour_staging_system_at_diagnosis", "donor_tumour_staging_system_at_diagnosis")
-      .put("donor_tumour_stage_at_diagnosis", "donor_tumour_stage_at_diagnosis")
-      .put("donor_tumour_stage_at_diagnosis_supplemental", "donor_tumour_stage_at_diagnosis_supplemental")
-      .put("donor_survival_time", "donor_survival_time")
-      .put("donor_interval_of_last_followup", "donor_interval_of_last_followup")
       .put(SPECIMEN_FIELD_NAME, SPECIMEN_FIELD_NAME)
       .build();
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("donor_id", "donor_id")
       .put("_specimen_id", "icgc_specimen_id")
+      .put("study_specimen_involved_in", "study_specimen_involved_in,")
       .put("specimen_id", "submitted_specimen_id")
       .put("specimen_type", "specimen_type")
       .put("specimen_type_other", "specimen_type_other")

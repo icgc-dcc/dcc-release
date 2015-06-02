@@ -21,8 +21,6 @@ import static org.icgc.dcc.etl2.job.export.model.type.Constants.EXP_SEQ_TYPE_FIE
 
 import java.util.Set;
 
-import lombok.RequiredArgsConstructor;
-
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
@@ -35,8 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-@RequiredArgsConstructor
-public class ExpSeqDataType implements DataType {
+public class ExpSeq implements Type {
 
   private final String DATA_TYPE_FOLDER = "exp_seq";
 

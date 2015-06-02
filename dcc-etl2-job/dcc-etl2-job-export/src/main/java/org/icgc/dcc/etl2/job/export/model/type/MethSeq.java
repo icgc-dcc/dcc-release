@@ -17,63 +17,69 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.type.Constants.THERAPY_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.MIRNA_SEQ_TYPE_FIELD_NAME;
 
 import java.util.Set;
 
-import lombok.RequiredArgsConstructor;
-
 import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.core.function.FlattenField;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
-import org.icgc.dcc.etl2.core.function.PullUpField;
 import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
-import org.icgc.dcc.etl2.job.export.function.IsNonEmpty;
+import org.icgc.dcc.etl2.job.export.function.IsType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-@RequiredArgsConstructor
-public class DonorTherapyDataType implements DataType {
+public class MethSeq implements Type {
 
-  private final String DATA_TYPE_FOLDER = "donor";
+  private final String DATA_TYPE_FOLDER = "meth_seq";
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
       .put("_project_id", "project_code")
-      .put("donor_id", "submitted_donor_id")
-      .put(THERAPY_FIELD_NAME, THERAPY_FIELD_NAME)
+      .put("_specimen_id", "icgc_specimen_id")
+      .put("_sample_id", "icgc_sample_id")
+      .put("analyzed_sample_id", "submitted_sample_id,")
+      .put("analysis_id", "analysis_id")
+      .put("mirna_db", "mirna_db")
+      .put("mirna_id", "mirna_id")
+      .put("normalized_read_count", "normalized_read_count")
+      .put("raw_read_count", "raw_read_count")
+      .put("fold_change", "fold_change")
+      .put("is_isomir", "is_isomir")
+      .put("chromosome", "chromosome")
+      .put("chromosome_start", "chromosome_start")
+      .put("chromosome_end", "chromosome_end")
+      .put("chromosome_strand", "chromosome_strand")
+      .put("assembly_version", "assembly_version")
+      .put("verification_status", "verification_status")
+      .put("verification_platform", "verification_platform")
+      .put("sequencing_platform", "sequencing_platform")
+      .put("total_read_count", "total_read_count")
+      .put("experimental_protocol", "experimental_protocol")
+      .put("reference_sample_type", "reference_sample_type")
+      .put("alignment_algorithm", "alignment_algorithm")
+      .put("normalization_algorithm", "normalization_algorithm")
+      .put("other_analysis_algorithm", "other_analysis_algorithm")
+      .put("sequencing_strategy", "sequencing_strategy")
+      .put("raw_data_repository", "raw_data_repository")
+      .put("raw_data_accession", "raw_data_accession")
       .build();
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("donor_id", "donor_id")
-      .put("first_therapy_type", "first_therapy_type")
-      .put("first_therapy_therapeutic_intent", "first_therapy_therapeutic_intent")
-      .put("first_therapy_start_interval", "first_therapy_start_interval")
-      .put("first_therapy_duration", "first_therapy_duration")
-      .put("first_therapy_response", "first_therapy_response")
-      .put("second_therapy_type", "second_therapy_type")
-      .put("second_therapy_therapeutic_intent", "second_therapy_therapeutic_intent")
-      .put("second_therapy_start_interval", "second_therapy_start_interval")
-      .put("second_therapy_duration", "second_therapy_duration")
-      .put("second_therapy_response", "second_therapy_response")
-      .put("other_therapy", "other_therapy")
-      .put("other_therapy_response", "other_therapy_response")
       .build();
 
   @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
+        .filter(new IsType(MIRNA_SEQ_TYPE_FIELD_NAME))
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())
-        .filter(new IsNonEmpty(THERAPY_FIELD_NAME))
-        .flatMap(new FlattenField(THERAPY_FIELD_NAME))
-        .map(new PullUpField(THERAPY_FIELD_NAME))
         .map(new RetainFields(getFields()));
   }
 

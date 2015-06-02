@@ -17,11 +17,9 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.type.Constants.PEXP_TYPE_FIELD_NAME;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.JCN_TYPE_FIELD_NAME;
 
 import java.util.Set;
-
-import lombok.RequiredArgsConstructor;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
@@ -35,10 +33,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-@RequiredArgsConstructor
-public class PExpDataType implements DataType {
+public class JCN implements Type {
 
-  private final String DATA_TYPE_FOLDER = "pexp";
+  private final String DATA_TYPE_FOLDER = "jcn";
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
@@ -47,15 +44,40 @@ public class PExpDataType implements DataType {
       .put("_sample_id", "icgc_sample_id")
       .put("analyzed_sample_id", "submitted_sample_id,")
       .put("analysis_id", "analysis_id")
-      .put("antibody_id", "antibody_id")
-      .put("gene_name", "gene_name")
+      .put("junction_id", "junction_id")
       .put("gene_stable_id", "gene_stable_id")
-      .put("gene_build_version", "gene_build_version")
-      .put("normalized_expression_level", "normalized_expression_level")
+      .put("gene_chromosome", "gene_chromosome")
+      .put("gene_strand", "gene_strand")
+      .put("gene_start", "gene_start")
+      .put("gene_end", "gene_end")
+      .put("assembly_version", "assembly_version")
+      .put("second_gene_stable_id", "second_gene_stable_id")
+      .put("exon1_chromosome", "exon1_chromosome")
+      .put("exon1_number_bases", "exon1_number_bases")
+      .put("exon1_end", "exon1_end")
+      .put("exon1_strand", "exon1_strand")
+      .put("exon2_chromosome", "exon2_chromosome")
+      .put("exon2_number_bases", "exon2_number_bases")
+      .put("exon2_start", "exon2_start")
+      .put("exon2_strand", "exon2_strand")
+      .put("is_fusion_gene", "is_fusion_gene")
+      .put("is_novel_splice_form", "is_novel_splice_form")
+      .put("junction_seq", "junction_seq")
+      .put("junction_type", "junction_type")
+      .put("junction_read_count", "junction_read_count")
+      .put("quality_score", "quality_score")
+      .put("probability", "probability")
       .put("verification_status", "verification_status")
       .put("verification_platform", "verification_platform")
+      .put("gene_build_version", "gene_build_version")
       .put("platform", "platform")
       .put("experimental_protocol", "experimental_protocol")
+      .put("base_calling_algorithm", "base_calling_algorithm")
+      .put("alignment_algorithm", "alignment_algorithm")
+      .put("normalization_algorithm", "normalization_algorithm")
+      .put("other_analysis_algorithm", "other_analysis_algorithm")
+      .put("sequencing_strategy", "sequencing_strategy")
+      .put("seq_coverage", "seq_coverage")
       .put("raw_data_repository", "raw_data_repository")
       .put("raw_data_accession", "raw_data_accession")
       .build();
@@ -68,7 +90,7 @@ public class PExpDataType implements DataType {
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
-        .filter(new IsType(PEXP_TYPE_FIELD_NAME))
+        .filter(new IsType(JCN_TYPE_FIELD_NAME))
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())
         .map(new RetainFields(getFields()));
