@@ -24,11 +24,16 @@ import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.getFilePaths;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.DATA_CONTENT_FAMILY;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.getStaticFileOutput;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.getTableName;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.DONOR_ID;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.*;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -48,14 +53,15 @@ import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
 import org.icgc.dcc.etl2.job.export.test.hbase.EmbeddedHBase;
+import org.icgc.dcc.etl2.job.export.util.HTableManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Table;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.MoreExecutors;
 
 @Slf4j
@@ -67,6 +73,7 @@ public class ExportJobTest {
    */
   private static final String TEST_FIXTURES_DIR = "src/test/resources/fixtures";
   private static final String INPUT_DIR = TEST_FIXTURES_DIR + "/export_input";
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   /**
    * Collaborators.
@@ -140,36 +147,60 @@ public class ExportJobTest {
     log.info("Using data from '{}'", inputDirectory.getAbsolutePath());
 
     val projectNames = ImmutableList.of("All-US", "EOPC-DE", "PRAD-CA");
-    String releaseName = "ICGC18";
+    val releaseName = "ICGC19";
     val jobContext = createJobContext(job.getType(), releaseName, projectNames, hadoopWorkingDir.toString());
+
     job.execute(jobContext);
 
     val tableName = getTableName(ExportTable.Clinical.name(), releaseName);
     val staticOutputFile = getStaticFileOutput(tableName);
+    List<ObjectNode> staticOutput = sparkContext.textFile(staticOutputFile)
+        .collect()
+        .stream()
+        .map(row -> readJson(row))
+        .collect(Collectors.toList());
+
+    assertThat(staticOutput.size()).isEqualTo(15);
     val rowCount = hbase.getRowCount(tableName);
     assertThat(rowCount).isEqualTo(15);
 
-    val scanner = hbase.scanTable(tableName, DATA_CONTENT_FAMILY);
+    ListMultimap<Integer, ObjectNode> donors = collectDonors(staticOutput);
+    Map<String, Integer> values = collectValueCount(staticOutput);
 
+    val scanner = hbase.scanTable(tableName, DATA_CONTENT_FAMILY);
     for (Result result = scanner.next(); (result != null); result = scanner.next()) {
       for (KeyValue keyValue : result.list()) {
-        log.info("Qualifier : " + keyValue.getKeyString() + " : Value : "
-            + Bytes.toString(keyValue.getValue()));
+        val family = keyValue.getFamily();
+        val qualifier = keyValue.getQualifier();
+        val cell = keyValue.getValue();
+        log.info("Family : '{}', Qualifier : '{}', Value: '{}'", Bytes.toString(family), qualifier,
+            Bytes.toString(cell));
+
+        assertThat(family).isEqualTo(DATA_CONTENT_FAMILY);
+
+        val rowByte = keyValue.getRow();
+        val compositeKey = HTableManager.decodeRowKey(rowByte);
+        val donorId = compositeKey.getDonorId();
+        List<ObjectNode> rows = donors.get(donorId);
+        assertThat(rows).isNotNull();
+        assertThat(rows.size()).isGreaterThan(0);
+
+        val cellValue = Bytes.toString(cell);
+        val count = values.get(cellValue);
+
+        assertThat(count).isNotNull();
+        assertThat(count).isGreaterThan(0);
+
+        values.put(cellValue, count - 1);
+
       }
     }
 
-    // val get = new Get(Bytes.toBytes(1));
-    // get.addFamily(ExportTables.DATA_CONTENT_FAMILY);
-    // val result = table.get(get);
-    // assertThat(result.isEmpty()).isFalse();
-    //
-    // byte[] expectedBytes = Bytes.toBytes("");
-    //
-    // byte[] family = ExportTables.DATA_CONTENT_FAMILY;
-    // byte[] qualifier = ExportTables.META_TYPE_HEADER;
-    // byte[] actualBytes = result.getValue(family, qualifier);
-    //
-    // assertThat(actualBytes).isEqualTo(expectedBytes);
+    // Make sure all values have been found.
+    for (val key : values.keySet()) {
+      assertThat(values.get(key)).isEqualTo(0);
+    }
+
   }
 
   private void copyFiles(Path source, Path target) throws IOException {
@@ -184,4 +215,41 @@ public class ExportJobTest {
     return new DefaultJobContext(type, release, projects, "/dev/null", workingDir, mock(Table.class),
         taskExecutor);
   }
+
+  @SneakyThrows
+  private ObjectNode readJson(String row) {
+    return (ObjectNode) MAPPER.readTree(row);
+  }
+
+  private Map<String, Integer> collectValueCount(List<ObjectNode> staticOutput) {
+    Map<String, Integer> values = Maps.newHashMap();
+    for (val row : staticOutput) {
+      val fields = row.fieldNames();
+      while (fields.hasNext()) {
+        val fieldName = fields.next();
+        val value = row.get(fieldName);
+        if (!(value == null || value.isNull())) {
+          val count = values.get(value.asText());
+          if (count == null) {
+            values.put(value.asText(), 1);
+          } else {
+            values.put(value.asText(), count + 1);
+          }
+        }
+      }
+    }
+
+    return values;
+  }
+
+  private ListMultimap<Integer, ObjectNode> collectDonors(List<ObjectNode> staticOutput) {
+    ListMultimap<Integer, ObjectNode> donors = ArrayListMultimap.create();
+    for (val row : staticOutput) {
+      val donorId = row.get(DONOR_ID).asInt();
+      donors.put(donorId, row);
+    }
+
+    return donors;
+  }
+
 }

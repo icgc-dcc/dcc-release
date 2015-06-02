@@ -118,7 +118,7 @@ public class HTableManager {
     return Bytes.add(Bytes.toBytes(donorId), Bytes.toBytes(sum));
   }
 
-  private static CompositeRowKey decodeRowKey(byte[] encodedRowKey) {
+  public static CompositeRowKey decodeRowKey(byte[] encodedRowKey) {
     int donorId = Bytes.toInt(encodedRowKey, 0);
     long sum = Bytes.toLong(encodedRowKey, 4);
 
