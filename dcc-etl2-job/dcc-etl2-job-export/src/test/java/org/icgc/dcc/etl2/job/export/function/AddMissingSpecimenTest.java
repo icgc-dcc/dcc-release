@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.toEmptyJsonValue;
 import static org.icgc.dcc.etl2.job.export.model.type.Constants.SPECIMEN_FIELD_NAME;
 import static org.icgc.dcc.etl2.test.util.TestJsonNodes.$;
+
 import lombok.val;
 
 import org.icgc.dcc.etl2.core.function.AddMissingField;

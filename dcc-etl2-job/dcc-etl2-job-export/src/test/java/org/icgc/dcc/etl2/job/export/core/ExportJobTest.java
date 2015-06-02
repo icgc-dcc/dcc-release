@@ -21,9 +21,7 @@ import static org.apache.hadoop.fs.FileSystem.getDefaultUri;
 import static org.apache.hadoop.fs.FileSystem.setDefaultUri;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.getFilePaths;
-import static org.icgc.dcc.etl2.job.export.model.ExportTables.DATA_CONTENT_FAMILY;
-import static org.icgc.dcc.etl2.job.export.model.ExportTables.getStaticFileOutput;
-import static org.icgc.dcc.etl2.job.export.model.ExportTables.getTableName;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.*;
 import static org.icgc.dcc.etl2.job.export.model.type.Constants.DONOR_ID;
 import static org.mockito.Mockito.mock;
 
@@ -33,11 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.*;
-
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -62,6 +58,7 @@ import org.junit.rules.TemporaryFolder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.*;
 import com.google.common.util.concurrent.MoreExecutors;
 
 @Slf4j

@@ -16,7 +16,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.icgc.dcc.etl2.job.export.util;
- 
+
 import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.getFilePaths;
 import static org.icgc.dcc.etl2.job.export.model.ExportTables.*;
 

@@ -25,8 +25,8 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.TreeMap;
 
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -72,7 +72,7 @@ public class ProcessDataType implements
     }
 
     val kv = kvs.toArray(new KeyValue[kvs.size()]);
-    Map<ByteBuffer, KeyValue[]> data = new TreeMap<ByteBuffer, KeyValue[]>();
+    Map<ByteBuffer, KeyValue[]> data = new TreeMap<>();
     data.put(ByteBuffer.wrap(rowKey), kv);
 
     return new Tuple2<>(donorId, new Tuple3<>(data, totalBytes, 1));

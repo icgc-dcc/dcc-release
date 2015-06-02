@@ -22,8 +22,8 @@ import static java.util.stream.Collectors.toList;
 import java.util.Collection;
 
 import lombok.NonNull;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import org.apache.hadoop.conf.Configuration;
 import org.icgc.dcc.etl2.core.job.Job;

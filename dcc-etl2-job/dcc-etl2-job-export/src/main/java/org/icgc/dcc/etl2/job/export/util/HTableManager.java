@@ -32,7 +32,6 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableExistsException;
@@ -152,22 +151,6 @@ public class HTableManager {
     }
 
     return builder.build();
-  }
-
-  public static void createDataTable(String tableName) throws IOException {
-    createDataTable(tableName, ImmutableList.<byte[]> of(),
-        HBaseConfiguration.create(), true);
-  }
-
-  public static void createDataTable(String tableName, Configuration conf)
-      throws IOException {
-    createDataTable(tableName, ImmutableList.<byte[]> of(), conf, true);
-  }
-
-  public static void createDataTable(String tableName, Configuration conf,
-      boolean withSnappyCompression) throws IOException {
-    createDataTable(tableName, ImmutableList.<byte[]> of(), conf,
-        withSnappyCompression);
   }
 
   @SneakyThrows

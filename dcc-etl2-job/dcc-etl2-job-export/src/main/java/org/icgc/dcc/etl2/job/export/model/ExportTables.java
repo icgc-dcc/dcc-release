@@ -18,6 +18,7 @@
 package org.icgc.dcc.etl2.job.export.model;
 
 import static lombok.AccessLevel.PRIVATE;
+
 import lombok.NoArgsConstructor;
 
 import org.apache.hadoop.fs.permission.FsPermission;
