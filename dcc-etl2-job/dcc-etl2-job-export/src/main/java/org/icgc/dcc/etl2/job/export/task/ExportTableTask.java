@@ -30,8 +30,8 @@ import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -48,7 +48,6 @@ import org.icgc.dcc.etl2.job.export.function.ExtractStats;
 import org.icgc.dcc.etl2.job.export.function.ProcessDataType;
 import org.icgc.dcc.etl2.job.export.function.SumDataType;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
-import org.icgc.dcc.etl2.job.export.model.type.DataType;
 import org.icgc.dcc.etl2.job.export.util.HFileManager;
 import org.icgc.dcc.etl2.job.export.util.HTableManager;
 
@@ -93,7 +92,7 @@ public class ExportTableTask implements Task {
     log.info("table name '{}' ...", tableName);
     val inputPath = taskContext.getPath(FileType.EXPORT_INPUT);
     log.info("Input path {} ...", inputPath);
-    val dataType = createDataTypeInstance(table.name());
+    val dataType = table.type;
     log.info("Processing data type {} ...", dataType.getClass().getName());
 
     val dataTypeDirectoryName = dataType.getTypeDirectoryName();
@@ -196,16 +195,6 @@ public class ExportTableTask implements Task {
     log.info("Loading HFiles...");
     hFileManager.loadHFiles(hTable);
     log.info("Loaded HFiles");
-  }
-
-  @SneakyThrows
-  private DataType createDataTypeInstance(String tableName) {
-    val packageName = "org.icgc.dcc.etl2.job.export.model.type";
-    val className = packageName + "." + tableName + "DataType";
-    val clazz = Class.forName(className);
-    val constructor = clazz.getConstructor();
-    val instance = constructor.newInstance();
-    return (DataType) instance;
   }
 
 }

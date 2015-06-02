@@ -149,7 +149,7 @@ public class ExportJobTest {
 
     job.execute(jobContext);
 
-    val tableName = getTableName(ExportTable.Clinical.name(), releaseName);
+    val tableName = getTableName(ExportTable.CLINICAL.name, releaseName);
     val staticOutputFile = getStaticFileOutput(tableName);
     List<ObjectNode> staticOutput = sparkContext.textFile(staticOutputFile)
         .collect()

@@ -17,12 +17,9 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.type.Constants.CNSM_TYPE_FIELD_NAME;
 import static org.icgc.dcc.etl2.job.export.model.type.Constants.CONSEQUENCE_FIELD_NAME;
 
 import java.util.Set;
-
-import lombok.RequiredArgsConstructor;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.function.AddMissingField;
@@ -32,42 +29,36 @@ import org.icgc.dcc.etl2.core.function.ProjectFields;
 import org.icgc.dcc.etl2.core.function.PullUpField;
 import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
-import org.icgc.dcc.etl2.job.export.function.IsType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-@RequiredArgsConstructor
-public class CNSMDataType implements DataType {
+public class SGVControlled implements Type {
 
-  private final String DATA_TYPE_FOLDER = "cnsm";
+  private final String DATA_TYPE_FOLDER = "sgv";
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
       .put("_project_id", "project_code")
       .put("_specimen_id", "icgc_specimen_id")
       .put("_sample_id", "icgc_sample_id")
-      .put("_matched_sample_id", "matched_icgc_sample_id")
       .put("analyzed_sample_id", "submitted_sample_id")
-      .put("matched_sample_id", "submitted_matched_sample_id")
-      .put("mutation_type", "mutation_type")
-      .put("copy_number", "copy_number")
-      .put("segment_mean", "segment_mean")
-      .put("segment_median", "segment_median")
+      .put("analysis_id", "analysis_id")
       .put("chromosome", "chromosome")
       .put("chromosome_start", "chromosome_start")
       .put("chromosome_end", "chromosome_end")
+      .put("chromosome_strand", "chromosome_strand")
       .put("assembly_version", "assembly_version")
-      .put("chromosome_start_range", "chromosome_start_range")
-      .put("chromosome_end_range", "chromosome_end_range")
-      .put("start_probe_id", "start_probe_id")
-      .put("end_probe_id", "end_probe_id")
-      .put("sequencing_strategy", "sequencing_strategy")
+      .put("variant_type", "variant_type")
+      .put("reference_genome_allele", "reference_genome_allele")
+      .put("genotype", "genotype")
+      .put("variant_allele", "variant_allele")
       .put("quality_score", "quality_score")
       .put("probability", "probability")
-      .put("is_annotated", "is_annotated")
+      .put("total_read_count", "total_read_count")
+      .put("variant_allele_read_count", "variant_allele_read_count")
       .put("verification_status", "verification_status")
       .put("verification_platform", "verification_platform")
       .put("consequence", "consequences")
@@ -77,23 +68,26 @@ public class CNSMDataType implements DataType {
       .put("alignment_algorithm", "alignment_algorithm")
       .put("variation_calling_algorithm", "variation_calling_algorithm")
       .put("other_analysis_algorithm", "other_analysis_algorithm")
+      .put("sequencing_strategy", "sequencing_strategy")
       .put("seq_coverage", "seq_coverage")
       .put("raw_data_repository", "raw_data_repository")
       .put("raw_data_accession", "raw_data_accession")
+      .put("note", "note")
       .build();
 
   private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("donor_id", "donor_id")
+      .put("consequence_type", "consequence_type")
+      .put("aa_change", "aa_change")
+      .put("cds_change", "cds_change")
       .put("gene_affected", "gene_affected")
       .put("transcript_affected", "transcript_affected")
-      .put("gene_build_version", "gene_build_version")
       .build();
 
   @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
-        .filter(new IsType(CNSM_TYPE_FIELD_NAME))
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())
         .map(new AddMissingField(CONSEQUENCE_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet()))

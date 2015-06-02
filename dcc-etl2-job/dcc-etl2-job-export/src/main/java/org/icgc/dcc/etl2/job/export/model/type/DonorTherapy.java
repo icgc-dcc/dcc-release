@@ -17,46 +17,49 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.THERAPY_FIELD_NAME;
+
 import java.util.Set;
 
-import lombok.RequiredArgsConstructor;
-
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.etl2.core.function.FlattenField;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
+import org.icgc.dcc.etl2.core.function.PullUpField;
+import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
+import org.icgc.dcc.etl2.job.export.function.IsNonEmpty;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-@RequiredArgsConstructor
-public class DonorDataType implements DataType {
+public class DonorTherapy implements Type {
 
   private final String DATA_TYPE_FOLDER = "donor";
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
       .put("_project_id", "project_code")
-      .put("study_donor_involved_in", "study_donor_involved_in")
       .put("donor_id", "submitted_donor_id")
-      .put("donor_sex", "donor_sex")
-      .put("donor_vital_status", "donor_vital_status")
-      .put("disease_status_last_followup", "disease_status_last_followup")
-      .put("donor_relapse_type", "donor_relapse_type")
-      .put("donor_age_at_diagnosis", "donor_age_at_diagnosis")
-      .put("donor_age_at_enrollment", "donor_age_at_enrollment")
-      .put("donor_age_at_last_followup", "donor_age_at_last_followup")
-      .put("donor_relapse_interval", "donor_relapse_interval")
-      .put("donor_diagnosis_icd10", "donor_diagnosis_icd10")
-      .put("donor_tumour_staging_system_at_diagnosis", "donor_tumour_staging_system_at_diagnosis")
-      .put("donor_tumour_stage_at_diagnosis", "donor_tumour_stage_at_diagnosis")
-      .put("donor_tumour_stage_at_diagnosis_supplemental", "donor_tumour_stage_at_diagnosis_supplemental")
-      .put("donor_survival_time", "donor_survival_time")
-      .put("donor_interval_of_last_followup", "donor_interval_of_last_followup")
-      .put("prior_malignancy", "prior_malignancy")
-      .put("cancer_type_prior_malignancy", "cancer_type_prior_malignancy")
-      .put("cancer_history_first_degree_relative", "cancer_history_first_degree_relative")
+      .put(THERAPY_FIELD_NAME, THERAPY_FIELD_NAME)
+      .build();
+
+  private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
+      .put("donor_id", "donor_id")
+      .put("first_therapy_type", "first_therapy_type")
+      .put("first_therapy_therapeutic_intent", "first_therapy_therapeutic_intent")
+      .put("first_therapy_start_interval", "first_therapy_start_interval")
+      .put("first_therapy_duration", "first_therapy_duration")
+      .put("first_therapy_response", "first_therapy_response")
+      .put("second_therapy_type", "second_therapy_type")
+      .put("second_therapy_therapeutic_intent", "second_therapy_therapeutic_intent")
+      .put("second_therapy_start_interval", "second_therapy_start_interval")
+      .put("second_therapy_duration", "second_therapy_duration")
+      .put("second_therapy_response", "second_therapy_response")
+      .put("other_therapy", "other_therapy")
+      .put("other_therapy_response", "other_therapy_response")
       .build();
 
   @Override
@@ -64,12 +67,16 @@ public class DonorDataType implements DataType {
     return input
         .map(new ParseObjectNode())
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
-        .map(new AddDonorIdField());
+        .map(new AddDonorIdField())
+        .filter(new IsNonEmpty(THERAPY_FIELD_NAME))
+        .flatMap(new FlattenField(THERAPY_FIELD_NAME))
+        .map(new PullUpField(THERAPY_FIELD_NAME))
+        .map(new RetainFields(getFields()));
   }
 
   @Override
   public Set<String> getFields() {
-    return Sets.newHashSet(FIRST_LEVEL_PROJECTION.values());
+    return Sets.newHashSet(Iterables.concat(FIRST_LEVEL_PROJECTION.values(), SECOND_LEVEL_PROJECTION.keySet()));
   }
 
   @Override

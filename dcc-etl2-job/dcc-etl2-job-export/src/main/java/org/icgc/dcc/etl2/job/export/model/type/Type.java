@@ -23,7 +23,7 @@ import org.apache.spark.api.java.JavaRDD;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public interface DataType {
+public interface Type {
 
   JavaRDD<ObjectNode> process(JavaRDD<String> input);
 

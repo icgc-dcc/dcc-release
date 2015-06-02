@@ -22,8 +22,6 @@ import static org.icgc.dcc.etl2.job.export.model.type.Constants.OBSERVATION_FIEL
 
 import java.util.Set;
 
-import lombok.RequiredArgsConstructor;
-
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.function.AddMissingField;
 import org.icgc.dcc.etl2.core.function.FlattenField;
@@ -33,15 +31,14 @@ import org.icgc.dcc.etl2.core.function.PullUpField;
 import org.icgc.dcc.etl2.core.function.RenameFields;
 import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
-import org.icgc.dcc.etl2.job.export.function.IsOpenControlled;
+import org.icgc.dcc.etl2.job.export.function.IsOpenMasked;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-@RequiredArgsConstructor
-public class SSMControlledDataType implements DataType {
+public class SSMOpen implements Type {
 
   private final String DATA_TYPE_FOLDER = "ssm";
 
@@ -111,7 +108,7 @@ public class SSMControlledDataType implements DataType {
         .map(new AddMissingField(OBSERVATION_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet()))
         .flatMap(new FlattenField(OBSERVATION_FIELD_NAME))
         .map(new PullUpField(OBSERVATION_FIELD_NAME))
-        .filter(new IsOpenControlled())
+        .filter(new IsOpenMasked())
         .map(new RetainFields(getFirstLevelFields()))
         .map(new RenameFields(SECOND_LEVEL_PROJECTION))
         .map(new AddMissingField(CONSEQUENCE_FIELD_NAME, THIRD_LEVEL_PROJECTION.keySet()))
@@ -134,5 +131,4 @@ public class SSMControlledDataType implements DataType {
   public String getTypeDirectoryName() {
     return DATA_TYPE_FOLDER;
   }
-
 }

@@ -17,66 +17,56 @@
  */
 package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.job.export.model.type.Constants.EXP_ARRAY_TYPE_FIELD_NAME;
-
 import java.util.Set;
-
-import lombok.RequiredArgsConstructor;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
 import org.icgc.dcc.etl2.core.function.ProjectFields;
-import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.job.export.function.AddDonorIdField;
-import org.icgc.dcc.etl2.job.export.function.IsType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-@RequiredArgsConstructor
-public class ExpArrayDataType implements DataType {
+public class Donor implements Type {
 
-  private final String DATA_TYPE_FOLDER = "exp_array";
+  private final String DATA_TYPE_FOLDER = "donor";
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")
       .put("_project_id", "project_code")
-      .put("_specimen_id", "icgc_specimen_id")
-      .put("_sample_id", "icgc_sample_id")
-      .put("analyzed_sample_id", "submitted_sample_id")
-      .put("analysis_id", "analysis_id")
-      .put("gene_model", "gene_model")
-      .put("gene_id", "gene_id")
-      .put("normalized_expression_value", "normalized_expression_value")
-      .put("fold_change", "fold_change")
-      .put("platform", "platform")
-      .put("experimental_protocol", "experimental_protocol")
-      .put("normalization_algorithm", "normalization_algorithm")
-      .put("other_analysis_algorithm", "other_analysis_algorithm")
-      .put("raw_data_repository", "raw_data_repository")
-      .put("raw_data_accession", "raw_data_accession")
-      .put("reference_sample_type", "reference_sample_type")
-      .build();
-
-  private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
-      .put("donor_id", "donor_id")
+      .put("study_donor_involved_in", "study_donor_involved_in")
+      .put("donor_id", "submitted_donor_id")
+      .put("donor_sex", "donor_sex")
+      .put("donor_vital_status", "donor_vital_status")
+      .put("disease_status_last_followup", "disease_status_last_followup")
+      .put("donor_relapse_type", "donor_relapse_type")
+      .put("donor_age_at_diagnosis", "donor_age_at_diagnosis")
+      .put("donor_age_at_enrollment", "donor_age_at_enrollment")
+      .put("donor_age_at_last_followup", "donor_age_at_last_followup")
+      .put("donor_relapse_interval", "donor_relapse_interval")
+      .put("donor_diagnosis_icd10", "donor_diagnosis_icd10")
+      .put("donor_tumour_staging_system_at_diagnosis", "donor_tumour_staging_system_at_diagnosis")
+      .put("donor_tumour_stage_at_diagnosis", "donor_tumour_stage_at_diagnosis")
+      .put("donor_tumour_stage_at_diagnosis_supplemental", "donor_tumour_stage_at_diagnosis_supplemental")
+      .put("donor_survival_time", "donor_survival_time")
+      .put("donor_interval_of_last_followup", "donor_interval_of_last_followup")
+      .put("prior_malignancy", "prior_malignancy")
+      .put("cancer_type_prior_malignancy", "cancer_type_prior_malignancy")
+      .put("cancer_history_first_degree_relative", "cancer_history_first_degree_relative")
       .build();
 
   @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
-        .filter(new IsType(EXP_ARRAY_TYPE_FIELD_NAME))
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
-        .map(new AddDonorIdField())
-        .map(new RetainFields(getFields()));
+        .map(new AddDonorIdField());
   }
 
   @Override
   public Set<String> getFields() {
-    return Sets.newHashSet(Iterables.concat(FIRST_LEVEL_PROJECTION.values(), SECOND_LEVEL_PROJECTION.keySet()));
+    return Sets.newHashSet(FIRST_LEVEL_PROJECTION.values());
   }
 
   @Override
