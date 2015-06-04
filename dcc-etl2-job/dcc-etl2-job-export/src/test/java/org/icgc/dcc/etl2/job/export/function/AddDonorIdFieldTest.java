@@ -17,55 +17,26 @@
  */
 package org.icgc.dcc.etl2.job.export.function;
 
-import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.etl2.test.util.TestJsonNodes.$;
+
 import lombok.val;
 
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.spark.api.java.function.PairFunction;
-import org.icgc.dcc.etl2.job.export.model.ExportTables;
+import org.junit.Test;
 
-import scala.Tuple2;
+public class AddDonorIdFieldTest {
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+  @Test
+  public void testAddDonorIdField() throws Exception {
+    val addDonorIdField = new AddDonorIdField();
+    val input = $("{icgc_donor_id: 'DO5', y: 2}");
+    val actual = addDonorIdField.call(input);
 
-public class TranslateHBaseKeyValue implements PairFunction<ObjectNode, ImmutableBytesWritable, KeyValue> {
+    val expected = $("{icgc_donor_id: 'DO5', y: 2, donor_id: '5'}");
 
-  @Override
-  public Tuple2<ImmutableBytesWritable, KeyValue> call(ObjectNode record) throws Exception {
-    val key = createKey(record);
-    byte[] row = key.get();
-    byte[] value = createValue(record);
-
-    val keyValue = createKeyValue(row, value);
-
-    return createTuple(key, keyValue);
-  }
-
-  private byte[] createValue(ObjectNode record) {
-    return Bytes.toBytes(record.toString());
-  }
-
-  private ImmutableBytesWritable createKey(ObjectNode record) {
-    // TODO: Make configurable
-    val value = textValue(record, "id");
-    val key = new ImmutableBytesWritable();
-    key.set(Bytes.toBytes(value));
-
-    return key;
-  }
-
-  private KeyValue createKeyValue(byte[] row, byte[] value) {
-    // TODO: Make configurable
-    byte[] family = ExportTables.META_TYPE_INFO_FAMILY;
-    byte[] qualifier = ExportTables.META_TYPE_HEADER;
-
-    return new KeyValue(row, family, qualifier, value);
-  }
-
-  private Tuple2<ImmutableBytesWritable, KeyValue> createTuple(ImmutableBytesWritable key, KeyValue keyValue) {
-    return new Tuple2<ImmutableBytesWritable, KeyValue>(key, keyValue);
+    assertThat(actual)
+        .isNotSameAs(expected)
+        .isEqualTo(expected);
   }
 
 }

@@ -54,8 +54,8 @@ public class PredictFathmmTest {
       Map<String, String> result = predict(input.get(TRANSLATION_ID), input.get(AA_MUTATION));
       assertThat(result.get(PREDICTION)).isEqualTo(input.get(PREDICTION));
 
-      val inputScore = Double.parseDouble(input.get(SCORE));
-      val resultScore = Double.parseDouble(result.get(SCORE));
+      double inputScore = Double.parseDouble(input.get(SCORE));
+      double resultScore = Double.parseDouble(result.get(SCORE));
       assertThat(Math.abs(resultScore - inputScore)).isLessThan(TOLERANCE);
     });
   }

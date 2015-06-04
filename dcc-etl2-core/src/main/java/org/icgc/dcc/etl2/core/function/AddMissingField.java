@@ -15,76 +15,47 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.export.util;
+package org.icgc.dcc.etl2.core.function;
+
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.toEmptyJsonValue;
+
+import java.util.Set;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.val;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
-import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.etl2.core.function.ParseObjectNode;
-import org.icgc.dcc.etl2.job.export.function.TranslateHBaseKeyValue;
+import org.apache.spark.api.java.function.Function;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@RequiredArgsConstructor
-public class HFileWriter {
+/*
+ * This function will add a default value if the provided field is missing or empty. 
+ */
+public class AddMissingField implements Function<ObjectNode, ObjectNode> {
 
-  /**
-   * Configuration
-   */
   @NonNull
-  private final Configuration conf;
+  private final String fieldName;
   @NonNull
-  private final HTable table;
+  private final String value;
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final JavaSparkContext sparkContext;
-
-  public void writeHFiles(@NonNull Path inputPath, @NonNull Path hFilePath) {
-    val input = readInput(inputPath);
-
-    val processed = process(input);
-
-    writeOutput(hFilePath, processed);
+  public AddMissingField(String fieldName, String value) {
+    this.fieldName = fieldName;
+    this.value = value;
   }
 
-  private JavaRDD<ObjectNode> readInput(Path inputPath) {
-    val input = sparkContext
-        .textFile(inputPath.toString())
-        .map(new ParseObjectNode());
-
-    return input;
+  public AddMissingField(String fieldName, Set<String> fields) {
+    this.fieldName = fieldName;
+    this.value = toEmptyJsonValue(fields);
   }
 
-  @SneakyThrows
-  private JavaPairRDD<ImmutableBytesWritable, KeyValue> process(JavaRDD<ObjectNode> input) {
-    return input
-        .mapToPair(new TranslateHBaseKeyValue())
-        .partitionBy(new HFilePartitioner(conf, table.getStartKeys()));
-  }
+  @Override
+  public ObjectNode call(ObjectNode row) {
+    val field = row.get(fieldName);
+    if (field == null || field.size() == 0) {
+      row.put(fieldName, value);
+    }
 
-  private void writeOutput(Path hFilePath, JavaPairRDD<ImmutableBytesWritable, KeyValue> processed) {
-    processed.saveAsNewAPIHadoopFile(
-        hFilePath.toString(),
-
-        // Key / value
-        ImmutableBytesWritable.class, KeyValue.class,
-
-        HFileOutputFormat2.class,
-        conf);
+    return row;
   }
 
 }

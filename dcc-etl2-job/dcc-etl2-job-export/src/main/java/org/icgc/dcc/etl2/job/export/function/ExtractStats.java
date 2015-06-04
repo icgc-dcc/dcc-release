@@ -15,45 +15,26 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.export.util;
+package org.icgc.dcc.etl2.job.export.function;
 
-import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.util.Map;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-import org.apache.hadoop.fs.Path;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.etl2.core.function.ParseObjectNode;
-import org.icgc.dcc.etl2.job.export.function.ExtractKey;
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.spark.api.java.function.Function;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import scala.Tuple2;
+import scala.Tuple3; 
 
-@RequiredArgsConstructor
-public class InputKeyResolver implements Serializable {
+public class ExtractStats implements Function<Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>>, Tuple3<String, Long, Integer>> {
 
-  /**
-   * State.
-   */
-  @NonNull
-  private final JavaSparkContext sparkContext;
-
-  public JavaRDD<String> resolveKeys(Path inputPath) {
-    val input = readInput(inputPath);
-
-    return resolve(input);
+  @Override 
+  public Tuple3<String, Long, Integer> call(Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> tuple) throws Exception {
+    val donorId = tuple._1();
+    val tuple3 = tuple._2();
+    
+    return new Tuple3<>(donorId, tuple3._2(), tuple3._3());
   }
-
-  private JavaRDD<ObjectNode> readInput(Path inputPath) {
-    return sparkContext
-        .textFile(inputPath.toString())
-        .map(new ParseObjectNode());
-  }
-
-  private JavaRDD<String> resolve(JavaRDD<ObjectNode> input) {
-    return input.map(new ExtractKey());
-  }
-
 }

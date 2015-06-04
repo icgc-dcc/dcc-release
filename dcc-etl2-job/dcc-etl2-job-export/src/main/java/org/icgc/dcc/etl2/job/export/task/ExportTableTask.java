@@ -17,12 +17,16 @@
  */
 package org.icgc.dcc.etl2.job.export.task;
 
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.Joiners.COMMA;
+import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.getFilePaths;
+import static org.icgc.dcc.etl2.core.util.HadoopFileSystemUtils.readFile;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.getStaticFileOutput;
+import static org.icgc.dcc.etl2.job.export.model.ExportTables.getTableName;
 
-import java.util.UUID;
+import java.nio.ByteBuffer;
+import java.util.Map;
 
-import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -32,32 +36,30 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.mapreduce.Job;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.Task;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.task.TaskType;
+import org.icgc.dcc.etl2.job.export.function.ExtractStats;
+import org.icgc.dcc.etl2.job.export.function.ProcessDataType;
+import org.icgc.dcc.etl2.job.export.function.SumDataType;
 import org.icgc.dcc.etl2.job.export.model.ExportTable;
-import org.icgc.dcc.etl2.job.export.model.ExportTables;
-import org.icgc.dcc.etl2.job.export.util.HFileLoadJobFactory;
-import org.icgc.dcc.etl2.job.export.util.HFileLoader;
-import org.icgc.dcc.etl2.job.export.util.HFileWriter;
+import org.icgc.dcc.etl2.job.export.util.HFileManager;
 import org.icgc.dcc.etl2.job.export.util.HTableManager;
-import org.icgc.dcc.etl2.job.export.util.InputKeyResolver;
-import org.icgc.dcc.etl2.job.export.util.SplitKeyCalculator;
+
+import scala.Tuple3;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+//TODO Currently the list of projects and list of data types are not integrated in processing.
 
 @Slf4j
 @RequiredArgsConstructor
 public class ExportTableTask implements Task {
-
-  /**
-   * Constants.
-   */
-  private static final Path HFILE_DIR_PATH = new Path("/tmp");
 
   /**
    * Configuration.
@@ -66,8 +68,6 @@ public class ExportTableTask implements Task {
   private final ExportTable table;
   @NonNull
   private final Configuration conf;
-  // TODO: Correct this value and externalize
-  private final long regionSize = ExportTables.MAX_DATA_FILE_SIZE;
 
   @Override
   public String getName() {
@@ -83,68 +83,99 @@ public class ExportTableTask implements Task {
   public void execute(@NonNull TaskContext taskContext) {
     val watch = createStarted();
     val fileSystem = taskContext.getFileSystem();
-    val sparkContext = taskContext.getSparkContext();
+    val javaSparkContext = taskContext.getSparkContext();
+    val jobContext = taskContext.getJobContext();
 
-    log.info("Getting input path...");
-    val inputPath = getInputPath(taskContext);
-    log.info("Got input path '{}'", inputPath);
+    val releaseName = jobContext.getReleaseName();
+    log.info("Release name '{}' ...", releaseName);
+    val tableName = getTableName(table.name(), releaseName);
+    log.info("table name '{}' ...", tableName);
+    val inputPath = taskContext.getPath(FileType.EXPORT_INPUT);
+    log.info("Input path {} ...", inputPath);
+    val dataType = table.type;
+    log.info("Processing data type {} ...", dataType.getClass().getName());
 
-    log.info("Resolving input keys...");
-    val keys = resolveInputKeys(sparkContext, inputPath);
-    log.info("Resolved input keys");
+    val dataTypeDirectoryName = dataType.getTypeDirectoryName();
+    val files = getFilePaths(fileSystem, new Path(inputPath, dataTypeDirectoryName));
+    if (files.isEmpty()) {
+      log.info("No files found to process for data type {} ...", dataType.getClass().getName());
+      return;
+    }
 
-    log.info("Calculating input path split keys...");
-    val splitKeys = calculateSplitKeys(regionSize, inputPath, keys);
-    log.info("Calculated {} input path split keys: {}", formatCount(splitKeys), splitKeys);
+    val inputPaths = COMMA.join(files);
+    val input = javaSparkContext.textFile(inputPaths);
 
-    log.info("Preparing export table '{}'...", table);
-    val hTable = prepareHTable(conf, splitKeys);
-    log.info("Prepared export table: {}", table);
+    log.info("Running the base export process for data type...");
+    val dataTypeProcessResult = dataType.process(input);
+    log.info("Finished running the base export process.");
 
-    log.info("Creating load job...");
-    val hFileLoadJob = createHFileLoadJob(conf, hTable);
-    log.info("Created load job: {}", hFileLoadJob);
+    log.info("Writing static export output files...");
+    val staticOutputFile = getStaticFileOutput(tableName);
+    exportStatic(dataTypeProcessResult, staticOutputFile);
+    verifyFileExistence(fileSystem, staticOutputFile);
+    log.info("Done writing static export output files...");
 
-    log.info("Getting HFile path...");
-    val hFilePath = getHFilePath(fileSystem, hTable);
-    log.info("Got HFile path: '{}'", hFilePath);
-
-    log.info("Writting HFiles...");
-    writeHFiles(sparkContext, hFileLoadJob.getConfiguration(), inputPath, hTable, hFilePath);
-    log.info("Wrote HFiles");
-
-    log.info("Loading HFiles...");
-    loadHFiles(conf, fileSystem, hTable, hFilePath);
-    log.info("Loaded HFiles");
+    log.info("Writing dynamic export output files...");
+    exportDynamic(fileSystem, dataTypeProcessResult, tableName);
+    log.info("Done writing dynamic export output files...");
 
     log.info("Finished exporting table '{}' in {}", table, watch);
   }
 
-  private static Path getInputPath(TaskContext taskContext) {
-    // TODO: This is not a real input and should be decomposed to the upstream types
-    return new Path(taskContext.getPath(FileType.EXPORT_INPUT));
+  private void exportDynamic(FileSystem fileSystem, JavaRDD<ObjectNode> input, String tableName) {
+
+    log.info("Preparing data for '{}'...", tableName);
+    val processedInput = prepareData(input);
+    log.info("Finished preparing data for '{}'", tableName);
+
+    log.info("Preparing export table '{}'...", tableName);
+    val hTable = prepareHTable(conf, processedInput, tableName);
+    log.info("Prepared export table: {}", tableName);
+
+    log.info("Processing HFiles...");
+    processHFiles(conf, fileSystem, processedInput, hTable);
+    log.info("Finished processing HFiles...");
   }
 
-  private JavaRDD<String> resolveInputKeys(JavaSparkContext sparkContext, Path inputPath) {
-    val resolver = new InputKeyResolver(sparkContext);
-
-    return resolver.resolveKeys(inputPath);
+  private JavaPairRDD<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> prepareData(JavaRDD<ObjectNode> input) {
+    return input
+        .zipWithIndex()
+        .mapToPair(new ProcessDataType())
+        .reduceByKey(new SumDataType());
   }
 
-  private Iterable<String> calculateSplitKeys(long regionSize, Path inputPath, JavaRDD<String> keys) {
-    val calculator = new SplitKeyCalculator(conf);
+  private void exportStatic(JavaRDD<ObjectNode> input, String staticOutputFile) {
+    input.coalesce(1, true).saveAsTextFile(staticOutputFile);
+  }
 
-    return calculator.calculateSplitKeys(inputPath, keys, regionSize);
+  private static void verifyFileExistence(FileSystem fileSystem, final String outputFile) {
+    val files = getFilePaths(fileSystem, new Path(outputFile));
+    for (val file : files) {
+      log.info(file);
+      val contents = readFile(fileSystem, new Path(file));
+      contents.forEach(log::info);
+    }
   }
 
   @SneakyThrows
-  private HTable prepareHTable(Configuration conf, Iterable<String> splitKeys) {
-    @Cleanup
-    val admin = new HBaseAdmin(conf);
-    val manager = new HTableManager(admin);
-
+  private static HTable prepareHTable(Configuration conf,
+      JavaPairRDD<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> input,
+      String tableName) {
     log.info("Ensuring table...");
-    val htable = manager.ensureTable(table.name(), splitKeys);
+    val manager = new HTableManager(conf);
+
+    if (manager.existsTable(tableName)) {
+      log.info("Table exists...");
+      return manager.getTable(tableName);
+    }
+
+    log.info("Calculating statistics about data...");
+    val stats = input.map(new ExtractStats()).collect();
+    log.info("Finished calculating statistics...");
+    stats.stream().forEach(
+        stat -> log.info("Donor {} has size {} and {} observation.", stat._1(), stat._2(), stat._3()));
+    log.info("Preparing table...");
+    val htable = manager.ensureTable(tableName, stats);
 
     log.info("Listing tables...");
     manager.listTables();
@@ -152,30 +183,18 @@ public class ExportTableTask implements Task {
     return htable;
   }
 
-  private Job createHFileLoadJob(Configuration conf, HTable table) {
-    val factory = new HFileLoadJobFactory(conf);
+  @SneakyThrows
+  private static void processHFiles(Configuration conf, FileSystem fileSystem,
+      JavaPairRDD<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> processedInput, HTable hTable) {
+    val hFileManager = new HFileManager(conf, fileSystem);
 
-    return factory.createJob(table);
-  }
+    log.info("Writing HFiles...");
+    hFileManager.writeHFiles(processedInput, hTable);
+    log.info("Wrote HFiles");
 
-  private static void writeHFiles(JavaSparkContext sparkContext, Configuration conf, Path inputPath, HTable table,
-      Path hFilePath) {
-    val writer = new HFileWriter(conf, table, sparkContext);
-
-    writer.writeHFiles(inputPath, hFilePath);
-  }
-
-  private static void loadHFiles(Configuration conf, FileSystem fileSystem, HTable hTable, Path hFilePath) {
-    val loader = new HFileLoader(conf, fileSystem);
-
-    loader.loadHFiles(hTable, hFilePath);
-  }
-
-  private static Path getHFilePath(FileSystem fileSystem, HTable hTable) {
-    val hFileName = new String(hTable.getTableName()) + "_" + UUID.randomUUID();
-    val hFilePath = new Path(HFILE_DIR_PATH, hFileName);
-
-    return fileSystem.makeQualified(hFilePath);
+    log.info("Loading HFiles...");
+    hFileManager.loadHFiles(hTable);
+    log.info("Loaded HFiles");
   }
 
 }

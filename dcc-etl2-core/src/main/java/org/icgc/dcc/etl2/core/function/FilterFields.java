@@ -39,7 +39,7 @@ public class FilterFields implements Function<ObjectNode, ObjectNode> {
   }
 
   @Override
-  public ObjectNode call(ObjectNode row) throws Exception {
+  public ObjectNode call(ObjectNode row) {
     filter(row);
 
     return row;

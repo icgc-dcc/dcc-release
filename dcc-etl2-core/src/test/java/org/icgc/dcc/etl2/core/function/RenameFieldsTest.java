@@ -15,58 +15,28 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.export.util;
+package org.icgc.dcc.etl2.core.function;
 
-import java.io.IOException;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.etl2.core.function.JsonNodes.$;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.val;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.job.export.function.CoercePair;
-import org.icgc.dcc.etl2.job.export.function.PairIteratorFirstKey;
+import org.junit.Test;
 
-@RequiredArgsConstructor
-public class SplitKeyCalculator {
+public class RenameFieldsTest {
 
-  /**
-   * Configuration
-   */
-  @NonNull
-  private final Configuration conf;
+  @Test
+  public void testRenameFields() throws Exception {
+    val renameFields = new RenameFields("x", "z");
+    val input = $("{x: 1, y: 2}");
+    val actual = renameFields.call(input);
 
-  @SneakyThrows
-  public Iterable<String> calculateSplitKeys(@NonNull Path inputPath, @NonNull JavaRDD<String> keys, long regionSize) {
-    val fileSystem = inputPath.getFileSystem(conf);
-    val fileLength = getFileLength(inputPath, fileSystem);
-    val splitsCount = calculateSplitCount(regionSize, fileLength);
+    val expected = $("{z: 1, y: 2}");
 
-    return calculateSplitKeys(keys, splitsCount);
-  }
-
-  private Iterable<String> calculateSplitKeys(@NonNull JavaRDD<String> keys, int splitsCount) {
-    val ascending = true;
-
-    return keys
-        .mapToPair(new CoercePair<String>())
-        .sortByKey(ascending, splitsCount)
-        .mapPartitions(new PairIteratorFirstKey<String, Void>())
-        .collect();
-  }
-
-  private static long getFileLength(Path inputPath, FileSystem fileSystem) throws IOException {
-    val summary = fileSystem.getContentSummary(inputPath);
-
-    return summary.getLength();
-  }
-
-  private static int calculateSplitCount(long regionSize, final long fileLength) {
-    return (int) (fileLength / regionSize) + 1;
+    assertThat(actual)
+        .isNotSameAs(expected)
+        .isEqualTo(expected);
   }
 
 }

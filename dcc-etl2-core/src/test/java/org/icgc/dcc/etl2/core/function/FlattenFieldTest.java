@@ -46,4 +46,18 @@ public class FlattenFieldTest {
         .isEqualTo($("{x: 1, y: 3}"));
   }
 
+  @Test
+  public void testFlattenField2() throws Exception {
+    val flattenField = new FlattenField("y");
+
+    val input = $("{x: 1}");
+    val actual = flattenField.call(input);
+
+    assertThat(actual).hasSize(1);
+
+    val first = get(actual, 0);
+    assertThat(first).isEqualTo($("{x: 1}"));
+
+  }
+
 }

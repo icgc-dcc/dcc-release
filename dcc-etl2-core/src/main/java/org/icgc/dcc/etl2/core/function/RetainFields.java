@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.etl2.core.function;
 
+import java.util.Set;
+
 import org.apache.spark.api.java.function.Function;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -29,8 +31,12 @@ public class RetainFields implements Function<ObjectNode, ObjectNode> {
     this.fieldNames = fieldNames;
   }
 
+  public RetainFields(Set<String> fieldNames) {
+    this.fieldNames = fieldNames.toArray(new String[fieldNames.size()]);
+  }
+
   @Override
-  public ObjectNode call(ObjectNode row) throws Exception {
+  public ObjectNode call(ObjectNode row) {
     // TODO: Deep copy required?
     return row.retain(fieldNames);
   }

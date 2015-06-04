@@ -17,28 +17,29 @@
  */
 package org.icgc.dcc.etl2.job.export.function;
 
-import static com.google.common.collect.Iterators.get;
-import static java.util.Collections.singleton;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.DONOR_ID;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.ICGC_DONOR_ID;
+import static org.icgc.dcc.etl2.job.export.model.type.Constants.ICGC_DONOR_ID_PREFIX;
+import lombok.val;
 
-import java.util.Iterator;
+import org.apache.commons.lang.StringUtils;
+import org.apache.spark.api.java.function.Function;
 
-import org.apache.spark.api.java.function.FlatMapFunction;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Preconditions;
 
-import scala.Tuple2;
+public class AddDonorIdField implements Function<ObjectNode, ObjectNode> {
 
-public class PairIteratorFirstKey<K, V> implements FlatMapFunction<Iterator<Tuple2<K, V>>, K> {
+  private String extractDonorId(ObjectNode row) {
+    val donorIdValue = textValue(row, ICGC_DONOR_ID);
+    Preconditions.checkState(donorIdValue.startsWith(ICGC_DONOR_ID_PREFIX));
+    return StringUtils.substringAfter(donorIdValue.trim(), ICGC_DONOR_ID_PREFIX);
+  }
 
   @Override
-  public Iterable<K> call(Iterator<Tuple2<K, V>> iterator) throws Exception {
-    return singleton(getFirstKey(iterator));
-  }
-
-  private K getFirstKey(Iterator<Tuple2<K, V>> iterator) {
-    return getFirst(iterator)._1;
-  }
-
-  private Tuple2<K, V> getFirst(Iterator<Tuple2<K, V>> iterator) {
-    return get(iterator, 0);
+  public ObjectNode call(ObjectNode row) {
+    return row.put(DONOR_ID, extractDonorId(row));
   }
 
 }

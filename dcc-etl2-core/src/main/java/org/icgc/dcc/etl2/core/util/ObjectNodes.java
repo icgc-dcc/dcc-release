@@ -17,6 +17,9 @@
  */
 package org.icgc.dcc.etl2.core.util;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import lombok.NonNull;
 import lombok.val;
 import lombok.experimental.UtilityClass;
@@ -61,6 +64,14 @@ public class ObjectNodes {
   private static Iterable<String> parsePath(String path) {
     val parts = PATH_SPLITTER.split(path);
     return parts;
+  }
+
+  public static String toEmptyJsonValue(Set<String> fields) {
+    String joined = fields.stream()
+        .map(i -> "\"" + i.toString() + "\":\"\"")
+        .collect(Collectors.joining(", "));
+
+    return "[" + joined + "]";
   }
 
 }

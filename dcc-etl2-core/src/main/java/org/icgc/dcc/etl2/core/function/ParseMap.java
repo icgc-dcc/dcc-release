@@ -37,14 +37,13 @@ public class ParseMap implements Function<String, Map<String, String>> {
   private final List<SubmissionFileField> fields;
 
   @Override
-  public Map<String, String> call(String row) throws Exception {
+  public Map<String, String> call(String row) {
     val values = parseLine(row);
     val map = Maps.<String, String> newLinkedHashMap();
 
     for (int i = 0; i < values.length; i++) {
       val value = values[i];
       val name = fields.get(i).getName();
-
       map.put(name, value);
     }
 

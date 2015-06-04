@@ -18,7 +18,12 @@
 package org.icgc.dcc.etl2.job.export.model;
 
 import static lombok.AccessLevel.PRIVATE;
+
 import lombok.NoArgsConstructor;
+
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hbase.io.compress.Compression;
+import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 
 /**
  * Shamefully forked from:
@@ -29,6 +34,8 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor(access = PRIVATE)
 public final class ExportTables {
+
+  public static final int NUM_REGIONS = 60;
 
   /**
    * Data table.
@@ -47,5 +54,39 @@ public final class ExportTables {
   public static final String HEADER_SEPARATOR = ",";
   public static final int META_BLOCK_SIZE = 65536;
   public static final byte[] META_SIZE_INFO_FAMILY = new byte[] { 's' };
+
+  public static final String TABLENAME_SEPARATOR = ".";
+  public static final byte[] TSV_DELIMITER = new byte[] { '\t' };
+  public static final long MAX_TAR_ENTRY_SIZE_IN_BYTES = 3221225472L;
+  public static final byte[] END_OF_LINE = new byte[] { 10 }; // LF character
+
+  /**
+   * Paths
+   */
+  public static final String ROOT = "/tmp/download/";
+  public static final String ROOT_OUT_STATIC = ROOT + "static/";
+  public static final String TMP = ROOT + "tmp/";
+  public static final String TMP_DYNAMIC_ROOT = TMP + "dynamic/";
+  public static final String TMP_HFILE_ROOT = TMP + "hfile/";
+  public static final String TMP_STATIC_ROOT = TMP + "static/";
+  public static final String TMP_BUCKET_ROOT = TMP + "bucket/";
+  public static final String TMP_INDEX = TMP + "fullindex/";
+  public static final String OUT_DYNAMIC = ROOT + "dynamic/";
+
+  /**
+   * Misc.
+   */
+  public static final String ICGC_DONOR_ID_PREFIX = "DO";
+  public static final FsPermission rwx = new FsPermission("777");
+  public static int BLOCKSIZE = 5 * 1048576;
+  public static Algorithm COMPRESSION = Compression.Algorithm.SNAPPY;
+
+  public static String getStaticFileOutput(String tableName) {
+    return TMP_STATIC_ROOT + tableName;
+  }
+
+  public static String getTableName(String tableName, String release) {
+    return tableName + "-" + release;
+  }
 
 }

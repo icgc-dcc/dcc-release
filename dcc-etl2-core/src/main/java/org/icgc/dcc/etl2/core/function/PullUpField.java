@@ -32,7 +32,7 @@ public class PullUpField implements Function<ObjectNode, ObjectNode> {
   private final String fieldName;
 
   @Override
-  public ObjectNode call(ObjectNode row) throws Exception {
+  public ObjectNode call(ObjectNode row) {
     if (isPullable(row)) {
       pullUp(row);
     }
@@ -46,7 +46,6 @@ public class PullUpField implements Function<ObjectNode, ObjectNode> {
 
   private void pullUp(ObjectNode row) {
     val field = (ObjectNode) row.remove(fieldName);
-
     row.putAll(field);
   }
 

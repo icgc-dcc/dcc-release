@@ -15,23 +15,20 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.export.function;
+package org.icgc.dcc.etl2.job.export.model.type;
 
-import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import java.util.Set;
 
-import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.JavaRDD;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ExtractKey implements Function<ObjectNode, String> {
+public interface Type {
 
-  @Override
-  public String call(ObjectNode row) throws Exception {
-    return getKey(row);
-  }
+  JavaRDD<ObjectNode> process(JavaRDD<String> input);
 
-  private String getKey(ObjectNode row) {
-    return textValue(row, "id");
-  }
+  Set<String> getFields();
+
+  String getTypeDirectoryName();
 
 }

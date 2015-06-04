@@ -52,11 +52,11 @@ public class FathmmRepository implements Closeable {
     this.handle = new DBI(fathmmPostgresqlUri).open();
 
     // @formatter:off
-    this.cacheQuery                 = handle.createQuery("select * from DCC_CACHE where translation_id = :translationId and aa_mutation = :aaMutation");
-    this.sequenceQuery              = handle.createQuery("select a.* from SEQUENCE a, PROTEIN b where a.id = b.id and b.name = :translationId");
-    this.domainQuery                = handle.createQuery("select * from DOMAINS where id=:sequenceId and :substitution between seq_begin and seq_end order by score");
-    this.probabilityQuery           = handle.createQuery("select a.*, b.* from PROBABILITIES a, LIBRARY b where a.id=b.id and a.id=:hmm and a.position=:residue");
-    this.unweightedProbabilityQuery = handle.createQuery("select a.*, b.* from PROBABILITIES a, LIBRARY b where a.id=b.id and a.id=:sequenceId and a.position=:substitution");
+    this.cacheQuery                 = handle.createQuery("select * from \"DCC_CACHE\" where translation_id = :translationId and aa_mutation = :aaMutation");
+    this.sequenceQuery              = handle.createQuery("select a.* from \"SEQUENCE\" a, \"PROTEIN\" b where a.id = b.id and b.name = :translationId");
+    this.domainQuery                = handle.createQuery("select * from \"DOMAINS\" where id=:sequenceId and :substitution between seq_begin and seq_end order by score");
+    this.probabilityQuery           = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:hmm and a.position=:residue");
+    this.unweightedProbabilityQuery = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:sequenceId and a.position=:substitution");
     // @formatter:on
   }
 
@@ -73,7 +73,7 @@ public class FathmmRepository implements Closeable {
 
   public void updateCache(@NonNull String translationId, @NonNull String aaChange, @NonNull String score,
       @NonNull String prediction) {
-    handle.execute("insert into DCC_CACHE (translation_id,  aa_mutation, score, prediction) values (?,?,?,?)",
+    handle.execute("insert into \"DCC_CACHE\" (translation_id,  aa_mutation, score, prediction) values (?,?,?,?)",
         translationId, aaChange, score, prediction);
   }
 
@@ -97,7 +97,8 @@ public class FathmmRepository implements Closeable {
   }
 
   private Query<Map<String, Object>> createWeightQuery(String weights) {
-    return handle.createQuery("select disease, other from WEIGHTS where id=:wid and type=:type").bind("type", weights);
+    return handle.createQuery("select disease, other from \"WEIGHTS\" where id=:wid and type=:type").bind("type",
+        weights);
   }
 
   public Map<String, Object> getProbability(@NonNull String hmm, @NonNull Integer residue) {

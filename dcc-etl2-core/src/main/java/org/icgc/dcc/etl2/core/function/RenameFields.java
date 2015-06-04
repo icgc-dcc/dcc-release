@@ -15,17 +15,48 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.export.function;
+package org.icgc.dcc.etl2.core.function;
 
-import org.apache.spark.api.java.function.PairFunction;
+import java.util.Map;
 
-import scala.Tuple2;
+import lombok.NonNull;
+import lombok.val;
 
-public class CoercePair<T> implements PairFunction<T, T, Void> {
+import org.apache.spark.api.java.function.Function;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Maps;
+
+public class RenameFields implements Function<ObjectNode, ObjectNode> {
+
+  @NonNull
+  private final Map<String, String> mappings;
+
+  public RenameFields(Map<String, String> values) {
+    this.mappings = values;
+  }
+
+  public RenameFields(String... values) {
+    val mappings = Maps.<String, String> newHashMap();
+    for (int i = 0; i < values.length; i += 2) {
+      val fieldName = values[i];
+      val path = values[i + 1];
+      mappings.put(fieldName, path);
+    }
+    this.mappings = mappings;
+  }
 
   @Override
-  public Tuple2<T, Void> call(T key) throws Exception {
-    return new Tuple2<T, Void>(key, null);
+  public ObjectNode call(ObjectNode row) {
+    for (val entry : mappings.entrySet()) {
+      val oldFieldName = entry.getKey();
+      val newFieldName = entry.getValue();
+      val value = row.get(oldFieldName);
+      row.remove(oldFieldName);
+      row.put(newFieldName, value);
+    }
+
+    return row;
   }
 
 }

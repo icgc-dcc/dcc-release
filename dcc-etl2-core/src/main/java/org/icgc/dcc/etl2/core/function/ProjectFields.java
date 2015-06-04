@@ -17,12 +17,9 @@
  */
 package org.icgc.dcc.etl2.core.function;
 
-import static org.icgc.dcc.etl2.core.util.ObjectNodes.getPath;
-
 import java.util.Map;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
@@ -30,18 +27,20 @@ import org.apache.spark.api.java.function.Function;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
-@RequiredArgsConstructor
 public class ProjectFields implements Function<ObjectNode, ObjectNode> {
 
   @NonNull
   private final Map<String, String> projections;
 
+  public ProjectFields(Map<String, String> values) {
+    this.projections = values;
+  }
+
   public ProjectFields(String... values) {
     val projections = Maps.<String, String> newHashMap();
-    for (int i = 0; i < values.length / 2; i += 2) {
+    for (int i = 0; i < values.length; i += 2) {
       val fieldName = values[i];
       val path = values[i + 1];
-
       projections.put(fieldName, path);
     }
 
@@ -49,17 +48,19 @@ public class ProjectFields implements Function<ObjectNode, ObjectNode> {
   }
 
   @Override
-  public ObjectNode call(ObjectNode row) throws Exception {
-    for (val entry : projections.entrySet()) {
+  public ObjectNode call(ObjectNode row) {
+    val newRow = row.objectNode();
+    val fields = row.fields();
+    while (fields.hasNext()) {
+      val entry = fields.next();
       val fieldName = entry.getKey();
-      val path = entry.getValue();
-
-      val value = getPath(row, path);
-
-      row.put(fieldName, value);
+      val value = entry.getValue();
+      if (projections.containsKey(fieldName)) {
+        newRow.put(projections.get(fieldName), value);
+      }
     }
 
-    return row;
+    return newRow;
   }
 
 }
