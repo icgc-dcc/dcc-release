@@ -124,6 +124,14 @@ public class HTableManager {
     return new CompositeRowKey(donorId, sum);
   }
 
+
+  /**
+   * See:
+   *
+   * <pre>
+   * https://github.com/icgc-dcc/dcc-etl/blob/develop/dcc-etl-exporter/src/main/java/org/icgc/dcc/etl/exporter/pig/udf/CreateTable.java#L89
+   * </pre>
+   */
   private static List<byte[]> calculateBoundaries(List<byte[]> keys) {
     long current = 0;
     val rangeMap = TreeRangeMap.<Long, CompositeRowKey> create();

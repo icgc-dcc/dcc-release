@@ -137,9 +137,14 @@ public class ExportTableTask implements Task {
     log.info("Finished processing HFiles...");
   }
 
+  /*
+   * Original Exporter uses BytesOf(long(icgc_donor_id))+long(line_number) as row key for hbase records.
+   * .zipWithUniqueId() replaces the line_number, so that we can process the data in parallel
+   * without keeping track of lines.
+   */
   private JavaPairRDD<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> prepareData(JavaRDD<ObjectNode> input) {
     return input
-        .zipWithIndex()
+        .zipWithUniqueId()
         .mapToPair(new ProcessDataType())
         .reduceByKey(new SumDataType());
   }

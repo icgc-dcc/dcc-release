@@ -25,7 +25,6 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.TreeMap;
 
-import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import org.apache.hadoop.hbase.KeyValue;
@@ -39,7 +38,13 @@ import scala.Tuple3;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
-@Slf4j
+/**
+ * See:
+ *
+ * <pre>
+ * https://github.com/icgc-dcc/dcc-etl/blob/develop/dcc-etl-exporter/src/main/java/org/icgc/dcc/etl/exporter/pig/udf/ToHFile.java#L153
+ * </pre>
+ */
 public class ProcessDataType implements
     PairFunction<Tuple2<ObjectNode, Long>, String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> {
 
@@ -55,7 +60,6 @@ public class ProcessDataType implements
     val kvs = Lists.<KeyValue> newArrayList();
     val now = System.currentTimeMillis();
     val fields = row.fieldNames();
-    log.info("row: '{}'", row);
     while (fields.hasNext()) {
       i++;
       val field = fields.next();
