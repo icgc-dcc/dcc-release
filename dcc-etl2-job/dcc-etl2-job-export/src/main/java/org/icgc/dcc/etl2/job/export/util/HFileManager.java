@@ -131,6 +131,13 @@ public class HFileManager {
     return factory.createJob(table);
   }
 
+  /**
+   * See:
+   *
+   * <pre>
+   * https://github.com/icgc-dcc/dcc-etl/blob/develop/dcc-etl-exporter/src/main/java/org/icgc/dcc/etl/exporter/pig/udf/ToHFile.java#L94
+   * </pre>
+   */
   @RequiredArgsConstructor
   private static class HFileWriter implements VoidFunction<Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>>> {
 
