@@ -160,7 +160,7 @@ public abstract class AbstractJobTest {
   }
 
   private File getFileTypeDirectory(FileType fileType) {
-    val type = new File(workingDir, fileType.name());
+    val type = new File(workingDir, fileType.getDirName());
 
     return type;
   }

@@ -58,6 +58,7 @@ public class AnnotateJob extends GenericJob {
 
   private void annotate(JobContext jobContext) {
     jobContext.execute(
+        // TODO: Confirm input time are SSM_P and SGV_P or SSM_P_MASKED and SGV_P_MASKED ?
         new AnnotationTask(properties, FileType.SSM_P, FileType.SSM_S),
         new AnnotationTask(properties, FileType.SGV_P, FileType.SGV_S));
   }
