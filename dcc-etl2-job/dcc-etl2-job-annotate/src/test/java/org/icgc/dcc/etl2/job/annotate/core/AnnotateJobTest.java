@@ -52,11 +52,11 @@ public class AnnotateJobTest extends AbstractJobTest {
   public void setUp() {
     super.setUp();
     this.job = new AnnotateJob(createSnpEffProperties());
-    given(new File(INPUT_DIR));
   }
 
   @Test
   public void testExecute() {
+    given(new File(INPUT_DIR));
     val jobContext = createJobContext(job.getType(), singletonList(PROJECT_NAME));
     job.execute(jobContext);
 
