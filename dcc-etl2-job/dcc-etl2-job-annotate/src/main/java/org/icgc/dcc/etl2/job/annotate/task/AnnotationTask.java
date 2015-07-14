@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
-import org.icgc.dcc.etl2.core.function.TranslateMissingCode;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericProcessTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
@@ -67,11 +66,7 @@ public class AnnotationTask extends GenericProcessTask {
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input
-        .mapPartitions(
-            new SnpEffAnnotate(properties, getAnnotatedFileType()))
-        // TODO: Design this out of this module as this is a submission concept
-        .map(new TranslateMissingCode());
+    return input.mapPartitions(new SnpEffAnnotate(properties, getAnnotatedFileType()));
   }
 
   private AnnotatedFileType getAnnotatedFileType() {

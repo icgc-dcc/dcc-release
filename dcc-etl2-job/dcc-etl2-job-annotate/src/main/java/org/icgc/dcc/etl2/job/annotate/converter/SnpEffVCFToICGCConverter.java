@@ -19,6 +19,7 @@ package org.icgc.dcc.etl2.job.annotate.converter;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.model.SpecialValue.NO_VALUE;
 import static org.icgc.dcc.etl2.job.annotate.model.ParseNotification.WARNING_REF_DOES_NOT_MATCH_GENOME;
 
 import java.util.Arrays;
@@ -63,8 +64,8 @@ public class SnpEffVCFToICGCConverter {
    * proteinDomainAffected does not have data to be populated. See SsmSecondaryRecord class for more details
    */
   private static final String PROTEIN_AFFECTED_DOMAIN_VALUE = null;
-  private static final String SSM_NOTE = "-999";
-  private static final String MISSING_DATA = "-999";
+  private static final String MISSING_DATA = (String) NO_VALUE;
+  private static final String SSM_NOTE = MISSING_DATA;
 
   @NonNull
   private final String geneBuildVersion;
