@@ -147,7 +147,8 @@ public abstract class AbstractJobTest {
       val targetFile = new File(target, sourceFile.getName());
       TestFiles.writeInputFile(sourceFile, targetFile);
     } else {
-      TestFiles.writeInputFile(inputFile.getRows(), target);
+      val targetFile = new File(target, "part-00000");
+      TestFiles.writeInputFile(inputFile.getRows(), targetFile);
     }
   }
 

@@ -259,7 +259,6 @@ public class SnpEffVCFToICGCConverter {
 
   private static void checkPhasing(Genotype genotype) {
     if (genotype.isPhased()) {
-      // TODO: don't throw an exception. This breaks a cascading flow
       throw new UnsupportedOperationException("Phased genotype is not currently supported. Genotype: " + genotype);
     }
   }

@@ -33,8 +33,14 @@ public class Options {
   /**
    * Behavior
    */
-  @Parameter(names = { "--jobs" }, converter = JobTypeConverter.class, description = "Comma seperated list of jobs to run. By default all jobs will be run.")
+  @Parameter(names = { "--jobs" }, required = true, converter = JobTypeConverter.class, description = "Comma seperated list of jobs to run. By default all jobs will be run.")
   public List<JobType> jobs = newArrayList(JobType.values());
+  @Parameter(names = { "--release-dir" }, required = true, description = "The source of the submission files.")
+  public String releaseDir;
+  @Parameter(names = { "--staging-dir" }, description = "The base working directory.")
+  public String stagingDir = "/tmp/dcc-workflow";
+  @Parameter(names = { "--project-names" }, required = true, description = "The list of project names / codes to process. Defaults to all")
+  public List<String> projectNames = newArrayList();
 
   /**
    * Info

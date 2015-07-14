@@ -22,7 +22,6 @@ import static com.google.common.base.Strings.repeat;
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 import static java.lang.System.err;
 
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import lombok.val;
@@ -112,10 +111,9 @@ public class WorkflowMain {
     return new WorkflowContext(
         Temp.RELEASE_NAME,
         // Temp.PROJECT_NAMES,
-        Collections.singletonList("ALL-US"),
-        Temp.RELEASE_DIR,
-        Temp.STAGING_DIR,
-
+        options.projectNames,
+        options.releaseDir,
+        options.stagingDir,
         options.jobs);
   }
 
