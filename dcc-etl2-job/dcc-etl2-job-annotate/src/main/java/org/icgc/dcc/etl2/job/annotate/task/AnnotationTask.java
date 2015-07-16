@@ -18,6 +18,7 @@
 package org.icgc.dcc.etl2.job.annotate.task;
 
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
+import static org.icgc.dcc.etl2.job.annotate.core.AnnotateJob.SSM_INPUT_TYPE;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,7 +71,7 @@ public class AnnotationTask extends GenericProcessTask {
   }
 
   private AnnotatedFileType getAnnotatedFileType() {
-    return inputFileType == FileType.SSM_P ? AnnotatedFileType.SSM : AnnotatedFileType.SGV;
+    return inputFileType == SSM_INPUT_TYPE ? AnnotatedFileType.SSM : AnnotatedFileType.SGV;
   }
 
   private long getMaxFileSize() {

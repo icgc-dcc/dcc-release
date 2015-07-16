@@ -109,7 +109,7 @@ public class WorkflowMain {
   private static WorkflowContext createWorkflowContext(Options options) {
     // TODO: Derive from options
     return new WorkflowContext(
-        Temp.RELEASE_NAME,
+        options.release,
         // Temp.PROJECT_NAMES,
         options.projectNames,
         options.releaseDir,

@@ -41,6 +41,8 @@ public class Options {
   public String stagingDir = "/tmp/dcc-workflow";
   @Parameter(names = { "--project-names" }, required = true, description = "The list of project names / codes to process. Defaults to all")
   public List<String> projectNames = newArrayList();
+  @Parameter(names = { "--release" }, required = true, description = "Release name. E.g. ICGC19.")
+  public String release;
 
   /**
    * Info
