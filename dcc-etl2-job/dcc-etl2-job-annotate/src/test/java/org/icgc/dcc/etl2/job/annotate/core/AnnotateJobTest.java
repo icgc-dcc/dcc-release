@@ -38,7 +38,6 @@ public class AnnotateJobTest extends AbstractJobTest {
   /**
    * Constants.
    */
-  private static final String TEST_FIXTURES_DIR = "src/test/resources/fixtures";
   private static final String INPUT_DIR = TEST_FIXTURES_DIR + "/staging";
   private static final String PROJECT_NAME = "BRCA-UK";
 

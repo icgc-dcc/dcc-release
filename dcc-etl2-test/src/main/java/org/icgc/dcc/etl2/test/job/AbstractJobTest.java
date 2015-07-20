@@ -36,6 +36,11 @@ import com.google.common.util.concurrent.MoreExecutors;
 public abstract class AbstractJobTest {
 
   /**
+   * Constants.
+   */
+  protected static final String TEST_FIXTURES_DIR = "src/test/resources/fixtures";
+
+  /**
    * Collaborators.
    */
   protected JavaSparkContext sparkContext;
