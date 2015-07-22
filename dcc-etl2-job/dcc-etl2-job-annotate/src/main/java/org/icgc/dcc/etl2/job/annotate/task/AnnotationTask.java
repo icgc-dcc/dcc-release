@@ -50,6 +50,7 @@ public class AnnotationTask extends GenericProcessTask {
     val maxFileSize = getMaxFileSize();
 
     log.info("Setting input split size of {}", formatBytes(maxFileSize));
+    // TODO: Improve performance. See https://github.com/icgc-dcc/dcc-etl2/pull/6#discussion_r35150675
     val splitSize = Long.toString(maxFileSize);
     hadoopConf.set("mapred.min.split.size", splitSize);
     hadoopConf.set("mapred.max.split.size", splitSize);
