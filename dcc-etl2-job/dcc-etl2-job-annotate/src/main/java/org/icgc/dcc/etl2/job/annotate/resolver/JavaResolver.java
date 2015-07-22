@@ -17,51 +17,20 @@
  */
 package org.icgc.dcc.etl2.job.annotate.resolver;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.isNullOrEmpty;
-
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
 
-import lombok.Cleanup;
-import lombok.SneakyThrows;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
- * Resolves location of java executable by JAVA_HOME or location on the PATH.
+ * Resolves location of java executable.
  */
-@Slf4j
 public class JavaResolver {
 
-  private static final String COMMAND = "which java";
-
   public File resolve() {
-    val javaHome = System.getenv("JAVA_HOME");
-    val java = isNullOrEmpty(javaHome) ? resolveJavaFromPath() : resolveJavaFromJavaHome(javaHome);
-    checkState(!isNullOrEmpty(java), "Failed to resolve java executable.");
+    val separator = System.getProperty("file.separator");
+    val javaPath = System.getProperty("java.home") + separator + "bin" + separator + "java";
 
-    val javaExecutable = new File(java);
-    checkState(javaExecutable.exists(), "Java executable %s does not exist", java);
-    log.info("Resolved Java executable: {}", javaExecutable);
-
-    return javaExecutable;
-  }
-
-  private String resolveJavaFromJavaHome(String javaHome) {
-    return javaHome + "/jre/bin/java";
-  }
-
-  @SneakyThrows
-  private String resolveJavaFromPath() {
-    val process = Runtime.getRuntime().exec(COMMAND);
-    process.waitFor();
-
-    @Cleanup
-    val reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-    return reader.readLine();
+    return new File(javaPath);
   }
 
 }
