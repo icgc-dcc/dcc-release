@@ -30,7 +30,6 @@ import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.task.TaskType;
 import org.icgc.dcc.etl2.job.index.function.GeneCentricRowTransform;
-import org.icgc.dcc.etl2.job.index.function.RowTransform;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
 
 import scala.Tuple2;
@@ -57,6 +56,13 @@ public class GeneCentricIndexTask extends IndexTask {
     val genes = readGenes(taskContext);
     val observations = readObservations(taskContext);
 
+    // TODO: This should be configured to give optimum results
+    // val splitSize = Long.toString(48 * 1024 * 1024);
+    // conf.set("mapred.min.split.size", splitSize);
+    // conf.set("mapred.max.split.size", splitSize);
+    //
+    // return ObjectNodeRDDs.combineObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
+    //
     val output = transform(taskContext, genes, observations);
     writeOutput(output);
   }
@@ -105,7 +111,7 @@ public class GeneCentricIndexTask extends IndexTask {
     return transformed;
   }
 
-  private RowTransform createTransform(TaskContext taskContext) {
+  private GeneCentricRowTransform createTransform(TaskContext taskContext) {
     val collectionDir = taskContext.getJobContext().getWorkingDir();
     val fsUri = taskContext.getFileSystem().getUri();
 

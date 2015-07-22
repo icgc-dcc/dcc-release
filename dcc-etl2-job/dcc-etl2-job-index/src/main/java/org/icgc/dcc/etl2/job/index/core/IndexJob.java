@@ -35,7 +35,7 @@ import org.icgc.dcc.etl2.core.util.Streams;
 import org.icgc.dcc.etl2.job.index.config.IndexProperties;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
 import org.icgc.dcc.etl2.job.index.service.IndexService;
-import org.icgc.dcc.etl2.job.index.task.GeneCentricIndexTask;
+import org.icgc.dcc.etl2.job.index.task.MutationCentricIndexTask;
 import org.icgc.dcc.etl2.job.index.task.RemoteIndexTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -104,7 +104,8 @@ public class IndexJob implements Job {
 
   private Collection<? extends Task> createStreamingTasks(JobContext jobContext, String indexName) {
     return ImmutableList.of(
-        new GeneCentricIndexTask()
+        new MutationCentricIndexTask()
+        // , new GeneCentricIndexTask()
         // , new DonorCentricIndexTask()
         );
   }

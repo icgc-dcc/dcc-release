@@ -25,14 +25,14 @@ import org.icgc.dcc.etl2.job.index.util.ForwardingDocumentContext;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class DonorCentricRowTransform extends RowTransform {
+public class DonorCentricRowTransform extends RowChildrenTransform {
 
   public DonorCentricRowTransform(String collectionDir, URI fsUri) {
     super(DocumentType.DONOR_CENTRIC_TYPE, collectionDir, fsUri);
   }
 
   @Override
-  protected DocumentContext createDocumentContext(Iterable<ObjectNode> donorObservations) {
+  protected DocumentContext createCustomDocumentContext(Iterable<ObjectNode> donorObservations) {
     return new ForwardingDocumentContext(getDocumentContext()) {
 
       @Override
