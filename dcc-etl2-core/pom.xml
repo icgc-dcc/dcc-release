@@ -21,6 +21,10 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>dcc-common-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-common-hadoop</artifactId>
+    </dependency>
 
     <!-- Spring -->
     <dependency>

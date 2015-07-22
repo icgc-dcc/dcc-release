@@ -28,42 +28,33 @@ import scala.Tuple2;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
 
-public class CombineClinical implements Function<Tuple2<String, Tuple2<Tuple2<Tuple2<Tuple2<ObjectNode,
-    Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>,
-    Optional<Iterable<ObjectNode>>>>, ObjectNode> {
+public class CombineSpecimen implements Function<Tuple2<String, Tuple2<Tuple2<Tuple2<ObjectNode,
+    Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>>, ObjectNode> {
 
   @Override
-  public ObjectNode call(Tuple2<String, Tuple2<Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>,
-      Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>> tuple)
-      throws Exception {
-    val donorTherapyTuple = tuple._2._1._1._1;
-    val donor = donorTherapyTuple._1;
+  public ObjectNode call(Tuple2<String, Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>,
+      Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
+    val specimenSampleTuple = tuple._2._1._1;
+    val specimen = specimenSampleTuple._1;
+    if (specimenSampleTuple._2.isPresent()) {
+      val sample = specimen.withArray(FieldNames.DONOR_SAMPLE);
+      populateArrayNode(sample, specimenSampleTuple._2.get());
+    }
 
     // FIXME: add fields to proper FieldNames variables
-    if (donorTherapyTuple._2.isPresent()) {
-      val therapy = donor.withArray("therapy");
-      populateArrayNode(therapy, donorTherapyTuple._2.get());
+    val biomarkerTuple = tuple._2._1;
+    if (biomarkerTuple._2.isPresent()) {
+      val biomarker = specimen.withArray("biomarker");
+      populateArrayNode(biomarker, biomarkerTuple._2.get());
     }
 
-    val familyTuple = tuple._2._1._1;
-    if (familyTuple._2.isPresent()) {
-      val family = donor.withArray("family");
-      populateArrayNode(family, familyTuple._2.get());
+    val surgeryTuple = tuple._2;
+    if (surgeryTuple._2.isPresent()) {
+      val surgery = specimen.withArray("surgery");
+      populateArrayNode(surgery, surgeryTuple._2.get());
     }
 
-    val exposureTuple = tuple._2._1;
-    if (exposureTuple._2.isPresent()) {
-      val exposure = donor.withArray("exposure");
-      populateArrayNode(exposure, exposureTuple._2.get());
-    }
-
-    val specimenTuple = tuple._2;
-    if (specimenTuple._2.isPresent()) {
-      val specimen = donor.withArray(FieldNames.DONOR_SPECIMEN);
-      populateArrayNode(specimen, specimenTuple._2.get());
-    }
-
-    return donor;
+    return specimen;
   }
 
 }

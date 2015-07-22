@@ -19,6 +19,7 @@ package org.icgc.dcc.etl2.core.util;
 
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 
+import java.util.Collections;
 import java.util.List;
 
 import lombok.AccessLevel;
@@ -41,6 +42,8 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.rdd.HadoopPartition;
+import org.icgc.dcc.common.hadoop.fs.FileSystems;
+import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
 import org.icgc.dcc.etl2.core.hadoop.CombineTextInputFormat;
 import org.slf4j.Logger;
 
@@ -115,6 +118,18 @@ public final class JavaRDDs {
     SequenceFileOutputFormat.setOutputCompressorClass(conf, SnappyCodec.class);
 
     rdd.saveAsHadoopFile(path, keyClass, valueClass, SequenceFileOutputFormat.class, conf);
+  }
+
+  @NonNull
+  public static boolean exists(JavaSparkContext sparkContext, String path) {
+    val fs = FileSystems.getFileSystem(sparkContext.hadoopConfiguration());
+
+    return HadoopUtils.checkExistence(fs, path);
+  }
+
+  @NonNull
+  public static <T> JavaRDD<T> emptyRDD(JavaSparkContext sparkContext) {
+    return sparkContext.parallelize(Collections.emptyList());
   }
 
   @SneakyThrows

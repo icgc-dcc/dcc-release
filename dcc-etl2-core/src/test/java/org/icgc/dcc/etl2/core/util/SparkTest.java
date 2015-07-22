@@ -15,55 +15,40 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.function;
+package org.icgc.dcc.etl2.core.util;
 
-import static org.icgc.dcc.etl2.job.join.utils.JsonNodes.populateArrayNode;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Collections;
+
 import lombok.val;
 
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.core.model.FieldNames;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.junit.Test;
 
 import scala.Tuple2;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
+public class SparkTest {
 
-public class CombineClinical implements Function<Tuple2<String, Tuple2<Tuple2<Tuple2<Tuple2<ObjectNode,
-    Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>,
-    Optional<Iterable<ObjectNode>>>>, ObjectNode> {
+  @Test
+  public void joinEmptyRDDTest() {
+    val sparkConf = new SparkConf().setAppName("test").setMaster("local");
 
-  @Override
-  public ObjectNode call(Tuple2<String, Tuple2<Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>,
-      Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>> tuple)
-      throws Exception {
-    val donorTherapyTuple = tuple._2._1._1._1;
-    val donor = donorTherapyTuple._1;
+    try (val sparkContext = new JavaSparkContext(sparkConf)) {
+      val oneRdd = sparkContext.parallelize(Collections.singletonList("one"));
+      val twoRdd = sparkContext.parallelize(Collections.singletonList("two"));
+      val threeRdd = sparkContext.emptyRDD();
 
-    // FIXME: add fields to proper FieldNames variables
-    if (donorTherapyTuple._2.isPresent()) {
-      val therapy = donor.withArray("therapy");
-      populateArrayNode(therapy, donorTherapyTuple._2.get());
+      val onePair = oneRdd.mapToPair(t -> new Tuple2<Integer, String>(1, t));
+      val twoPair = twoRdd.groupBy(t -> 1);
+      val threePair = threeRdd.groupBy(t -> 1);
+
+      assertThat(onePair.leftOuterJoin(twoPair).collect()).isNotEmpty();
+
+      // FIXME: https://issues.apache.org/jira/browse/SPARK-9236
+      assertThat(onePair.leftOuterJoin(threePair).collect()).isEmpty();
     }
-
-    val familyTuple = tuple._2._1._1;
-    if (familyTuple._2.isPresent()) {
-      val family = donor.withArray("family");
-      populateArrayNode(family, familyTuple._2.get());
-    }
-
-    val exposureTuple = tuple._2._1;
-    if (exposureTuple._2.isPresent()) {
-      val exposure = donor.withArray("exposure");
-      populateArrayNode(exposure, exposureTuple._2.get());
-    }
-
-    val specimenTuple = tuple._2;
-    if (specimenTuple._2.isPresent()) {
-      val specimen = donor.withArray(FieldNames.DONOR_SPECIMEN);
-      populateArrayNode(specimen, specimenTuple._2.get());
-    }
-
-    return donor;
   }
 
 }

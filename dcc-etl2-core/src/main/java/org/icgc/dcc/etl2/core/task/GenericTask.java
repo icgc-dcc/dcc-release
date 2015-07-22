@@ -17,7 +17,10 @@
  */
 package org.icgc.dcc.etl2.core.task;
 
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.emptyRDD;
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.exists;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
@@ -26,6 +29,7 @@ import org.icgc.dcc.etl2.core.util.ObjectNodeRDDs;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+@Slf4j
 public abstract class GenericTask implements Task {
 
   private final String name;
@@ -67,8 +71,15 @@ public abstract class GenericTask implements Task {
 
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType, String path) {
     val sparkContext = taskContext.getSparkContext();
+    val filePath = taskContext.getPath(inputFileType) + path;
 
-    return ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
+    if (!exists(sparkContext, filePath)) {
+      log.warn("{} does not exist. Skipping...", filePath);
+
+      return emptyRDD(sparkContext);
+    }
+
+    return ObjectNodeRDDs.textObjectNodeFile(sparkContext, filePath, conf);
     // return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
   }
 
