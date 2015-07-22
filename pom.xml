@@ -304,7 +304,7 @@
     <dcc-common.version>3.8.2.1</dcc-common.version>
 
     <!-- Versions - DCC ETL -->
-    <dcc-etl.version>3.8.9.1</dcc-etl.version>
+    <dcc-etl.version>3.8.9.2</dcc-etl.version>
 
     <!-- Versions - Spring -->
     <spring.version>4.0.8.RELEASE</spring.version>
