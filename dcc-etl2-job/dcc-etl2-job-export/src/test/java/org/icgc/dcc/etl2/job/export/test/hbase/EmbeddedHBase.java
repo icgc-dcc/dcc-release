@@ -20,7 +20,6 @@ package org.icgc.dcc.etl2.job.export.test.hbase;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
@@ -28,6 +27,8 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -72,11 +73,20 @@ public class EmbeddedHBase {
     return utility.countRows(getTable(tableName));
   }
 
+  @SneakyThrows
+  public ResultScanner scanTable(String tableName, byte[] family) {
+    HTable table = getTable(tableName);
+    Scan scan = new Scan();
+    scan.addFamily(family);
+    ResultScanner scanner = table.getScanner(scan);
+
+    return scanner;
+  }
+
   private Configuration createConfiguration() {
     log.info("Creating configuation...'");
-    val config = HBaseConfiguration.create();
 
-    return config;
+    return HBaseConfiguration.create();
   }
 
 }

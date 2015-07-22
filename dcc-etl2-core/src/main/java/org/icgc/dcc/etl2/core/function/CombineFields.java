@@ -32,7 +32,7 @@ public class CombineFields implements Function<ObjectNode, String> {
   }
 
   @Override
-  public String call(ObjectNode row) throws Exception {
+  public String call(ObjectNode row) {
     return getKey(row, fieldNames);
   }
 

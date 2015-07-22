@@ -11,7 +11,7 @@
 dcc:
    submission:
       url: http://***REMOVED***/ws
-      dictionaryVersion: 0.10a
+      dictionaryVersion: 0.11c
    identifier:
       url: http://hcache-dcc.oicr.on.ca:5391
 
@@ -118,3 +118,8 @@ mongo:
    userName:
    password:
    splitSizeMb: 8
+   
+# Hadoop
+hadoop:
+   properties:
+      fs.defaultFS: file:///

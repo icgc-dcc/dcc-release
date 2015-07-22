@@ -35,6 +35,13 @@ import org.springframework.stereotype.Component;
 public class AnnotateJob extends GenericJob {
 
   /**
+   * Constants.
+   */
+  // TODO: Confirm input time are SSM_P and SGV_P or SSM_P_MASKED and SGV_P_MASKED ?
+  public static final FileType SSM_INPUT_TYPE = FileType.SSM_P_MASKED;
+  public static final FileType SGV_INPUT_TYPE = FileType.SGV_P_MASKED;
+
+  /**
    * Dependencies.
    */
   @NonNull
@@ -58,8 +65,8 @@ public class AnnotateJob extends GenericJob {
 
   private void annotate(JobContext jobContext) {
     jobContext.execute(
-        new AnnotationTask(properties, FileType.SSM_P, FileType.SSM_S),
-        new AnnotationTask(properties, FileType.SGV_P, FileType.SGV_S));
+        new AnnotationTask(properties, SSM_INPUT_TYPE, FileType.SSM_S),
+        new AnnotationTask(properties, SGV_INPUT_TYPE, FileType.SGV_S));
   }
 
 }

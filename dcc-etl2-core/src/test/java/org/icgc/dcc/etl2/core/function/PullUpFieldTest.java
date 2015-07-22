@@ -46,5 +46,4 @@ public class PullUpFieldTest {
     assertThat(actual)
         .isEqualTo(input);
   }
-
 }

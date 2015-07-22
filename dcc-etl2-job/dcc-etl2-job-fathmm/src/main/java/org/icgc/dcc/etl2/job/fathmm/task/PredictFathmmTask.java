@@ -23,6 +23,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericProcessTask;
 import org.icgc.dcc.etl2.job.fathmm.function.PredictFathmm;
+import org.icgc.dcc.etl2.job.fathmm.model.FathmmRepository;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.BiMap;
@@ -40,7 +41,7 @@ public class PredictFathmmTask extends GenericProcessTask {
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input.map(new PredictFathmm(jdbcUrl, transcripts));
+    return input.map(new PredictFathmm(new FathmmRepository(jdbcUrl), transcripts));
   }
 
 }

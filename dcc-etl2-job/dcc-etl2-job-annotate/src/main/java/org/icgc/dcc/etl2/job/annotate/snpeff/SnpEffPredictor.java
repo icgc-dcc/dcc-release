@@ -50,7 +50,7 @@ import org.icgc.dcc.etl2.job.annotate.converter.ICGCToVCFConverter;
 import org.icgc.dcc.etl2.job.annotate.converter.ICGCToVCFConverter.MutationType;
 import org.icgc.dcc.etl2.job.annotate.model.AnnotatedFileType;
 import org.icgc.dcc.etl2.job.annotate.model.SecondaryEntity;
-import org.icgc.dcc.etl2.job.annotate.resolver.Jre7Resolver;
+import org.icgc.dcc.etl2.job.annotate.resolver.JavaResolver;
 import org.icgc.dcc.etl2.job.annotate.resolver.SnpEffDatabaseResolver;
 import org.icgc.dcc.etl2.job.annotate.resolver.SnpEffJarResolver;
 import org.icgc.dcc.etl2.job.annotate.util.Alleles;
@@ -143,7 +143,7 @@ public class SnpEffPredictor {
   }
 
   private File resolveJava() {
-    val resolver = new Jre7Resolver(properties.getResourceDir());
+    val resolver = new JavaResolver();
 
     return resolver.resolve();
   }

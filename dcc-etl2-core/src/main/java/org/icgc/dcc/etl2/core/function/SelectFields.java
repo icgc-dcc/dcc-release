@@ -32,11 +32,10 @@ public class SelectFields implements Function<ObjectNode, ObjectNode> {
   }
 
   @Override
-  public ObjectNode call(ObjectNode row) throws Exception {
+  public ObjectNode call(ObjectNode row) {
     val fields = row.objectNode();
     for (val fieldName : fieldNames) {
       val field = row.get(fieldName);
-
       fields.put(fieldName, field);
     }
 

@@ -56,7 +56,7 @@ public class SnpEffAnnotate implements FlatMapFunction<Iterator<ObjectNode>, Obj
   private final AnnotatedFileType fileType;
 
   @Override
-  public Iterable<ObjectNode> call(final Iterator<ObjectNode> partition) throws Exception {
+  public Iterable<ObjectNode> call(final Iterator<ObjectNode> partition) {
     val predictor = new SnpEffPredictor(properties, fileType);
 
     log.info("Asynchronously forking SnpEff process...");

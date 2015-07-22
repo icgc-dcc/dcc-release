@@ -33,12 +33,12 @@ public abstract class BaseExportJobTest extends AbstractJobTest {
   /**
    * Configuration.
    */
-  File loaderDir;
+  private File loaderDir;
 
   /**
    * Collaborators.
    */
-  EmbeddedHBase hbase;
+  private EmbeddedHBase hbase;
 
   @Override
   @Before

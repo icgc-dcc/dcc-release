@@ -18,13 +18,13 @@
 package org.icgc.dcc.etl2.job.annotate.task;
 
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
+import static org.icgc.dcc.etl2.job.annotate.core.AnnotateJob.SSM_INPUT_TYPE;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.function.ParseObjectNode;
-import org.icgc.dcc.etl2.core.function.TranslateMissingCode;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericProcessTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
@@ -50,6 +50,7 @@ public class AnnotationTask extends GenericProcessTask {
     val maxFileSize = getMaxFileSize();
 
     log.info("Setting input split size of {}", formatBytes(maxFileSize));
+    // TODO: Improve performance. See https://github.com/icgc-dcc/dcc-etl2/pull/6#discussion_r35150675
     val splitSize = Long.toString(maxFileSize);
     hadoopConf.set("mapred.min.split.size", splitSize);
     hadoopConf.set("mapred.max.split.size", splitSize);
@@ -67,15 +68,11 @@ public class AnnotationTask extends GenericProcessTask {
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input
-        .mapPartitions(
-            new SnpEffAnnotate(properties, getAnnotatedFileType()))
-        // TODO: Design this out of this module as this is a submission concept
-        .map(new TranslateMissingCode());
+    return input.mapPartitions(new SnpEffAnnotate(properties, getAnnotatedFileType()));
   }
 
   private AnnotatedFileType getAnnotatedFileType() {
-    return inputFileType == FileType.SSM_P ? AnnotatedFileType.SSM : AnnotatedFileType.SGV;
+    return inputFileType == SSM_INPUT_TYPE ? AnnotatedFileType.SSM : AnnotatedFileType.SGV;
   }
 
   private long getMaxFileSize() {

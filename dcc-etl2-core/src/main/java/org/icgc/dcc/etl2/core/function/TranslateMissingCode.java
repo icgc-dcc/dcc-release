@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class TranslateMissingCode implements Function<ObjectNode, ObjectNode> {
 
   @Override
-  public ObjectNode call(ObjectNode row) throws Exception {
+  public ObjectNode call(ObjectNode row) {
     val iterator = row.fieldNames();
     while (iterator.hasNext()) {
       val fieldName = iterator.next();
@@ -38,7 +38,6 @@ public class TranslateMissingCode implements Function<ObjectNode, ObjectNode> {
       if (isMissingCode(value)) {
         // Replace any empty value, missing code or former missing code with null
         val replaced = (String) NO_VALUE;
-
         row.put(fieldName, replaced);
       }
     }

@@ -30,7 +30,7 @@ public class FormatValues implements Function<Object[], String>, Serializable {
   private static final Joiner ROW_JOINER = TAB.useForNull("\\N");
 
   @Override
-  public String call(Object[] row) throws Exception {
+  public String call(Object[] row) {
     return ROW_JOINER.join(row);
   }
 

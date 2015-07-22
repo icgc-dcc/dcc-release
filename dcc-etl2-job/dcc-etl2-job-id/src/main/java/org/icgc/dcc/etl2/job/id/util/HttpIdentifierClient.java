@@ -139,8 +139,8 @@ public class HttpIdentifierClient implements IdentifierClient {
       int status = http.executeMethod(m);
       checkState(
           status == HttpStatus.SC_OK,
-          "Unable to retrieve ids from dcc-identifier service using '%s' and '%s'",
-          path, newArrayList(params));
+          "Unable to retrieve ids from dcc-identifier service using '%s' and '%s'. Response code: %s",
+          path, newArrayList(params), status);
 
       InputStream in = m.getResponseBodyAsStream();
       checkState(in != null, "No content returns from dcc-identifier service");
