@@ -5,7 +5,7 @@
  * You should have received a copy of the GNU General Public License along with                                  
  * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
  *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY                           
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
  * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
@@ -15,53 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.core.job;
+package org.icgc.dcc.etl2.job.annotate.resolver;
 
-import static com.google.common.base.Preconditions.checkState;
-
-import java.util.Collection;
+import java.io.File;
 
 import lombok.val;
 
-import com.google.common.collect.ImmutableList;
+/**
+ * Resolves location of java executable.
+ */
+public class JavaResolver {
 
-public enum JobType {
+  public File resolve() {
+    val separator = System.getProperty("file.separator");
+    val javaPath = System.getProperty("java.home") + separator + "bin" + separator + "java";
 
-  ANNOTATE,
-  EXPORT,
-  FATHMM,
-  FI,
-  ID,
-  IMAGE,
-  IMPORT,
-  INDEX,
-  JOIN,
-  MASK,
-  ORPHAN,
-  STAGE,
-  SUMMARIZE;
-
-  public static Collection<JobType> getTopologicalSortOrder() {
-    val order = ImmutableList.of(
-        JobType.STAGE,
-        JobType.MASK,
-        JobType.ID,
-        JobType.IMAGE,
-        // This was removed in release ICGC19 (DCC-3506)
-        // JobType.ORPHAN,
-        JobType.ANNOTATE,
-        JobType.JOIN,
-        JobType.FATHMM,
-        JobType.FI,
-        JobType.IMPORT,
-        JobType.EXPORT,
-        JobType.SUMMARIZE,
-        JobType.INDEX
-        );
-
-    checkState(order.size() == values().length);
-
-    return order;
+    return new File(javaPath);
   }
 
 }

@@ -36,6 +36,11 @@ import com.google.common.util.concurrent.MoreExecutors;
 public abstract class AbstractJobTest {
 
   /**
+   * Constants.
+   */
+  protected static final String TEST_FIXTURES_DIR = "src/test/resources/fixtures";
+
+  /**
    * Collaborators.
    */
   protected JavaSparkContext sparkContext;
@@ -147,7 +152,8 @@ public abstract class AbstractJobTest {
       val targetFile = new File(target, sourceFile.getName());
       TestFiles.writeInputFile(sourceFile, targetFile);
     } else {
-      TestFiles.writeInputFile(inputFile.getRows(), target);
+      val targetFile = new File(target, "part-00000");
+      TestFiles.writeInputFile(inputFile.getRows(), targetFile);
     }
   }
 
@@ -160,7 +166,7 @@ public abstract class AbstractJobTest {
   }
 
   private File getFileTypeDirectory(FileType fileType) {
-    val type = new File(workingDir, fileType.name());
+    val type = new File(workingDir, fileType.getDirName());
 
     return type;
   }

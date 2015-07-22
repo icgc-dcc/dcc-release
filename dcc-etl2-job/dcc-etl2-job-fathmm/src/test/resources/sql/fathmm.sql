@@ -142,6 +142,18 @@ CREATE TABLE `WEIGHTS` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
+-- Table structure for table `DCC_CACHE`
+--
+
+DROP TABLE if exists `DCC_CACHE`;
+CREATE TABLE `DCC_CACHE` (
+   `translation_id` varchar(64) NOT NULL,
+   `aa_mutation` varchar(64) NOT NULL,
+   `score` varchar(16),
+   `prediction` varchar(16)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
 -- Dumping data.
 --
 
