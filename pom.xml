@@ -67,6 +67,11 @@
         <artifactId>dcc-etl2-core</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-etl-core</artifactId>
+        <version>${dcc-etl.version}</version>
+      </dependency>
 
       <!-- DCC - Common -->
       <dependency>
@@ -297,6 +302,9 @@
   <properties>
     <!-- Versions - DCC -->
     <dcc-common.version>3.8.2.1</dcc-common.version>
+
+    <!-- Versions - DCC ETL -->
+    <dcc-etl.version>3.8.9.1</dcc-etl.version>
 
     <!-- Versions - Spring -->
     <spring.version>4.0.8.RELEASE</spring.version>

@@ -58,13 +58,17 @@ public class JoinJobTest extends AbstractJobTest {
     val jobContext = createJobContext(job.getType(), asList(PROJECT_NAME, EMPTY_PROJECT_NAME));
     job.execute(jobContext);
 
-    val clinicalResults = produces(PROJECT_NAME, FileType.CLINICAL);
-    log.debug("Clinical Results - {}", clinicalResults);
-    validateClinicalResults(clinicalResults);
+    // Clinical
+    validateClinicalResults(produces(PROJECT_NAME, FileType.CLINICAL));
+    validateEmptyProjectClinicalResults(produces(EMPTY_PROJECT_NAME, FileType.CLINICAL));
 
-    val emptyProjectClinicalResults = produces(EMPTY_PROJECT_NAME, FileType.CLINICAL);
-    log.debug("Empty Project Clinical Results - {}", emptyProjectClinicalResults);
-    validateEmptyProjectClinicalResults(emptyProjectClinicalResults);
+    // Observation
+    validateObservation(produces(PROJECT_NAME, FileType.OBSERVATION));
+  }
+
+  private static void validateObservation(List<ObjectNode> results) {
+    log.info("{}", results);
+    assertThat(results).isNotEmpty();
   }
 
   private static void validateClinicalResults(List<ObjectNode> results) {
