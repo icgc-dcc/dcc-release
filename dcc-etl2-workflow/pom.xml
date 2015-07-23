@@ -82,6 +82,12 @@
       <groupId>javax.mail</groupId>
       <artifactId>mail</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.zeroturnaround</groupId>
+      <artifactId>zt-exec</artifactId>
+      <version>1.8</version>
+    </dependency>
+
 
     <!-- Testing - DCC -->
     <dependency>
