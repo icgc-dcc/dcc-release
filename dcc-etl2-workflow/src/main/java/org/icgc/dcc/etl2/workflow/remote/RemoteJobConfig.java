@@ -15,61 +15,15 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.workflow.exec;
+package org.icgc.dcc.etl2.workflow.remote;
 
-import org.icgc.dcc.etl2.core.job.Job;
-import org.icgc.dcc.etl2.workflow.WorkflowMain;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.stream.slf4j.Slf4jOutputStream;
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableMBeanExport;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-public class JobProcessExecutor {
-
-  public void submit() throws Exception {
-    val command = new ProcessExecutor()
-        .command(java(), "-cp", classpath(), mainClass())
-        .redirectError(logOutputStream())
-        .redirectOutput(logOutputStream())
-        .readOutput(true);
-
-    val result = command.execute();
-    log.info(result.outputUTF8());
-  }
-
-  private String mainClass() {
-    return WorkflowMain.class.getName();
-  }
-
-  private String classpath() {
-    val separator = System.getProperty("path.separator");
-    val classpath = System.getProperty("java.class.path");
-    log.info(classpath);
-
-    return isExpoded() ? getLocation(getClass()) + separator + classpath : getLocation(Job.class);
-  }
-
-  private boolean isExpoded() {
-    return getLocation(getClass()).endsWith("classes");
-  }
-
-  private static String getLocation(Class<?> type) {
-    return type.getProtectionDomain().getCodeSource().getLocation().getPath();
-  }
-
-  private static String java() {
-    val separator = System.getProperty("file.separator");
-    val javaHome = System.getProperty("java.home");
-    log.info(javaHome);
-
-    return javaHome + separator + "bin" + separator + "java";
-  }
-
-  private static Slf4jOutputStream logOutputStream() {
-    return Slf4jStream.of(log).asInfo();
-  }
+@Configuration
+@EnableMBeanExport
+@EnableAutoConfiguration
+public class RemoteJobConfig {
 
 }
