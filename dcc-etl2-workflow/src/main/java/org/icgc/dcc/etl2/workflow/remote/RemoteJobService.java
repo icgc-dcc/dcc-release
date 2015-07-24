@@ -21,8 +21,10 @@ import java.util.Map;
 
 public interface RemoteJobService {
 
-  void execute(Map<String, Object> properties);
+  void executeJob(Map<String, Object> properties);
 
-  String getName();
+  void cancelJob();
+
+  String getJobName();
 
 }

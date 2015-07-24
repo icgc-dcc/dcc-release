@@ -6,11 +6,6 @@ import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 
 import java.util.List;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.etl2.core.job.DefaultJobContext;
 import org.icgc.dcc.etl2.core.job.Job;
@@ -29,10 +24,15 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Table;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 @Lazy
 @Service
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
+@RequiredArgsConstructor(onConstructor = @__({ @Autowired }) )
 public class Workflow {
 
   /**
@@ -42,6 +42,10 @@ public class Workflow {
   private final SubmissionMetadataService submissionMetadata;
   @NonNull
   private final SubmissionFileSystem submissionFileSystem;
+
+  /**
+   * Technical dependencies.
+   */
   @NonNull
   private final TaskExecutor taskExecutor;
   @NonNull

@@ -29,6 +29,7 @@ import org.springframework.jmx.support.MBeanServerConnectionFactoryBean;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RemoteJobExecutor {
 
+  @NonNull
   public void submit(Class<? extends Job> jobClass) throws Exception {
     val process = new RemoteJobProcess(jobClass);
 
@@ -59,11 +61,11 @@ public class RemoteJobExecutor {
     }
   }
 
-  private void execute(final org.icgc.dcc.etl2.workflow.remote.RemoteJobService jobService) {
+  private void execute(RemoteJobService jobService) {
     val properties = ImmutableMap.<String, Object> of("x", 1);
 
-    log.info("Executing job service {}...", jobService.getName());
-    jobService.execute(properties);
+    log.info("Executing job service {}...", jobService.getJobName());
+    jobService.executeJob(properties);
   }
 
   @SneakyThrows
@@ -72,7 +74,7 @@ public class RemoteJobExecutor {
     val serverFactory = new MBeanServerConnectionFactoryBean();
     serverFactory.setServiceUrl(serviceUrl);
 
-    return await(serviceUrl, () -> {
+    return withRetry(serviceUrl, () -> {
       // Are we there yet?
       serverFactory.afterPropertiesSet();
 
@@ -86,7 +88,7 @@ public class RemoteJobExecutor {
     val objectName = new ObjectName(JMXRemoteJobService.JMX_OBJECT_NAME);
     val proxy = new MBeanProxyFactoryBean();
 
-    return await(objectName, () -> {
+    return withRetry(objectName, () -> {
       // Are we there yet?
       server.getMBeanInfo(objectName);
 
@@ -101,7 +103,7 @@ public class RemoteJobExecutor {
   }
 
   @SneakyThrows
-  private <T> T await(Object resource, Callable<T> producer) {
+  private <T> T withRetry(Object resource, Callable<T> producer) {
     val delay = 500; // ms
     val watch = Stopwatch.createStarted();
     for (int i = 0; i < 4; i++) {

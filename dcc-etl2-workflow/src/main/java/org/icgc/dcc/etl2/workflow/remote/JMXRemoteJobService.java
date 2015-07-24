@@ -32,13 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-@ManagedResource(objectName = JMX_OBJECT_NAME, description = "ETL2 Job Server")
+@ManagedResource(objectName = JMX_OBJECT_NAME, description = "Remote Job Service")
 public class JMXRemoteJobService implements RemoteJobService {
 
   /**
    * Constants.
    */
-  public static final String JMX_OBJECT_NAME = "org.icgc.dcc.etl2:name=RemoteJobMain";
+  public static final String JMX_OBJECT_NAME = "org.icgc.dcc.etl2:name=RemoteJobService";
 
   /**
    * Configuration.
@@ -48,13 +48,20 @@ public class JMXRemoteJobService implements RemoteJobService {
 
   @Override
   @ManagedOperation(description = "Run the job")
-  public void execute(Map<String, Object> properties) {
-    log.info("Running with " + properties);
+  public void executeJob(Map<String, Object> properties) {
+    log.info("Running with {}", properties);
+  }
+
+  @Override
+  @ManagedOperation(description = "Cancel the job")
+  public void cancelJob() {
+    log.info("Cancelling job...");
+    System.exit(1);
   }
 
   @Override
   @ManagedAttribute(description = "The job name")
-  public String getName() {
+  public String getJobName() {
     return jobClass.getName();
   }
 
