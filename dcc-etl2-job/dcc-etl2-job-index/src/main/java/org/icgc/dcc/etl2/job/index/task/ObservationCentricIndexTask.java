@@ -15,23 +15,42 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.index.function;
+package org.icgc.dcc.etl2.job.index.task;
 
-import java.net.URI;
+import lombok.val;
 
+import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.etl2.core.task.TaskContext;
+import org.icgc.dcc.etl2.job.index.function.RowTransform;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class RowTransform extends AbstractRowTransform<ObjectNode> {
+public class ObservationCentricIndexTask extends IndexTask {
 
-  public RowTransform(DocumentType type, String collectionDir, URI fsUri) {
-    super(type, collectionDir, fsUri);
+  public ObservationCentricIndexTask() {
+    super(DocumentType.OBSERVATION_CENTRIC_TYPE);
   }
 
   @Override
-  public ObjectNode call(ObjectNode root) throws Exception {
-    return execute(root, getDocumentContext());
+  public void execute(TaskContext taskContext) {
+    val observations = readObservations(taskContext);
+
+    val output = transform(taskContext, observations);
+    writeOutput(output);
+  }
+
+  private JavaRDD<ObjectNode> transform(TaskContext taskContext, JavaRDD<ObjectNode> observations) {
+    val transformed = observations.map(createTransform(taskContext));
+
+    return transformed;
+  }
+
+  private RowTransform createTransform(TaskContext taskContext) {
+    val collectionDir = taskContext.getJobContext().getWorkingDir();
+    val fsUri = taskContext.getFileSystem().getUri();
+
+    return new RowTransform(type, collectionDir, fsUri);
   }
 
 }

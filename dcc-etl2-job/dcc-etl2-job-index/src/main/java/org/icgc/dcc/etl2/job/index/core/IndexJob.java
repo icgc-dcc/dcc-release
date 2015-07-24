@@ -21,12 +21,6 @@ import static org.icgc.dcc.etl2.job.index.factory.TransportClientFactory.newTran
 
 import java.util.Collection;
 
-import lombok.Cleanup;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.etl2.core.job.Job;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
@@ -35,16 +29,22 @@ import org.icgc.dcc.etl2.core.util.Streams;
 import org.icgc.dcc.etl2.job.index.config.IndexProperties;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
 import org.icgc.dcc.etl2.job.index.service.IndexService;
-import org.icgc.dcc.etl2.job.index.task.GeneCentricIndexTask;
+import org.icgc.dcc.etl2.job.index.task.MutationCentricIndexTask;
 import org.icgc.dcc.etl2.job.index.task.RemoteIndexTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableList;
 
+import lombok.Cleanup;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 @Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
+@RequiredArgsConstructor(onConstructor = @__({ @Autowired }) )
 public class IndexJob implements Job {
 
   /**
@@ -70,6 +70,7 @@ public class IndexJob implements Job {
 
     @Cleanup
     val client = newTransportClient(properties.getEsUri());
+    @Cleanup
     val indexService = new IndexService(client);
 
     // TODOD: Fix this to be tied to a run id:
@@ -104,9 +105,10 @@ public class IndexJob implements Job {
 
   private Collection<? extends Task> createStreamingTasks(JobContext jobContext, String indexName) {
     return ImmutableList.of(
-        new GeneCentricIndexTask()
-        // , new DonorCentricIndexTask()
-        );
+        new MutationCentricIndexTask()
+    // , new GeneCentricIndexTask()
+    // , new DonorCentricIndexTask()
+    );
   }
 
   @SuppressWarnings("unused")

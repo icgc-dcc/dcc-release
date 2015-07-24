@@ -17,21 +17,42 @@
  */
 package org.icgc.dcc.etl2.job.index.function;
 
+import static java.util.Collections.emptyList;
+
 import java.net.URI;
 
+import lombok.val;
+
+import org.icgc.dcc.etl2.job.index.core.DocumentContext;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
 
+import scala.Tuple2;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 
-public class RowTransform extends AbstractRowTransform<ObjectNode> {
+public class RowChildrenTransform extends
+    AbstractRowTransform<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>> {
 
-  public RowTransform(DocumentType type, String collectionDir, URI fsUri) {
+  public RowChildrenTransform(DocumentType type, String collectionDir, URI fsUri) {
     super(type, collectionDir, fsUri);
   }
 
   @Override
-  public ObjectNode call(ObjectNode root) throws Exception {
-    return execute(root, getDocumentContext());
+  public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
+    val root = tuple._2._1;
+    val children = tuple._2._2.or(emptyList());
+    val customDocumentContext = createCustomDocumentContext(children);
+
+    return execute(root, customDocumentContext);
+  }
+
+  /**
+   * Template method.
+   */
+  protected DocumentContext createCustomDocumentContext(Iterable<ObjectNode> children) {
+    // By default, return the default
+    return getDocumentContext();
   }
 
 }

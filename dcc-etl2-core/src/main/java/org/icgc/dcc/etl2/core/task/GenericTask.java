@@ -79,7 +79,12 @@ public abstract class GenericTask implements Task {
       return emptyRDD(sparkContext);
     }
 
-    return ObjectNodeRDDs.textObjectNodeFile(sparkContext, filePath, conf);
+    val splitSize = Long.toString(48 * 1024 * 1024);
+    conf.set("mapred.min.split.size", splitSize);
+    conf.set("mapred.max.split.size", splitSize);
+
+    return ObjectNodeRDDs.combineObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
+    // return ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
     // return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
   }
 

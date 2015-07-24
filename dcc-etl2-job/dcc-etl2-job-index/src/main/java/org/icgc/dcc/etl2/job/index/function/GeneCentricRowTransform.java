@@ -25,14 +25,14 @@ import org.icgc.dcc.etl2.job.index.util.ForwardingDocumentContext;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class GeneCentricRowTransform extends RowTransform {
+public class GeneCentricRowTransform extends RowChildrenTransform {
 
   public GeneCentricRowTransform(String collectionDir, URI fsUri) {
     super(DocumentType.GENE_CENTRIC_TYPE, collectionDir, fsUri);
   }
 
   @Override
-  protected DocumentContext createDocumentContext(Iterable<ObjectNode> geneObservations) {
+  protected DocumentContext createCustomDocumentContext(Iterable<ObjectNode> geneObservations) {
     return new ForwardingDocumentContext(getDocumentContext()) {
 
       @Override

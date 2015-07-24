@@ -24,7 +24,6 @@ import lombok.val;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.job.index.function.DonorCentricRowTransform;
-import org.icgc.dcc.etl2.job.index.function.RowTransform;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -54,7 +53,7 @@ public class DonorCentricIndexTask extends IndexTask {
     return transformed;
   }
 
-  private RowTransform createTransform(TaskContext taskContext) {
+  private DonorCentricRowTransform createTransform(TaskContext taskContext) {
     val collectionDir = taskContext.getJobContext().getWorkingDir();
     val fsUri = taskContext.getFileSystem().getUri();
 

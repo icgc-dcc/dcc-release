@@ -19,19 +19,28 @@ package org.icgc.dcc.etl2.job.index.function;
 
 import java.net.URI;
 
+import org.icgc.dcc.etl2.job.index.core.DocumentContext;
 import org.icgc.dcc.etl2.job.index.model.DocumentType;
+import org.icgc.dcc.etl2.job.index.util.ForwardingDocumentContext;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class RowTransform extends AbstractRowTransform<ObjectNode> {
+public class MutationCentricRowTransform extends RowChildrenTransform {
 
-  public RowTransform(DocumentType type, String collectionDir, URI fsUri) {
-    super(type, collectionDir, fsUri);
+  public MutationCentricRowTransform(String collectionDir, URI fsUri) {
+    super(DocumentType.MUTATION_CENTRIC_TYPE, collectionDir, fsUri);
   }
 
   @Override
-  public ObjectNode call(ObjectNode root) throws Exception {
-    return execute(root, getDocumentContext());
+  protected DocumentContext createCustomDocumentContext(Iterable<ObjectNode> mutationObservations) {
+    return new ForwardingDocumentContext(getDocumentContext()) {
+
+      @Override
+      public Iterable<ObjectNode> getObservationsByMutationId(String mutationId) {
+        return mutationObservations;
+      }
+
+    };
   }
 
 }
