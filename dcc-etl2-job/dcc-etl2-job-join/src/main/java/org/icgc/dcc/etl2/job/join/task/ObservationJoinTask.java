@@ -18,6 +18,9 @@
 package org.icgc.dcc.etl2.job.join.task;
 
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
 
 import java.util.Map;
 
@@ -25,16 +28,16 @@ import lombok.val;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
 import org.icgc.dcc.etl2.core.function.CombineFields;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.job.join.function.KeyAnalysisIdAnalyzedSampleIdField;
-import org.icgc.dcc.etl2.job.join.function.KeyDonorMutationId;
+import org.icgc.dcc.etl2.job.join.function.KeyDonorMutataionId;
 import org.icgc.dcc.etl2.job.join.function.KeyFields;
-import org.icgc.dcc.etl2.job.join.function.TransformDonorMutationSsmPrimarySecondary;
-import org.icgc.dcc.etl2.job.join.function.TransformJoinedObservation;
+import org.icgc.dcc.etl2.job.join.function.PairAnalysisIdSampleId;
+import org.icgc.dcc.etl2.job.join.function.TransormToOccurrence;
+import org.icgc.dcc.etl2.job.join.model.Donor;
 
 import scala.Tuple2;
 
@@ -48,29 +51,39 @@ public class ObservationJoinTask extends GenericTask {
     val outputFileType = FileType.OBSERVATION;
 
     val sampleDonorIds = resolveSampleDonorIds(taskContext);
+    val sampleSurrogageSampleIds = sampleSurrogageSampleIds(taskContext);
 
     val ssmM = parseSsmM(taskContext);
     val ssmP = parseSsmP(taskContext);
     val ssmS = parseSsmS(taskContext);
 
-    val output = joinSsm(ssmM, ssmP, ssmS, sampleDonorIds);
+    val output = joinSsm(ssmM, ssmP, ssmS, sampleDonorIds, sampleSurrogageSampleIds);
 
     writeOutput(taskContext, output, outputFileType);
   }
 
-  private Map<String, String> resolveSampleDonorIds(TaskContext taskContext) {
+  private Map<String, String> sampleSurrogageSampleIds(TaskContext taskContext) {
+    val samples = parseSample(taskContext);
+
+    return samples.mapToPair(s -> tuple(textValue(s, SUBMISSION_ANALYZED_SAMPLE_ID), textValue(s, "_sample_id")))
+        .collectAsMap();
+  }
+
+  private Map<String, Donor> resolveSampleDonorIds(TaskContext taskContext) {
     val clinical = parseClinical(taskContext);
     val donors = clinical.collect();
 
-    val sampleDonorIds = Maps.<String, String> newHashMap();
+    val sampleDonorIds = Maps.<String, Donor> newHashMap();
     for (val donor : donors) {
       val donorId = donor.get("_donor_id").textValue();
 
       for (val specimen : donor.withArray("specimen")) {
         for (val sample : specimen.withArray("sample")) {
-          val sampleId = sample.get(SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID).textValue();
+          val sampleId = textValue(sample, SUBMISSION_ANALYZED_SAMPLE_ID);
+          val _specimenId = textValue(specimen, "_specimen_id");
+          val _sampleId = textValue(sample, "_sample_id");
 
-          sampleDonorIds.put(sampleId, donorId);
+          sampleDonorIds.put(sampleId, new Donor(donorId, _specimenId, _sampleId));
         }
       }
     }
@@ -94,25 +107,25 @@ public class ObservationJoinTask extends GenericTask {
     return readInput(taskContext, FileType.SSM_S);
   }
 
-  private JavaRDD<ObjectNode> joinSsm(JavaRDD<ObjectNode> ssmM, JavaRDD<ObjectNode> ssmP, JavaRDD<ObjectNode> ssmS,
-      Map<String, String> sampleDonorIds) {
+  private JavaRDD<ObjectNode> parseSample(TaskContext taskContext) {
+    return readInput(taskContext, FileType.SAMPLE_SURROGATE_KEY);
+  }
+
+  private static JavaRDD<ObjectNode> joinSsm(JavaRDD<ObjectNode> ssmM, JavaRDD<ObjectNode> ssmP,
+      JavaRDD<ObjectNode> ssmS, Map<String, Donor> sampleDonorIds, Map<String, String> sampleSurrogageSampleIds) {
     val ssmPrimarySecondary = joinSsmPrimarySecondary(ssmP, ssmS);
 
-    val donorMutationSsmPrimarySecondary = ssmPrimarySecondary
-        .groupBy(new KeyDonorMutationId(sampleDonorIds));
-
-    val donorMutation = donorMutationSsmPrimarySecondary
-        .map(new TransformDonorMutationSsmPrimarySecondary());
-
-    val observation = donorMutation
-        .mapToPair(new KeyAnalysisIdAnalyzedSampleIdField())
+    val observations = ssmPrimarySecondary
+        .mapToPair(new PairAnalysisIdSampleId())
         .join(ssmM
             .mapToPair(new KeyAnalysisIdAnalyzedSampleIdField()));
 
-    return observation.map(new TransformJoinedObservation());
+    val donorMutationObservations = observations.groupBy(new KeyDonorMutataionId(sampleDonorIds));
+
+    return donorMutationObservations.map(new TransormToOccurrence(sampleDonorIds, sampleSurrogageSampleIds));
   }
 
-  private JavaPairRDD<String, Tuple2<ObjectNode, Iterable<ObjectNode>>> joinSsmPrimarySecondary(
+  private static JavaPairRDD<String, Tuple2<ObjectNode, Iterable<ObjectNode>>> joinSsmPrimarySecondary(
       JavaRDD<ObjectNode> ssmP, JavaRDD<ObjectNode> ssmS) {
     return ssmP
         .mapToPair(new KeyFields(NORMALIZER_OBSERVATION_ID))

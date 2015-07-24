@@ -127,6 +127,9 @@ public final class JavaRDDs {
     return HadoopUtils.checkExistence(fs, path);
   }
 
+  /**
+   * @see <a href="https://issues.apache.org/jira/browse/SPARK-9236">SPARK-9236</a>
+   */
   @NonNull
   public static <T> JavaRDD<T> emptyRDD(JavaSparkContext sparkContext) {
     return sparkContext.parallelize(Collections.emptyList());

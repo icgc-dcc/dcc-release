@@ -15,39 +15,17 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.function;
+package org.icgc.dcc.etl2.job.join.model;
 
-import java.util.Map;
+import java.io.Serializable;
 
-import lombok.RequiredArgsConstructor;
-import lombok.val;
+import lombok.Value;
 
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
-import org.icgc.dcc.etl2.core.util.Keys;
+@Value
+public class Donor implements Serializable {
 
-import scala.Tuple2;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-@RequiredArgsConstructor
-public class KeyDonorMutationId implements
-    Function<Tuple2<String, Tuple2<ObjectNode, Iterable<ObjectNode>>>, String> {
-
-  private final Map<String, String> sampleDonorIds;
-
-  @Override
-  public String call(Tuple2<String, Tuple2<ObjectNode, Iterable<ObjectNode>>> tuple) throws Exception {
-    val primary = tuple._2._1;
-
-    // TODO: Externalize all strings!
-    val mutationId = primary.get("_mutation_id").textValue();
-    val sampleId = primary.get(SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYZED_SAMPLE_ID).textValue();
-
-    val donorId = sampleDonorIds.get(sampleId);
-    val key = Keys.getKey(donorId, mutationId);
-
-    return key;
-  }
+  String donorId;
+  String specimenId;
+  String sampleId;
 
 }

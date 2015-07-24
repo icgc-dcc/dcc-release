@@ -15,63 +15,42 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.core.util;
+package org.icgc.dcc.etl2.job.join.function;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 
-import lombok.NonNull;
+import java.util.Map;
+
+import lombok.RequiredArgsConstructor;
 import lombok.val;
-import lombok.experimental.UtilityClass;
 
-import org.icgc.dcc.common.core.util.Splitters;
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.etl2.core.util.Keys;
+import org.icgc.dcc.etl2.job.join.model.Donor;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import scala.Tuple2;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Splitter;
 
-@UtilityClass
-public class ObjectNodes {
+@RequiredArgsConstructor
+public class KeyDonorMutataionId implements
+    Function<Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>, ObjectNode>>, String> {
 
-  public static final ObjectMapper MAPPER = new ObjectMapper();
+  private final Map<String, Donor> sampleDonorIds;
 
-  private static final Splitter PATH_SPLITTER = Splitters.DOT;
+  @Override
+  public String call(Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>, ObjectNode>> tuple)
+      throws Exception {
+    val primary = tuple._2._1._1;
+    // TODO: Externalize all strings!
+    val mutationId = textValue(primary, "_mutation_id");
+    val sampleId = textValue(primary, SUBMISSION_ANALYZED_SAMPLE_ID);
 
-  public static String textValue(JsonNode jsonNode, @NonNull String fieldName) {
-    if (jsonNode == null) {
-      return null;
-    }
+    val donorId = sampleDonorIds.get(sampleId);
+    val key = Keys.getKey(donorId.getDonorId(), mutationId);
 
-    return jsonNode.get(fieldName).textValue();
-  }
-
-  public static JsonNode getPath(@NonNull ObjectNode objectNode, @NonNull String path) {
-    val parts = parsePath(path);
-
-    JsonNode jsonNode = objectNode;
-    for (val fieldName : parts) {
-      jsonNode = jsonNode.get(fieldName);
-      if (jsonNode == null) {
-        // Missing
-        return null;
-      }
-    }
-
-    return jsonNode;
-  }
-
-  private static Iterable<String> parsePath(String path) {
-    val parts = PATH_SPLITTER.split(path);
-    return parts;
-  }
-
-  public static String toEmptyJsonValue(Set<String> fields) {
-    String joined = fields.stream()
-        .map(i -> "\"" + i.toString() + "\":\"\"")
-        .collect(Collectors.joining(", "));
-
-    return "[" + joined + "]";
+    return key;
   }
 
 }

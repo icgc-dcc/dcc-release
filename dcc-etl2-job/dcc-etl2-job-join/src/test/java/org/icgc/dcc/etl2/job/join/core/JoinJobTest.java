@@ -20,12 +20,12 @@ package org.icgc.dcc.etl2.job.join.core;
 import static com.google.common.collect.ImmutableList.copyOf;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 
 import java.io.File;
 import java.util.List;
 
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.test.job.AbstractJobTest;
@@ -36,8 +36,56 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
-@Slf4j
 public class JoinJobTest extends AbstractJobTest {
+
+  private static final ImmutableList<String> VALID_CONSEQUENCE_FIELDS = ImmutableList.of("consequence_type",
+      "aa_change",
+      "cds_change",
+      "protein_domain_affected",
+      "gene_affected",
+      "transcript_affected",
+      "gene_build_version",
+      "note",
+      "observation_id");
+
+  private static final ImmutableList<String> VALID_OBSERVATION_FIELDS = ImmutableList.of("analysis_id",
+      "analyzed_sample_id",
+      "total_read_count",
+      "mutant_allele_read_count",
+      "verification_status",
+      "biological_validation_status",
+      "observation_id",
+      "marking",
+      "matched_sample_id",
+      "platform",
+      "base_calling_algorithm",
+      "alignment_algorithm",
+      "variation_calling_algorithm",
+      "other_analysis_algorithm",
+      "sequencing_strategy",
+      "seq_coverage",
+      "raw_data_repository",
+      "raw_data_accession",
+      "_specimen_id",
+      "_sample_id",
+      "_matched_sample_id");
+
+  private static final ImmutableList<String> VALID_MUTATION_FIELDS = ImmutableList.of(
+      "_donor_id",
+      "_mutation_id",
+      "_project_id",
+      "assembly_version",
+      "chromosome",
+      "chromosome_end",
+      "chromosome_start",
+      "chromosome_strand",
+      "mutated_from_allele",
+      "mutated_to_allele",
+      "mutation",
+      "mutation_type",
+      "reference_genome_allele",
+      "consequence",
+      "observation");
 
   private static final String PROJECT_NAME = "BRCA-UK";
   private static final String EMPTY_PROJECT_NAME = "EMPTY";
@@ -62,17 +110,64 @@ public class JoinJobTest extends AbstractJobTest {
     validateClinicalResults(produces(PROJECT_NAME, FileType.CLINICAL));
     validateEmptyProjectClinicalResults(produces(EMPTY_PROJECT_NAME, FileType.CLINICAL));
 
-    // Observation
-    validateObservation(produces(PROJECT_NAME, FileType.OBSERVATION));
+    // Occurrences
+    validateOccurrences(produces(PROJECT_NAME, FileType.OBSERVATION));
   }
 
-  private static void validateObservation(List<ObjectNode> results) {
-    log.info("{}", results);
-    assertThat(results).isNotEmpty();
+  private static void validateOccurrences(List<ObjectNode> results) {
+    assertThat(results).hasSize(2);
+
+    for (val occurrence : results) {
+      validateOccurrenceStructure(occurrence);
+
+      if (textValue(occurrence, "_donor_id").equals("DO001")) {
+        validateDO1Occurrence(occurrence);
+      }
+      else {
+        validateDO2Occurrence(occurrence);
+      }
+    }
+
+  }
+
+  private static void validateDO2Occurrence(ObjectNode occurrence) {
+    assertThat(occurrence.get("observation").size()).isEqualTo(2);
+  }
+
+  private static void validateDO1Occurrence(ObjectNode occurrence) {
+    assertThat(occurrence.get("observation").size()).isEqualTo(1);
+  }
+
+  private static void validateOccurrenceStructure(ObjectNode occurrence) {
+    val fields = ImmutableList.copyOf(occurrence.fieldNames());
+    assertThat(VALID_MUTATION_FIELDS).containsOnlyElementsOf(fields);
+
+    validateArrayNode(occurrence.get("consequence"));
+    validateArrayNode(occurrence.get("observation"));
+
+    validateConsequenceStructure(occurrence.get("consequence").get(0));
+    validateObservationStructure(occurrence.get("observation").get(0));
+  }
+
+  private static void validateObservationStructure(JsonNode observation) {
+    assertThat(VALID_OBSERVATION_FIELDS).containsOnlyElementsOf(getFields(observation));
+  }
+
+  private static void validateConsequenceStructure(JsonNode consequence) {
+    assertThat(VALID_CONSEQUENCE_FIELDS).containsOnlyElementsOf(getFields(consequence));
+  }
+
+  private static List<String> getFields(JsonNode node) {
+    return ImmutableList.copyOf(node.fieldNames());
+  }
+
+  private static void validateArrayNode(JsonNode arrayNode) {
+    assertThat(arrayNode.isArray()).isTrue();
+    assertThat(arrayNode.size()).isGreaterThan(0);
   }
 
   private static void validateClinicalResults(List<ObjectNode> results) {
-    assertThat(results).hasSize(1);
+    assertThat(results).hasSize(2);
     val donor = results.get(0);
     validateTherapyFamilyExposure(donor.get("therapy"));
     validateTherapyFamilyExposure(donor.get("family"));
@@ -82,19 +177,18 @@ public class JoinJobTest extends AbstractJobTest {
 
   private static void validateSpecimen(JsonNode specimen) {
     assertThat(specimen.isArray()).isTrue();
-    val specimens = copyOf(specimen.elements());
+    val specimens = getElements(specimen);
     assertThat(specimens).hasSize(1);
 
-    val samples = copyOf(specimens.get(0).get("sample").elements());
+    val samples = getElements(specimens.get(0).get("sample"));
     assertThat(samples).hasSize(2);
 
-    samples.stream()
-        .forEach(s -> verifySamples(s));
+    samples.stream().forEach(s -> verifySamples(s));
   }
 
   private static void validateTherapyFamilyExposure(JsonNode node) {
     assertThat(node.isArray()).isTrue();
-    val elements = copyOf(node.elements());
+    val elements = getElements(node);
     assertThat(elements).hasSize(1);
   }
 
@@ -109,6 +203,10 @@ public class JoinJobTest extends AbstractJobTest {
     assertThat(donor.findPath("family").isMissingNode()).isTrue();
     assertThat(donor.findPath("exposure").isMissingNode()).isTrue();
     assertThat(donor.findPath("specimen").isMissingNode()).isTrue();
+  }
+
+  private static List<JsonNode> getElements(JsonNode node) {
+    return copyOf(node.elements());
   }
 
 }

@@ -15,31 +15,17 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.function;
+package org.icgc.dcc.etl2.core.util;
 
-import lombok.val;
-
-import org.apache.spark.api.java.function.Function;
-
+import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
 import scala.Tuple2;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+@NoArgsConstructor(access = PRIVATE)
+public final class Tuples {
 
-public class TransformJoinedObservation implements Function<Tuple2<String, Tuple2<ObjectNode, ObjectNode>>, ObjectNode> {
-
-  @Override
-  public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, ObjectNode>> tuple) throws Exception {
-    val observation = tuple._2._1;
-    val meta = trimMeta(tuple._2._2);
-
-    observation.putAll(meta);
-
-    return observation;
+  public static <K, V> Tuple2<K, V> tuple(K key, V value) {
+    return new Tuple2<K, V>(key, value);
   }
 
-  private ObjectNode trimMeta(ObjectNode meta) {
-    // TODO: Remove fields
-
-    return meta;
-  }
 }
