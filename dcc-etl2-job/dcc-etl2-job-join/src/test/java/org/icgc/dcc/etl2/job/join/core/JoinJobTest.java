@@ -26,7 +26,6 @@ import java.io.File;
 import java.util.List;
 
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.test.job.AbstractJobTest;
@@ -37,7 +36,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
-@Slf4j
 public class JoinJobTest extends AbstractJobTest {
 
   private static final ImmutableList<String> VALID_CONSEQUENCE_FIELDS = ImmutableList.of(
@@ -118,10 +116,29 @@ public class JoinJobTest extends AbstractJobTest {
 
     // Occurrences
     validateOccurrences(produces(PROJECT_NAME, FileType.OBSERVATION));
+
+    // PEXP file type
+    validatePexp(produces(PROJECT_NAME, FileType.PEXP_JOINED));
+
+    // JCN file type
+    validateJcn(produces(PROJECT_NAME, FileType.JCN_JOINED));
+  }
+
+  private static void validateJcn(List<ObjectNode> results) {
+    validateJoinedTypes(results, 41);
+  }
+
+  private static void validatePexp(List<ObjectNode> results) {
+    validateJoinedTypes(results, 16);
+  }
+
+  private static void validateJoinedTypes(List<ObjectNode> results, int expectedFieldsCount) {
+    assertThat(results).hasSize(1);
+    val joined = results.get(0);
+    assertThat(getElements(joined)).hasSize(expectedFieldsCount);
   }
 
   private static void validateOccurrences(List<ObjectNode> results) {
-    log.debug("Occurrences results: {}", results);
     assertThat(results).hasSize(2);
 
     for (val occurrence : results) {

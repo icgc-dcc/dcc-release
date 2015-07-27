@@ -17,9 +17,12 @@
  */
 package org.icgc.dcc.etl2.core.job;
 
+import static java.lang.String.format;
+
 import java.util.Optional;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 
@@ -76,6 +79,7 @@ public enum FileType {
 
   PEXP_M(true),
   PEXP_P(true),
+  PEXP_JOINED(true),
 
   METH_ARRAY_M(true),
   METH_ARRAY_PROBES(true),
@@ -89,6 +93,7 @@ public enum FileType {
 
   JCN_M(true),
   JCN_P(true),
+  JCN_JOINED(true),
 
   EXP_ARRAY_M(true),
   EXP_ARRAY_P(true),
@@ -149,6 +154,17 @@ public enum FileType {
     } catch (Exception e) {
       return Optional.empty();
     }
+  }
+
+  @NonNull
+  public static FileType getFileType(String name) {
+    for (val value : values()) {
+      if (value.name().equals(name.toUpperCase())) {
+        return value;
+      }
+    }
+
+    throw new IllegalArgumentException(format("Failed to resolve FileType from name '%s'", name));
   }
 
 }

@@ -15,46 +15,25 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.core;
+package org.icgc.dcc.etl2.job.join.function;
 
-import lombok.NonNull;
+import lombok.val;
 
-import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.job.GenericJob;
-import org.icgc.dcc.etl2.core.job.JobContext;
-import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.job.join.task.ClinicalJoinTask;
-import org.icgc.dcc.etl2.job.join.task.ObservationJoinTask;
-import org.icgc.dcc.etl2.job.join.task.PrimaryMetaJoinTask;
-import org.springframework.stereotype.Component;
+import org.apache.spark.api.java.function.Function;
 
-@Component
-public class JoinJob extends GenericJob {
+import scala.Tuple2;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+public final class CombinePrimaryMeta implements Function<Tuple2<String, Tuple2<ObjectNode, ObjectNode>>, ObjectNode> {
 
   @Override
-  public JobType getType() {
-    return JobType.JOIN;
-  }
+  public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, ObjectNode>> tuple) throws Exception {
+    val primary = tuple._2._1;
+    val meta = tuple._2._2;
+    primary.setAll(meta);
 
-  @Override
-  public void execute(@NonNull JobContext jobContext) {
-    clean(jobContext);
-    join(jobContext);
-  }
-
-  private void clean(JobContext jobContext) {
-    // TODO: Add more
-    delete(jobContext, FileType.CLINICAL, FileType.OBSERVATION);
-  }
-
-  private void join(JobContext jobContext) {
-    // TODO: Add more
-    jobContext.execute(
-        new ClinicalJoinTask(),
-        new ObservationJoinTask(),
-        new PrimaryMetaJoinTask(FileType.PEXP_P),
-        new PrimaryMetaJoinTask(FileType.JCN_P)
-        );
+    return primary;
   }
 
 }
