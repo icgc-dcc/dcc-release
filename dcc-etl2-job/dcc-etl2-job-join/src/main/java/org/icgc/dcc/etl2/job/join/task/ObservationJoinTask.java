@@ -65,7 +65,8 @@ public class ObservationJoinTask extends GenericTask {
   private Map<String, String> sampleSurrogageSampleIds(TaskContext taskContext) {
     val samples = parseSample(taskContext);
 
-    return samples.mapToPair(s -> tuple(textValue(s, SUBMISSION_ANALYZED_SAMPLE_ID), textValue(s, "_sample_id")))
+    return samples
+        .mapToPair(s -> tuple(textValue(s, SUBMISSION_ANALYZED_SAMPLE_ID), textValue(s, "_sample_id")))
         .collectAsMap();
   }
 

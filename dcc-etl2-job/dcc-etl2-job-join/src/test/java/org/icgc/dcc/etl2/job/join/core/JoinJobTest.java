@@ -26,6 +26,7 @@ import java.io.File;
 import java.util.List;
 
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.test.job.AbstractJobTest;
@@ -36,56 +37,59 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
+@Slf4j
 public class JoinJobTest extends AbstractJobTest {
 
-  private static final ImmutableList<String> VALID_CONSEQUENCE_FIELDS = ImmutableList.of("consequence_type",
+  private static final ImmutableList<String> VALID_CONSEQUENCE_FIELDS = ImmutableList.of(
       "aa_change",
       "cds_change",
-      "protein_domain_affected",
+      "consequence_type",
       "gene_affected",
-      "transcript_affected",
       "gene_build_version",
       "note",
-      "observation_id");
+      "protein_domain_affected",
+      "transcript_affected");
 
-  private static final ImmutableList<String> VALID_OBSERVATION_FIELDS = ImmutableList.of("analysis_id",
+  private static final ImmutableList<String> VALID_OBSERVATION_FIELDS = ImmutableList.of(
+      "_matched_sample_id",
+      "_sample_id",
+      "_specimen_id",
+      "alignment_algorithm",
+      "analysis_id",
       "analyzed_sample_id",
-      "total_read_count",
-      "mutant_allele_read_count",
-      "verification_status",
+      "base_calling_algorithm",
       "biological_validation_status",
-      "observation_id",
       "marking",
       "matched_sample_id",
-      "platform",
-      "base_calling_algorithm",
-      "alignment_algorithm",
-      "variation_calling_algorithm",
+      "mutant_allele_read_count",
+      "observation_id",
       "other_analysis_algorithm",
-      "sequencing_strategy",
-      "seq_coverage",
-      "raw_data_repository",
+      "platform",
       "raw_data_accession",
-      "_specimen_id",
-      "_sample_id",
-      "_matched_sample_id");
+      "raw_data_repository",
+      "seq_coverage",
+      "sequencing_strategy",
+      "total_read_count",
+      "variation_calling_algorithm",
+      "verification_status");
 
   private static final ImmutableList<String> VALID_MUTATION_FIELDS = ImmutableList.of(
       "_donor_id",
       "_mutation_id",
       "_project_id",
+      "_type",
       "assembly_version",
       "chromosome",
       "chromosome_end",
       "chromosome_start",
       "chromosome_strand",
+      "consequence",
       "mutated_from_allele",
       "mutated_to_allele",
       "mutation",
       "mutation_type",
-      "reference_genome_allele",
-      "consequence",
-      "observation");
+      "observation",
+      "reference_genome_allele");
 
   private static final String PROJECT_NAME = "BRCA-UK";
   private static final String EMPTY_PROJECT_NAME = "EMPTY";
@@ -115,6 +119,7 @@ public class JoinJobTest extends AbstractJobTest {
   }
 
   private static void validateOccurrences(List<ObjectNode> results) {
+    log.debug("Occurrences results: {}", results);
     assertThat(results).hasSize(2);
 
     for (val occurrence : results) {

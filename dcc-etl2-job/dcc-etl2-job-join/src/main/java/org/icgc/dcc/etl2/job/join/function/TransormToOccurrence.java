@@ -17,6 +17,9 @@
  */
 package org.icgc.dcc.etl2.job.join.function;
 
+import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
 import static org.icgc.dcc.etl2.core.util.Keys.KEY_SEPARATOR;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 
@@ -80,9 +83,12 @@ public class TransormToOccurrence implements Function<Tuple2<String, Iterable<Tu
   private static ObjectNode createMutation(ObjectNode primary, ObjectNode meta, String donorIdMutationId) {
     val mutation = trimMutation(primary.deepCopy());
 
-    // TODO: add _type
+    // Enrich with additional fields
     mutation.put("_donor_id", resolveDonorId(donorIdMutationId));
     mutation.put("assembly_version", textValue(meta, "assembly_version"));
+
+    // TODO: resolve dynamically?
+    mutation.put(OBSERVATION_TYPE, SSM_TYPE.getId());
 
     return mutation;
   }
@@ -156,15 +162,19 @@ public class TransormToOccurrence implements Function<Tuple2<String, Iterable<Tu
 
   private static ArrayNode createConsequences(Iterable<ObjectNode> secondaries) {
     val consequences = MAPPER.createArrayNode();
-
-    // TODO: add _gene_id and clear null values fields (E.g. cds_mutation: null is not in the Mongo db)?
-    // TODO: add _transcript_id and remove observation_id ?
-
     for (val secondary : secondaries) {
+      trimConsequence(secondary);
       consequences.add(secondary);
     }
 
     return consequences;
+  }
+
+  private static void trimConsequence(ObjectNode consequence) {
+    // FIXME: add _gene_id and clear null values fields (E.g. cds_mutation: null is not in the Mongo db)?
+    // FIXME: add _transcript_id ?
+
+    consequence.remove(NORMALIZER_OBSERVATION_ID);
   }
 
   private static ArrayNode createObservations() {
