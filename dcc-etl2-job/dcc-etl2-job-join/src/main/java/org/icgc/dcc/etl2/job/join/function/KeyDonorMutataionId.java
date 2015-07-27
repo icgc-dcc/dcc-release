@@ -17,7 +17,9 @@
  */
 package org.icgc.dcc.etl2.job.join.function;
 
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_MUTATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
+import static org.icgc.dcc.etl2.core.util.Keys.getKey;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 
 import java.util.Map;
@@ -26,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.core.util.Keys;
 import org.icgc.dcc.etl2.job.join.model.Donor;
 
 import scala.Tuple2;
@@ -43,12 +44,11 @@ public class KeyDonorMutataionId implements
   public String call(Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>, ObjectNode>> tuple)
       throws Exception {
     val primary = tuple._2._1._1;
-    // TODO: Externalize all strings!
-    val mutationId = textValue(primary, "_mutation_id");
+    val mutationId = textValue(primary, SURROGATE_MUTATION_ID);
     val sampleId = textValue(primary, SUBMISSION_ANALYZED_SAMPLE_ID);
 
     val donorId = sampleDonorIds.get(sampleId);
-    val key = Keys.getKey(donorId.getDonorId(), mutationId);
+    val key = getKey(donorId.getDonorId(), mutationId);
 
     return key;
   }

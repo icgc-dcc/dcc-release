@@ -17,11 +17,11 @@
  */
 package org.icgc.dcc.etl2.job.join.function;
 
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
 import static org.icgc.dcc.etl2.job.join.utils.JsonNodes.populateArrayNode;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.core.model.FieldNames;
 
 import scala.Tuple2;
 
@@ -59,7 +59,7 @@ public class CombineClinical implements Function<Tuple2<String, Tuple2<Tuple2<Tu
 
     val specimenTuple = tuple._2;
     if (specimenTuple._2.isPresent()) {
-      val specimen = donor.withArray(FieldNames.DONOR_SPECIMEN);
+      val specimen = donor.withArray(DONOR_SPECIMEN);
       populateArrayNode(specimen, specimenTuple._2.get());
     }
 

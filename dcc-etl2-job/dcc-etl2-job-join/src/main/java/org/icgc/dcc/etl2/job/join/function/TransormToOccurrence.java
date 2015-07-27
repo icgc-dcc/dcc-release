@@ -18,8 +18,38 @@
 package org.icgc.dcc.etl2.job.join.function;
 
 import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_VERIFICATION_STATUS;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_VERIFICATION_PLATFORM;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_DONOR_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_MUTATION_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SPECIMEN_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_ARRAY_NAME;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.PROJECT_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.SURROGATE_MATCHED_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.TRANSCRIPT_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_MARKING;
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MATCHED_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MUTATION;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ASSEMBLY_VERSION;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_END;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_START;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_STRAND;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CONTROL_GENOTYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATION_TYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
 import static org.icgc.dcc.etl2.core.util.Keys.KEY_SEPARATOR;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 
@@ -74,8 +104,8 @@ public class TransormToOccurrence implements Function<Tuple2<String, Iterable<Tu
       }
     }
 
-    mutation.put("consequence", consequences);
-    mutation.put("observation", observations);
+    mutation.put(CONSEQUENCE_ARRAY_NAME, consequences);
+    mutation.put(OBSERVATION_ARRAY_NAME, observations);
 
     return mutation;
   }
@@ -84,8 +114,8 @@ public class TransormToOccurrence implements Function<Tuple2<String, Iterable<Tu
     val mutation = trimMutation(primary.deepCopy());
 
     // Enrich with additional fields
-    mutation.put("_donor_id", resolveDonorId(donorIdMutationId));
-    mutation.put("assembly_version", textValue(meta, "assembly_version"));
+    mutation.put(SURROGATE_DONOR_ID, resolveDonorId(donorIdMutationId));
+    mutation.put(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION, textValue(meta, SUBMISSION_OBSERVATION_ASSEMBLY_VERSION));
 
     // TODO: resolve dynamically?
     mutation.put(OBSERVATION_TYPE, SSM_TYPE.getId());
@@ -94,14 +124,13 @@ public class TransormToOccurrence implements Function<Tuple2<String, Iterable<Tu
   }
 
   private JsonNode createObservation(ObjectNode primary, ObjectNode meta) {
-    val sampleId = textValue(primary, "analyzed_sample_id");
+    val sampleId = textValue(primary, SUBMISSION_ANALYZED_SAMPLE_ID);
     primary.putAll(meta);
-    primary.put("_specimen_id", sampleDonorIds.get(sampleId).getSpecimenId());
-    primary.put("_sample_id", sampleDonorIds.get(sampleId).getSampleId());
+    primary.put(SURROGATE_SPECIMEN_ID, sampleDonorIds.get(sampleId).getSpecimenId());
+    primary.put(SURROGATE_SAMPLE_ID, sampleDonorIds.get(sampleId).getSampleId());
 
-    val matchedSampleId = textValue(meta, "matched_sample_id");
-    primary.put("_matched_sample_id", sampleSurrogageSampleIds.get(matchedSampleId));
-    // add _matched_sample_id
+    val matchedSampleId = textValue(meta, SUBMISSION_MATCHED_SAMPLE_ID);
+    primary.put(SURROGATE_MATCHED_SAMPLE_ID, sampleSurrogageSampleIds.get(matchedSampleId));
 
     return trimObservation(primary);
   }
@@ -113,48 +142,47 @@ public class TransormToOccurrence implements Function<Tuple2<String, Iterable<Tu
   /**
    * Removes fields in the parent object.
    */
-  // TODO: use FieldNames
+  // TODO: add fields to FieldNames
   private static ObjectNode trimMutation(ObjectNode mutation) {
-    mutation.remove("analysis_id");
-    mutation.remove("analyzed_sample_id");
+    mutation.remove(SUBMISSION_OBSERVATION_ANALYSIS_ID);
+    mutation.remove(SUBMISSION_ANALYZED_SAMPLE_ID);
     mutation.remove("expressed_allele");
-    mutation.remove("tumour_genotype");
+    mutation.remove(SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE);
     mutation.remove("quality_score");
     mutation.remove("probability");
     mutation.remove("total_read_count");
     mutation.remove("mutant_allele_read_count");
-    mutation.remove("verification_status");
-    mutation.remove("verification_platform");
+    mutation.remove(MUTATION_VERIFICATION_STATUS);
+    mutation.remove(OBSERVATION_VERIFICATION_PLATFORM);
     mutation.remove("biological_validation_status");
     mutation.remove("biological_validation_platform");
-    mutation.remove("observation_id");
-    mutation.remove("marking");
-    mutation.remove("control_genotype");
+    mutation.remove(NORMALIZER_OBSERVATION_ID);
+    mutation.remove(NORMALIZER_MARKING);
+    mutation.remove(SUBMISSION_OBSERVATION_CONTROL_GENOTYPE);
 
     return mutation;
   }
 
-  // TODO: use FieldNames
   private static ObjectNode trimObservation(ObjectNode observation) {
-    observation.remove("assembly_version");
-    observation.remove("mutation_type");
-    observation.remove("chromosome");
-    observation.remove("chromosome_start");
-    observation.remove("chromosome_end");
-    observation.remove("chromosome_strand");
-    observation.remove("reference_genome_allele");
-    observation.remove("control_genotype");
-    observation.remove("mutated_from_allele");
-    observation.remove("mutated_to_allele");
-    observation.remove("tumour_genotype");
+    observation.remove(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION);
+    observation.remove(SUBMISSION_OBSERVATION_MUTATION_TYPE);
+    observation.remove(SUBMISSION_OBSERVATION_CHROMOSOME);
+    observation.remove(SUBMISSION_OBSERVATION_CHROMOSOME_START);
+    observation.remove(SUBMISSION_OBSERVATION_CHROMOSOME_END);
+    observation.remove(SUBMISSION_OBSERVATION_CHROMOSOME_STRAND);
+    observation.remove(SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE);
+    observation.remove(SUBMISSION_OBSERVATION_CONTROL_GENOTYPE);
+    observation.remove(SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE);
+    observation.remove(SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE);
+    observation.remove(SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE);
     observation.remove("expressed_allele");
     observation.remove("quality_score");
     observation.remove("probability");
-    observation.remove("verification_platform");
+    observation.remove(OBSERVATION_VERIFICATION_PLATFORM);
     observation.remove("biological_validation_platform");
-    observation.remove("_project_id");
-    observation.remove("mutation");
-    observation.remove("_mutation_id");
+    observation.remove(PROJECT_ID);
+    observation.remove(SUBMISSION_MUTATION);
+    observation.remove(SURROGATE_MUTATION_ID);
     observation.remove("experimental_protocol");
 
     return observation;
@@ -163,18 +191,18 @@ public class TransormToOccurrence implements Function<Tuple2<String, Iterable<Tu
   private static ArrayNode createConsequences(Iterable<ObjectNode> secondaries) {
     val consequences = MAPPER.createArrayNode();
     for (val secondary : secondaries) {
-      trimConsequence(secondary);
+      enrichConsequenceFields(secondary);
       consequences.add(secondary);
     }
 
     return consequences;
   }
 
-  private static void trimConsequence(ObjectNode consequence) {
-    // FIXME: add _gene_id and clear null values fields (E.g. cds_mutation: null is not in the Mongo db)?
-    // FIXME: add _transcript_id ?
-
+  private static void enrichConsequenceFields(ObjectNode consequence) {
+    // FIXME: clear null values fields (E.g. cds_mutation: null is not in the Mongo db)?
     consequence.remove(NORMALIZER_OBSERVATION_ID);
+    consequence.put(GENE_ID, consequence.get(SUBMISSION_GENE_AFFECTED));
+    consequence.put(TRANSCRIPT_ID, consequence.get(SUBMISSION_TRANSCRIPT_AFFECTED));
   }
 
   private static ArrayNode createObservations() {

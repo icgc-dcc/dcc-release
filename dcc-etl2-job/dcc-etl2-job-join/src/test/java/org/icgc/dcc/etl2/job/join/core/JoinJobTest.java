@@ -41,6 +41,8 @@ import com.google.common.collect.ImmutableList;
 public class JoinJobTest extends AbstractJobTest {
 
   private static final ImmutableList<String> VALID_CONSEQUENCE_FIELDS = ImmutableList.of(
+      "_gene_id",
+      "_transcript_id",
       "aa_change",
       "cds_change",
       "consequence_type",

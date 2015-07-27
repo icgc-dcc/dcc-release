@@ -17,6 +17,11 @@
  */
 package org.icgc.dcc.etl2.job.join.task;
 
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_DONOR_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SPECIMEN_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
@@ -66,7 +71,7 @@ public class ObservationJoinTask extends GenericTask {
     val samples = parseSample(taskContext);
 
     return samples
-        .mapToPair(s -> tuple(textValue(s, SUBMISSION_ANALYZED_SAMPLE_ID), textValue(s, "_sample_id")))
+        .mapToPair(s -> tuple(textValue(s, SUBMISSION_ANALYZED_SAMPLE_ID), textValue(s, SURROGATE_SAMPLE_ID)))
         .collectAsMap();
   }
 
@@ -76,13 +81,13 @@ public class ObservationJoinTask extends GenericTask {
 
     val sampleDonorIds = Maps.<String, Donor> newHashMap();
     for (val donor : donors) {
-      val donorId = donor.get("_donor_id").textValue();
+      val donorId = donor.get(SURROGATE_DONOR_ID).textValue();
 
-      for (val specimen : donor.withArray("specimen")) {
-        for (val sample : specimen.withArray("sample")) {
+      for (val specimen : donor.withArray(DONOR_SPECIMEN)) {
+        for (val sample : specimen.withArray(DONOR_SAMPLE)) {
           val sampleId = textValue(sample, SUBMISSION_ANALYZED_SAMPLE_ID);
-          val _specimenId = textValue(specimen, "_specimen_id");
-          val _sampleId = textValue(sample, "_sample_id");
+          val _specimenId = textValue(specimen, SURROGATE_SPECIMEN_ID);
+          val _sampleId = textValue(sample, SURROGATE_SAMPLE_ID);
 
           sampleDonorIds.put(sampleId, new Donor(donorId, _specimenId, _sampleId));
         }

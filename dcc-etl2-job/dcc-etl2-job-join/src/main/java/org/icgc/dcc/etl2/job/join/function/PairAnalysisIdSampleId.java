@@ -17,11 +17,13 @@
  */
 package org.icgc.dcc.etl2.job.join.function;
 
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID;
+import static org.icgc.dcc.etl2.core.util.Keys.getKey;
 import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
 import lombok.val;
 
 import org.apache.spark.api.java.function.PairFunction;
-import org.icgc.dcc.etl2.core.util.Keys;
 
 import scala.Tuple2;
 
@@ -36,7 +38,7 @@ public class PairAnalysisIdSampleId implements PairFunction<Tuple2<String, Tuple
 
     val value = tuple._2;
     val primary = value._1;
-    val key = Keys.getKey(primary, "analysis_id", "analyzed_sample_id");
+    val key = getKey(primary, SUBMISSION_OBSERVATION_ANALYSIS_ID, SUBMISSION_ANALYZED_SAMPLE_ID);
 
     return tuple(key, value);
   }
