@@ -118,14 +118,14 @@ public class JoinJobTest extends AbstractJobTest {
     validateOccurrences(produces(PROJECT_NAME, FileType.OBSERVATION));
 
     // PEXP file type
-    validatePexp(produces(PROJECT_NAME, FileType.PEXP_JOINED));
+    validatePexp(produces(PROJECT_NAME, FileType.PEXP));
 
     // JCN file type
-    validateJcn(produces(PROJECT_NAME, FileType.JCN_JOINED));
+    validateJcn(produces(PROJECT_NAME, FileType.JCN));
   }
 
   private static void validateJcn(List<ObjectNode> results) {
-    validateJoinedTypes(results, 41);
+    validateJoinedTypes(results, 36);
   }
 
   private static void validatePexp(List<ObjectNode> results) {

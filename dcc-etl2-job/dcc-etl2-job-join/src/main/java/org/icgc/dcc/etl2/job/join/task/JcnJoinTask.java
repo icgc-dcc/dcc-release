@@ -15,55 +15,31 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.core;
+package org.icgc.dcc.etl2.job.join.task;
 
-import lombok.NonNull;
-import lombok.val;
+import java.util.Map;
 
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.job.GenericJob;
-import org.icgc.dcc.etl2.core.job.JobContext;
-import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.job.join.task.ClinicalJoinTask;
-import org.icgc.dcc.etl2.job.join.task.JcnJoinTask;
-import org.icgc.dcc.etl2.job.join.task.ObservationJoinTask;
-import org.icgc.dcc.etl2.job.join.task.PexpJoinTask;
-import org.icgc.dcc.etl2.job.join.task.ResolveSampleDonorTask;
-import org.springframework.stereotype.Component;
+import org.icgc.dcc.etl2.job.join.model.Donor;
 
-@Component
-public class JoinJob extends GenericJob {
+public class JcnJoinTask extends PrimaryMetaJoinTask {
 
-  @Override
-  public JobType getType() {
-    return JobType.JOIN;
-  }
+  private static final FileType PRIMARY_FILE_TYPE = FileType.JCN_P;
 
-  @Override
-  public void execute(@NonNull JobContext jobContext) {
-    clean(jobContext);
-    join(jobContext);
-  }
+  private static final String[] REMOVE_FIELDS = {
+      "biological_validation_platform",
+      "junction_seq",
+      "junction_type",
+      "other_analysis_algorithm",
+      "probability",
+      "quality_score",
+      "second_gene_stable_id",
+      "seq_coverage",
+      "verification_platform" };
 
-  private void clean(JobContext jobContext) {
-    // TODO: Add more
-    delete(jobContext, FileType.CLINICAL, FileType.OBSERVATION, FileType.PEXP, FileType.JCN);
-  }
-
-  private void join(JobContext jobContext) {
-    val resolveSampleDonorTask = new ResolveSampleDonorTask();
-
-    jobContext.execute(
-        new ClinicalJoinTask(),
-        resolveSampleDonorTask);
-
-    val sampleDonors = resolveSampleDonorTask.getSampleDonorBroadcast();
-    jobContext.execute(
-        new ObservationJoinTask(sampleDonors),
-        new PexpJoinTask(sampleDonors),
-        new JcnJoinTask(sampleDonors)
-        // TODO: Add more
-        );
+  public JcnJoinTask(Broadcast<Map<String, Map<String, Donor>>> sampleDonor) {
+    super(sampleDonor, PRIMARY_FILE_TYPE, REMOVE_FIELDS);
   }
 
 }

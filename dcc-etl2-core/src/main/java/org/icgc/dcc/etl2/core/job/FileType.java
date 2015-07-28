@@ -79,7 +79,7 @@ public enum FileType {
 
   PEXP_M(true),
   PEXP_P(true),
-  PEXP_JOINED(true),
+  PEXP(true),
 
   METH_ARRAY_M(true),
   METH_ARRAY_PROBES(true),
@@ -93,7 +93,7 @@ public enum FileType {
 
   JCN_M(true),
   JCN_P(true),
-  JCN_JOINED(true),
+  JCN(true),
 
   EXP_ARRAY_M(true),
   EXP_ARRAY_P(true),

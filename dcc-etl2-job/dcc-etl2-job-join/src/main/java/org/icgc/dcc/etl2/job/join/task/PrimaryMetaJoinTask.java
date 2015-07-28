@@ -17,46 +17,64 @@
  */
 package org.icgc.dcc.etl2.job.join.task;
 
+import static org.icgc.dcc.etl2.job.join.utils.Tasks.resolveSampleDonors;
+
+import java.util.Map;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.etl2.core.function.RemoveFields;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.job.join.function.CombinePrimaryMeta;
+import org.icgc.dcc.etl2.job.join.function.EnrichPrimaryMeta;
 import org.icgc.dcc.etl2.job.join.function.KeyAnalysisIdAnalyzedSampleIdField;
+import org.icgc.dcc.etl2.job.join.model.Donor;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @RequiredArgsConstructor
-public class PrimaryMetaJoinTask extends GenericTask {
+public abstract class PrimaryMetaJoinTask extends GenericTask {
 
   private static final String META_FILE_TYPE_SUFFIX = "_M";
-  private static final String OUTPUT_FILE_TYPE_SUFFIX = "_JOINED";
+  private static final String OUTPUT_FILE_TYPE_SUFFIX = "";
   private static final String PRIMARY_FILE_TYPE_REGEX = "_P$";
 
   @NonNull
+  private final Broadcast<Map<String, Map<String, Donor>>> sampleDonor;
+  @NonNull
   private final FileType primaryFileType;
+  @NonNull
+  private final String[] removeFields;
 
   @Override
   public void execute(TaskContext taskContext) {
     val primary = parsePrimary(primaryFileType, taskContext);
     val meta = parseMeta(resolveMetaFileType(primaryFileType), taskContext);
-    val output = join(primary, meta);
+    val sampleDonors = resolveSampleDonors(taskContext, sampleDonor);
+    val output = join(primary, meta, sampleDonors);
 
     writeOutput(taskContext, output, resolveOutputFileType(primaryFileType));
   }
 
-  private static JavaRDD<ObjectNode> join(JavaRDD<ObjectNode> primary, JavaRDD<ObjectNode> meta) {
+  protected JavaRDD<ObjectNode> join(JavaRDD<ObjectNode> primary, JavaRDD<ObjectNode> meta,
+      Map<String, Donor> sampleDonors) {
     val keyFunction = new KeyAnalysisIdAnalyzedSampleIdField();
+    val outputFileType = resolveOutputFileType(primaryFileType);
+    val type = outputFileType.name().toLowerCase();
 
     return primary
         .mapToPair(keyFunction)
         .join(meta
             .mapToPair(keyFunction))
-        .map(new CombinePrimaryMeta());
+        .map(new CombinePrimaryMeta())
+        .map(new RemoveFields(removeFields))
+        .map(new EnrichPrimaryMeta(type, sampleDonors));
   }
 
   private JavaRDD<ObjectNode> parsePrimary(FileType primaryFileType, TaskContext taskContext) {

@@ -15,55 +15,44 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.core;
+package org.icgc.dcc.etl2.job.join.function;
+
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_DONOR_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SPECIMEN_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+
+import java.util.Map;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.job.GenericJob;
-import org.icgc.dcc.etl2.core.job.JobContext;
-import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.job.join.task.ClinicalJoinTask;
-import org.icgc.dcc.etl2.job.join.task.JcnJoinTask;
-import org.icgc.dcc.etl2.job.join.task.ObservationJoinTask;
-import org.icgc.dcc.etl2.job.join.task.PexpJoinTask;
-import org.icgc.dcc.etl2.job.join.task.ResolveSampleDonorTask;
-import org.springframework.stereotype.Component;
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.etl2.job.join.model.Donor;
 
-@Component
-public class JoinJob extends GenericJob {
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-  @Override
-  public JobType getType() {
-    return JobType.JOIN;
-  }
+@RequiredArgsConstructor
+public class EnrichPrimaryMeta implements Function<ObjectNode, ObjectNode> {
+
+  @NonNull
+  private final String type;
+  @NonNull
+  private final Map<String, Donor> sampleDonors;
 
   @Override
-  public void execute(@NonNull JobContext jobContext) {
-    clean(jobContext);
-    join(jobContext);
-  }
+  public ObjectNode call(ObjectNode node) throws Exception {
+    node.put(OBSERVATION_TYPE, type);
 
-  private void clean(JobContext jobContext) {
-    // TODO: Add more
-    delete(jobContext, FileType.CLINICAL, FileType.OBSERVATION, FileType.PEXP, FileType.JCN);
-  }
+    val sampleId = textValue(node, SUBMISSION_ANALYZED_SAMPLE_ID);
+    node.put(SURROGATE_SPECIMEN_ID, sampleDonors.get(sampleId).getSpecimenId());
+    node.put(SURROGATE_SAMPLE_ID, sampleDonors.get(sampleId).getSampleId());
+    node.put(SURROGATE_DONOR_ID, sampleDonors.get(sampleId).getDonorId());
 
-  private void join(JobContext jobContext) {
-    val resolveSampleDonorTask = new ResolveSampleDonorTask();
-
-    jobContext.execute(
-        new ClinicalJoinTask(),
-        resolveSampleDonorTask);
-
-    val sampleDonors = resolveSampleDonorTask.getSampleDonorBroadcast();
-    jobContext.execute(
-        new ObservationJoinTask(sampleDonors),
-        new PexpJoinTask(sampleDonors),
-        new JcnJoinTask(sampleDonors)
-        // TODO: Add more
-        );
+    return node;
   }
 
 }
