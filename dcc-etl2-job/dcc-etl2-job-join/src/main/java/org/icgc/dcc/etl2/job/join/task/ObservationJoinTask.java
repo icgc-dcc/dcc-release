@@ -37,11 +37,11 @@ import org.icgc.dcc.etl2.core.function.CombineFields;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
+import org.icgc.dcc.etl2.job.join.function.CreateOccurrence;
 import org.icgc.dcc.etl2.job.join.function.KeyAnalysisIdAnalyzedSampleIdField;
 import org.icgc.dcc.etl2.job.join.function.KeyDonorMutataionId;
 import org.icgc.dcc.etl2.job.join.function.KeyFields;
 import org.icgc.dcc.etl2.job.join.function.PairAnalysisIdSampleId;
-import org.icgc.dcc.etl2.job.join.function.CreateOccurrence;
 import org.icgc.dcc.etl2.job.join.model.SampleInfo;
 
 import scala.Tuple2;
@@ -58,7 +58,7 @@ public class ObservationJoinTask extends GenericTask {
   public void execute(TaskContext taskContext) {
     val outputFileType = FileType.OBSERVATION;
 
-    val donorSamples = resolveDonorSamples(taskContext, donorSamples);
+    val donorSamples = resolveDonorSamples(taskContext, this.donorSamples);
     val sampleSurrogageSampleIds = sampleSurrogageSampleIds(taskContext);
 
     val ssmM = parseSsmM(taskContext);
