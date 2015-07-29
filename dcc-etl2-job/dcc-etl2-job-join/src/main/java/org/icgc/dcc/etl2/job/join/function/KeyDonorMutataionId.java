@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.job.join.model.Donor;
+import org.icgc.dcc.etl2.job.join.model.SampleInfo;
 
 import scala.Tuple2;
 
@@ -38,7 +38,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class KeyDonorMutataionId implements
     Function<Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>, ObjectNode>>, String> {
 
-  private final Map<String, Donor> sampleDonorIds;
+  private final Map<String, SampleInfo> donorSamples;
 
   @Override
   public String call(Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>, ObjectNode>> tuple)
@@ -47,7 +47,7 @@ public class KeyDonorMutataionId implements
     val mutationId = textValue(primary, SURROGATE_MUTATION_ID);
     val sampleId = textValue(primary, SUBMISSION_ANALYZED_SAMPLE_ID);
 
-    val donorId = sampleDonorIds.get(sampleId);
+    val donorId = donorSamples.get(sampleId);
     val key = getKey(donorId.getDonorId(), mutationId);
 
     return key;

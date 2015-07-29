@@ -27,7 +27,7 @@ import lombok.val;
 
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.join.model.Donor;
+import org.icgc.dcc.etl2.job.join.model.SampleInfo;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Tasks {
@@ -42,8 +42,8 @@ public class Tasks {
   }
 
   @NonNull
-  public static Map<String, Donor> resolveSampleDonors(TaskContext taskContext,
-      Broadcast<Map<String, Map<String, Donor>>> broadcast) {
+  public static Map<String, SampleInfo> resolveDonorSamples(TaskContext taskContext,
+      Broadcast<Map<String, Map<String, SampleInfo>>> broadcast) {
     val projectName = resolveProjectName(taskContext);
 
     return broadcast.value().get(projectName);

@@ -18,6 +18,7 @@
 package org.icgc.dcc.etl2.core.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
 
 import java.util.Collections;
 
@@ -26,8 +27,6 @@ import lombok.val;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.junit.Test;
-
-import scala.Tuple2;
 
 public class SparkTest {
 
@@ -40,7 +39,7 @@ public class SparkTest {
       val twoRdd = sparkContext.parallelize(Collections.singletonList("two"));
       val threeRdd = sparkContext.emptyRDD();
 
-      val onePair = oneRdd.mapToPair(t -> new Tuple2<Integer, String>(1, t));
+      val onePair = oneRdd.mapToPair(t -> tuple(1, t));
       val twoPair = twoRdd.groupBy(t -> 1);
       val threePair = threeRdd.groupBy(t -> 1);
 

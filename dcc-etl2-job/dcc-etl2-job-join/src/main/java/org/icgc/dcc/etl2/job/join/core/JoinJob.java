@@ -28,7 +28,7 @@ import org.icgc.dcc.etl2.job.join.task.ClinicalJoinTask;
 import org.icgc.dcc.etl2.job.join.task.JcnJoinTask;
 import org.icgc.dcc.etl2.job.join.task.ObservationJoinTask;
 import org.icgc.dcc.etl2.job.join.task.PexpJoinTask;
-import org.icgc.dcc.etl2.job.join.task.ResolveSampleDonorTask;
+import org.icgc.dcc.etl2.job.join.task.ResolveDonorSamplesTask;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -51,17 +51,17 @@ public class JoinJob extends GenericJob {
   }
 
   private void join(JobContext jobContext) {
-    val resolveSampleDonorTask = new ResolveSampleDonorTask();
+    val resolveDonorSamplesTask = new ResolveDonorSamplesTask();
 
     jobContext.execute(
         new ClinicalJoinTask(),
-        resolveSampleDonorTask);
+        resolveDonorSamplesTask);
 
-    val sampleDonors = resolveSampleDonorTask.getSampleDonorBroadcast();
+    val donorSamples = resolveDonorSamplesTask.getDonorSamplesBroadcast();
     jobContext.execute(
-        new ObservationJoinTask(sampleDonors),
-        new PexpJoinTask(sampleDonors),
-        new JcnJoinTask(sampleDonors)
+        new ObservationJoinTask(donorSamples),
+        new PexpJoinTask(donorSamples),
+        new JcnJoinTask(donorSamples)
         // TODO: Add more
         );
   }

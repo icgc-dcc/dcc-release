@@ -18,6 +18,9 @@
 package org.icgc.dcc.etl2.job.join.function;
 
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.EXPOSURE;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.FAMILY;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.THERAPY;
 import static org.icgc.dcc.etl2.job.join.utils.JsonNodes.populateArrayNode;
 import lombok.val;
 
@@ -39,21 +42,20 @@ public class CombineClinical implements Function<Tuple2<String, Tuple2<Tuple2<Tu
     val donorTherapyTuple = tuple._2._1._1._1;
     val donor = donorTherapyTuple._1;
 
-    // FIXME: add fields to proper FieldNames variables
     if (donorTherapyTuple._2.isPresent()) {
-      val therapy = donor.withArray("therapy");
+      val therapy = donor.withArray(THERAPY);
       populateArrayNode(therapy, donorTherapyTuple._2.get());
     }
 
     val familyTuple = tuple._2._1._1;
     if (familyTuple._2.isPresent()) {
-      val family = donor.withArray("family");
+      val family = donor.withArray(FAMILY);
       populateArrayNode(family, familyTuple._2.get());
     }
 
     val exposureTuple = tuple._2._1;
     if (exposureTuple._2.isPresent()) {
-      val exposure = donor.withArray("exposure");
+      val exposure = donor.withArray(EXPOSURE);
       populateArrayNode(exposure, exposureTuple._2.get());
     }
 

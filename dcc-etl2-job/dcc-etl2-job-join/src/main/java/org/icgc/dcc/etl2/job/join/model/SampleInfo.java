@@ -22,7 +22,7 @@ import java.io.Serializable;
 import lombok.Value;
 
 @Value
-public class Donor implements Serializable {
+public class SampleInfo implements Serializable {
 
   String donorId;
   String specimenId;

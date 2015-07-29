@@ -17,14 +17,32 @@
  */
 package org.icgc.dcc.etl2.core.util;
 
-/**
- * 
- */
 public class FieldNames {
 
   public static class OrphanFieldNames {
 
     public static final String ORPHANED_FIELD = "orphaned";
+
+  }
+
+  public static class JoinFieldNames {
+
+    public static final String EXPRESSED_ALLELE = "expressed_allele";
+    public static final String QUALITY_SCORE = "quality_score";
+    public static final String PROBABILITY = "probability";
+    public static final String BIOLOGICAL_VALIDATION_PLATFORM = "biological_validation_platform";
+    public static final String EXPERIMENTAL_PROTOCOL = "experimental_protocol";
+    public static final String THERAPY = "therapy";
+    public static final String FAMILY = "family";
+    public static final String EXPOSURE = "exposure";
+    public static final String BIOMARKER = "biomarker";
+    public static final String SURGERY = "surgery";
+    public static final String JUNCTION_SEQ = "junction_seq";
+    public static final String SEQ_COVERAGE = "seq_coverage";
+    public static final String SECOND_GENE_STABLE_ID = "second_gene_stable_id";
+    public static final String OTHER_ANALYSIS_ALGORITHM = "other_analysis_algorithm";
+    public static final String JUNCTION_TYPE = "junction_type";
+    public static final String GENE_STABLE_ID = "gene_stable_id";
 
   }
 

@@ -37,32 +37,31 @@ import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.join.model.Donor;
+import org.icgc.dcc.etl2.job.join.model.SampleInfo;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
-public class ResolveSampleDonorTask extends GenericTask {
+public class ResolveDonorSamplesTask extends GenericTask {
 
   @Getter(lazy = true)
-  private final Broadcast<Map<String, Map<String, Donor>>> sampleDonorBroadcast = createBroadcastVariable();
-  private final Map<String, Map<String, Donor>> sampleDonorByProject = Maps.newHashMap();
+  private final Broadcast<Map<String, Map<String, SampleInfo>>> donorSamplesBroadcast = createBroadcastVariable();
+  private final Map<String, Map<String, SampleInfo>> donorSamplesByProject = Maps.newHashMap();
   private JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {
-    // TODO: assign once?
     sparkContext = taskContext.getSparkContext();
-    val sampleDonorIds = resolveSampleDonorIds(taskContext);
+    val donorSamples = resolveDonorSamples(taskContext);
     val projectName = resolveProjectName(taskContext);
-    sampleDonorByProject.put(projectName, sampleDonorIds);
+    donorSamplesByProject.put(projectName, donorSamples);
   }
 
-  private Map<String, Donor> resolveSampleDonorIds(TaskContext taskContext) {
+  private Map<String, SampleInfo> resolveDonorSamples(TaskContext taskContext) {
     val clinical = parseClinical(taskContext);
     val donors = clinical.collect();
 
-    val sampleDonorIds = Maps.<String, Donor> newHashMap();
+    val donorSamples = Maps.<String, SampleInfo> newHashMap();
     for (val donor : donors) {
       val donorId = donor.get(SURROGATE_DONOR_ID).textValue();
 
@@ -72,16 +71,16 @@ public class ResolveSampleDonorTask extends GenericTask {
           val _specimenId = textValue(specimen, SURROGATE_SPECIMEN_ID);
           val _sampleId = textValue(sample, SURROGATE_SAMPLE_ID);
 
-          sampleDonorIds.put(sampleId, new Donor(donorId, _specimenId, _sampleId));
+          donorSamples.put(sampleId, new SampleInfo(donorId, _specimenId, _sampleId));
         }
       }
     }
 
-    return sampleDonorIds;
+    return donorSamples;
   }
 
-  private Broadcast<Map<String, Map<String, Donor>>> createBroadcastVariable() {
-    return sparkContext.broadcast(sampleDonorByProject);
+  private Broadcast<Map<String, Map<String, SampleInfo>>> createBroadcastVariable() {
+    return sparkContext.broadcast(donorSamplesByProject);
   }
 
   private JavaRDD<ObjectNode> parseClinical(TaskContext taskContext) {

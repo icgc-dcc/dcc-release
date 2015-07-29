@@ -17,24 +17,29 @@
  */
 package org.icgc.dcc.etl2.job.join.task;
 
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_VERIFICATION_PLATFORM;
+import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_GENE_BUILD_VERSION;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.BIOLOGICAL_VALIDATION_PLATFORM;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.GENE_STABLE_ID;
+
 import java.util.Map;
 
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.job.join.model.Donor;
+import org.icgc.dcc.etl2.job.join.model.SampleInfo;
 
 public class PexpJoinTask extends PrimaryMetaJoinTask {
 
   private static final FileType PRIMARY_FILE_TYPE = FileType.PEXP_P;
   private static final String[] REMOVE_FIELDS = {
-      "biological_validation_platform",
-      "gene_build_version",
-      "gene_stable_id",
-      "verification_platform"
+      BIOLOGICAL_VALIDATION_PLATFORM,
+      ANNOTATOR_GENE_BUILD_VERSION,
+      GENE_STABLE_ID,
+      OBSERVATION_VERIFICATION_PLATFORM
   };
 
-  public PexpJoinTask(Broadcast<Map<String, Map<String, Donor>>> sampleDonorByProject) {
-    super(sampleDonorByProject, PRIMARY_FILE_TYPE, REMOVE_FIELDS);
+  public PexpJoinTask(Broadcast<Map<String, Map<String, SampleInfo>>> donorSamplesByProject) {
+    super(donorSamplesByProject, PRIMARY_FILE_TYPE, REMOVE_FIELDS);
   }
 
 }

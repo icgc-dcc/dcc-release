@@ -73,7 +73,7 @@ public class JoinJobTest extends AbstractJobTest {
       "variation_calling_algorithm",
       "verification_status");
 
-  private static final ImmutableList<String> VALID_MUTATION_FIELDS = ImmutableList.of(
+  private static final ImmutableList<String> VALID_OCCURRENCE_FIELDS = ImmutableList.of(
       "_donor_id",
       "_mutation_id",
       "_project_id",
@@ -164,7 +164,7 @@ public class JoinJobTest extends AbstractJobTest {
 
   private static void validateOccurrenceStructure(ObjectNode occurrence) {
     val fields = ImmutableList.copyOf(occurrence.fieldNames());
-    assertThat(VALID_MUTATION_FIELDS).containsOnlyElementsOf(fields);
+    assertThat(VALID_OCCURRENCE_FIELDS).containsOnlyElementsOf(fields);
 
     validateArrayNode(occurrence.get("consequence"));
     validateArrayNode(occurrence.get("observation"));

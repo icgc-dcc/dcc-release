@@ -17,11 +17,13 @@
  */
 package org.icgc.dcc.etl2.job.join.function;
 
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.BIOMARKER;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.SURGERY;
 import static org.icgc.dcc.etl2.job.join.utils.JsonNodes.populateArrayNode;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.core.model.FieldNames;
 
 import scala.Tuple2;
 
@@ -37,20 +39,19 @@ public class CombineSpecimen implements Function<Tuple2<String, Tuple2<Tuple2<Tu
     val specimenSampleTuple = tuple._2._1._1;
     val specimen = specimenSampleTuple._1;
     if (specimenSampleTuple._2.isPresent()) {
-      val sample = specimen.withArray(FieldNames.DONOR_SAMPLE);
+      val sample = specimen.withArray(DONOR_SAMPLE);
       populateArrayNode(sample, specimenSampleTuple._2.get());
     }
 
-    // FIXME: add fields to proper FieldNames variables
     val biomarkerTuple = tuple._2._1;
     if (biomarkerTuple._2.isPresent()) {
-      val biomarker = specimen.withArray("biomarker");
+      val biomarker = specimen.withArray(BIOMARKER);
       populateArrayNode(biomarker, biomarkerTuple._2.get());
     }
 
     val surgeryTuple = tuple._2;
     if (surgeryTuple._2.isPresent()) {
-      val surgery = specimen.withArray("surgery");
+      val surgery = specimen.withArray(SURGERY);
       populateArrayNode(surgery, surgeryTuple._2.get());
     }
 

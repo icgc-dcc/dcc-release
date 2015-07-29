@@ -123,3 +123,6 @@ mongo:
 hadoop:
    properties:
       fs.defaultFS: file:///
+      
+mail:
+   recipients: nobody@example.com

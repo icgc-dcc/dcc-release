@@ -27,9 +27,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.icgc.dcc.common.core.model.FileTypes;
+import org.icgc.dcc.common.core.model.Identifiable;
 
 @RequiredArgsConstructor
-public enum FileType {
+public enum FileType implements Identifiable {
 
   //
   // Clinical
@@ -165,6 +166,11 @@ public enum FileType {
     }
 
     throw new IllegalArgumentException(format("Failed to resolve FileType from name '%s'", name));
+  }
+
+  @Override
+  public String getId() {
+    return name().toLowerCase();
   }
 
 }
