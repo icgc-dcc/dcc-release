@@ -67,13 +67,11 @@ public class JoinJob extends GenericJob {
   }
 
   private void join(JobContext jobContext) {
+    jobContext.execute(new ClinicalJoinTask());
+
     val resolveDonorSamplesTask = new ResolveDonorSamplesTask();
     val resolveSampleIds = new ResolveSampleSurrogateSampleIds();
-
-    jobContext.execute(
-        new ClinicalJoinTask(),
-        resolveDonorSamplesTask,
-        resolveSampleIds);
+    jobContext.execute(resolveDonorSamplesTask, resolveSampleIds);
 
     val donorSamples = resolveDonorSamplesTask.getDonorSamplesBroadcast();
     val sampleSurrogateSampleIds = resolveSampleIds.getSampleSurrogateSampleIdsBroadcast();
