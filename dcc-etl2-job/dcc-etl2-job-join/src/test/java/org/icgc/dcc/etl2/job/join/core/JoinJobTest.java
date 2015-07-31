@@ -26,6 +26,7 @@ import java.io.File;
 import java.util.List;
 
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.test.job.AbstractJobTest;
@@ -36,6 +37,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
+@Slf4j
 public class JoinJobTest extends AbstractJobTest {
 
   private static final ImmutableList<String> VALID_CONSEQUENCE_FIELDS = ImmutableList.of(
@@ -50,7 +52,7 @@ public class JoinJobTest extends AbstractJobTest {
       "protein_domain_affected",
       "transcript_affected");
 
-  private static final ImmutableList<String> VALID_OBSERVATION_FIELDS = ImmutableList.of(
+  private static final ImmutableList<String> COMMON_OBSERVATION_FIELDS = ImmutableList.of(
       "_matched_sample_id",
       "_sample_id",
       "_specimen_id",
@@ -110,29 +112,54 @@ public class JoinJobTest extends AbstractJobTest {
     val jobContext = createJobContext(job.getType(), asList(PROJECT_NAME, EMPTY_PROJECT_NAME));
     job.execute(jobContext);
 
-    // Clinical
     validateClinicalResults(produces(PROJECT_NAME, FileType.CLINICAL));
     validateEmptyProjectClinicalResults(produces(EMPTY_PROJECT_NAME, FileType.CLINICAL));
 
-    // Occurrences
     validateOccurrences(produces(PROJECT_NAME, FileType.OBSERVATION));
 
-    // PEXP file type
-    validatePexp(produces(PROJECT_NAME, FileType.PEXP));
+    validatePrimaryMeta(produces(PROJECT_NAME, FileType.PEXP), 20);
+    validatePrimaryMeta(produces(PROJECT_NAME, FileType.JCN), 45);
+    validatePrimaryMeta(produces(PROJECT_NAME, FileType.MIRNA_SEQ), 30);
+    validatePrimaryMeta(produces(PROJECT_NAME, FileType.METH_SEQ), 27);
+    validatePrimaryMeta(produces(PROJECT_NAME, FileType.EXP_SEQ), 23);
+    validatePrimaryMeta(produces(PROJECT_NAME, FileType.EXP_ARRAY), 18);
+    validatePrimaryMeta(produces(PROJECT_NAME, FileType.METH_ARRAY), 21);
 
-    // JCN file type
-    validateJcn(produces(PROJECT_NAME, FileType.JCN));
+    validateSecondaryType(produces(PROJECT_NAME, FileType.CNSM), 40);
+    validateSecondaryType(produces(PROJECT_NAME, FileType.SGV), 34);
+    validateStsm(produces(PROJECT_NAME, FileType.STSM), 46);
+
+    validateSsm(produces(PROJECT_NAME, FileType.SSM));
   }
 
-  private static void validateJcn(List<ObjectNode> results) {
-    validateJoinedTypes(results, 36);
+  private static void validateSsm(List<ObjectNode> results) {
+    assertThat(results).hasSize(2);
+    for (val occurrence : results) {
+      assertThat(getElements(occurrence)).hasSize(16);
+      assertThat(occurrence.get("observation").size()).isGreaterThan(0);
+      assertThat(occurrence.get("consequence").size()).isGreaterThan(0);
+    }
+
   }
 
-  private static void validatePexp(List<ObjectNode> results) {
-    validateJoinedTypes(results, 16);
+  private static void validateStsm(List<ObjectNode> produces, int fieldsCount) {
+    validatePrimaryMeta(produces, fieldsCount);
+    val occurrence = produces.get(0);
+    assertThat(getElements(occurrence.get("consequence"))).isEmpty();
   }
 
-  private static void validateJoinedTypes(List<ObjectNode> results, int expectedFieldsCount) {
+  private static void validateSecondaryType(List<ObjectNode> results, int fieldsCount) {
+    log.debug("{}", results);
+    validatePrimaryMeta(results, fieldsCount);
+    val occurrence = results.get(0);
+
+    val consequences = occurrence.get("consequence");
+    assertThat(consequences.size()).isGreaterThan(0);
+    assertThat(getElements(consequences.get(0)).size()).isGreaterThan(2);
+  }
+
+  private static void validatePrimaryMeta(List<ObjectNode> results, int expectedFieldsCount) {
+    log.debug("{}", results);
     assertThat(results).hasSize(1);
     val joined = results.get(0);
     assertThat(getElements(joined)).hasSize(expectedFieldsCount);
@@ -151,7 +178,6 @@ public class JoinJobTest extends AbstractJobTest {
         validateDO2Occurrence(occurrence);
       }
     }
-
   }
 
   private static void validateDO2Occurrence(ObjectNode occurrence) {
@@ -174,7 +200,7 @@ public class JoinJobTest extends AbstractJobTest {
   }
 
   private static void validateObservationStructure(JsonNode observation) {
-    assertThat(VALID_OBSERVATION_FIELDS).containsOnlyElementsOf(getFields(observation));
+    assertThat(COMMON_OBSERVATION_FIELDS).containsOnlyElementsOf(getFields(observation));
   }
 
   private static void validateConsequenceStructure(JsonNode consequence) {

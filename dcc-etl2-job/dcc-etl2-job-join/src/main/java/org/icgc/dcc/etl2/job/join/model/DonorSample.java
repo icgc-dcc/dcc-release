@@ -15,42 +15,17 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.function;
+package org.icgc.dcc.etl2.job.join.model;
 
-import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_MUTATION_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
-import static org.icgc.dcc.etl2.core.util.Keys.getKey;
-import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import java.io.Serializable;
 
-import java.util.Map;
+import lombok.Value;
 
-import lombok.RequiredArgsConstructor;
-import lombok.val;
+@Value
+public class DonorSample implements Serializable {
 
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.job.join.model.DonorSample;
-
-import scala.Tuple2;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-@RequiredArgsConstructor
-public class KeyDonorMutataionId implements
-    Function<Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>, ObjectNode>>, String> {
-
-  private final Map<String, DonorSample> donorSamples;
-
-  @Override
-  public String call(Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>, ObjectNode>> tuple)
-      throws Exception {
-    val primary = tuple._2._1._1;
-    val mutationId = textValue(primary, SURROGATE_MUTATION_ID);
-    val sampleId = textValue(primary, SUBMISSION_ANALYZED_SAMPLE_ID);
-
-    val donorId = donorSamples.get(sampleId);
-    val key = getKey(donorId.getDonorId(), mutationId);
-
-    return key;
-  }
+  String donorId;
+  String specimenId;
+  String sampleId;
 
 }

@@ -37,7 +37,7 @@ import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.join.model.SampleInfo;
+import org.icgc.dcc.etl2.job.join.model.DonorSample;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
@@ -45,8 +45,8 @@ import com.google.common.collect.Maps;
 public class ResolveDonorSamplesTask extends GenericTask {
 
   @Getter(lazy = true)
-  private final Broadcast<Map<String, Map<String, SampleInfo>>> donorSamplesBroadcast = createBroadcastVariable();
-  private final Map<String, Map<String, SampleInfo>> donorSamplesByProject = Maps.newHashMap();
+  private final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesBroadcast = createBroadcastVariable();
+  private final Map<String, Map<String, DonorSample>> donorSamplesByProject = Maps.newHashMap();
   private JavaSparkContext sparkContext;
 
   @Override
@@ -57,11 +57,11 @@ public class ResolveDonorSamplesTask extends GenericTask {
     donorSamplesByProject.put(projectName, donorSamples);
   }
 
-  private Map<String, SampleInfo> resolveDonorSamples(TaskContext taskContext) {
+  private Map<String, DonorSample> resolveDonorSamples(TaskContext taskContext) {
     val clinical = parseClinical(taskContext);
     val donors = clinical.collect();
 
-    val donorSamples = Maps.<String, SampleInfo> newHashMap();
+    val donorSamples = Maps.<String, DonorSample> newHashMap();
     for (val donor : donors) {
       val donorId = donor.get(SURROGATE_DONOR_ID).textValue();
 
@@ -71,7 +71,7 @@ public class ResolveDonorSamplesTask extends GenericTask {
           val _specimenId = textValue(specimen, SURROGATE_SPECIMEN_ID);
           val _sampleId = textValue(sample, SURROGATE_SAMPLE_ID);
 
-          donorSamples.put(sampleId, new SampleInfo(donorId, _specimenId, _sampleId));
+          donorSamples.put(sampleId, new DonorSample(donorId, _specimenId, _sampleId));
         }
       }
     }
@@ -79,7 +79,7 @@ public class ResolveDonorSamplesTask extends GenericTask {
     return donorSamples;
   }
 
-  private Broadcast<Map<String, Map<String, SampleInfo>>> createBroadcastVariable() {
+  private Broadcast<Map<String, Map<String, DonorSample>>> createBroadcastVariable() {
     return sparkContext.broadcast(donorSamplesByProject);
   }
 

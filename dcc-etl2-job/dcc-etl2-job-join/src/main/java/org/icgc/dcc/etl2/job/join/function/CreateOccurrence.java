@@ -63,7 +63,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.job.join.model.SampleInfo;
+import org.icgc.dcc.etl2.job.join.model.DonorSample;
 
 import scala.Tuple2;
 
@@ -116,7 +116,7 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
       SURROGATE_MUTATION_ID,
       EXPERIMENTAL_PROTOCOL);
 
-  private final Map<String, SampleInfo> donorSamples;
+  private final Map<String, DonorSample> donorSamples;
   private final Map<String, String> sampleSurrogageSampleIds;
 
   @Override

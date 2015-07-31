@@ -17,29 +17,51 @@
  */
 package org.icgc.dcc.etl2.job.join.task;
 
-import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_VERIFICATION_PLATFORM;
-import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_GENE_BUILD_VERSION;
-import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.BIOLOGICAL_VALIDATION_PLATFORM;
-import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.GENE_STABLE_ID;
-
 import java.util.Map;
+
+import lombok.val;
 
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.job.join.model.SampleInfo;
+import org.icgc.dcc.etl2.core.task.TaskContext;
+import org.icgc.dcc.etl2.job.join.function.KeyFields;
+import org.icgc.dcc.etl2.job.join.model.DonorSample;
 
-public class PexpJoinTask extends PrimaryMetaJoinTask {
+import scala.Tuple2;
 
-  private static final FileType PRIMARY_FILE_TYPE = FileType.PEXP_P;
-  private static final String[] REMOVE_FIELDS = {
-      BIOLOGICAL_VALIDATION_PLATFORM,
-      ANNOTATOR_GENE_BUILD_VERSION,
-      GENE_STABLE_ID,
-      OBSERVATION_VERIFICATION_PLATFORM
-  };
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 
-  public PexpJoinTask(Broadcast<Map<String, Map<String, SampleInfo>>> donorSamplesByProject) {
-    super(donorSamplesByProject, PRIMARY_FILE_TYPE, REMOVE_FIELDS);
+public class MethArrayJoinTask extends PrimaryMetaJoinTask {
+
+  private static final FileType PRIMARY_FILE_TYPE = FileType.METH_ARRAY_P;
+
+  public MethArrayJoinTask(Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesByProject) {
+    super(donorSamplesByProject, PRIMARY_FILE_TYPE);
+  }
+
+  @Override
+  public void execute(TaskContext taskContext) {
+    val primaryMeta = joinPrimaryMeta(taskContext);
+    val probes = readInput(taskContext, FileType.METH_ARRAY_PROBES);
+
+    val keyFunction = new KeyFields("probe_id");
+    val output = primaryMeta
+        .mapToPair(keyFunction)
+        .leftOuterJoin(probes.mapToPair(keyFunction))
+        .map(MethArrayJoinTask::combineProbes);
+
+    writeOutput(taskContext, output, FileType.METH_ARRAY);
+  }
+
+  private static ObjectNode combineProbes(Tuple2<String, Tuple2<ObjectNode, Optional<ObjectNode>>> tuple) {
+    val primary = tuple._2._1;
+    val probe = tuple._2._2;
+    if (probe.isPresent()) {
+      primary.putAll(probe.get());
+    }
+
+    return primary;
   }
 
 }

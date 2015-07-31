@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.job.join.model.SampleInfo;
+import org.icgc.dcc.etl2.job.join.model.DonorSample;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -41,7 +41,7 @@ public class EnrichPrimaryMeta implements Function<ObjectNode, ObjectNode> {
   @NonNull
   private final String type;
   @NonNull
-  private final Map<String, SampleInfo> donorSamples;
+  private final Map<String, DonorSample> donorSamples;
 
   @Override
   public ObjectNode call(ObjectNode node) throws Exception {

@@ -43,7 +43,9 @@ public class ObjectNodes {
       return null;
     }
 
-    return jsonNode.get(fieldName).textValue();
+    val fieldValue = jsonNode.path(fieldName);
+
+    return fieldValue.isMissingNode() ? null : fieldValue.textValue();
   }
 
   public static JsonNode getPath(@NonNull ObjectNode objectNode, @NonNull String path) {

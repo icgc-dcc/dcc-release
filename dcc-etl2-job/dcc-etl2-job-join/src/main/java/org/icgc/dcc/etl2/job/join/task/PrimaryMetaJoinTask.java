@@ -27,43 +27,46 @@ import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.etl2.core.function.RemoveFields;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.job.join.function.CombinePrimaryMeta;
 import org.icgc.dcc.etl2.job.join.function.EnrichPrimaryMeta;
 import org.icgc.dcc.etl2.job.join.function.KeyAnalysisIdAnalyzedSampleIdField;
-import org.icgc.dcc.etl2.job.join.model.SampleInfo;
+import org.icgc.dcc.etl2.job.join.model.DonorSample;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @RequiredArgsConstructor
-public abstract class PrimaryMetaJoinTask extends GenericTask {
+public class PrimaryMetaJoinTask extends GenericTask {
 
   private static final String META_FILE_TYPE_SUFFIX = "_M";
   private static final String OUTPUT_FILE_TYPE_SUFFIX = "";
-  private static final String PRIMARY_FILE_TYPE_REGEX = "_P$";
+  private static final String PRIMARY_FILE_TYPE_REGEX = "_P(_(\\w)*)*$";
 
   @NonNull
-  private final Broadcast<Map<String, Map<String, SampleInfo>>> donorSamplesbyProject;
+  protected final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesbyProject;
   @NonNull
-  private final FileType primaryFileType;
-  @NonNull
-  private final String[] removeFields;
+  protected final FileType primaryFileType;
 
   @Override
   public void execute(TaskContext taskContext) {
+    val output = joinPrimaryMeta(taskContext);
+
+    writeOutput(taskContext, output, resolveOutputFileType(primaryFileType));
+  }
+
+  protected JavaRDD<ObjectNode> joinPrimaryMeta(TaskContext taskContext) {
     val primary = parsePrimary(primaryFileType, taskContext);
     val meta = parseMeta(resolveMetaFileType(primaryFileType), taskContext);
     val donorSamples = resolveDonorSamples(taskContext, donorSamplesbyProject);
     val output = join(primary, meta, donorSamples);
 
-    writeOutput(taskContext, output, resolveOutputFileType(primaryFileType));
+    return output;
   }
 
-  protected JavaRDD<ObjectNode> join(JavaRDD<ObjectNode> primary, JavaRDD<ObjectNode> meta,
-      Map<String, SampleInfo> donorSamples) {
+  private JavaRDD<ObjectNode> join(JavaRDD<ObjectNode> primary, JavaRDD<ObjectNode> meta,
+      Map<String, DonorSample> donorSamples) {
     val keyFunction = new KeyAnalysisIdAnalyzedSampleIdField();
     val outputFileType = resolveOutputFileType(primaryFileType);
     val type = outputFileType.getId();
@@ -72,7 +75,6 @@ public abstract class PrimaryMetaJoinTask extends GenericTask {
         .mapToPair(keyFunction)
         .join(meta.mapToPair(keyFunction))
         .map(new CombinePrimaryMeta())
-        .map(new RemoveFields(removeFields))
         .map(new EnrichPrimaryMeta(type, donorSamples));
   }
 
@@ -84,7 +86,7 @@ public abstract class PrimaryMetaJoinTask extends GenericTask {
     return readInput(taskContext, metaFileType);
   }
 
-  private static FileType resolveOutputFileType(FileType primaryFileType) {
+  protected static FileType resolveOutputFileType(FileType primaryFileType) {
     return resolveFileType(primaryFileType, OUTPUT_FILE_TYPE_SUFFIX);
   }
 
@@ -92,7 +94,7 @@ public abstract class PrimaryMetaJoinTask extends GenericTask {
     return resolveFileType(primaryFileType, META_FILE_TYPE_SUFFIX);
   }
 
-  private static FileType resolveFileType(FileType primaryFileType, String outputFileTypeSuffix) {
+  protected static FileType resolveFileType(FileType primaryFileType, String outputFileTypeSuffix) {
     val outputName = primaryFileType.name().replaceAll(PRIMARY_FILE_TYPE_REGEX, outputFileTypeSuffix);
 
     return FileType.getFileType(outputName);

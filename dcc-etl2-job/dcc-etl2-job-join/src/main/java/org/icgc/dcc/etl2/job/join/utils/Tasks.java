@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.etl2.job.join.utils;
 
+import static java.util.Collections.emptyMap;
 import static lombok.AccessLevel.PRIVATE;
 
 import java.util.Map;
@@ -27,7 +28,7 @@ import lombok.val;
 
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.join.model.SampleInfo;
+import org.icgc.dcc.etl2.job.join.model.DonorSample;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Tasks {
@@ -42,11 +43,20 @@ public class Tasks {
   }
 
   @NonNull
-  public static Map<String, SampleInfo> resolveDonorSamples(TaskContext taskContext,
-      Broadcast<Map<String, Map<String, SampleInfo>>> broadcast) {
+  public static Map<String, DonorSample> resolveDonorSamples(TaskContext taskContext,
+      Broadcast<Map<String, Map<String, DonorSample>>> broadcast) {
     val projectName = resolveProjectName(taskContext);
+    val result = broadcast.value().get(projectName);
 
-    return broadcast.value().get(projectName);
+    return result == null ? emptyMap() : result;
+  }
+
+  public static Map<String, String> getSampleSurrogateSampleIds(TaskContext taskContext,
+      Broadcast<Map<String, Map<String, String>>> broadcast) {
+    val projectName = resolveProjectName(taskContext);
+    val result = broadcast.value().get(projectName);
+
+    return result == null ? emptyMap() : result;
   }
 
 }

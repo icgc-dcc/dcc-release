@@ -15,42 +15,58 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.function;
+package org.icgc.dcc.etl2.job.join.task;
 
-import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_MUTATION_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
-import static org.icgc.dcc.etl2.core.util.Keys.getKey;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
+import static org.icgc.dcc.etl2.job.join.utils.Tasks.resolveProjectName;
 
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
 import lombok.val;
 
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.job.join.model.DonorSample;
-
-import scala.Tuple2;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.etl2.core.job.FileType;
+import org.icgc.dcc.etl2.core.task.GenericTask;
+import org.icgc.dcc.etl2.core.task.TaskContext;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Maps;
 
-@RequiredArgsConstructor
-public class KeyDonorMutataionId implements
-    Function<Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>, ObjectNode>>, String> {
+public class ResolveSampleSurrogateSampleIds extends GenericTask {
 
-  private final Map<String, DonorSample> donorSamples;
+  @Getter(lazy = true)
+  private final Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIdsBroadcast =
+      createBroadcastVariable();
+  private Map<String, Map<String, String>> sampleSurrogateSampleIdsByProject = Maps.newHashMap();
+  private JavaSparkContext sparkContext;
 
   @Override
-  public String call(Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>, ObjectNode>> tuple)
-      throws Exception {
-    val primary = tuple._2._1._1;
-    val mutationId = textValue(primary, SURROGATE_MUTATION_ID);
-    val sampleId = textValue(primary, SUBMISSION_ANALYZED_SAMPLE_ID);
+  public void execute(TaskContext taskContext) {
+    sparkContext = taskContext.getSparkContext();
+    val sampleIds = resolveSampleIds(taskContext);
+    val projectName = resolveProjectName(taskContext);
+    sampleSurrogateSampleIdsByProject.put(projectName, sampleIds);
+  }
 
-    val donorId = donorSamples.get(sampleId);
-    val key = getKey(donorId.getDonorId(), mutationId);
+  private JavaRDD<ObjectNode> parseSample(TaskContext taskContext) {
+    return readInput(taskContext, FileType.SAMPLE_SURROGATE_KEY);
+  }
 
-    return key;
+  private Map<String, String> resolveSampleIds(TaskContext taskContext) {
+    val samples = parseSample(taskContext);
+    return samples
+        .mapToPair(s -> tuple(textValue(s, SUBMISSION_ANALYZED_SAMPLE_ID), textValue(s, SURROGATE_SAMPLE_ID)))
+        .collectAsMap();
+  }
+
+  private Broadcast<Map<String, Map<String, String>>> createBroadcastVariable() {
+    return sparkContext.broadcast(sampleSurrogateSampleIdsByProject);
   }
 
 }

@@ -57,18 +57,22 @@ public enum FileType implements Identifiable {
   SSM_M(true),
   SSM_P(true),
   SSM_S(true),
+  SSM(true),
 
   CNSM_M(true),
   CNSM_P(true),
   CNSM_S(true),
+  CNSM(true),
 
   STSM_M(true),
   STSM_P(true),
   STSM_S(true),
+  STSM(true),
 
   SGV_M(true),
   SGV_P(true),
   SGV_S(true),
+  SGV(true),
 
   CNGV_M(true),
   CNGV_P(true),
@@ -85,12 +89,15 @@ public enum FileType implements Identifiable {
   METH_ARRAY_M(true),
   METH_ARRAY_PROBES(true),
   METH_ARRAY_P(true),
+  METH_ARRAY(true),
 
   METH_SEQ_M(true),
   METH_SEQ_P(true),
+  METH_SEQ(true),
 
   MIRNA_SEQ_M(true),
   MIRNA_SEQ_P(true),
+  MIRNA_SEQ(true),
 
   JCN_M(true),
   JCN_P(true),
@@ -98,9 +105,11 @@ public enum FileType implements Identifiable {
 
   EXP_ARRAY_M(true),
   EXP_ARRAY_P(true),
+  EXP_ARRAY(true),
 
   EXP_SEQ_M(true),
   EXP_SEQ_P(true),
+  EXP_SEQ(true),
 
   //
   // New

@@ -15,17 +15,17 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.model;
+package org.icgc.dcc.etl2.job.join.function;
 
-import java.io.Serializable;
+import org.icgc.dcc.common.core.model.FieldNames;
+import org.icgc.dcc.etl2.core.function.CombineFields;
 
-import lombok.Value;
+public final class ExtractAnalysisIdAnalyzedSampleId extends CombineFields {
 
-@Value
-public class SampleInfo implements Serializable {
-
-  String donorId;
-  String specimenId;
-  String sampleId;
+  public ExtractAnalysisIdAnalyzedSampleId() {
+    super(
+        FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID,
+        FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID);
+  }
 
 }

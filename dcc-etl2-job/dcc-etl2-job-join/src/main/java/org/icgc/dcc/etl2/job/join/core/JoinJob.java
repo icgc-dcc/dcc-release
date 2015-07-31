@@ -17,6 +17,19 @@
  */
 package org.icgc.dcc.etl2.job.join.core;
 
+import static org.icgc.dcc.etl2.core.job.FileType.CLINICAL;
+import static org.icgc.dcc.etl2.core.job.FileType.CNSM;
+import static org.icgc.dcc.etl2.core.job.FileType.EXP_ARRAY;
+import static org.icgc.dcc.etl2.core.job.FileType.EXP_SEQ;
+import static org.icgc.dcc.etl2.core.job.FileType.JCN;
+import static org.icgc.dcc.etl2.core.job.FileType.METH_ARRAY;
+import static org.icgc.dcc.etl2.core.job.FileType.METH_SEQ;
+import static org.icgc.dcc.etl2.core.job.FileType.MIRNA_SEQ;
+import static org.icgc.dcc.etl2.core.job.FileType.OBSERVATION;
+import static org.icgc.dcc.etl2.core.job.FileType.PEXP;
+import static org.icgc.dcc.etl2.core.job.FileType.SGV;
+import static org.icgc.dcc.etl2.core.job.FileType.SSM;
+import static org.icgc.dcc.etl2.core.job.FileType.STSM;
 import lombok.NonNull;
 import lombok.val;
 
@@ -25,10 +38,13 @@ import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
 import org.icgc.dcc.etl2.job.join.task.ClinicalJoinTask;
-import org.icgc.dcc.etl2.job.join.task.JcnJoinTask;
+import org.icgc.dcc.etl2.job.join.task.MethArrayJoinTask;
 import org.icgc.dcc.etl2.job.join.task.ObservationJoinTask;
-import org.icgc.dcc.etl2.job.join.task.PexpJoinTask;
+import org.icgc.dcc.etl2.job.join.task.PrimaryMetaJoinTask;
 import org.icgc.dcc.etl2.job.join.task.ResolveDonorSamplesTask;
+import org.icgc.dcc.etl2.job.join.task.ResolveSampleSurrogateSampleIds;
+import org.icgc.dcc.etl2.job.join.task.SecondaryJoinTask;
+import org.icgc.dcc.etl2.job.join.task.SgvJoinTask;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -46,24 +62,33 @@ public class JoinJob extends GenericJob {
   }
 
   private void clean(JobContext jobContext) {
-    // TODO: Add more
-    delete(jobContext, FileType.CLINICAL, FileType.OBSERVATION, FileType.PEXP, FileType.JCN);
+    delete(jobContext, CLINICAL, OBSERVATION, PEXP, JCN, EXP_ARRAY, EXP_SEQ, METH_SEQ, MIRNA_SEQ, SSM, CNSM, STSM,
+        SGV, METH_ARRAY);
   }
 
   private void join(JobContext jobContext) {
     val resolveDonorSamplesTask = new ResolveDonorSamplesTask();
+    val resolveSampleIds = new ResolveSampleSurrogateSampleIds();
 
     jobContext.execute(
         new ClinicalJoinTask(),
-        resolveDonorSamplesTask);
+        resolveDonorSamplesTask,
+        resolveSampleIds);
 
     val donorSamples = resolveDonorSamplesTask.getDonorSamplesBroadcast();
+    val sampleSurrogateSampleIds = resolveSampleIds.getSampleSurrogateSampleIdsBroadcast();
     jobContext.execute(
-        new ObservationJoinTask(donorSamples),
-        new PexpJoinTask(donorSamples),
-        new JcnJoinTask(donorSamples)
-        // TODO: Add more
-        );
+        new ObservationJoinTask(donorSamples, sampleSurrogateSampleIds),
+        new PrimaryMetaJoinTask(donorSamples, FileType.MIRNA_SEQ_P),
+        new PrimaryMetaJoinTask(donorSamples, FileType.METH_SEQ_P),
+        new PrimaryMetaJoinTask(donorSamples, FileType.EXP_SEQ_P),
+        new PrimaryMetaJoinTask(donorSamples, FileType.EXP_ARRAY_P),
+        new PrimaryMetaJoinTask(donorSamples, FileType.PEXP_P),
+        new PrimaryMetaJoinTask(donorSamples, FileType.JCN_P),
+        new SecondaryJoinTask(donorSamples, sampleSurrogateSampleIds, FileType.CNSM_P),
+        new SecondaryJoinTask(donorSamples, sampleSurrogateSampleIds, FileType.STSM_P),
+        new SgvJoinTask(donorSamples, sampleSurrogateSampleIds),
+        new MethArrayJoinTask(donorSamples));
   }
 
 }
