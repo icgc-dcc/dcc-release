@@ -58,10 +58,10 @@ public class ClinicalJoinTask extends GenericTask {
   }
 
   private JavaRDD<ObjectNode> joinSpecimen(TaskContext taskContext) {
-    val specimen = readInput(taskContext, SPECIMEN_SURROGATE_KEY_IMAGE);
-    val sample = readInput(taskContext, SAMPLE_SURROGATE_KEY);
-    val biomarker = readInput(taskContext, BIOMARKER);
-    val surgery = readInput(taskContext, SURGERY);
+    val specimen = readInput(taskContext, SPECIMEN_SURROGATE_KEY_IMAGE).coalesce(1);
+    val sample = readInput(taskContext, SAMPLE_SURROGATE_KEY).coalesce(1);
+    val biomarker = readInput(taskContext, BIOMARKER).coalesce(1);
+    val surgery = readInput(taskContext, SURGERY).coalesce(1);
 
     val joinedSpecimen = joinSpecimenSample(specimen, sample, biomarker, surgery);
 
@@ -81,10 +81,10 @@ public class ClinicalJoinTask extends GenericTask {
 
   private JavaPairRDD<String, Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>,
       Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>> joinDonor(TaskContext taskContext) {
-    val donor = readInput(taskContext, DONOR_SURROGATE_KEY);
-    val therapy = readInput(taskContext, THERAPY);
-    val family = readInput(taskContext, FAMILY);
-    val exposure = readInput(taskContext, EXPOSURE);
+    val donor = readInput(taskContext, DONOR_SURROGATE_KEY).coalesce(1);
+    val therapy = readInput(taskContext, THERAPY).coalesce(1);
+    val family = readInput(taskContext, FAMILY).coalesce(1);
+    val exposure = readInput(taskContext, EXPOSURE).coalesce(1);
     val extractDonorId = new ExtractDonorId();
 
     return donor
