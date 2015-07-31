@@ -18,7 +18,6 @@
 package org.icgc.dcc.etl2.core.task;
 
 import static com.google.common.base.Throwables.propagate;
-import static java.lang.String.format;
 import static org.icgc.dcc.etl2.core.util.Stopwatches.createStarted;
 
 import java.util.Collection;
@@ -62,8 +61,7 @@ public class TaskExecutor {
       executeTasks(jobContext, tasks);
       log.info("Finished {} task(s) in {}", tasks.size(), watch);
     } catch (Throwable t) {
-      val message = format("Aborting task(s) [%s] executions due to exception...", tasks);
-      log.error(message, t);
+      log.error("Aborting task(s) executions due to exception...", t);
       propagate(t);
     }
   }
@@ -110,7 +108,12 @@ public class TaskExecutor {
       Stopwatch watch = Stopwatches.createStarted();
       prepareSubmission(task);
 
-      task.execute(taskContext);
+      try {
+        task.execute(taskContext);
+      } catch (Exception e) {
+        log.error("Failed to execute task '{}'", task.getName());
+        throw e;
+      }
 
       return task.getName() + " - " + watch;
     });
