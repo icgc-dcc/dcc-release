@@ -89,9 +89,9 @@ public class ClinicalJoinTask extends GenericTask {
 
     return donor
         .mapToPair(new KeyDonorIdField())
-        .leftOuterJoin(therapy.groupBy(extractDonorId), 1)
-        .leftOuterJoin(family.groupBy(extractDonorId), 1)
-        .leftOuterJoin(exposure.groupBy(extractDonorId), 1);
+        .leftOuterJoin(therapy.groupBy(extractDonorId))
+        .leftOuterJoin(family.groupBy(extractDonorId))
+        .leftOuterJoin(exposure.groupBy(extractDonorId));
   }
 
   private static JavaPairRDD<String, Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>,
@@ -101,9 +101,9 @@ public class ClinicalJoinTask extends GenericTask {
 
     return specimen
         .mapToPair(new KeySpecimenIdField())
-        .leftOuterJoin(sample.groupBy(extractSpecimenId), 1)
-        .leftOuterJoin(biomarker.groupBy(extractSpecimenId), 1)
-        .leftOuterJoin(therapy.groupBy(extractSpecimenId), 1);
+        .leftOuterJoin(sample.groupBy(extractSpecimenId))
+        .leftOuterJoin(biomarker.groupBy(extractSpecimenId))
+        .leftOuterJoin(therapy.groupBy(extractSpecimenId));
   }
 
 }

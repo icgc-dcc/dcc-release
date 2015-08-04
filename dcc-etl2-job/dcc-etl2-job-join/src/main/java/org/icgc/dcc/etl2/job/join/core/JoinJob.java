@@ -30,13 +30,18 @@ import static org.icgc.dcc.etl2.core.job.FileType.PEXP;
 import static org.icgc.dcc.etl2.core.job.FileType.SGV;
 import static org.icgc.dcc.etl2.core.job.FileType.SSM;
 import static org.icgc.dcc.etl2.core.job.FileType.STSM;
+
+import java.util.Map;
+
 import lombok.NonNull;
 import lombok.val;
 
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
+import org.icgc.dcc.etl2.job.join.model.DonorSample;
 import org.icgc.dcc.etl2.job.join.task.ClinicalJoinTask;
 import org.icgc.dcc.etl2.job.join.task.MethArrayJoinTask;
 import org.icgc.dcc.etl2.job.join.task.ObservationJoinTask;
@@ -71,10 +76,18 @@ public class JoinJob extends GenericJob {
 
     val resolveDonorSamplesTask = new ResolveDonorSamplesTask();
     val resolveSampleIds = new ResolveSampleSurrogateSampleIds();
-    jobContext.execute(resolveDonorSamplesTask, resolveSampleIds);
+    jobContext.execute(resolveDonorSamplesTask);
+    jobContext.execute(resolveSampleIds);
 
-    val donorSamples = resolveDonorSamplesTask.getDonorSamplesBroadcast();
-    val sampleSurrogateSampleIds = resolveSampleIds.getSampleSurrogateSampleIdsBroadcast();
+    // val donorSamples = resolveDonorSamplesTask.getDonorSamplesBroadcast();
+    // val sampleSurrogateSampleIds = resolveSampleIds.getSampleSurrogateSampleIdsBroadcast();
+    // joinExperimental(jobContext, donorSamples, sampleSurrogateSampleIds);
+  }
+
+  private void joinExperimental(
+      JobContext jobContext,
+      Broadcast<Map<String, java.util.Map<String, DonorSample>>> donorSamples,
+      Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIds) {
     jobContext.execute(
         new ObservationJoinTask(donorSamples, sampleSurrogateSampleIds),
         new PrimaryMetaJoinTask(donorSamples, FileType.MIRNA_SEQ_P),

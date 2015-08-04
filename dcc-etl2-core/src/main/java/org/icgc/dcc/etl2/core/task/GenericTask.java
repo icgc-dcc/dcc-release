@@ -19,6 +19,8 @@ package org.icgc.dcc.etl2.core.task;
 
 import static org.icgc.dcc.etl2.core.util.JavaRDDs.emptyRDD;
 import static org.icgc.dcc.etl2.core.util.JavaRDDs.exists;
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.logPartitions;
+import static org.icgc.dcc.etl2.core.util.ObjectNodeRDDs.combineObjectNodeFile;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -83,7 +85,10 @@ public abstract class GenericTask implements Task {
     conf.set("mapred.min.split.size", splitSize);
     conf.set("mapred.max.split.size", splitSize);
 
-    return ObjectNodeRDDs.combineObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
+    val input = combineObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
+    logPartitions(log, input.partitions());
+
+    return input;
     // return ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
     // return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
   }
