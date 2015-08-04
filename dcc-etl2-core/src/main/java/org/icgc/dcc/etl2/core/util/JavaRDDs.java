@@ -132,18 +132,27 @@ public final class JavaRDDs {
    */
   @NonNull
   public static <T> JavaRDD<T> emptyRDD(JavaSparkContext sparkContext) {
-    return sparkContext.parallelize(Collections.emptyList());
+    return sparkContext.parallelize(Collections.<T> emptyList()).coalesce(1);
   }
 
   @SneakyThrows
   public static void logPartitions(Logger log, List<Partition> partitions) {
     for (int i = 0; i < partitions.size(); i++) {
-      val partition = (HadoopPartition) partitions.get(i);
+      val partition = partitions.get(i);
+      if (!(partition instanceof HadoopPartition)) {
+        log.info("[{}/{}] Input split: {}",
+            i + 1,
+            partitions.size(),
+            partition);
+        continue;
+      }
+
+      val hadoopPartition = (HadoopPartition) partition;
       log.info("[{}/{}] Input split ({}): {}",
           i + 1,
           partitions.size(),
-          formatBytes(partition.inputSplit().value().getLength()),
-          partition.inputSplit());
+          formatBytes(hadoopPartition.inputSplit().value().getLength()),
+          hadoopPartition.inputSplit());
     }
   }
 

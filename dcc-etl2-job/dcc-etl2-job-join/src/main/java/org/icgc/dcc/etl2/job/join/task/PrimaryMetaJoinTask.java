@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.etl2.job.join.task;
 
+import static java.lang.String.format;
 import static org.icgc.dcc.etl2.job.join.utils.Tasks.resolveDonorSamples;
 
 import java.util.Map;
@@ -54,6 +55,11 @@ public class PrimaryMetaJoinTask extends GenericTask {
     val output = joinPrimaryMeta(taskContext);
 
     writeOutput(taskContext, output, resolveOutputFileType(primaryFileType));
+  }
+
+  @Override
+  public String getName() {
+    return format("%s(%s)", super.getName(), resolveOutputFileType(primaryFileType).getId());
   }
 
   protected JavaRDD<ObjectNode> joinPrimaryMeta(TaskContext taskContext) {
