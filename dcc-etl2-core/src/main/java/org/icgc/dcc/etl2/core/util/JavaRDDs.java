@@ -132,7 +132,7 @@ public final class JavaRDDs {
    */
   @NonNull
   public static <T> JavaRDD<T> emptyRDD(JavaSparkContext sparkContext) {
-    return sparkContext.parallelize(Collections.<T> emptyList()).coalesce(1);
+    return sparkContext.parallelize(Collections.<T> emptyList()).coalesce(0);
   }
 
   @SneakyThrows

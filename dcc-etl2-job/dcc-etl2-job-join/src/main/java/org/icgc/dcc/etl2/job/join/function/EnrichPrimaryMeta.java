@@ -49,9 +49,11 @@ public class EnrichPrimaryMeta implements Function<ObjectNode, ObjectNode> {
 
     val sampleId = textValue(node, SUBMISSION_ANALYZED_SAMPLE_ID);
     val sample = donorSamples.get(sampleId);
-    node.put(SURROGATE_SPECIMEN_ID, sample.getSpecimenId());
-    node.put(SURROGATE_SAMPLE_ID, sample.getSampleId());
-    node.put(SURROGATE_DONOR_ID, sample.getDonorId());
+    if (sample != null) {
+      node.put(SURROGATE_SPECIMEN_ID, sample.getSpecimenId());
+      node.put(SURROGATE_SAMPLE_ID, sample.getSampleId());
+      node.put(SURROGATE_DONOR_ID, sample.getDonorId());
+    }
 
     return node;
   }
