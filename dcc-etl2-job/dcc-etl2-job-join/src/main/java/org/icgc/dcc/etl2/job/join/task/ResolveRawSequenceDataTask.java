@@ -17,54 +17,70 @@
  */
 package org.icgc.dcc.etl2.job.join.task;
 
-import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForLeftJoin;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.etl2.job.join.utils.Tasks.resolveProjectName;
 
+import java.util.List;
 import java.util.Map;
 
+import lombok.Getter;
 import lombok.val;
 
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.job.FileType;
+import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.join.function.KeyFields;
-import org.icgc.dcc.etl2.job.join.model.DonorSample;
-
-import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 
-public class MethArrayJoinTask extends PrimaryMetaJoinTask {
+public class ResolveRawSequenceDataTask extends GenericTask {
 
-  private static final FileType PRIMARY_FILE_TYPE = FileType.METH_ARRAY_P;
-
-  public MethArrayJoinTask(Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesByProject) {
-    super(donorSamplesByProject, PRIMARY_FILE_TYPE);
-  }
+  @Getter(lazy = true)
+  private final Broadcast<Map<String, JavaRDD<ObjectNode>>> rawSequenceDataBroadcast = createBroadcastVariable();
+  private final Map<String, JavaRDD<ObjectNode>> rawSequenceDataByProject = Maps.newHashMap();
+  private JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {
     sparkContext = taskContext.getSparkContext();
-    val primaryMeta = joinPrimaryMeta(taskContext);
-    val probes = readInput(taskContext, FileType.METH_ARRAY_PROBES);
-
-    val keyFunction = new KeyFields("probe_id");
-    val output = primaryMeta
-        .mapToPair(keyFunction)
-        .leftOuterJoin(createRddForLeftJoin(probes.mapToPair(keyFunction), sparkContext))
-        .map(MethArrayJoinTask::combineProbes);
-
-    writeOutput(taskContext, output, FileType.METH_ARRAY);
+    val rawSequenceData = resolveRawSequenceData(taskContext);
+    val projectName = resolveProjectName(taskContext);
+    rawSequenceDataByProject.put(projectName, rawSequenceData);
   }
 
-  private static ObjectNode combineProbes(Tuple2<String, Tuple2<ObjectNode, Optional<ObjectNode>>> tuple) {
-    val primary = tuple._2._1;
-    val probe = tuple._2._2;
-    if (probe.isPresent()) {
-      primary.putAll(probe.get());
+  private JavaRDD<ObjectNode> resolveRawSequenceData(TaskContext taskContext) {
+    JavaRDD<ObjectNode> resultRdd = null;
+    val createRawSeqDataFunction = new CreateRawSequenceDataObject();
+
+    for (val fileType : filterMetaTypes()) {
+      val currentRdd = readInput(taskContext, fileType)
+          .map(createRawSeqDataFunction)
+          .distinct();
+
+      if (resultRdd == null) {
+        resultRdd = currentRdd;
+      } else {
+        resultRdd = resultRdd.union(currentRdd);
+      }
+
     }
 
-    return primary;
+    return resultRdd;
+  }
+
+  private Broadcast<Map<String, JavaRDD<ObjectNode>>> createBroadcastVariable() {
+    return sparkContext.broadcast(rawSequenceDataByProject);
+  }
+
+  private static List<FileType> filterMetaTypes() {
+    return newArrayList(FileType.values()).stream()
+        .filter(ft -> ft.isMetaFileType())
+        .collect(toList());
+
   }
 
 }

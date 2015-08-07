@@ -18,6 +18,7 @@
 package org.icgc.dcc.etl2.job.join.function;
 
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_DONOR_ID;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.EXPOSURE;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.FAMILY;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.THERAPY;
@@ -62,10 +63,16 @@ public class CombineClinical implements Function<Tuple2<String, Tuple2<Tuple2<Tu
     val specimenTuple = tuple._2;
     if (specimenTuple._2.isPresent()) {
       val specimen = donor.withArray(DONOR_SPECIMEN);
-      populateArrayNode(specimen, specimenTuple._2.get());
+      populateArrayNode(specimen, specimenTuple._2.get(), CombineClinical::trimSpecimen);
     }
 
     return donor;
+  }
+
+  private static ObjectNode trimSpecimen(ObjectNode node) {
+    node.remove(SUBMISSION_DONOR_ID);
+
+    return node;
   }
 
 }

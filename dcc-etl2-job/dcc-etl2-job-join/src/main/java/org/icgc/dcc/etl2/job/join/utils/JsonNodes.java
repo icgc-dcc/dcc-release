@@ -20,7 +20,10 @@ package org.icgc.dcc.etl2.job.join.utils;
 import static lombok.AccessLevel.PRIVATE;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
+
+import org.apache.spark.api.java.function.Function;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -32,6 +35,18 @@ public final class JsonNodes {
   public static void populateArrayNode(ArrayNode node, Iterable<ObjectNode> values) {
     for (val value : values) {
       node.add(value);
+    }
+  }
+
+  /**
+   * Populates array {@code array} with {@code values} and applies {@code function} to each of the {@code value}.
+   */
+  @NonNull
+  @SneakyThrows
+  public static void populateArrayNode(ArrayNode array, Iterable<ObjectNode> values,
+      Function<ObjectNode, ObjectNode> function) {
+    for (val value : values) {
+      array.add(function.call(value));
     }
   }
 

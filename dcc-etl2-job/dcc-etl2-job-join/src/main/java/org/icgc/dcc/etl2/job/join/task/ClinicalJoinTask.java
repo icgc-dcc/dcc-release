@@ -25,14 +25,24 @@ import static org.icgc.dcc.etl2.core.job.FileType.SAMPLE_SURROGATE_KEY;
 import static org.icgc.dcc.etl2.core.job.FileType.SPECIMEN_SURROGATE_KEY_IMAGE;
 import static org.icgc.dcc.etl2.core.job.FileType.SURGERY;
 import static org.icgc.dcc.etl2.core.job.FileType.THERAPY;
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForLeftJoin;
+import static org.icgc.dcc.etl2.job.join.utils.Tasks.resolveProjectName;
+
+import java.util.Map;
+
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.job.join.function.CombineClinical;
+import org.icgc.dcc.etl2.job.join.function.CombineSampleFunctions;
 import org.icgc.dcc.etl2.job.join.function.CombineSpecimen;
 import org.icgc.dcc.etl2.job.join.function.ExtractDonorId;
 import org.icgc.dcc.etl2.job.join.function.ExtractSpecimenId;
@@ -44,10 +54,16 @@ import scala.Tuple2;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
 
+@RequiredArgsConstructor
 public class ClinicalJoinTask extends GenericTask {
+
+  @NonNull
+  private final Broadcast<Map<String, JavaRDD<ObjectNode>>> rawSequenceDataBroadcast;
+  private JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {
+    sparkContext = taskContext.getSparkContext();
     val outputFileType = FileType.CLINICAL;
 
     val joinedSpecimen = joinSpecimen(taskContext);
@@ -59,11 +75,12 @@ public class ClinicalJoinTask extends GenericTask {
 
   private JavaRDD<ObjectNode> joinSpecimen(TaskContext taskContext) {
     val specimen = readInput(taskContext, SPECIMEN_SURROGATE_KEY_IMAGE);
-    val sample = readInput(taskContext, SAMPLE_SURROGATE_KEY);
     val biomarker = readInput(taskContext, BIOMARKER);
     val surgery = readInput(taskContext, SURGERY);
+    val sample = readInput(taskContext, SAMPLE_SURROGATE_KEY);
+    val joinedSample = joinSample(taskContext, sample);
 
-    val joinedSpecimen = joinSpecimenSample(specimen, sample, biomarker, surgery);
+    val joinedSpecimen = joinSpecimenSample(specimen, joinedSample, biomarker, surgery);
 
     return joinedSpecimen.map(new CombineSpecimen());
   }
@@ -76,7 +93,7 @@ public class ClinicalJoinTask extends GenericTask {
         .mapToPair(new KeyDonorIdField())
         .groupByKey();
 
-    return donor.leftOuterJoin(pairedSpecimen);
+    return donor.leftOuterJoin(createRddForLeftJoin(pairedSpecimen, sparkContext));
   }
 
   private JavaPairRDD<String, Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>,
@@ -89,21 +106,36 @@ public class ClinicalJoinTask extends GenericTask {
 
     return donor
         .mapToPair(new KeyDonorIdField())
-        .leftOuterJoin(therapy.groupBy(extractDonorId))
-        .leftOuterJoin(family.groupBy(extractDonorId))
-        .leftOuterJoin(exposure.groupBy(extractDonorId));
+        .leftOuterJoin(createRddForLeftJoin(therapy.groupBy(extractDonorId), sparkContext))
+        .leftOuterJoin(createRddForLeftJoin(family.groupBy(extractDonorId), sparkContext))
+        .leftOuterJoin(createRddForLeftJoin(exposure.groupBy(extractDonorId), sparkContext));
   }
 
-  private static JavaPairRDD<String, Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>,
+  private JavaPairRDD<String, Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>,
       Optional<Iterable<ObjectNode>>>> joinSpecimenSample(JavaRDD<ObjectNode> specimen, JavaRDD<ObjectNode> sample,
           JavaRDD<ObjectNode> biomarker, JavaRDD<ObjectNode> therapy) {
     val extractSpecimenId = new ExtractSpecimenId();
 
     return specimen
         .mapToPair(new KeySpecimenIdField())
-        .leftOuterJoin(sample.groupBy(extractSpecimenId))
-        .leftOuterJoin(biomarker.groupBy(extractSpecimenId))
-        .leftOuterJoin(therapy.groupBy(extractSpecimenId));
+        .leftOuterJoin(createRddForLeftJoin(sample.groupBy(extractSpecimenId), sparkContext))
+        .leftOuterJoin(createRddForLeftJoin(biomarker.groupBy(extractSpecimenId), sparkContext))
+        .leftOuterJoin(createRddForLeftJoin(therapy.groupBy(extractSpecimenId), sparkContext));
+  }
+
+  private JavaRDD<ObjectNode> joinSample(TaskContext taskContext, JavaRDD<ObjectNode> sample) {
+    val rawSeqData = getRawSequenceData(taskContext);
+
+    return sample
+        .mapToPair(CombineSampleFunctions::pairSampleId)
+        .leftOuterJoin(createRddForLeftJoin(rawSeqData.groupBy(CombineSampleFunctions::extractSampleId), sparkContext))
+        .map(CombineSampleFunctions::combineSample);
+  }
+
+  private JavaRDD<ObjectNode> getRawSequenceData(TaskContext taskContext) {
+    val projectName = resolveProjectName(taskContext);
+
+    return rawSequenceDataBroadcast.value().get(projectName);
   }
 
 }

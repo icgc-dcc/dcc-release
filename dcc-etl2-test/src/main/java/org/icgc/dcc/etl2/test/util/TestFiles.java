@@ -64,6 +64,10 @@ public class TestFiles {
 
   @SneakyThrows
   public static List<ObjectNode> readInputFile(File source) {
+    if (source.isDirectory()) {
+      return readInputDirectory(source);
+    }
+
     val reader = MAPPER.reader(ObjectNode.class);
 
     @Cleanup
@@ -76,6 +80,20 @@ public class TestFiles {
     }
 
     return rows;
+  }
+
+  public static List<ObjectNode> readInputDirectory(File sourceDir) {
+    File[] files = sourceDir.listFiles(TestFiles::filterPartFiles);
+    val rows = Lists.<ObjectNode> newArrayList();
+    for (val file : files) {
+      rows.addAll(readInputFile(file));
+    }
+
+    return rows;
+  }
+
+  private static boolean filterPartFiles(File file) {
+    return file.getName().startsWith("part-");
   }
 
 }

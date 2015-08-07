@@ -180,11 +180,24 @@ public abstract class AbstractJobTest {
     return new File(getProjectFileTypeDirectory(projectName, fileType), "part-00000");
   }
 
+  protected List<ObjectNode> producesFile(FileType fileType) {
+    return producesFile(null, fileType);
+  }
+
   @SneakyThrows
-  protected List<ObjectNode> produces(String projectName, FileType fileType) {
+  protected List<ObjectNode> producesFile(String projectName, FileType fileType) {
     val file = projectName == null ? getFileTypeFile(fileType) : getProjectFileTypeFile(projectName, fileType);
 
     return TestFiles.readInputFile(file);
+  }
+
+  @SneakyThrows
+  protected List<ObjectNode> produces(String projectName, FileType fileType) {
+    val file = projectName == null ?
+        getFileTypeDirectory(fileType) :
+        getProjectFileTypeDirectory(projectName, fileType);
+
+    return TestFiles.readInputDirectory(file);
   }
 
   @SneakyThrows

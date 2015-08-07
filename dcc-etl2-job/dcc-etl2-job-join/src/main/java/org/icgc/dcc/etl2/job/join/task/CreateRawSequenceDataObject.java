@@ -15,54 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.function;
+package org.icgc.dcc.etl2.job.join.task;
 
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_SPECIMEN_ID;
-import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.BIOMARKER;
-import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.SURGERY;
-import static org.icgc.dcc.etl2.job.join.utils.JsonNodes.populateArrayNode;
+import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_LIBRARY_STRATEGY;
+import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_REPOSITORY;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_REPOSITORY;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_SEQUENCING_STRATEGY;
+
+import java.util.Map;
+
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-
-import scala.Tuple2;
+import org.icgc.dcc.common.core.util.Jackson;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
-public class CombineSpecimen implements Function<Tuple2<String, Tuple2<Tuple2<Tuple2<ObjectNode,
-    Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>>, ObjectNode> {
+public final class CreateRawSequenceDataObject implements Function<ObjectNode, ObjectNode> {
+
+  private static final Map<String, String> RAW_SEQUENCE_DATA_FIELDS_MAPPING = ImmutableMap.of(
+      SUBMISSION_ANALYZED_SAMPLE_ID, SUBMISSION_ANALYZED_SAMPLE_ID,
+      SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION, SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION,
+      SUBMISSION_OBSERVATION_RAW_DATA_REPOSITORY, SEQUENCE_DATA_REPOSITORY,
+      SUBMISSION_OBSERVATION_SEQUENCING_STRATEGY, SEQUENCE_DATA_LIBRARY_STRATEGY);
 
   @Override
-  public ObjectNode call(Tuple2<String, Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>,
-      Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
-    val specimenSampleTuple = tuple._2._1._1;
-    val specimen = specimenSampleTuple._1;
-    if (specimenSampleTuple._2.isPresent()) {
-      val samples = specimen.withArray(DONOR_SAMPLE);
-      populateArrayNode(samples, specimenSampleTuple._2.get(), CombineSpecimen::trimSample);
+  public ObjectNode call(ObjectNode node) throws Exception {
+    val rawSequenceDataObject = Jackson.DEFAULT.createObjectNode();
+    for (val entry : RAW_SEQUENCE_DATA_FIELDS_MAPPING.entrySet()) {
+      rawSequenceDataObject.put(entry.getValue(), node.get(entry.getKey()));
     }
 
-    val biomarkerTuple = tuple._2._1;
-    if (biomarkerTuple._2.isPresent()) {
-      val biomarker = specimen.withArray(BIOMARKER);
-      populateArrayNode(biomarker, biomarkerTuple._2.get());
-    }
-
-    val surgeryTuple = tuple._2;
-    if (surgeryTuple._2.isPresent()) {
-      val surgery = specimen.withArray(SURGERY);
-      populateArrayNode(surgery, surgeryTuple._2.get());
-    }
-
-    return specimen;
-  }
-
-  private static ObjectNode trimSample(ObjectNode node) {
-    node.remove(SUBMISSION_SPECIMEN_ID);
-
-    return node;
+    return rawSequenceDataObject;
   }
 
 }

@@ -19,7 +19,10 @@ package org.icgc.dcc.etl2.job.join.core;
 
 import static com.google.common.collect.ImmutableList.copyOf;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.AVAILABLE_RAW_SEQUENCE_DATA;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 
 import java.io.File;
@@ -29,6 +32,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.etl2.core.job.FileType;
+import org.icgc.dcc.etl2.core.util.ObjectNodes;
 import org.icgc.dcc.etl2.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -135,7 +139,7 @@ public class JoinJobTest extends AbstractJobTest {
   private static void validateSsm(List<ObjectNode> results) {
     assertThat(results).hasSize(2);
     for (val occurrence : results) {
-      assertThat(getElements(occurrence)).hasSize(16);
+      assertThat(keys(occurrence)).hasSize(16);
       assertThat(occurrence.get("observation").size()).isGreaterThan(0);
       assertThat(occurrence.get("consequence").size()).isGreaterThan(0);
     }
@@ -155,14 +159,14 @@ public class JoinJobTest extends AbstractJobTest {
 
     val consequences = occurrence.get("consequence");
     assertThat(consequences.size()).isGreaterThan(0);
-    assertThat(getElements(consequences.get(0)).size()).isGreaterThan(2);
+    assertThat(keys(consequences.get(0)).size()).isGreaterThan(2);
   }
 
   private static void validatePrimaryMeta(List<ObjectNode> results, int expectedFieldsCount) {
     log.debug("{}", results);
     assertThat(results).hasSize(1);
     val joined = results.get(0);
-    assertThat(getElements(joined)).hasSize(expectedFieldsCount);
+    assertThat(keys(joined)).hasSize(expectedFieldsCount);
   }
 
   private static void validateOccurrences(List<ObjectNode> results) {
@@ -217,6 +221,7 @@ public class JoinJobTest extends AbstractJobTest {
   }
 
   private static void validateClinicalResults(List<ObjectNode> results) {
+    log.debug("Clinical - {}", results);
     assertThat(results).hasSize(2);
     val donor = results.get(0);
     validateTherapyFamilyExposure(donor.get("therapy"));
@@ -225,15 +230,17 @@ public class JoinJobTest extends AbstractJobTest {
     validateSpecimen(donor.get("specimen"));
   }
 
-  private static void validateSpecimen(JsonNode specimen) {
-    assertThat(specimen.isArray()).isTrue();
-    val specimens = getElements(specimen);
+  private static void validateSpecimen(JsonNode specimenArray) {
+    assertThat(specimenArray.isArray()).isTrue();
+    val specimens = getElements(specimenArray);
     assertThat(specimens).hasSize(1);
 
-    val samples = getElements(specimens.get(0).get("sample"));
+    val specimen = specimens.get(0);
+    assertThat(keys(specimen)).hasSize(30);
+    val samples = getElements(specimen.get("sample"));
     assertThat(samples).hasSize(2);
 
-    samples.stream().forEach(s -> verifySamples(s));
+    samples.stream().forEach(s -> validateSamples(s));
   }
 
   private static void validateTherapyFamilyExposure(JsonNode node) {
@@ -242,8 +249,32 @@ public class JoinJobTest extends AbstractJobTest {
     assertThat(elements).hasSize(1);
   }
 
-  private static void verifySamples(JsonNode sample) {
-    assertThat(VALID_SAMPLES).contains(sample.get("analyzed_sample_id").asText());
+  private static void validateSamples(JsonNode sample) {
+    val sampleId = ObjectNodes.textValue(sample, SUBMISSION_ANALYZED_SAMPLE_ID);
+    assertThat(VALID_SAMPLES).contains(sampleId);
+    // Sample has 9 fields
+    assertThat(keys(sample)).hasSize(9);
+
+    if (sampleId.equals("ASID1")) {
+      verifyRawSequenceData(sample, 11);
+    } else {
+      verifyRawSequenceData(sample, 0);
+    }
+
+  }
+
+  private static void verifyRawSequenceData(JsonNode sample, int expectedExementsCount) {
+    val elements = getElements(sample.get(AVAILABLE_RAW_SEQUENCE_DATA));
+    assertThat(elements).hasSize(expectedExementsCount);
+
+    if (expectedExementsCount > 0) {
+      elements.stream()
+          .forEach(node -> {
+            // Each RawSequenceData object has 3 fields
+              assertThat(keys(node)).hasSize(3);
+              assertThat(node.path(SUBMISSION_ANALYZED_SAMPLE_ID).isMissingNode()).isTrue();
+            });
+    }
   }
 
   private static void validateEmptyProjectClinicalResults(List<ObjectNode> results) {
@@ -257,6 +288,15 @@ public class JoinJobTest extends AbstractJobTest {
 
   private static List<JsonNode> getElements(JsonNode node) {
     return copyOf(node.elements());
+  }
+
+  private static List<String> keys(JsonNode node) {
+    if (node.isObject()) {
+      val objectNode = (ObjectNode) node;
+      return copyOf(objectNode.fieldNames());
+    }
+
+    return emptyList();
   }
 
 }

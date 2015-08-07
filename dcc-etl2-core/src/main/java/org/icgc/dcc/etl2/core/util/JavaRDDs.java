@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.etl2.core.util;
 
+import static java.util.Collections.emptyList;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 
 import java.util.Collections;
@@ -130,6 +131,7 @@ public final class JavaRDDs {
   /**
    * @see <a href="https://issues.apache.org/jira/browse/SPARK-9236">SPARK-9236</a>
    */
+  // FIXME: Remove after https://issues.apache.org/jira/browse/SPARK-9236 is fixed.
   @NonNull
   public static <T> JavaRDD<T> emptyRDD(JavaSparkContext sparkContext) {
     return sparkContext.parallelize(Collections.<T> emptyList()).coalesce(0);
@@ -162,6 +164,18 @@ public final class JavaRDDs {
 
   private static JobConf createJobConf(JavaSparkContext sparkContext) {
     return new JobConf(sparkContext.hadoopConfiguration());
+  }
+
+  // FIXME: Remove after https://issues.apache.org/jira/browse/SPARK-9236 is fixed.
+  @SuppressWarnings("unchecked")
+  public static <T> JavaPairRDD<String, T> createRddForLeftJoin(JavaPairRDD<String, T> pairRdd, JavaSparkContext sc) {
+    if (!pairRdd.isEmpty()) {
+      return pairRdd;
+    }
+
+    val t = sc.parallelize(emptyList());
+
+    return (JavaPairRDD<String, T>) t.groupBy(on -> "THIS IS A FAKE ID");
   }
 
 }

@@ -19,6 +19,7 @@ package org.icgc.dcc.etl2.job.join.task;
 
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.SURROGATE_MATCHED_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MATCHED_SAMPLE_ID;
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForLeftJoin;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.etl2.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 
@@ -101,7 +102,7 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
 
     return primaryMeta
         .mapToPair(keyPrimaryMetaFunction)
-        .leftOuterJoin(secondary.groupBy(secondaryGroupByFunction))
+        .leftOuterJoin(createRddForLeftJoin(secondary.groupBy(secondaryGroupByFunction), sparkContext))
         .map(new CreateOccurrenceFromSecondary());
   }
 

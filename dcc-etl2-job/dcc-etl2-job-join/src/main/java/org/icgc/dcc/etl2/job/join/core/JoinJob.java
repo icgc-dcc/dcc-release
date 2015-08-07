@@ -54,6 +54,7 @@ import org.icgc.dcc.etl2.job.join.task.MethArrayJoinTask;
 import org.icgc.dcc.etl2.job.join.task.ObservationJoinTask;
 import org.icgc.dcc.etl2.job.join.task.PrimaryMetaJoinTask;
 import org.icgc.dcc.etl2.job.join.task.ResolveDonorSamplesTask;
+import org.icgc.dcc.etl2.job.join.task.ResolveRawSequenceDataTask;
 import org.icgc.dcc.etl2.job.join.task.ResolveSampleSurrogateSampleIds;
 import org.icgc.dcc.etl2.job.join.task.SecondaryJoinTask;
 import org.icgc.dcc.etl2.job.join.task.SgvJoinTask;
@@ -118,7 +119,13 @@ public class JoinJob extends GenericJob {
   }
 
   private static void join(JobContext jobContext) {
-    jobContext.execute(new ClinicalJoinTask());
+    val resolveRawSequenceDataTask = new ResolveRawSequenceDataTask();
+    jobContext.execute(resolveRawSequenceDataTask);
+    val rawSequenceDataBroadcast = resolveRawSequenceDataTask.getRawSequenceDataBroadcast();
+    jobContext.execute(new ClinicalJoinTask(rawSequenceDataBroadcast));
+
+    // Discard the broadcast
+    rawSequenceDataBroadcast.destroy();
     val executeFileTypes = resolveExecuteFileTypes();
 
     if (executeFileTypes.isEmpty()) {

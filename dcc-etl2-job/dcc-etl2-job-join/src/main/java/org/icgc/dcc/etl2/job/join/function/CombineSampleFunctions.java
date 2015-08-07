@@ -17,50 +17,52 @@
  */
 package org.icgc.dcc.etl2.job.join.function;
 
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_SPECIMEN_ID;
-import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.BIOMARKER;
-import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.SURGERY;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.AVAILABLE_RAW_SEQUENCE_DATA;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
 import static org.icgc.dcc.etl2.job.join.utils.JsonNodes.populateArrayNode;
+import lombok.NoArgsConstructor;
 import lombok.val;
-
-import org.apache.spark.api.java.function.Function;
-
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
 
-public class CombineSpecimen implements Function<Tuple2<String, Tuple2<Tuple2<Tuple2<ObjectNode,
-    Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>>, ObjectNode> {
+@NoArgsConstructor(access = PRIVATE)
+public final class CombineSampleFunctions {
 
-  @Override
-  public ObjectNode call(Tuple2<String, Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>,
-      Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
-    val specimenSampleTuple = tuple._2._1._1;
-    val specimen = specimenSampleTuple._1;
-    if (specimenSampleTuple._2.isPresent()) {
-      val samples = specimen.withArray(DONOR_SAMPLE);
-      populateArrayNode(samples, specimenSampleTuple._2.get(), CombineSpecimen::trimSample);
-    }
-
-    val biomarkerTuple = tuple._2._1;
-    if (biomarkerTuple._2.isPresent()) {
-      val biomarker = specimen.withArray(BIOMARKER);
-      populateArrayNode(biomarker, biomarkerTuple._2.get());
-    }
-
-    val surgeryTuple = tuple._2;
-    if (surgeryTuple._2.isPresent()) {
-      val surgery = specimen.withArray(SURGERY);
-      populateArrayNode(surgery, surgeryTuple._2.get());
-    }
-
-    return specimen;
+  public static Tuple2<String, ObjectNode> pairSampleId(ObjectNode node) {
+    return tuple(getSampleId(node), node);
   }
 
-  private static ObjectNode trimSample(ObjectNode node) {
-    node.remove(SUBMISSION_SPECIMEN_ID);
+  public static ObjectNode combineSample(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) {
+    val sample = tuple._2._1;
+    val rawSeqData = tuple._2._2;
+
+    val rawSeqDataArray = sample.withArray(AVAILABLE_RAW_SEQUENCE_DATA);
+    if (rawSeqData.isPresent()) {
+      populateArrayNode(rawSeqDataArray, rawSeqData.get(), CombineSampleFunctions::trimRawSequenceData);
+    }
+
+    return sample;
+  }
+
+  public static String extractSampleId(ObjectNode node) {
+    return getSampleId(node);
+  }
+
+  private static String getSampleId(ObjectNode node) {
+    val sampleId = textValue(node, SUBMISSION_ANALYZED_SAMPLE_ID);
+    checkState(!isNullOrEmpty(sampleId), "Failed to resolve %s for %s", SUBMISSION_ANALYZED_SAMPLE_ID, node);
+    return sampleId;
+  }
+
+  private static ObjectNode trimRawSequenceData(ObjectNode node) {
+    node.remove(SUBMISSION_ANALYZED_SAMPLE_ID);
 
     return node;
   }

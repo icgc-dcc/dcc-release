@@ -18,6 +18,7 @@
 package org.icgc.dcc.etl2.job.join.task;
 
 import static java.lang.String.format;
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForLeftJoin;
 import static org.icgc.dcc.etl2.job.join.utils.Tasks.resolveDonorSamples;
 
 import java.util.Map;
@@ -27,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
@@ -49,6 +51,7 @@ public class PrimaryMetaJoinTask extends GenericTask {
   protected final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesbyProject;
   @NonNull
   protected final FileType primaryFileType;
+  protected JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {
@@ -63,6 +66,7 @@ public class PrimaryMetaJoinTask extends GenericTask {
   }
 
   protected JavaRDD<ObjectNode> joinPrimaryMeta(TaskContext taskContext) {
+    sparkContext = taskContext.getSparkContext();
     val primary = parsePrimary(primaryFileType, taskContext);
     val meta = parseMeta(resolveMetaFileType(primaryFileType), taskContext);
     val donorSamples = resolveDonorSamples(taskContext, donorSamplesbyProject);
@@ -79,7 +83,7 @@ public class PrimaryMetaJoinTask extends GenericTask {
 
     return primary
         .mapToPair(keyFunction)
-        .join(meta.mapToPair(keyFunction))
+        .join(createRddForLeftJoin(meta.mapToPair(keyFunction), sparkContext))
         .map(new CombinePrimaryMeta())
         .map(new EnrichPrimaryMeta(type, donorSamples));
   }

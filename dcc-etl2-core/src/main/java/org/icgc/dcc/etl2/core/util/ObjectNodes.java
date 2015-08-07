@@ -38,6 +38,10 @@ public class ObjectNodes {
 
   private static final Splitter PATH_SPLITTER = Splitters.DOT;
 
+  /**
+   * Returns value for {@code fieldName} as String.
+   * @return value or null if {@code jsonNode} is {@code null} or {@code fieldName} is missing.
+   */
   public static String textValue(JsonNode jsonNode, @NonNull String fieldName) {
     if (jsonNode == null) {
       return null;
