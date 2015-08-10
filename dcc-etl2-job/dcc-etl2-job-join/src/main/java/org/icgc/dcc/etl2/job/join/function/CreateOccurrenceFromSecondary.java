@@ -17,6 +17,13 @@
  */
 package org.icgc.dcc.etl2.job.join.function;
 
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.TRANSCRIPT_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
 import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
 import lombok.val;
 
@@ -39,7 +46,7 @@ public class CreateOccurrenceFromSecondary implements
   public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
     val primary = tuple._2._1;
     val secondaries = tuple._2._2;
-    primary.put("consequence", createConsequences(secondaries));
+    primary.put(CONSEQUENCE_ARRAY_NAME, createConsequences(secondaries));
 
     return primary;
   }
@@ -59,13 +66,13 @@ public class CreateOccurrenceFromSecondary implements
   }
 
   private static void enrichConsequence(ObjectNode secondary) {
-    secondary.put("_gene_id", ObjectNodes.textValue(secondary, "gene_affected"));
-    secondary.put("_transcript_id", ObjectNodes.textValue(secondary, "transcript_affected"));
+    secondary.put(GENE_ID, ObjectNodes.textValue(secondary, SUBMISSION_GENE_AFFECTED));
+    secondary.put(TRANSCRIPT_ID, ObjectNodes.textValue(secondary, SUBMISSION_TRANSCRIPT_AFFECTED));
   }
 
   private static void trimConsequence(ObjectNode secondary) {
-    secondary.remove("analysis_id");
-    secondary.remove("analyzed_sample_id");
+    secondary.remove(SUBMISSION_OBSERVATION_ANALYSIS_ID);
+    secondary.remove(SUBMISSION_ANALYZED_SAMPLE_ID);
   }
 
 }

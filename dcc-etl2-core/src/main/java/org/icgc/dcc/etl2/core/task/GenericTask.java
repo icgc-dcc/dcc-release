@@ -105,6 +105,7 @@ public abstract class GenericTask implements Task {
         processed.partitions().size(),
         outputPath);
 
+    // TODO: This leads to shuffles. Should we care about empty files?
     if (!processed.isEmpty()) {
       ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath);
       // ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);

@@ -17,7 +17,8 @@
  */
 package org.icgc.dcc.etl2.job.join.task;
 
-import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForLeftJoin;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.PROBE_ID;
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForJoin;
 
 import java.util.Map;
 
@@ -48,10 +49,10 @@ public class MethArrayJoinTask extends PrimaryMetaJoinTask {
     val primaryMeta = joinPrimaryMeta(taskContext);
     val probes = readInput(taskContext, FileType.METH_ARRAY_PROBES);
 
-    val keyFunction = new KeyFields("probe_id");
+    val keyFunction = new KeyFields(PROBE_ID);
     val output = primaryMeta
         .mapToPair(keyFunction)
-        .leftOuterJoin(createRddForLeftJoin(probes.mapToPair(keyFunction), sparkContext))
+        .leftOuterJoin(createRddForJoin(probes.mapToPair(keyFunction), sparkContext))
         .map(MethArrayJoinTask::combineProbes);
 
     writeOutput(taskContext, output, FileType.METH_ARRAY);

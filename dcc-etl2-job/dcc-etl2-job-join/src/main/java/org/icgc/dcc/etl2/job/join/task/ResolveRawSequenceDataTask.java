@@ -58,8 +58,7 @@ public class ResolveRawSequenceDataTask extends GenericTask {
 
     for (val fileType : filterMetaTypes()) {
       val currentRdd = readInput(taskContext, fileType)
-          .map(createRawSeqDataFunction)
-          .distinct();
+          .map(createRawSeqDataFunction);
 
       if (resultRdd == null) {
         resultRdd = currentRdd;
@@ -69,7 +68,7 @@ public class ResolveRawSequenceDataTask extends GenericTask {
 
     }
 
-    return resultRdd;
+    return resultRdd.distinct();
   }
 
   private Broadcast<Map<String, JavaRDD<ObjectNode>>> createBroadcastVariable() {

@@ -43,6 +43,14 @@ public class FieldNames {
     public static final String OTHER_ANALYSIS_ALGORITHM = "other_analysis_algorithm";
     public static final String JUNCTION_TYPE = "junction_type";
     public static final String GENE_STABLE_ID = "gene_stable_id";
+    public static final String PROBE_ID = "probe_id";
+    public static final String MUTATION_ID = "mutation_id";
+    public static final String ALIGNMENT_ALGORITHM = "alignment_algorithm";
+    public static final String BASE_CALLING_ALGORITHM = "base_calling_algorithm";
+    public static final String BIOLOGICAL_VALIDATION_STATUS = "biological_validation_status";
+    public static final String MUTANT_ALLELE_READ_COUNT = "mutant_allele_read_count";
+    public static final String TOTAL_READ_COUNT = "total_read_count";
+    public static final String VARIATION_CALLING_ALGORITHM = "variation_calling_algorithm";
 
   }
 

@@ -21,8 +21,59 @@ import static com.google.common.collect.ImmutableList.copyOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_VERIFICATION_STATUS;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_TYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_PLATFORM;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_SEQUENCING_STRATEGY;
+import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_AMINO_ACID_CHANGE;
+import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_CDS_CHANGE;
+import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_GENE_BUILD_VERSION;
+import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_NOTE;
+import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_PROTEIN_DOMAIN_AFFECTED;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_DONOR_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_MUTATION_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SPECIMEN_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.AVAILABLE_RAW_SEQUENCE_DATA;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_ARRAY_NAME;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_TYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.PROJECT_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.SURROGATE_MATCHED_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.TRANSCRIPT_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_MARKING;
+import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_MUTATION;
+import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MATCHED_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ASSEMBLY_VERSION;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_END;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_START;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_STRAND;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATION_TYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_REPOSITORY;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.ALIGNMENT_ALGORITHM;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.BASE_CALLING_ALGORITHM;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.BIOLOGICAL_VALIDATION_STATUS;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.EXPOSURE;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.FAMILY;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.MUTANT_ALLELE_READ_COUNT;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.OTHER_ANALYSIS_ALGORITHM;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.SEQ_COVERAGE;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.THERAPY;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.TOTAL_READ_COUNT;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.VARIATION_CALLING_ALGORITHM;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 
 import java.io.File;
@@ -45,57 +96,57 @@ import com.google.common.collect.ImmutableList;
 public class JoinJobTest extends AbstractJobTest {
 
   private static final ImmutableList<String> VALID_CONSEQUENCE_FIELDS = ImmutableList.of(
-      "_gene_id",
-      "_transcript_id",
-      "aa_change",
-      "cds_change",
-      "consequence_type",
-      "gene_affected",
-      "gene_build_version",
-      "note",
-      "protein_domain_affected",
-      "transcript_affected");
+      GENE_ID,
+      TRANSCRIPT_ID,
+      ANNOTATOR_AMINO_ACID_CHANGE,
+      ANNOTATOR_CDS_CHANGE,
+      OBSERVATION_CONSEQUENCES_CONSEQUENCE_TYPE,
+      SUBMISSION_GENE_AFFECTED,
+      ANNOTATOR_GENE_BUILD_VERSION,
+      ANNOTATOR_NOTE,
+      ANNOTATOR_PROTEIN_DOMAIN_AFFECTED,
+      SUBMISSION_TRANSCRIPT_AFFECTED);
 
   private static final ImmutableList<String> COMMON_OBSERVATION_FIELDS = ImmutableList.of(
-      "_matched_sample_id",
-      "_sample_id",
-      "_specimen_id",
-      "alignment_algorithm",
-      "analysis_id",
-      "analyzed_sample_id",
-      "base_calling_algorithm",
-      "biological_validation_status",
-      "marking",
-      "matched_sample_id",
-      "mutant_allele_read_count",
-      "observation_id",
-      "other_analysis_algorithm",
-      "platform",
-      "raw_data_accession",
-      "raw_data_repository",
-      "seq_coverage",
-      "sequencing_strategy",
-      "total_read_count",
-      "variation_calling_algorithm",
-      "verification_status");
+      SURROGATE_MATCHED_SAMPLE_ID,
+      SURROGATE_SAMPLE_ID,
+      SURROGATE_SPECIMEN_ID,
+      ALIGNMENT_ALGORITHM,
+      SUBMISSION_OBSERVATION_ANALYSIS_ID,
+      SUBMISSION_ANALYZED_SAMPLE_ID,
+      BASE_CALLING_ALGORITHM,
+      BIOLOGICAL_VALIDATION_STATUS,
+      NORMALIZER_MARKING,
+      SUBMISSION_MATCHED_SAMPLE_ID,
+      MUTANT_ALLELE_READ_COUNT,
+      NORMALIZER_OBSERVATION_ID,
+      OTHER_ANALYSIS_ALGORITHM,
+      OBSERVATION_PLATFORM,
+      SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION,
+      SUBMISSION_OBSERVATION_RAW_DATA_REPOSITORY,
+      SEQ_COVERAGE,
+      OBSERVATION_SEQUENCING_STRATEGY,
+      TOTAL_READ_COUNT,
+      VARIATION_CALLING_ALGORITHM,
+      MUTATION_VERIFICATION_STATUS);
 
   private static final ImmutableList<String> VALID_OCCURRENCE_FIELDS = ImmutableList.of(
-      "_donor_id",
-      "_mutation_id",
-      "_project_id",
-      "_type",
-      "assembly_version",
-      "chromosome",
-      "chromosome_end",
-      "chromosome_start",
-      "chromosome_strand",
-      "consequence",
-      "mutated_from_allele",
-      "mutated_to_allele",
-      "mutation",
-      "mutation_type",
-      "observation",
-      "reference_genome_allele");
+      SURROGATE_DONOR_ID,
+      SURROGATE_MUTATION_ID,
+      PROJECT_ID,
+      OBSERVATION_TYPE,
+      SUBMISSION_OBSERVATION_ASSEMBLY_VERSION,
+      SUBMISSION_OBSERVATION_CHROMOSOME,
+      SUBMISSION_OBSERVATION_CHROMOSOME_END,
+      SUBMISSION_OBSERVATION_CHROMOSOME_START,
+      SUBMISSION_OBSERVATION_CHROMOSOME_STRAND,
+      CONSEQUENCE_ARRAY_NAME,
+      SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE,
+      SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE,
+      NORMALIZER_MUTATION,
+      SUBMISSION_OBSERVATION_MUTATION_TYPE,
+      OBSERVATION_ARRAY_NAME,
+      SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE);
 
   private static final String PROJECT_NAME = "BRCA-UK";
   private static final String EMPTY_PROJECT_NAME = "EMPTY";
@@ -140,8 +191,8 @@ public class JoinJobTest extends AbstractJobTest {
     assertThat(results).hasSize(2);
     for (val occurrence : results) {
       assertThat(keys(occurrence)).hasSize(16);
-      assertThat(occurrence.get("observation").size()).isGreaterThan(0);
-      assertThat(occurrence.get("consequence").size()).isGreaterThan(0);
+      assertThat(occurrence.get(OBSERVATION_ARRAY_NAME)).isNotEmpty();
+      assertThat(occurrence.get(CONSEQUENCE_ARRAY_NAME)).isNotEmpty();
     }
 
   }
@@ -149,7 +200,7 @@ public class JoinJobTest extends AbstractJobTest {
   private static void validateStsm(List<ObjectNode> produces, int fieldsCount) {
     validatePrimaryMeta(produces, fieldsCount);
     val occurrence = produces.get(0);
-    assertThat(getElements(occurrence.get("consequence"))).isEmpty();
+    assertThat(getElements(occurrence.get(CONSEQUENCE_ARRAY_NAME))).isEmpty();
   }
 
   private static void validateSecondaryType(List<ObjectNode> results, int fieldsCount) {
@@ -157,8 +208,8 @@ public class JoinJobTest extends AbstractJobTest {
     validatePrimaryMeta(results, fieldsCount);
     val occurrence = results.get(0);
 
-    val consequences = occurrence.get("consequence");
-    assertThat(consequences.size()).isGreaterThan(0);
+    val consequences = occurrence.get(CONSEQUENCE_ARRAY_NAME);
+    assertThat(consequences).isNotEmpty();
     assertThat(keys(consequences.get(0)).size()).isGreaterThan(2);
   }
 
@@ -175,7 +226,7 @@ public class JoinJobTest extends AbstractJobTest {
     for (val occurrence : results) {
       validateOccurrenceStructure(occurrence);
 
-      if (textValue(occurrence, "_donor_id").equals("DO001")) {
+      if (textValue(occurrence, SURROGATE_DONOR_ID).equals("DO001")) {
         validateDO1Occurrence(occurrence);
       }
       else {
@@ -185,22 +236,22 @@ public class JoinJobTest extends AbstractJobTest {
   }
 
   private static void validateDO2Occurrence(ObjectNode occurrence) {
-    assertThat(occurrence.get("observation").size()).isEqualTo(2);
+    assertThat(occurrence.get(OBSERVATION_ARRAY_NAME).size()).isEqualTo(2);
   }
 
   private static void validateDO1Occurrence(ObjectNode occurrence) {
-    assertThat(occurrence.get("observation").size()).isEqualTo(1);
+    assertThat(occurrence.get(OBSERVATION_ARRAY_NAME).size()).isEqualTo(1);
   }
 
   private static void validateOccurrenceStructure(ObjectNode occurrence) {
     val fields = ImmutableList.copyOf(occurrence.fieldNames());
     assertThat(VALID_OCCURRENCE_FIELDS).containsOnlyElementsOf(fields);
 
-    validateArrayNode(occurrence.get("consequence"));
-    validateArrayNode(occurrence.get("observation"));
+    validateArrayNode(occurrence.get(CONSEQUENCE_ARRAY_NAME));
+    validateArrayNode(occurrence.get(OBSERVATION_ARRAY_NAME));
 
-    validateConsequenceStructure(occurrence.get("consequence").get(0));
-    validateObservationStructure(occurrence.get("observation").get(0));
+    validateConsequenceStructure(occurrence.get(CONSEQUENCE_ARRAY_NAME).get(0));
+    validateObservationStructure(occurrence.get(OBSERVATION_ARRAY_NAME).get(0));
   }
 
   private static void validateObservationStructure(JsonNode observation) {
@@ -217,17 +268,17 @@ public class JoinJobTest extends AbstractJobTest {
 
   private static void validateArrayNode(JsonNode arrayNode) {
     assertThat(arrayNode.isArray()).isTrue();
-    assertThat(arrayNode.size()).isGreaterThan(0);
+    assertThat(arrayNode).isNotEmpty();
   }
 
   private static void validateClinicalResults(List<ObjectNode> results) {
     log.debug("Clinical - {}", results);
     assertThat(results).hasSize(2);
     val donor = results.get(0);
-    validateTherapyFamilyExposure(donor.get("therapy"));
-    validateTherapyFamilyExposure(donor.get("family"));
-    validateTherapyFamilyExposure(donor.get("exposure"));
-    validateSpecimen(donor.get("specimen"));
+    validateTherapyFamilyExposure(donor.get(THERAPY));
+    validateTherapyFamilyExposure(donor.get(FAMILY));
+    validateTherapyFamilyExposure(donor.get(EXPOSURE));
+    validateSpecimen(donor.get(DONOR_SPECIMEN));
   }
 
   private static void validateSpecimen(JsonNode specimenArray) {
@@ -237,7 +288,7 @@ public class JoinJobTest extends AbstractJobTest {
 
     val specimen = specimens.get(0);
     assertThat(keys(specimen)).hasSize(30);
-    val samples = getElements(specimen.get("sample"));
+    val samples = getElements(specimen.get(DONOR_SAMPLE));
     assertThat(samples).hasSize(2);
 
     samples.stream().forEach(s -> validateSamples(s));
@@ -280,10 +331,10 @@ public class JoinJobTest extends AbstractJobTest {
   private static void validateEmptyProjectClinicalResults(List<ObjectNode> results) {
     assertThat(results).hasSize(1);
     val donor = results.get(0);
-    assertThat(donor.findPath("therapy").isMissingNode()).isTrue();
-    assertThat(donor.findPath("family").isMissingNode()).isTrue();
-    assertThat(donor.findPath("exposure").isMissingNode()).isTrue();
-    assertThat(donor.findPath("specimen").isMissingNode()).isTrue();
+    assertThat(donor.findPath(THERAPY).isMissingNode()).isTrue();
+    assertThat(donor.findPath(FAMILY).isMissingNode()).isTrue();
+    assertThat(donor.findPath(EXPOSURE).isMissingNode()).isTrue();
+    assertThat(donor.findPath(DONOR_SPECIMEN).isMissingNode()).isTrue();
   }
 
   private static List<JsonNode> getElements(JsonNode node) {

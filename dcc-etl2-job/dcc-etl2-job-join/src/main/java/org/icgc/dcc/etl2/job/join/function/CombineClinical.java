@@ -18,6 +18,7 @@
 package org.icgc.dcc.etl2.job.join.function;
 
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_DONOR_ID;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.EXPOSURE;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.FAMILY;
@@ -45,19 +46,19 @@ public class CombineClinical implements Function<Tuple2<String, Tuple2<Tuple2<Tu
 
     if (donorTherapyTuple._2.isPresent()) {
       val therapy = donor.withArray(THERAPY);
-      populateArrayNode(therapy, donorTherapyTuple._2.get());
+      populateArrayNode(therapy, donorTherapyTuple._2.get(), CombineClinical::trimDuplicateFields);
     }
 
     val familyTuple = tuple._2._1._1;
     if (familyTuple._2.isPresent()) {
       val family = donor.withArray(FAMILY);
-      populateArrayNode(family, familyTuple._2.get());
+      populateArrayNode(family, familyTuple._2.get(), CombineClinical::trimDuplicateFields);
     }
 
     val exposureTuple = tuple._2._1;
     if (exposureTuple._2.isPresent()) {
       val exposure = donor.withArray(EXPOSURE);
-      populateArrayNode(exposure, exposureTuple._2.get());
+      populateArrayNode(exposure, exposureTuple._2.get(), CombineClinical::trimDuplicateFields);
     }
 
     val specimenTuple = tuple._2;
@@ -71,6 +72,13 @@ public class CombineClinical implements Function<Tuple2<String, Tuple2<Tuple2<Tu
 
   private static ObjectNode trimSpecimen(ObjectNode node) {
     node.remove(SUBMISSION_DONOR_ID);
+
+    return node;
+  }
+
+  private static ObjectNode trimDuplicateFields(ObjectNode node) {
+    node.remove(SUBMISSION_DONOR_ID);
+    node.remove(PROJECT_ID);
 
     return node;
   }

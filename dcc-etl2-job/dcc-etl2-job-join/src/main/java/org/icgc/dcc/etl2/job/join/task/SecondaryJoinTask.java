@@ -17,9 +17,11 @@
  */
 package org.icgc.dcc.etl2.job.join.task;
 
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.SURROGATE_MATCHED_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MATCHED_SAMPLE_ID;
-import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForLeftJoin;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.MUTATION_ID;
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForJoin;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.etl2.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 
@@ -45,7 +47,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class SecondaryJoinTask extends PrimaryMetaJoinTask {
 
   private static final String SECONDARY_FILE_TYPE_SUFFIX = "_S";
-  private static final String[] SECONDARY_REMOVE_FIELDS = { "_project_id", "mutation_id" };
+  private static final String[] SECONDARY_REMOVE_FIELDS = { PROJECT_ID, MUTATION_ID };
 
   private final Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIdsByProject;
   private KeyFields keyPrimaryMetaFunction = new KeyAnalysisIdAnalyzedSampleIdField();
@@ -102,7 +104,7 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
 
     return primaryMeta
         .mapToPair(keyPrimaryMetaFunction)
-        .leftOuterJoin(createRddForLeftJoin(secondary.groupBy(secondaryGroupByFunction), sparkContext))
+        .leftOuterJoin(createRddForJoin(secondary.groupBy(secondaryGroupByFunction), sparkContext))
         .map(new CreateOccurrenceFromSecondary());
   }
 

@@ -25,7 +25,7 @@ import static org.icgc.dcc.etl2.core.job.FileType.SAMPLE_SURROGATE_KEY;
 import static org.icgc.dcc.etl2.core.job.FileType.SPECIMEN_SURROGATE_KEY_IMAGE;
 import static org.icgc.dcc.etl2.core.job.FileType.SURGERY;
 import static org.icgc.dcc.etl2.core.job.FileType.THERAPY;
-import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForLeftJoin;
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForJoin;
 import static org.icgc.dcc.etl2.job.join.utils.Tasks.resolveProjectName;
 
 import java.util.Map;
@@ -93,7 +93,7 @@ public class ClinicalJoinTask extends GenericTask {
         .mapToPair(new KeyDonorIdField())
         .groupByKey();
 
-    return donor.leftOuterJoin(createRddForLeftJoin(pairedSpecimen, sparkContext));
+    return donor.leftOuterJoin(createRddForJoin(pairedSpecimen, sparkContext));
   }
 
   private JavaPairRDD<String, Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>,
@@ -106,9 +106,9 @@ public class ClinicalJoinTask extends GenericTask {
 
     return donor
         .mapToPair(new KeyDonorIdField())
-        .leftOuterJoin(createRddForLeftJoin(therapy.groupBy(extractDonorId), sparkContext))
-        .leftOuterJoin(createRddForLeftJoin(family.groupBy(extractDonorId), sparkContext))
-        .leftOuterJoin(createRddForLeftJoin(exposure.groupBy(extractDonorId), sparkContext));
+        .leftOuterJoin(createRddForJoin(therapy.groupBy(extractDonorId), sparkContext))
+        .leftOuterJoin(createRddForJoin(family.groupBy(extractDonorId), sparkContext))
+        .leftOuterJoin(createRddForJoin(exposure.groupBy(extractDonorId), sparkContext));
   }
 
   private JavaPairRDD<String, Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>,
@@ -118,9 +118,9 @@ public class ClinicalJoinTask extends GenericTask {
 
     return specimen
         .mapToPair(new KeySpecimenIdField())
-        .leftOuterJoin(createRddForLeftJoin(sample.groupBy(extractSpecimenId), sparkContext))
-        .leftOuterJoin(createRddForLeftJoin(biomarker.groupBy(extractSpecimenId), sparkContext))
-        .leftOuterJoin(createRddForLeftJoin(therapy.groupBy(extractSpecimenId), sparkContext));
+        .leftOuterJoin(createRddForJoin(sample.groupBy(extractSpecimenId), sparkContext))
+        .leftOuterJoin(createRddForJoin(biomarker.groupBy(extractSpecimenId), sparkContext))
+        .leftOuterJoin(createRddForJoin(therapy.groupBy(extractSpecimenId), sparkContext));
   }
 
   private JavaRDD<ObjectNode> joinSample(TaskContext taskContext, JavaRDD<ObjectNode> sample) {
@@ -128,7 +128,7 @@ public class ClinicalJoinTask extends GenericTask {
 
     return sample
         .mapToPair(CombineSampleFunctions::pairSampleId)
-        .leftOuterJoin(createRddForLeftJoin(rawSeqData.groupBy(CombineSampleFunctions::extractSampleId), sparkContext))
+        .leftOuterJoin(createRddForJoin(rawSeqData.groupBy(CombineSampleFunctions::extractSampleId), sparkContext))
         .map(CombineSampleFunctions::combineSample);
   }
 

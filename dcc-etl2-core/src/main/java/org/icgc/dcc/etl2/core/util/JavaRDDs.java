@@ -168,12 +168,12 @@ public final class JavaRDDs {
 
   // FIXME: Remove after https://issues.apache.org/jira/browse/SPARK-9236 is fixed.
   @SuppressWarnings("unchecked")
-  public static <T> JavaPairRDD<String, T> createRddForLeftJoin(JavaPairRDD<String, T> pairRdd, JavaSparkContext sc) {
+  public static <T> JavaPairRDD<String, T> createRddForJoin(JavaPairRDD<String, T> pairRdd, JavaSparkContext sc) {
     if (!pairRdd.isEmpty()) {
       return pairRdd;
     }
 
-    val t = sc.parallelize(emptyList());
+    val t = sc.parallelize(emptyList()).coalesce(1);
 
     return (JavaPairRDD<String, T>) t.groupBy(on -> "THIS IS A FAKE ID");
   }

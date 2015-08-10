@@ -17,32 +17,24 @@
  */
 package org.icgc.dcc.etl2.job.join.core;
 
+import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.System.getProperty;
 import static java.util.Collections.emptyList;
 import static org.icgc.dcc.common.core.util.Splitters.COMMA;
 import static org.icgc.dcc.etl2.core.job.FileType.CLINICAL;
-import static org.icgc.dcc.etl2.core.job.FileType.CNSM;
-import static org.icgc.dcc.etl2.core.job.FileType.EXP_ARRAY;
-import static org.icgc.dcc.etl2.core.job.FileType.EXP_SEQ;
-import static org.icgc.dcc.etl2.core.job.FileType.JCN;
-import static org.icgc.dcc.etl2.core.job.FileType.METH_ARRAY;
-import static org.icgc.dcc.etl2.core.job.FileType.METH_SEQ;
-import static org.icgc.dcc.etl2.core.job.FileType.MIRNA_SEQ;
 import static org.icgc.dcc.etl2.core.job.FileType.OBSERVATION;
-import static org.icgc.dcc.etl2.core.job.FileType.PEXP;
-import static org.icgc.dcc.etl2.core.job.FileType.SGV;
-import static org.icgc.dcc.etl2.core.job.FileType.SSM;
-import static org.icgc.dcc.etl2.core.job.FileType.STSM;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.common.core.util.Joiners;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
@@ -63,16 +55,29 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 @Slf4j
 @Component
 public class JoinJob extends GenericJob {
 
+  private static final Set<FileType> ANALYSIS_FILE_TYPES = newHashSet(
+      FileType.MIRNA_SEQ,
+      FileType.METH_SEQ,
+      FileType.EXP_SEQ,
+      FileType.EXP_ARRAY,
+      FileType.PEXP,
+      FileType.JCN,
+      FileType.METH_ARRAY,
+      FileType.CNSM,
+      FileType.STSM,
+      FileType.SSM,
+      FileType.SGV);
+
   /**
    * Valid tasks the Join Job can execute
    */
-  private static final String VALID_TASKS = "mirna_seq,meth_seq,exp_seq,exp_array,pexp,jcn,meth_array,"
-      + "cnsm,stsm,ssm,sgv";
+  private static final String VALID_TASKS = Joiners.COMMA.join(ANALYSIS_FILE_TYPES);
 
   /**
    * A coma-separated list of join tasks(file types) to execute.
@@ -114,8 +119,7 @@ public class JoinJob extends GenericJob {
   }
 
   private void clean(JobContext jobContext) {
-    delete(jobContext, CLINICAL, OBSERVATION, PEXP, JCN, EXP_ARRAY, EXP_SEQ, METH_SEQ, MIRNA_SEQ, SSM, CNSM, STSM,
-        SGV, METH_ARRAY);
+    delete(jobContext, getDeleteFileTypes());
   }
 
   private static void join(JobContext jobContext) {
@@ -196,7 +200,7 @@ public class JoinJob extends GenericJob {
     val tasksProperty = getProperty(EXECUTE_TASKS_PROPERTY, VALID_TASKS);
     log.info("Requested join tasks: {}", tasksProperty);
     val tasks = COMMA.split(tasksProperty);
-    if (Iterables.size(tasks) == 1 && Iterables.contains(tasks, "clinical")) {
+    if (Iterables.size(tasks) == 1 && Iterables.contains(tasks, CLINICAL.getId())) {
       return emptyList();
     }
 
@@ -221,6 +225,14 @@ public class JoinJob extends GenericJob {
 
       return Optional.empty();
     }
+  }
+
+  private static FileType[] getDeleteFileTypes() {
+    val result = Sets.newHashSet(ANALYSIS_FILE_TYPES);
+    result.add(CLINICAL);
+    result.add(OBSERVATION);
+
+    return result.toArray(new FileType[result.size()]);
   }
 
 }

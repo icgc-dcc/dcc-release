@@ -67,18 +67,8 @@ public class ObservationJoinTask extends GenericTask {
     val output = joinSsm(ssmM, ssmP, ssmS, donorSamples, sampleSurrogageSampleIds);
 
     output.cache();
-    writeOutput(taskContext, cleanupOccurrenceObservations(output), outputFileType);
-    writeSsmOutput(taskContext, cleanupSsmObservations(output));
-  }
-
-  private JavaRDD<ObjectNode> cleanupSsmObservations(JavaRDD<ObjectNode> output) {
-    // TODO Is creanup required
-    return output;
-  }
-
-  private JavaRDD<ObjectNode> cleanupOccurrenceObservations(JavaRDD<ObjectNode> output) {
-    // TODO Is creanup required
-    return output;
+    writeOutput(taskContext, output, outputFileType);
+    writeSsmOutput(taskContext, output);
   }
 
   private void writeSsmOutput(TaskContext taskContext, JavaRDD<ObjectNode> output) {

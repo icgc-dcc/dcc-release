@@ -18,7 +18,7 @@
 package org.icgc.dcc.etl2.job.join.task;
 
 import static java.lang.String.format;
-import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForLeftJoin;
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForJoin;
 import static org.icgc.dcc.etl2.job.join.utils.Tasks.resolveDonorSamples;
 
 import java.util.Map;
@@ -83,7 +83,7 @@ public class PrimaryMetaJoinTask extends GenericTask {
 
     return primary
         .mapToPair(keyFunction)
-        .join(createRddForLeftJoin(meta.mapToPair(keyFunction), sparkContext))
+        .join(createRddForJoin(meta.mapToPair(keyFunction), sparkContext))
         .map(new CombinePrimaryMeta())
         .map(new EnrichPrimaryMeta(type, donorSamples));
   }
