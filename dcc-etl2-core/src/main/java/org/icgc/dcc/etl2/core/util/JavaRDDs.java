@@ -17,8 +17,10 @@
  */
 package org.icgc.dcc.etl2.core.util;
 
+import static java.util.Collections.emptyList;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 
+import java.util.Collections;
 import java.util.List;
 
 import lombok.AccessLevel;
@@ -41,6 +43,8 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.rdd.HadoopPartition;
+import org.icgc.dcc.common.hadoop.fs.FileSystems;
+import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
 import org.icgc.dcc.etl2.core.hadoop.CombineTextInputFormat;
 import org.slf4j.Logger;
 
@@ -117,15 +121,40 @@ public final class JavaRDDs {
     rdd.saveAsHadoopFile(path, keyClass, valueClass, SequenceFileOutputFormat.class, conf);
   }
 
+  @NonNull
+  public static boolean exists(JavaSparkContext sparkContext, String path) {
+    val fs = FileSystems.getFileSystem(sparkContext.hadoopConfiguration());
+
+    return HadoopUtils.checkExistence(fs, path);
+  }
+
+  /**
+   * @see <a href="https://issues.apache.org/jira/browse/SPARK-9236">SPARK-9236</a>
+   */
+  // FIXME: Remove after https://issues.apache.org/jira/browse/SPARK-9236 is fixed.
+  @NonNull
+  public static <T> JavaRDD<T> emptyRDD(JavaSparkContext sparkContext) {
+    return sparkContext.parallelize(Collections.<T> emptyList()).coalesce(0);
+  }
+
   @SneakyThrows
   public static void logPartitions(Logger log, List<Partition> partitions) {
     for (int i = 0; i < partitions.size(); i++) {
-      val partition = (HadoopPartition) partitions.get(i);
+      val partition = partitions.get(i);
+      if (!(partition instanceof HadoopPartition)) {
+        log.info("[{}/{}] Input split: {}",
+            i + 1,
+            partitions.size(),
+            partition);
+        continue;
+      }
+
+      val hadoopPartition = (HadoopPartition) partition;
       log.info("[{}/{}] Input split ({}): {}",
           i + 1,
           partitions.size(),
-          formatBytes(partition.inputSplit().value().getLength()),
-          partition.inputSplit());
+          formatBytes(hadoopPartition.inputSplit().value().getLength()),
+          hadoopPartition.inputSplit());
     }
   }
 
@@ -135,6 +164,26 @@ public final class JavaRDDs {
 
   private static JobConf createJobConf(JavaSparkContext sparkContext) {
     return new JobConf(sparkContext.hadoopConfiguration());
+  }
+
+  /**
+   * {@code emptyRDD()} method creates an empty RDD which is coalesced to 0 partitions. If such a partition is joined
+   * with another non-empty partition the result has zero partitions, which is incorrect. Most probably this is related
+   * to the <a href="https://issues.apache.org/jira/browse/SPARK-9236">SPARK-9236 JIRA</a>.<br>
+   * <br>
+   * To fix the issue this method create an empty RDD and groups it by a fake ID. If such an RDD is joined with another
+   * non-empty one the resulting RDD has proper(non-zero) number of partitions.
+   */
+  // FIXME: Remove after https://issues.apache.org/jira/browse/SPARK-9236 is fixed.
+  @SuppressWarnings("unchecked")
+  public static <T> JavaPairRDD<String, T> createRddForJoin(JavaPairRDD<String, T> pairRdd, JavaSparkContext sc) {
+    if (!pairRdd.isEmpty()) {
+      return pairRdd;
+    }
+
+    val t = sc.parallelize(emptyList()).coalesce(1);
+
+    return (JavaPairRDD<String, T>) t.groupBy(on -> "THIS IS A FAKE ID");
   }
 
 }

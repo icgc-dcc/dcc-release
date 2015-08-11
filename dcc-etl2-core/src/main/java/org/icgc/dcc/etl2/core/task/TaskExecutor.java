@@ -61,7 +61,7 @@ public class TaskExecutor {
       executeTasks(jobContext, tasks);
       log.info("Finished {} task(s) in {}", tasks.size(), watch);
     } catch (Throwable t) {
-      log.error("Aborting task executions due to exception...", t);
+      log.error("Aborting task(s) executions due to exception...", t);
       propagate(t);
     }
   }
@@ -108,7 +108,12 @@ public class TaskExecutor {
       Stopwatch watch = Stopwatches.createStarted();
       prepareSubmission(task);
 
-      task.execute(taskContext);
+      try {
+        task.execute(taskContext);
+      } catch (Exception e) {
+        log.error("Failed to execute task '{}'", task.getName());
+        throw e;
+      }
 
       return task.getName() + " - " + watch;
     });

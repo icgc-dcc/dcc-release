@@ -17,7 +17,11 @@
  */
 package org.icgc.dcc.etl2.core.task;
 
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.emptyRDD;
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.exists;
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.logPartitions;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
@@ -26,6 +30,7 @@ import org.icgc.dcc.etl2.core.util.ObjectNodeRDDs;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+@Slf4j
 public abstract class GenericTask implements Task {
 
   private final String name;
@@ -67,13 +72,24 @@ public abstract class GenericTask implements Task {
 
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType, String path) {
     val sparkContext = taskContext.getSparkContext();
+    val filePath = taskContext.getPath(inputFileType) + path;
 
-    val splitSize = Long.toString(48 * 1024 * 1024);
-    conf.set("mapred.min.split.size", splitSize);
-    conf.set("mapred.max.split.size", splitSize);
+    if (!exists(sparkContext, filePath)) {
+      log.warn("{} does not exist. Skipping...", filePath);
 
-    return ObjectNodeRDDs.combineObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
-    // return ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
+      return emptyRDD(sparkContext);
+    }
+
+    // TODO: Revisit during the Index Job
+    // val splitSize = Long.toString(48 * 1024 * 1024);
+    // conf.set("mapred.min.split.size", splitSize);
+    // conf.set("mapred.max.split.size", splitSize);
+    // val input = combineObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
+
+    val input = ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
+    logPartitions(log, input.partitions());
+
+    return input;
     // return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
   }
 
@@ -84,8 +100,16 @@ public abstract class GenericTask implements Task {
   }
 
   protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath) {
-    ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath);
-    // ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);
+    log.debug("Saving {} RDD({}) to {}...",
+        processed.isEmpty() ? "empty" : "non-empty",
+        processed.partitions().size(),
+        outputPath);
+
+    // TODO: This leads to shuffles. Should we care about empty files?
+    if (!processed.isEmpty()) {
+      ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath);
+      // ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);
+    }
   }
 
 }

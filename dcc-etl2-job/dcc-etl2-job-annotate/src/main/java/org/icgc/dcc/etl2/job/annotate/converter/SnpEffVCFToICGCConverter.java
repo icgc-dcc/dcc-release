@@ -167,7 +167,8 @@ public class SnpEffVCFToICGCConverter {
 
         return false;
       }
-      log.warn("Adding effect with warning or error: '{}'", effect);
+      // TODO: Change to other level once this information is required for data mining etc.
+      log.debug("Adding effect with warning or error: '{}'", effect);
     }
 
     return true;

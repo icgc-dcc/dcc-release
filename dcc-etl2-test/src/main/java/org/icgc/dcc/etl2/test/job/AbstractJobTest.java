@@ -39,6 +39,7 @@ public abstract class AbstractJobTest {
    * Constants.
    */
   protected static final String TEST_FIXTURES_DIR = "src/test/resources/fixtures";
+  private static final String RELEASE_VERSION = "ICGC19-0-2";
 
   /**
    * Collaborators.
@@ -130,7 +131,7 @@ public abstract class AbstractJobTest {
 
   @SuppressWarnings("unchecked")
   protected JobContext createJobContext(JobType type, List<String> projectNames) {
-    return new DefaultJobContext(type, "ICGC<version>", projectNames, "/dev/null",
+    return new DefaultJobContext(type, RELEASE_VERSION, projectNames, "/dev/null",
         workingDir.toString(), mock(Table.class), taskExecutor);
   }
 
@@ -179,11 +180,24 @@ public abstract class AbstractJobTest {
     return new File(getProjectFileTypeDirectory(projectName, fileType), "part-00000");
   }
 
+  protected List<ObjectNode> producesFile(FileType fileType) {
+    return producesFile(null, fileType);
+  }
+
   @SneakyThrows
-  protected List<ObjectNode> produces(String projectName, FileType fileType) {
+  protected List<ObjectNode> producesFile(String projectName, FileType fileType) {
     val file = projectName == null ? getFileTypeFile(fileType) : getProjectFileTypeFile(projectName, fileType);
 
     return TestFiles.readInputFile(file);
+  }
+
+  @SneakyThrows
+  protected List<ObjectNode> produces(String projectName, FileType fileType) {
+    val file = projectName == null ?
+        getFileTypeDirectory(fileType) :
+        getProjectFileTypeDirectory(projectName, fileType);
+
+    return TestFiles.readInputDirectory(file);
   }
 
   @SneakyThrows
@@ -201,6 +215,10 @@ public abstract class AbstractJobTest {
 
   protected static TestFileBuilder inputFile(String projectName) {
     return inputFile().projectName(projectName);
+  }
+
+  protected String resolvePath(String fileName) {
+    return new File(TEST_FIXTURES_DIR + "/" + fileName).getAbsolutePath();
   }
 
 }

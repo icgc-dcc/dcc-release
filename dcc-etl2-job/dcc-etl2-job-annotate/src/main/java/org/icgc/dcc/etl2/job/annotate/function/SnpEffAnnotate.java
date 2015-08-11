@@ -129,7 +129,7 @@ public class SnpEffAnnotate implements FlatMapFunction<Iterator<ObjectNode>, Obj
       // Determine the prediction
       val predictions = predict(row, predictor);
       for (val prediction : predictions) {
-        results.add(SecondaryObjectNodeConverter.convert(prediction));
+        results.add(SecondaryObjectNodeConverter.convert(prediction, fileType));
       }
     }
 

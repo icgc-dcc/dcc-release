@@ -15,77 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.function;
+package org.icgc.dcc.etl2.job.join.task;
+
+import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_LIBRARY_STRATEGY;
+import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_REPOSITORY;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_REPOSITORY;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_SEQUENCING_STRATEGY;
+
+import java.util.Map;
 
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.common.core.util.Jackson;
 
-import scala.Tuple2;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableMap;
 
-public class TransformDonorMutationSsmPrimarySecondary implements
-    Function<Tuple2<String, Iterable<Tuple2<String, Tuple2<ObjectNode, Iterable<ObjectNode>>>>>, ObjectNode> {
+public final class CreateRawSequenceDataObject implements Function<ObjectNode, ObjectNode> {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final Map<String, String> RAW_SEQUENCE_DATA_FIELDS_MAPPING = ImmutableMap.of(
+      SUBMISSION_ANALYZED_SAMPLE_ID, SUBMISSION_ANALYZED_SAMPLE_ID,
+      SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION, SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION,
+      SUBMISSION_OBSERVATION_RAW_DATA_REPOSITORY, SEQUENCE_DATA_REPOSITORY,
+      SUBMISSION_OBSERVATION_SEQUENCING_STRATEGY, SEQUENCE_DATA_LIBRARY_STRATEGY);
 
   @Override
-  public ObjectNode call(
-      Tuple2<String, Iterable<Tuple2<String, Tuple2<ObjectNode, Iterable<ObjectNode>>>>> tuple) throws Exception {
-
-    // TODO: Factor primary in to primary1 and nested primary2 and nest secondary under primary1
-    val donorMutations = tuple._2;
-
-    ObjectNode mutation = null;
-    ArrayNode consequences = null;
-    ArrayNode observations = createObservations();
-
-    for (val donorMutation : donorMutations) {
-      val primary = donorMutation._2._1;
-      if (mutation == null) {
-        mutation = trimMutation(primary.deepCopy());
-      }
-
-      val observation = trimObservation(primary);
-      observations.add(observation);
-
-      if (consequences == null) {
-        consequences = createConsequences();
-
-        val secondaries = donorMutation._2._2;
-        for (val secondary : secondaries) {
-          consequences.add(secondary);
-        }
-      }
+  public ObjectNode call(ObjectNode node) throws Exception {
+    val rawSequenceDataObject = Jackson.DEFAULT.createObjectNode();
+    for (val entry : RAW_SEQUENCE_DATA_FIELDS_MAPPING.entrySet()) {
+      rawSequenceDataObject.put(entry.getValue(), node.get(entry.getKey()));
     }
 
-    mutation.put("consequence", consequences);
-    mutation.put("observation", observations);
-
-    return mutation;
-  }
-
-  private ObjectNode trimMutation(ObjectNode mutation) {
-    // TODO: Remove fields
-
-    return mutation;
-  }
-
-  private ObjectNode trimObservation(ObjectNode observation) {
-    // TODO: Remove fields
-
-    return observation;
-  }
-
-  private ArrayNode createConsequences() {
-    return MAPPER.createArrayNode();
-  }
-
-  private ArrayNode createObservations() {
-    return MAPPER.createArrayNode();
+    return rawSequenceDataObject;
   }
 
 }

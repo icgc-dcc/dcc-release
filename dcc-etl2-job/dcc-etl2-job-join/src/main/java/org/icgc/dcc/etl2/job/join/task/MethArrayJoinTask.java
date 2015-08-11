@@ -15,39 +15,57 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.function;
+package org.icgc.dcc.etl2.job.join.task;
+
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.PROBE_ID;
+import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForJoin;
 
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
-import org.icgc.dcc.etl2.core.util.Keys;
+import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.etl2.core.job.FileType;
+import org.icgc.dcc.etl2.core.task.TaskContext;
+import org.icgc.dcc.etl2.job.join.function.KeyFields;
+import org.icgc.dcc.etl2.job.join.model.DonorSample;
 
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 
-@RequiredArgsConstructor
-public class KeyDonorMutationId implements
-    Function<Tuple2<String, Tuple2<ObjectNode, Iterable<ObjectNode>>>, String> {
+public class MethArrayJoinTask extends PrimaryMetaJoinTask {
 
-  private final Map<String, String> sampleDonorIds;
+  private static final FileType PRIMARY_FILE_TYPE = FileType.METH_ARRAY_P;
+
+  public MethArrayJoinTask(Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesByProject) {
+    super(donorSamplesByProject, PRIMARY_FILE_TYPE);
+  }
 
   @Override
-  public String call(Tuple2<String, Tuple2<ObjectNode, Iterable<ObjectNode>>> tuple) throws Exception {
+  public void execute(TaskContext taskContext) {
+    sparkContext = taskContext.getSparkContext();
+    val primaryMeta = joinPrimaryMeta(taskContext);
+    val probes = readInput(taskContext, FileType.METH_ARRAY_PROBES);
+
+    val keyFunction = new KeyFields(PROBE_ID);
+    val output = primaryMeta
+        .mapToPair(keyFunction)
+        .leftOuterJoin(createRddForJoin(probes.mapToPair(keyFunction), sparkContext))
+        .map(MethArrayJoinTask::combineProbes);
+
+    writeOutput(taskContext, output, FileType.METH_ARRAY);
+  }
+
+  private static ObjectNode combineProbes(Tuple2<String, Tuple2<ObjectNode, Optional<ObjectNode>>> tuple) {
     val primary = tuple._2._1;
+    val probe = tuple._2._2;
+    if (probe.isPresent()) {
+      primary.putAll(probe.get());
+    }
 
-    // TODO: Externalize all strings!
-    val mutationId = primary.get("_mutation_id").textValue();
-    val sampleId = primary.get(SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYZED_SAMPLE_ID).textValue();
-
-    val donorId = sampleDonorIds.get(sampleId);
-    val key = Keys.getKey(donorId, mutationId);
-
-    return key;
+    return primary;
   }
 
 }

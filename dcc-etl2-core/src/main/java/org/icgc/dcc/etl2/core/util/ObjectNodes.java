@@ -38,12 +38,18 @@ public class ObjectNodes {
 
   private static final Splitter PATH_SPLITTER = Splitters.DOT;
 
-  public static String textValue(ObjectNode objectNode, @NonNull String fieldName) {
-    if (objectNode == null) {
+  /**
+   * Returns value for {@code fieldName} as String.
+   * @return value or null if {@code jsonNode} is {@code null} or {@code fieldName} is missing.
+   */
+  public static String textValue(JsonNode jsonNode, @NonNull String fieldName) {
+    if (jsonNode == null) {
       return null;
     }
 
-    return objectNode.get(fieldName).textValue();
+    val fieldValue = jsonNode.path(fieldName);
+
+    return fieldValue.isMissingNode() ? null : fieldValue.asText();
   }
 
   public static JsonNode getPath(@NonNull ObjectNode objectNode, @NonNull String path) {

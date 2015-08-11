@@ -1,0 +1,3 @@
+{"consequence_type":"downstream_gene_variant","aa_change":null,"cds_change":null,"protein_domain_affected":null,"gene_affected":"ENSG00000223749","transcript_affected":"ENST00000440570","gene_build_version":"75","note":null,"observation_id":"OI1"}
+{"consequence_type":"downstream_gene_variant","aa_change":null,"cds_change":null,"protein_domain_affected":null,"gene_affected":"ENSG2","transcript_affected":"ENST1","gene_build_version":"75","note":null,"observation_id":"OI5"}
+{"consequence_type":"downstream_gene_variant","aa_change":null,"cds_change":null,"protein_domain_affected":null,"gene_affected":"ENSG3","transcript_affected":"ENST4","gene_build_version":"75","note":null,"observation_id":"OI6"}

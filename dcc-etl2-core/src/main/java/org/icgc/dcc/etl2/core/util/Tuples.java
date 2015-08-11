@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,20 +15,17 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.id.util;
+package org.icgc.dcc.etl2.core.util;
 
-import java.io.Closeable;
+import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
+import scala.Tuple2;
 
-public interface IdentifierClient extends Closeable {
+@NoArgsConstructor(access = PRIVATE)
+public final class Tuples {
 
-  String getDonorId(String submittedDonorId, String submittedProjectId);
-
-  String getMutationId(String chromosome, String chromosomeStart, String chromosomeEnd,
-      String mutation,
-      String mutationType, String assemblyVersion);
-
-  String getSampleId(String submittedSampleId, String submittedProjectId);
-
-  String getSpecimenId(String submittedSpecimenId, String submittedProjectId);
+  public static <K, V> Tuple2<K, V> tuple(K key, V value) {
+    return new Tuple2<K, V>(key, value);
+  }
 
 }

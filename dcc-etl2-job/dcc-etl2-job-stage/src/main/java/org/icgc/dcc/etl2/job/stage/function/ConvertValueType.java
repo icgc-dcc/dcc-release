@@ -39,9 +39,7 @@ public class ConvertValueType implements Function<ObjectNode, ObjectNode>, Seria
 
   public ConvertValueType(@NonNull SubmissionFileSchema schema) {
     for (val field : schema.getFields()) {
-      if (field.getTerms() != null) {
-        fieldTypes.put(field.getName(), field.getType());
-      }
+      fieldTypes.put(field.getName(), field.getType());
     }
   }
 
@@ -51,7 +49,10 @@ public class ConvertValueType implements Function<ObjectNode, ObjectNode>, Seria
       val fieldName = entry.getKey();
       val fieldType = entry.getValue();
 
-      val value = row.get(fieldName).textValue();
+      val value = row.path(fieldName).textValue();
+      if (value == null) {
+        continue;
+      }
 
       try {
         if (fieldType == ValueType.DECIMAL) {

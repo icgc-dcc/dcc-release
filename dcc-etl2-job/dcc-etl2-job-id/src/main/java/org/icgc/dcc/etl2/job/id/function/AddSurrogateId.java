@@ -22,8 +22,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.FieldNames;
-import org.icgc.dcc.etl2.job.id.util.HttpIdentifierClient;
-import org.icgc.dcc.etl2.job.id.util.IdentifierClient;
+import org.icgc.dcc.etl.core.id.HttpIdentifierClient;
+import org.icgc.dcc.etl.core.id.IdentifierClient;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 

@@ -17,6 +17,11 @@
  */
 package org.icgc.dcc.etl2.job.join.function;
 
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_SPECIMEN_ID;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.BIOMARKER;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.SURGERY;
+import static org.icgc.dcc.etl2.job.join.utils.JsonNodes.populateArrayNode;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
@@ -24,22 +29,40 @@ import org.apache.spark.api.java.function.Function;
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 
-public class TransformJoinedObservation implements Function<Tuple2<String, Tuple2<ObjectNode, ObjectNode>>, ObjectNode> {
+public class CombineSpecimen implements Function<Tuple2<String, Tuple2<Tuple2<Tuple2<ObjectNode,
+    Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>>, ObjectNode> {
 
   @Override
-  public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, ObjectNode>> tuple) throws Exception {
-    val observation = tuple._2._1;
-    val meta = trimMeta(tuple._2._2);
+  public ObjectNode call(Tuple2<String, Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>,
+      Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
+    val specimenSampleTuple = tuple._2._1._1;
+    val specimen = specimenSampleTuple._1;
+    if (specimenSampleTuple._2.isPresent()) {
+      val samples = specimen.withArray(DONOR_SAMPLE);
+      populateArrayNode(samples, specimenSampleTuple._2.get(), CombineSpecimen::trimSample);
+    }
 
-    observation.putAll(meta);
+    val biomarkerTuple = tuple._2._1;
+    if (biomarkerTuple._2.isPresent()) {
+      val biomarker = specimen.withArray(BIOMARKER);
+      populateArrayNode(biomarker, biomarkerTuple._2.get());
+    }
 
-    return observation;
+    val surgeryTuple = tuple._2;
+    if (surgeryTuple._2.isPresent()) {
+      val surgery = specimen.withArray(SURGERY);
+      populateArrayNode(surgery, surgeryTuple._2.get());
+    }
+
+    return specimen;
   }
 
-  private ObjectNode trimMeta(ObjectNode meta) {
-    // TODO: Remove fields
+  private static ObjectNode trimSample(ObjectNode node) {
+    node.remove(SUBMISSION_SPECIMEN_ID);
 
-    return meta;
+    return node;
   }
+
 }

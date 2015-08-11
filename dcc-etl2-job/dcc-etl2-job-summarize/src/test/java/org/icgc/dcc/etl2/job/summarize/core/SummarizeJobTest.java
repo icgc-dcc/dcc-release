@@ -1,9 +1,6 @@
 package org.icgc.dcc.etl2.job.summarize.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.File;
-
 import lombok.val;
 
 import org.icgc.dcc.etl2.core.job.FileType;
@@ -33,7 +30,7 @@ public class SummarizeJobTest extends AbstractJobTest {
 
     given(inputFile(projectName)
         .fileType(FileType.OBSERVATION)
-        .path(new File(TEST_FIXTURES_DIR + "/observation.json").getAbsolutePath())
+        .path(resolvePath("observation.json"))
         .fileName("observation.json"));
 
     val jobContext = createJobContext(job.getType(), ImmutableList.of(projectName));

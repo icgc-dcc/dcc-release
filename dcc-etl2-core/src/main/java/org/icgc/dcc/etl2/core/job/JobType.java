@@ -48,7 +48,7 @@ public enum JobType {
         JobType.ID,
         JobType.IMAGE,
         // This was removed in release ICGC19 (DCC-3506)
-        // JobType.ORPHAN,
+        JobType.ORPHAN,
         JobType.ANNOTATE,
         JobType.JOIN,
         JobType.FATHMM,

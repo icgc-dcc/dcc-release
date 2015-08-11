@@ -26,7 +26,7 @@ public class ImportJobTest extends AbstractJobTest {
   public void testExecute() {
     job.execute(createJobContext(job.getType()));
 
-    val results = produces(FileType.GENE);
+    val results = producesFile(FileType.GENE);
     for (val gene : results) {
       System.out.println(gene);
     }

@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.icgc.dcc</groupId>
     <artifactId>dcc-parent</artifactId>
-    <version>13</version>
+    <version>18</version>
   </parent>
 
   <artifactId>dcc-etl2</artifactId>
@@ -66,6 +66,11 @@
         <groupId>${project.groupId}</groupId>
         <artifactId>dcc-etl2-core</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-etl-core</artifactId>
+        <version>${dcc-etl.version}</version>
       </dependency>
 
       <!-- DCC - Common -->
@@ -297,6 +302,9 @@
   <properties>
     <!-- Versions - DCC -->
     <dcc-common.version>3.8.2.1</dcc-common.version>
+
+    <!-- Versions - DCC ETL -->
+    <dcc-etl.version>3.8.9.2</dcc-etl.version>
 
     <!-- Versions - Spring -->
     <spring.version>4.0.8.RELEASE</spring.version>

@@ -29,7 +29,9 @@ import com.google.common.collect.Lists;
 @UtilityClass
 public class Keys {
 
-  private static final Joiner KEY_JOINER = Joiner.on('#');
+  public static final String KEY_SEPARATOR = "#";
+
+  private static final Joiner KEY_JOINER = Joiner.on(KEY_SEPARATOR);
 
   public static String getKey(ObjectNode row, String... fieldNames) {
     val values = Lists.<String> newArrayListWithCapacity(fieldNames.length);

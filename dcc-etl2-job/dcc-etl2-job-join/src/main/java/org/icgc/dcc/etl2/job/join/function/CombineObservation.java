@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.etl2.job.join.function;
 
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_ARRAY_NAME;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
@@ -36,7 +38,7 @@ public class CombineObservation
       Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>>>> tuple)
       throws Exception {
     val meta = tuple._2._1;
-    val observations = meta.withArray("observation");
+    val observations = meta.withArray(OBSERVATION_ARRAY_NAME);
 
     addObservations(observations, tuple._2._2);
 
@@ -51,7 +53,7 @@ public class CombineObservation
 
     for (val tuple : value.get()) {
       val observation = tuple._1;
-      val consequences = observation.withArray("consequence");
+      val consequences = observation.withArray(CONSEQUENCE_ARRAY_NAME);
 
       addConsequences(consequences, tuple._2);
 
