@@ -166,6 +166,14 @@ public final class JavaRDDs {
     return new JobConf(sparkContext.hadoopConfiguration());
   }
 
+  /**
+   * {@code emptyRDD()} method creates an empty RDD which is coalesced to 0 partitions. If such a partition is joined
+   * with another non-empty partition the result has zero partitions, which is incorrect. Most probably this is related
+   * to the <a href="https://issues.apache.org/jira/browse/SPARK-9236">SPARK-9236 JIRA</a>.<br>
+   * <br>
+   * To fix the issue this method create an empty RDD and groups it by a fake ID. If such an RDD is joined with another
+   * non-empty one the resulting RDD has proper(non-zero) number of partitions.
+   */
   // FIXME: Remove after https://issues.apache.org/jira/browse/SPARK-9236 is fixed.
   @SuppressWarnings("unchecked")
   public static <T> JavaPairRDD<String, T> createRddForJoin(JavaPairRDD<String, T> pairRdd, JavaSparkContext sc) {

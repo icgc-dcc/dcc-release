@@ -17,8 +17,6 @@
  */
 package org.icgc.dcc.etl2.core.util;
 
-import static java.lang.String.format;
-
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,27 +49,7 @@ public class ObjectNodes {
 
     val fieldValue = jsonNode.path(fieldName);
 
-    return fieldValue.isMissingNode() ? null : parseValueToString(fieldValue);
-  }
-
-  private static String parseValueToString(JsonNode fieldValue) {
-    if (fieldValue.isTextual()) {
-      return fieldValue.textValue();
-    }
-
-    if (fieldValue.isLong() || fieldValue.isInt()) {
-      return String.valueOf(fieldValue.asLong());
-    }
-
-    if (fieldValue.isDouble() || fieldValue.isFloat()) {
-      return String.valueOf(fieldValue.asDouble());
-    }
-
-    if (fieldValue.isBoolean()) {
-      return String.valueOf(fieldValue.asBoolean());
-    }
-
-    throw new IllegalArgumentException(format("Failed to parse text value from '{}'", fieldValue));
+    return fieldValue.isMissingNode() ? null : fieldValue.asText();
   }
 
   public static JsonNode getPath(@NonNull ObjectNode objectNode, @NonNull String path) {

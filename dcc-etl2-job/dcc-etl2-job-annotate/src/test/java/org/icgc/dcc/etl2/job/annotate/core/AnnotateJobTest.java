@@ -61,28 +61,34 @@ public class AnnotateJobTest extends AbstractJobTest {
 
     val ssmResults = produces(PROJECT_NAME, FileType.SSM_S);
     assertThat(ssmResults).hasSize(4);
-    verifyResults(ssmResults);
+    verifyResults(ssmResults, FileType.SSM);
 
     val sgvResults = produces(PROJECT_NAME, FileType.SGV_S);
     assertThat(sgvResults).hasSize(9);
-    verifyResults(sgvResults);
+    verifyResults(sgvResults, FileType.SGV);
   }
 
-  private static void verifyResults(List<ObjectNode> results) {
+  private static void verifyResults(List<ObjectNode> results, FileType fileType) {
     for (val result : results) {
-      assertResultFile(result);
+      assertResultFile(result, fileType);
     }
   }
 
-  private static void assertResultFile(ObjectNode result) {
+  private static void assertResultFile(ObjectNode result, FileType fileType) {
     assertThat(result.get("consequence_type").asText()).endsWith("_variant");
     assertThat(result.get("gene_affected").asText()).startsWith("ENSG");
     assertThat(result.get("transcript_affected").asText()).startsWith("ENST");
     assertThat(result.get("gene_build_version").asText()).isEqualTo("75");
     assertThat(result.get("observation_id").asText()).isEqualTo("zzz123");
 
-    assertThat(result.get("aa_change").isNull()).isTrue();
-    assertThat(result.get("cds_change").isNull()).isTrue();
+    if (fileType == FileType.SGV) {
+      assertThat(result.get("aa_change").isNull()).isTrue();
+      assertThat(result.get("cds_change").isNull()).isTrue();
+    } else {
+      assertThat(result.get("aa_mutation").isNull()).isTrue();
+      assertThat(result.get("cds_mutation").isNull()).isTrue();
+    }
+
     assertThat(result.get("protein_domain_affected").isNull()).isTrue();
     assertThat(result.get("note").isNull()).isTrue();
   }

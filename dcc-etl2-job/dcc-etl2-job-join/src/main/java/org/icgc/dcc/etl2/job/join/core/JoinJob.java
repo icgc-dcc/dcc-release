@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.etl2.job.join.core;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.System.getProperty;
 import static java.util.Collections.emptyList;
 import static org.icgc.dcc.common.core.util.Splitters.COMMA;
@@ -54,6 +53,7 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -61,7 +61,7 @@ import com.google.common.collect.Sets;
 @Component
 public class JoinJob extends GenericJob {
 
-  private static final Set<FileType> ANALYSIS_FILE_TYPES = newHashSet(
+  private static final Set<FileType> ANALYSIS_FILE_TYPES = ImmutableSet.of(
       FileType.MIRNA_SEQ,
       FileType.METH_SEQ,
       FileType.EXP_SEQ,
