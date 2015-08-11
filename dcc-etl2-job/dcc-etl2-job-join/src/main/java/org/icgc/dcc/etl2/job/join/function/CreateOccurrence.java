@@ -19,7 +19,6 @@ package org.icgc.dcc.etl2.job.join.function;
 
 import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
-import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_VERIFICATION_PLATFORM;
 import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_MUTATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SAMPLE_ID;
@@ -30,6 +29,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVA
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.SURROGATE_MATCHED_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.TRANSCRIPT_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_MUTATION;
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
@@ -40,19 +40,12 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_END;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_START;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_STRAND;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CONTROL_GENOTYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATION_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
 import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
-import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.BIOLOGICAL_VALIDATION_PLATFORM;
-import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.EXPERIMENTAL_PROTOCOL;
-import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.EXPRESSED_ALLELE;
-import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.PROBABILITY;
-import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.QUALITY_SCORE;
 import static org.icgc.dcc.etl2.core.util.Keys.KEY_SEPARATOR;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 
@@ -102,19 +95,11 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
       SUBMISSION_OBSERVATION_CHROMOSOME_END,
       SUBMISSION_OBSERVATION_CHROMOSOME_STRAND,
       SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE,
-      SUBMISSION_OBSERVATION_CONTROL_GENOTYPE,
       SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE,
       SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE,
-      SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE,
-      EXPRESSED_ALLELE,
-      QUALITY_SCORE,
-      PROBABILITY,
-      OBSERVATION_VERIFICATION_PLATFORM,
-      BIOLOGICAL_VALIDATION_PLATFORM,
       PROJECT_ID,
-      SUBMISSION_MUTATION,
-      SURROGATE_MUTATION_ID,
-      EXPERIMENTAL_PROTOCOL);
+      NORMALIZER_MUTATION,
+      SURROGATE_MUTATION_ID);
 
   private final Map<String, DonorSample> donorSamples;
   private final Map<String, String> sampleSurrogageSampleIds;

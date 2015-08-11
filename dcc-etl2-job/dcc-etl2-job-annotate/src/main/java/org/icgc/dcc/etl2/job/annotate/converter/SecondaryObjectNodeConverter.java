@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 import lombok.val;
 
 import org.icgc.dcc.common.core.model.FieldNames;
+import org.icgc.dcc.etl2.job.annotate.model.AnnotatedFileType;
 import org.icgc.dcc.etl2.job.annotate.model.SecondaryEntity;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,11 +33,19 @@ public final class SecondaryObjectNodeConverter {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  public static ObjectNode convert(SecondaryEntity secondaryEntity) {
+  public static ObjectNode convert(SecondaryEntity secondaryEntity, AnnotatedFileType fileType) {
     val secondary = MAPPER.createObjectNode();
+    val aaMutation = secondaryEntity.getAaMutation();
+    val cdsMutation = secondaryEntity.getCdsMutation();
+    if (fileType == AnnotatedFileType.SSM) {
+      secondary.put(FieldNames.CONSEQUENCE_AA_MUTATION, aaMutation);
+      secondary.put(FieldNames.AnnotatorFieldNames.ANNOTATOR_CDS_MUTATION, cdsMutation);
+    } else {
+      secondary.put(FieldNames.AnnotatorFieldNames.ANNOTATOR_AMINO_ACID_CHANGE, aaMutation);
+      secondary.put(FieldNames.AnnotatorFieldNames.ANNOTATOR_CDS_CHANGE, cdsMutation);
+    }
+
     secondary.put(FieldNames.MUTATION_CONSEQUENCE_TYPES, secondaryEntity.getConsequenceType());
-    secondary.put(FieldNames.AnnotatorFieldNames.ANNOTATOR_AMINO_ACID_CHANGE, secondaryEntity.getAaMutation());
-    secondary.put(FieldNames.AnnotatorFieldNames.ANNOTATOR_CDS_CHANGE, secondaryEntity.getCdsMutation());
     secondary.put(FieldNames.AnnotatorFieldNames.ANNOTATOR_PROTEIN_DOMAIN_AFFECTED,
         secondaryEntity.getProteinDomainAffected());
     secondary.put(FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED, secondaryEntity.getGeneAffected());

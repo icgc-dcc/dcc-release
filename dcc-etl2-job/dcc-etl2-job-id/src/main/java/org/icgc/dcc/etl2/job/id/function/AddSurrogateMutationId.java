@@ -22,6 +22,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_END;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_START;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATION_TYPE;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
 import lombok.NonNull;
 import lombok.val;
 
@@ -40,8 +41,8 @@ public class AddSurrogateMutationId extends AddSurrogateId {
   @Override
   public ObjectNode call(ObjectNode row) throws Exception {
     val chromosome = row.get(SUBMISSION_OBSERVATION_CHROMOSOME).textValue();
-    val chromosomeStart = row.get(SUBMISSION_OBSERVATION_CHROMOSOME_START).textValue();
-    val chromosomeEnd = row.get(SUBMISSION_OBSERVATION_CHROMOSOME_END).textValue();
+    val chromosomeStart = textValue(row, SUBMISSION_OBSERVATION_CHROMOSOME_START);
+    val chromosomeEnd = textValue(row, SUBMISSION_OBSERVATION_CHROMOSOME_END);
     val mutation = row.get(NORMALIZER_MUTATION).textValue();
     val mutationType = row.get(SUBMISSION_OBSERVATION_MUTATION_TYPE).textValue();
     // String assemblyVersion = row.get(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION).textValue();

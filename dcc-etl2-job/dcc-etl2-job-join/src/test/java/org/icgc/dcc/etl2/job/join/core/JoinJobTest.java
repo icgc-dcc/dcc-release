@@ -27,6 +27,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_VERIFICATION_ST
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_PLATFORM;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_SEQUENCING_STRATEGY;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_VERIFICATION_PLATFORM;
 import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_AMINO_ACID_CHANGE;
 import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_CDS_CHANGE;
 import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_GENE_BUILD_VERSION;
@@ -56,20 +57,27 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_END;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_START;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_STRAND;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CONTROL_GENOTYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATION_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_REPOSITORY;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.ALIGNMENT_ALGORITHM;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.BASE_CALLING_ALGORITHM;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.BIOLOGICAL_VALIDATION_PLATFORM;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.BIOLOGICAL_VALIDATION_STATUS;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.EXPERIMENTAL_PROTOCOL;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.EXPOSURE;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.EXPRESSED_ALLELE;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.FAMILY;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.MUTANT_ALLELE_READ_COUNT;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.OTHER_ANALYSIS_ALGORITHM;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.PROBABILITY;
+import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.QUALITY_SCORE;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.SEQ_COVERAGE;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.THERAPY;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.TOTAL_READ_COUNT;
@@ -107,7 +115,15 @@ public class JoinJobTest extends AbstractJobTest {
       ANNOTATOR_PROTEIN_DOMAIN_AFFECTED,
       SUBMISSION_TRANSCRIPT_AFFECTED);
 
-  private static final ImmutableList<String> COMMON_OBSERVATION_FIELDS = ImmutableList.of(
+  private static final ImmutableList<String> VALID_OBSERVATION_FIELDS = ImmutableList.of(
+      BIOLOGICAL_VALIDATION_PLATFORM,
+      EXPRESSED_ALLELE,
+      PROBABILITY,
+      QUALITY_SCORE,
+      EXPERIMENTAL_PROTOCOL,
+      OBSERVATION_VERIFICATION_PLATFORM,
+      SUBMISSION_OBSERVATION_CONTROL_GENOTYPE,
+      SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE,
       SURROGATE_MATCHED_SAMPLE_ID,
       SURROGATE_SAMPLE_ID,
       SURROGATE_SPECIMEN_ID,
@@ -255,7 +271,7 @@ public class JoinJobTest extends AbstractJobTest {
   }
 
   private static void validateObservationStructure(JsonNode observation) {
-    assertThat(COMMON_OBSERVATION_FIELDS).containsOnlyElementsOf(getFields(observation));
+    assertThat(VALID_OBSERVATION_FIELDS).containsOnlyElementsOf(getFields(observation));
   }
 
   private static void validateConsequenceStructure(JsonNode consequence) {
