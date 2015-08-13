@@ -4,6 +4,7 @@ import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -17,6 +18,8 @@ import org.icgc.dcc.etl2.core.job.DefaultJobContext;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
+import org.icgc.dcc.etl2.core.task.DefaultTaskContext;
+import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.core.task.TaskExecutor;
 import org.icgc.dcc.etl2.core.util.Partitions;
 import org.icgc.dcc.etl2.test.model.TestFile;
@@ -97,8 +100,39 @@ public abstract class AbstractJobTest {
       }
       String fileTypeDirName = fileTypeDir.getName();
       File[] projects = fileTypeDir.listFiles();
-      processProjects(fileTypeDirName, projects);
+      if (areProjects(projects)) {
+        processProjects(fileTypeDirName, projects);
+      } else {
+        processFiles(fileTypeDirName, projects);
+      }
     }
+  }
+
+  /**
+   * @param fileTypeDirName
+   * @param projects
+   */
+  private void processFiles(String fileTypeDirName, File[] projects) {
+
+    for (val p : projects) {
+      TestFile testFile = inputFile()
+          .fileType(FileType.valueOf(fileTypeDirName.toUpperCase()))
+          .path(p.getAbsolutePath())
+          .build();
+      createInputFile(testFile);
+    }
+
+  }
+
+  private boolean areProjects(File[] projects) {
+    val projectsList = ImmutableList.copyOf(projects);
+    if (projectsList.stream().allMatch(f -> f.getName().startsWith("project_name"))) {
+      return true;
+    } else if (projectsList.stream().allMatch(f -> f.getName().startsWith("part-"))) {
+      return false;
+    }
+
+    throw new IllegalArgumentException();
   }
 
   private void processProjects(String fileTypeDirName, File[] projects) {
@@ -135,6 +169,10 @@ public abstract class AbstractJobTest {
         workingDir.toString(), mock(Table.class), taskExecutor);
   }
 
+  protected TaskContext createTaskContext(JobType jobType) {
+    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.empty());
+  }
+
   protected void createInputFile(TestFile inputFile) {
     val fileTypeDirectory = getFileTypeDirectory(inputFile.getFileType());
     if (!fileTypeDirectory.exists()) {
@@ -144,13 +182,18 @@ public abstract class AbstractJobTest {
     val target = inputFile.isProjectPartitioned() ?
         getProjectFileTypeDirectory(inputFile.getProjectName(), inputFile.getFileType()) :
         getFileTypeFile(inputFile.getFileType());
-    if (!target.exists()) {
+    if (!target.getName().startsWith("part-") && !target.exists()) {
       target.mkdirs();
     }
 
     if (inputFile.isFile()) {
       val sourceFile = new File(inputFile.getPath());
-      val targetFile = new File(target, sourceFile.getName());
+      File targetFile = null;
+      if (inputFile.getFileName() == null) {
+        targetFile = target;
+      } else {
+        targetFile = new File(target, sourceFile.getName());
+      }
       TestFiles.writeInputFile(sourceFile, targetFile);
     } else {
       val targetFile = new File(target, "part-00000");

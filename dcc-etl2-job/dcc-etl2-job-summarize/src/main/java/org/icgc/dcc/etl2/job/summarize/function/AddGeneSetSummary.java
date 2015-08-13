@@ -15,15 +15,40 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.function;
+package org.icgc.dcc.etl2.job.summarize.function;
 
-import org.icgc.dcc.common.core.model.FieldNames;
-import org.icgc.dcc.etl2.core.function.KeyFields;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.SUMMARY;
+import static org.icgc.dcc.etl2.core.util.FieldNames.SummarizeFieldNames.GENE_COUNT;
+import lombok.val;
 
-public class KeyDonorIdField extends KeyFields {
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.common.core.util.Jackson;
 
-  public KeyDonorIdField() {
-    super(FieldNames.SubmissionFieldNames.SUBMISSION_DONOR_ID);
+import scala.Tuple2;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
+
+public final class AddGeneSetSummary implements
+    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Integer>>>, ObjectNode> {
+
+  @Override
+  public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Integer>>> tuple) throws Exception {
+    val geneSet = tuple._2._1;
+    val count = tuple._2._2;
+    if (count.isPresent()) {
+      val summary = createSummary(count.get());
+      geneSet.put(SUMMARY, summary);
+    }
+
+    return geneSet;
+  }
+
+  private static ObjectNode createSummary(Integer count) {
+    val summary = Jackson.DEFAULT.createObjectNode();
+    summary.put(GENE_COUNT, count);
+
+    return summary;
   }
 
 }

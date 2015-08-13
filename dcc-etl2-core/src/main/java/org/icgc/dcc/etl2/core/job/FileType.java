@@ -137,11 +137,13 @@ public enum FileType implements Identifiable {
   GENE_SET(false),
   OBSERVATION(true),
   MUTATION(false),
+  DIAGRAM(false),
 
   OBSERVATION_FATHMM(true),
   OBSERVATION_FI(true),
 
   DONOR_GENE_OBSERVATION_SUMMARY(true),
+  GENE_SET_SUMMARY(false),
 
   EXPORT_INPUT(true), EXPORT_OUTPUT(true);
 

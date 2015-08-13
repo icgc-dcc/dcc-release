@@ -23,8 +23,8 @@ import java.util.Map;
 
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.function.CombineFields;
+import org.icgc.dcc.etl2.core.function.KeyFields;
 import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.job.join.function.KeyFields;
 import org.icgc.dcc.etl2.job.join.model.DonorSample;
 
 public class SgvJoinTask extends SecondaryJoinTask {

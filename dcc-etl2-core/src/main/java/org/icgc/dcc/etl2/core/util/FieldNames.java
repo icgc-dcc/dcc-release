@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.etl2.core.util;
 
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_NAME;
+
 public class FieldNames {
 
   public static class OrphanFieldNames {
@@ -51,6 +53,13 @@ public class FieldNames {
     public static final String MUTANT_ALLELE_READ_COUNT = "mutant_allele_read_count";
     public static final String TOTAL_READ_COUNT = "total_read_count";
     public static final String VARIATION_CALLING_ALGORITHM = "variation_calling_algorithm";
+
+  }
+
+  public static class SummarizeFieldNames {
+
+    public static final String GENE_COUNT = "_gene_count";
+    public static final String GENE_NAME = GENE_SET_NAME;
 
   }
 

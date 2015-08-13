@@ -51,13 +51,14 @@ public class ImportJob extends GenericJob {
   }
 
   private void clean(JobContext jobContext) {
-    delete(jobContext, FileType.PROJECT, FileType.GENE, FileType.GENE_SET);
+    delete(jobContext, FileType.PROJECT, FileType.GENE, FileType.GENE_SET, FileType.DIAGRAM);
   }
 
   private void imports(JobContext jobContext) {
     jobContext.execute(
         new MongoImportTask(properties, "dcc-genome", "Project", FileType.PROJECT),
         new MongoImportTask(properties, "dcc-genome", "Gene", FileType.GENE),
-        new MongoImportTask(properties, "dcc-genome", "GeneSet", FileType.GENE_SET));
+        new MongoImportTask(properties, "dcc-genome", "GeneSet", FileType.GENE_SET),
+        new MongoImportTask(properties, "dcc-genome", "Diagram", FileType.DIAGRAM));
   }
 }

@@ -25,9 +25,9 @@ import java.util.Map;
 import lombok.val;
 
 import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.etl2.core.function.KeyFields;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.join.function.KeyFields;
 import org.icgc.dcc.etl2.job.join.model.DonorSample;
 
 import scala.Tuple2;
