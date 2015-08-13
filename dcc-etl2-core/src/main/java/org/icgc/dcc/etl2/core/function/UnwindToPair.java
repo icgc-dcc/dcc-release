@@ -15,9 +15,10 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.summarize.function;
+package org.icgc.dcc.etl2.core.function;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.copyOf;
 import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
 
@@ -30,9 +31,11 @@ import lombok.val;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.icgc.dcc.common.core.util.Joiners;
+import org.icgc.dcc.common.core.util.Splitters;
 
 import scala.Tuple2;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -46,10 +49,18 @@ public class UnwindToPair<KF, VF> implements PairFlatMapFunction<ObjectNode, KF,
   private final Function<ObjectNode, KF> keyFunction;
   @NonNull
   private final Function<ObjectNode, VF> valueFunction;
+  private final boolean includeParent;
+
+  public UnwindToPair(String unwindField, Function<ObjectNode, KF> keyFunction, Function<ObjectNode, VF> valueFunction) {
+    this.unwindField = unwindField;
+    this.keyFunction = keyFunction;
+    this.valueFunction = valueFunction;
+    this.includeParent = false;
+  }
 
   @Override
   public Iterable<Tuple2<KF, VF>> call(ObjectNode row) throws Exception {
-    val elements = row.get(unwindField);
+    val elements = getUnwindArray(row);
     if (elements == null) {
       return Collections.emptyList();
     }
@@ -66,14 +77,17 @@ public class UnwindToPair<KF, VF> implements PairFlatMapFunction<ObjectNode, KF,
   }
 
   private ObjectNode createUnwindedObject(ObjectNode row, ObjectNode element) {
-    checkArgument(!hasDuplicateFields(row, element), "Failed to unwind element[%s]. "
-        + "Parent object contains duplicate fields. Parent object fields: %s",
-        joinFields(element),
-        joinFields(row));
+    ObjectNode resultObject = element;
 
-    val resultObject = row.deepCopy();
-    resultObject.remove(unwindField);
-    resultObject.setAll(element);
+    if (includeParent) {
+      resultObject = row.deepCopy();
+      checkArgument(!hasDuplicateFields(row, element), "Failed to unwind element[%s]. "
+          + "Parent object contains duplicate fields. Parent object fields: %s",
+          joinFields(element),
+          joinFields(row));
+      resultObject.remove(unwindField);
+      resultObject.setAll(element);
+    }
 
     return resultObject;
   }
@@ -87,6 +101,20 @@ public class UnwindToPair<KF, VF> implements PairFlatMapFunction<ObjectNode, KF,
     val childFields = copyOf(element.fieldNames());
 
     return !Sets.intersection(parentFields, childFields).isEmpty();
+  }
+
+  private JsonNode getUnwindArray(ObjectNode row) {
+    JsonNode result = null;
+    for (val fieldName : Splitters.DOT.split(unwindField)) {
+      if (result == null) {
+        result = row.path(fieldName);
+      } else {
+        result = result.path(fieldName);
+      }
+      checkState(!result.isMissingNode(), "Failed to unwind object at '%s' in object %s", unwindField, joinFields(row));
+    }
+
+    return result;
   }
 
 }

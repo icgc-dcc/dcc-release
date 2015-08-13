@@ -189,7 +189,7 @@ public abstract class AbstractJobTest {
     if (inputFile.isFile()) {
       val sourceFile = new File(inputFile.getPath());
       File targetFile = null;
-      if (inputFile.getFileName() == null) {
+      if (inputFile.getFileName() == null || target.getName().startsWith("part-")) {
         targetFile = target;
       } else {
         targetFile = new File(target, sourceFile.getName());

@@ -15,31 +15,35 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.core.function;
+package org.icgc.dcc.etl2.job.summarize.function;
 
-import static org.icgc.dcc.etl2.core.util.Keys.getKey;
-import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENE_GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
+import static org.icgc.dcc.etl2.core.util.FieldNames.SummarizeFieldNames.FAKE_GENE_ID;
 import lombok.val;
 
-import org.apache.spark.api.java.function.PairFunction;
-
-import scala.Tuple2;
+import org.icgc.dcc.etl2.core.function.RetainFields;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class KeyFields implements PairFunction<ObjectNode, String, ObjectNode> {
+public final class RetainGeneFields extends RetainFields {
 
-  private final String[] fieldNames;
-
-  public KeyFields(String... fieldNames) {
-    this.fieldNames = fieldNames;
+  // Including _mutation_id to filter unique geneIds in one donor
+  public RetainGeneFields() {
+    super(OBSERVATION_TYPE, MUTATION_ID, DONOR_GENE_GENE_ID);
   }
 
   @Override
-  public Tuple2<String, ObjectNode> call(ObjectNode row) throws Exception {
-    val key = getKey(row, fieldNames);
+  public ObjectNode call(ObjectNode row) {
+    val result = super.call(row);
+    val geneId = result.path(DONOR_GENE_GENE_ID);
+    if (geneId.isMissingNode() || isNullOrEmpty(geneId.textValue())) {
+      result.put(DONOR_GENE_GENE_ID, FAKE_GENE_ID);
+    }
 
-    return tuple(key, row);
+    return result;
   }
 
 }

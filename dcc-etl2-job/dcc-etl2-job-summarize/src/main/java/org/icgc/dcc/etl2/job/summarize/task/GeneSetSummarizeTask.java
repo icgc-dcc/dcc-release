@@ -30,11 +30,11 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.icgc.dcc.etl2.core.function.CombineFields;
 import org.icgc.dcc.etl2.core.function.KeyFields;
 import org.icgc.dcc.etl2.core.function.RemoveFields;
+import org.icgc.dcc.etl2.core.function.UnwindToPair;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.job.summarize.function.AddGeneSetSummary;
-import org.icgc.dcc.etl2.job.summarize.function.UnwindToPair;
 
 public class GeneSetSummarizeTask extends GenericTask {
 

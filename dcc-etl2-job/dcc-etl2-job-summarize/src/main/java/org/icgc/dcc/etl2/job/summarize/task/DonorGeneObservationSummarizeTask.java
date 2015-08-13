@@ -17,36 +17,62 @@
  */
 package org.icgc.dcc.etl2.job.summarize.task;
 
+import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_DONOR_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
+import static org.icgc.dcc.etl2.core.job.FileType.DONOR_GENE_OBSERVATION_SUMMARY;
+import static org.icgc.dcc.etl2.core.job.FileType.OBSERVATION;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import lombok.Getter;
+import lombok.val;
+
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.core.function.FlattenField;
-import org.icgc.dcc.etl2.core.function.ProjectFields;
-import org.icgc.dcc.etl2.core.function.RemoveFields;
-import org.icgc.dcc.etl2.core.function.RetainFields;
-import org.icgc.dcc.etl2.core.function.SelectFields;
-import org.icgc.dcc.etl2.core.job.FileType;
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.etl2.core.function.UnwindToPair;
+import org.icgc.dcc.etl2.core.function.string.SelectField;
 import org.icgc.dcc.etl2.core.task.GenericProcessTask;
-import org.icgc.dcc.etl2.job.summarize.function.SummarizeDonorGene;
-import org.icgc.dcc.etl2.job.summarize.function.SummarizeDonorGenes;
+import org.icgc.dcc.etl2.core.task.TaskContext;
+import org.icgc.dcc.etl2.job.summarize.function.CreateDonorSummary;
+import org.icgc.dcc.etl2.job.summarize.function.RetainGeneFields;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+@Getter
 public class DonorGeneObservationSummarizeTask extends GenericProcessTask {
 
+  private JavaPairRDD<String, ObjectNode> summary;
+
   public DonorGeneObservationSummarizeTask() {
-    super(FileType.OBSERVATION, FileType.DONOR_GENE_OBSERVATION_SUMMARY);
+    super(OBSERVATION, DONOR_GENE_OBSERVATION_SUMMARY);
+  }
+
+  @Override
+  public void execute(TaskContext taskContext) {
+    val input = readInput(taskContext);
+    process(input);
   }
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input
-        .map(new RetainFields("_donor_id", "_type", "consequence"))
-        .flatMap(new FlattenField("consequence"))
-        .map(new ProjectFields("_gene_id", "consequence._gene_id"))
-        .map(new RemoveFields("consequence"))
-        .groupBy(new SelectFields("_donor_id", "_gene_id"))
-        .mapToPair(new SummarizeDonorGene())
+    val keyFunction = new SelectField(OBSERVATION_DONOR_ID);
+    val includeParent = true;
+    val flatFunction = new UnwindToPair<>(OBSERVATION_CONSEQUENCES, keyFunction, new RetainGeneFields(), includeParent);
+    summary = input
+        .flatMapToPair(flatFunction)
+        .filter(filterSsm())
+        .distinct()
         .groupByKey()
-        .map(new SummarizeDonorGenes());
+        .mapToPair(new CreateDonorSummary());
+
+    return null;
+  }
+
+  private static Function<Tuple2<String, ObjectNode>, Boolean> filterSsm() {
+    return tuple -> textValue(tuple._2, OBSERVATION_TYPE).equals(SSM_TYPE.getId());
   }
 
 }

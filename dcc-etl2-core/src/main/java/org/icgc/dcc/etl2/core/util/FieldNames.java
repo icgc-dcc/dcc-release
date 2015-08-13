@@ -60,6 +60,7 @@ public class FieldNames {
 
     public static final String GENE_COUNT = "_gene_count";
     public static final String GENE_NAME = GENE_SET_NAME;
+    public static final String FAKE_GENE_ID = "";
 
   }
 

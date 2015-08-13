@@ -15,31 +15,25 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.core.function;
+package org.icgc.dcc.etl2.core.function.string;
 
-import static org.icgc.dcc.etl2.core.util.Keys.getKey;
-import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
-import lombok.val;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-import org.apache.spark.api.java.function.PairFunction;
-
-import scala.Tuple2;
+import org.apache.spark.api.java.function.Function;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class KeyFields implements PairFunction<ObjectNode, String, ObjectNode> {
+@RequiredArgsConstructor
+public class SelectField implements Function<ObjectNode, String> {
 
-  private final String[] fieldNames;
-
-  public KeyFields(String... fieldNames) {
-    this.fieldNames = fieldNames;
-  }
+  @NonNull
+  private final String field;
 
   @Override
-  public Tuple2<String, ObjectNode> call(ObjectNode row) throws Exception {
-    val key = getKey(row, fieldNames);
-
-    return tuple(key, row);
+  public String call(ObjectNode row) throws Exception {
+    return textValue(row, field);
   }
 
 }
