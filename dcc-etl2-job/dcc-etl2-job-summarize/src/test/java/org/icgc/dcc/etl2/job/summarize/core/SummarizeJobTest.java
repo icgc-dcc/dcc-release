@@ -6,6 +6,7 @@ import lombok.val;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.test.job.AbstractJobTest;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -25,6 +26,7 @@ public class SummarizeJobTest extends AbstractJobTest {
   }
 
   @Test
+  @Ignore("Job test is broken down to task tests")
   public void testExecute() {
     val projectName = "PACA-CA";
 

@@ -21,6 +21,7 @@ import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
+import static org.icgc.dcc.etl2.core.function.UnwindToPair.unwindToParent;
 import static org.icgc.dcc.etl2.core.job.FileType.DONOR_GENE_OBSERVATION_SUMMARY;
 import static org.icgc.dcc.etl2.core.job.FileType.OBSERVATION;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
@@ -30,7 +31,6 @@ import lombok.val;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.etl2.core.function.UnwindToPair;
 import org.icgc.dcc.etl2.core.function.string.SelectField;
 import org.icgc.dcc.etl2.core.task.GenericProcessTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
@@ -59,8 +59,7 @@ public class DonorGeneObservationSummarizeTask extends GenericProcessTask {
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
     val keyFunction = new SelectField(OBSERVATION_DONOR_ID);
-    val includeParent = true;
-    val flatFunction = new UnwindToPair<>(OBSERVATION_CONSEQUENCES, keyFunction, new RetainGeneFields(), includeParent);
+    val flatFunction = unwindToParent(OBSERVATION_CONSEQUENCES, keyFunction, new RetainGeneFields());
     summary = input
         .flatMapToPair(flatFunction)
         .filter(filterSsm())

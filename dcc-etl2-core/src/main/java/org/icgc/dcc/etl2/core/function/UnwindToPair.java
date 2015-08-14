@@ -18,8 +18,8 @@
 package org.icgc.dcc.etl2.core.function;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.ImmutableSet.copyOf;
+import static java.util.Collections.disjoint;
+import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
 
 import java.util.Collections;
@@ -38,9 +38,9 @@ import scala.Tuple2;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = PRIVATE)
 public class UnwindToPair<KF, VF> implements PairFlatMapFunction<ObjectNode, KF, VF> {
 
   @NonNull
@@ -51,19 +51,39 @@ public class UnwindToPair<KF, VF> implements PairFlatMapFunction<ObjectNode, KF,
   private final Function<ObjectNode, VF> valueFunction;
   private final boolean includeParent;
 
-  public UnwindToPair(String unwindField, Function<ObjectNode, KF> keyFunction, Function<ObjectNode, VF> valueFunction) {
-    this.unwindField = unwindField;
-    this.keyFunction = keyFunction;
-    this.valueFunction = valueFunction;
-    this.includeParent = false;
+  /**
+   * Returns function which unwinds {@code unwindField}. After the object created applies {@code keyFunction} to the key
+   * and {@code valueFunction} to the value.<br>
+   * <br>
+   * The function returns an object that contains nested object's fields or empty collection if array at the unwind path
+   * does not exist
+   */
+  @NonNull
+  public static <KF, VF> UnwindToPair<KF, VF> unwind(String unwindField, Function<ObjectNode, KF> keyFunction,
+      Function<ObjectNode, VF> valueFunction) {
+    return new UnwindToPair<>(unwindField, keyFunction, valueFunction, false);
+  }
+
+  /**
+   * Returns function which unwinds {@code unwindField} and joins it to the parent object. After the object created
+   * applies {@code keyFunction} to the key and {@code valueFunction} to the value.<br>
+   * <br>
+   * The function returns an object that contains parent's and nested object's fields or empty collection if array at
+   * the unwind path does not exist
+   */
+  @NonNull
+  public static <KF, VF> UnwindToPair<KF, VF> unwindToParent(String unwindField, Function<ObjectNode, KF> keyFunction,
+      Function<ObjectNode, VF> valueFunction) {
+    return new UnwindToPair<>(unwindField, keyFunction, valueFunction, true);
   }
 
   @Override
   public Iterable<Tuple2<KF, VF>> call(ObjectNode row) throws Exception {
     val elements = getUnwindArray(row);
-    if (elements == null) {
+    if (elements.isMissingNode()) {
       return Collections.emptyList();
     }
+    checkArgument(elements.isArray(), "'%s' is not an array on object %s", unwindField, row);
 
     val result = ImmutableList.<Tuple2<KF, VF>> builder();
     for (val element : elements) {
@@ -97,10 +117,10 @@ public class UnwindToPair<KF, VF> implements PairFlatMapFunction<ObjectNode, KF,
   }
 
   private static boolean hasDuplicateFields(ObjectNode parent, ObjectNode element) {
-    val parentFields = copyOf(parent.fieldNames());
-    val childFields = copyOf(element.fieldNames());
+    val parentFields = ImmutableSet.copyOf(parent.fieldNames());
+    val childFields = ImmutableSet.copyOf(element.fieldNames());
 
-    return !Sets.intersection(parentFields, childFields).isEmpty();
+    return !disjoint(parentFields, childFields);
   }
 
   private JsonNode getUnwindArray(ObjectNode row) {
@@ -111,7 +131,10 @@ public class UnwindToPair<KF, VF> implements PairFlatMapFunction<ObjectNode, KF,
       } else {
         result = result.path(fieldName);
       }
-      checkState(!result.isMissingNode(), "Failed to unwind object at '%s' in object %s", unwindField, joinFields(row));
+
+      if (result.isMissingNode()) {
+        return result;
+      }
     }
 
     return result;

@@ -17,6 +17,14 @@
  */
 package org.icgc.dcc.etl2.job.imports.core;
 
+import static org.icgc.dcc.common.core.model.ReleaseCollection.DIAGRAM_COLLECTION;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.GENE_COLLECTION;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.GENE_SET_COLLECTION;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.PROJECT_COLLECTION;
+import static org.icgc.dcc.etl2.core.job.FileType.DIAGRAM;
+import static org.icgc.dcc.etl2.core.job.FileType.GENE;
+import static org.icgc.dcc.etl2.core.job.FileType.GENE_SET;
+import static org.icgc.dcc.etl2.core.job.FileType.PROJECT;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -56,9 +64,9 @@ public class ImportJob extends GenericJob {
 
   private void imports(JobContext jobContext) {
     jobContext.execute(
-        new MongoImportTask(properties, "dcc-genome", "Project", FileType.PROJECT),
-        new MongoImportTask(properties, "dcc-genome", "Gene", FileType.GENE),
-        new MongoImportTask(properties, "dcc-genome", "GeneSet", FileType.GENE_SET),
-        new MongoImportTask(properties, "dcc-genome", "Diagram", FileType.DIAGRAM));
+        new MongoImportTask(properties, "dcc-genome", PROJECT_COLLECTION.getId(), PROJECT),
+        new MongoImportTask(properties, "dcc-genome", GENE_COLLECTION.getId(), GENE),
+        new MongoImportTask(properties, "dcc-genome", GENE_SET_COLLECTION.getId(), GENE_SET),
+        new MongoImportTask(properties, "dcc-genome", DIAGRAM_COLLECTION.getId(), DIAGRAM));
   }
 }

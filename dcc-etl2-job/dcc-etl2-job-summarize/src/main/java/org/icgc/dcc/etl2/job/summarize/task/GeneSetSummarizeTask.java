@@ -17,10 +17,10 @@
  */
 package org.icgc.dcc.etl2.job.summarize.task;
 
-import static com.google.common.collect.Iterables.size;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SETS;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SETS_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_ID;
+import static org.icgc.dcc.etl2.core.function.UnwindToPair.unwind;
 import static org.icgc.dcc.etl2.core.job.FileType.GENE_SET_SUMMARY;
 import static org.icgc.dcc.etl2.core.util.FieldNames.SummarizeFieldNames.GENE_NAME;
 import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
@@ -30,25 +30,22 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.icgc.dcc.etl2.core.function.CombineFields;
 import org.icgc.dcc.etl2.core.function.KeyFields;
 import org.icgc.dcc.etl2.core.function.RemoveFields;
-import org.icgc.dcc.etl2.core.function.UnwindToPair;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.job.summarize.function.AddGeneSetSummary;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class GeneSetSummarizeTask extends GenericTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    val geneSets = readInput(taskContext, FileType.GENE_SET)
-        .mapToPair(new KeyFields(GENE_SET_ID, GENE_SETS_TYPE));
-
-    val genePairs = getGenePairs(taskContext);
-
-    // Results to pairs (gene_set_id#gene_set_type, 222)
+    val geneSets = readGeneSets(taskContext);
+    val genePairs = readGenePairs(taskContext);
     val geneSetsCount = geneSets.join(genePairs)
-        .groupByKey()
-        .mapToPair(t -> tuple(t._1, size(t._2)));
+        .mapToPair(t -> tuple(t._1, 1))
+        .reduceByKey((a, b) -> a + b);
 
     val summary = geneSets.leftOuterJoin(geneSetsCount)
         .map(new AddGeneSetSummary());
@@ -56,16 +53,19 @@ public class GeneSetSummarizeTask extends GenericTask {
     writeOutput(taskContext, summary, GENE_SET_SUMMARY);
   }
 
-  private JavaPairRDD<String, String> getGenePairs(TaskContext taskContext) {
+  private JavaPairRDD<String, ObjectNode> readGeneSets(TaskContext taskContext) {
+    return readInput(taskContext, FileType.GENE_SET)
+        .mapToPair(new KeyFields(GENE_SET_ID, GENE_SETS_TYPE));
+  }
+
+  private JavaPairRDD<String, String> readGenePairs(TaskContext taskContext) {
     val genes = readInput(taskContext, FileType.GENE);
     val keyFunction = new CombineFields(GENE_SET_ID, GENE_SETS_TYPE);
-    val genePairs = genes
+    return genes
         // Remove duplicate fields between gene and gene.sets to allow further unwind
         .map(new RemoveFields(GENE_NAME))
         // Map value of the pair to empty string as it's not used
-        .flatMapToPair(new UnwindToPair<String, String>(GENE_SETS, keyFunction, t -> ""));
-
-    return genePairs;
+        .flatMapToPair(unwind(GENE_SETS, keyFunction, t -> null));
   }
 
 }

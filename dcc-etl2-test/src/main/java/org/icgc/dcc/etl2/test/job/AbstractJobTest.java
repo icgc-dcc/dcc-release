@@ -108,27 +108,21 @@ public abstract class AbstractJobTest {
     }
   }
 
-  /**
-   * @param fileTypeDirName
-   * @param projects
-   */
   private void processFiles(String fileTypeDirName, File[] projects) {
-
-    for (val p : projects) {
-      TestFile testFile = inputFile()
+    for (val project : projects) {
+      val testFile = inputFile()
           .fileType(FileType.valueOf(fileTypeDirName.toUpperCase()))
-          .path(p.getAbsolutePath())
+          .path(project.getAbsolutePath())
           .build();
       createInputFile(testFile);
     }
-
   }
 
   private boolean areProjects(File[] projects) {
     val projectsList = ImmutableList.copyOf(projects);
     if (projectsList.stream().allMatch(f -> f.getName().startsWith("project_name"))) {
       return true;
-    } else if (projectsList.stream().allMatch(f -> f.getName().startsWith("part-"))) {
+    } else if (projectsList.stream().allMatch(f -> isPartFile(f))) {
       return false;
     }
 
@@ -182,23 +176,23 @@ public abstract class AbstractJobTest {
     val target = inputFile.isProjectPartitioned() ?
         getProjectFileTypeDirectory(inputFile.getProjectName(), inputFile.getFileType()) :
         getFileTypeFile(inputFile.getFileType());
-    if (!target.getName().startsWith("part-") && !target.exists()) {
+    if (!isPartFile(target) && !target.exists()) {
       target.mkdirs();
     }
 
     if (inputFile.isFile()) {
       val sourceFile = new File(inputFile.getPath());
-      File targetFile = null;
-      if (inputFile.getFileName() == null || target.getName().startsWith("part-")) {
-        targetFile = target;
-      } else {
-        targetFile = new File(target, sourceFile.getName());
-      }
+      val targetFile = !inputFile.hasFileName() || isPartFile(target) ?
+          target : new File(target, sourceFile.getName());
       TestFiles.writeInputFile(sourceFile, targetFile);
     } else {
       val targetFile = new File(target, "part-00000");
       TestFiles.writeInputFile(inputFile.getRows(), targetFile);
     }
+  }
+
+  private static boolean isPartFile(File target) {
+    return target.getName().startsWith("part-");
   }
 
   protected TaskExecutor createTaskExecutor() {
