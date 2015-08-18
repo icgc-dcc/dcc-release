@@ -27,7 +27,9 @@ import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.job.summarize.task.DonorGeneObservationSummarizeTask;
+import org.icgc.dcc.etl2.job.summarize.task.DonorSummarizeTask;
+import org.icgc.dcc.etl2.job.summarize.task.FeatureTypeSummarizeTask;
+import org.icgc.dcc.etl2.job.summarize.task.GeneSetSummarizeTask;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -54,8 +56,11 @@ public class SummarizeJob extends GenericJob {
   private void summarize(JobContext jobContext) {
     val watch = createStarted();
     log.info("Executing summary job...");
+    jobContext.execute(new GeneSetSummarizeTask());
     // TODO: Add more
-    jobContext.execute(new DonorGeneObservationSummarizeTask());
+    val featureTypeSummary = new FeatureTypeSummarizeTask();
+    jobContext.execute(featureTypeSummary);
+    jobContext.execute(new DonorSummarizeTask(featureTypeSummary.getProjectDonorSummary()));
     log.info("Finished executing summary job in {}", watch);
   }
 

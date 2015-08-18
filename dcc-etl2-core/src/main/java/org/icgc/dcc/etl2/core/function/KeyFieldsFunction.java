@@ -15,40 +15,34 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.utils;
+package org.icgc.dcc.etl2.core.function;
 
-import static java.util.Collections.emptyMap;
-import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.etl2.core.util.Tasks.resolveProjectName;
-
-import java.util.Map;
-
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import static org.icgc.dcc.etl2.core.util.Keys.getKey;
+import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
 import lombok.val;
 
-import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.join.model.DonorSample;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFunction;
 
-@NoArgsConstructor(access = PRIVATE)
-public class Tasks {
+import scala.Tuple2;
 
-  @NonNull
-  public static Map<String, DonorSample> resolveDonorSamples(TaskContext taskContext,
-      Broadcast<Map<String, Map<String, DonorSample>>> broadcast) {
-    val projectName = resolveProjectName(taskContext);
-    val result = broadcast.value().get(projectName);
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-    return result == null ? emptyMap() : result;
+public class KeyFieldsFunction<R> implements PairFunction<ObjectNode, String, R> {
+
+  private final String[] fieldNames;
+  private final Function<ObjectNode, R> valueFunction;
+
+  public KeyFieldsFunction(Function<ObjectNode, R> valueFunction, String... fieldNames) {
+    this.fieldNames = fieldNames;
+    this.valueFunction = valueFunction;
   }
 
-  public static Map<String, String> getSampleSurrogateSampleIds(TaskContext taskContext,
-      Broadcast<Map<String, Map<String, String>>> broadcast) {
-    val projectName = resolveProjectName(taskContext);
-    val result = broadcast.value().get(projectName);
+  @Override
+  public Tuple2<String, R> call(ObjectNode row) throws Exception {
+    val key = getKey(row, fieldNames);
 
-    return result == null ? emptyMap() : result;
+    return tuple(key, valueFunction.call(row));
   }
 
 }

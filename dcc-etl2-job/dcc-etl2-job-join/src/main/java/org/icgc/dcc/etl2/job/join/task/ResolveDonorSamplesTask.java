@@ -24,7 +24,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SUR
 import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SPECIMEN_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
-import static org.icgc.dcc.etl2.job.join.utils.Tasks.resolveProjectName;
+import static org.icgc.dcc.etl2.core.util.Tasks.resolveProjectName;
 
 import java.util.Map;
 

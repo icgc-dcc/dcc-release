@@ -15,40 +15,42 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.utils;
+package org.icgc.dcc.etl2.core.util;
 
-import static java.util.Collections.emptyMap;
+import static com.google.common.collect.ImmutableList.of;
+import static java.lang.Boolean.FALSE;
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.etl2.core.util.Tasks.resolveProjectName;
+import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.CNGV_TYPE;
+import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.STGV_TYPE;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.createBooleanNode;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.createNumberNode;
 
-import java.util.Map;
+import java.util.List;
 
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.val;
 
-import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.join.model.DonorSample;
+import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.Lists;
 
 @NoArgsConstructor(access = PRIVATE)
-public class Tasks {
+public final class FeatureTypes {
 
-  @NonNull
-  public static Map<String, DonorSample> resolveDonorSamples(TaskContext taskContext,
-      Broadcast<Map<String, Map<String, DonorSample>>> broadcast) {
-    val projectName = resolveProjectName(taskContext);
-    val result = broadcast.value().get(projectName);
+  private static final List<FeatureType> SKIP_TYPE = of(CNGV_TYPE, STGV_TYPE);
 
-    return result == null ? emptyMap() : result;
+  public static Iterable<FeatureType> getFeatureTypes() {
+    val featureTypes = Lists.newArrayList(FeatureType.values());
+    featureTypes.removeAll(SKIP_TYPE);
+
+    return featureTypes;
   }
 
-  public static Map<String, String> getSampleSurrogateSampleIds(TaskContext taskContext,
-      Broadcast<Map<String, Map<String, String>>> broadcast) {
-    val projectName = resolveProjectName(taskContext);
-    val result = broadcast.value().get(projectName);
+  public static JsonNode createFeatureTypeSummaryValue(FeatureType featureType, int featureTypeCount) {
+    val booleanValue = featureTypeCount == 0 ? FALSE : Boolean.TRUE;
 
-    return result == null ? emptyMap() : result;
+    return featureType.isCountSummary() ? createNumberNode(featureTypeCount) : createBooleanNode(booleanValue);
   }
 
 }

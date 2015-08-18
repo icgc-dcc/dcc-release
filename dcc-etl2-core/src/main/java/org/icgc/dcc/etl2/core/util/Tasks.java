@@ -15,25 +15,25 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.core.function.string;
+package org.icgc.dcc.etl2.core.util;
 
-import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.val;
 
-import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.etl2.core.task.TaskContext;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+@NoArgsConstructor(access = PRIVATE)
+public final class Tasks {
 
-@RequiredArgsConstructor
-public class SelectField implements Function<ObjectNode, String> {
+  public static final String NO_PROJECTS = "";
 
   @NonNull
-  private final String field;
+  public static String resolveProjectName(TaskContext taskContext) {
+    val project = taskContext.getProjectName();
 
-  @Override
-  public String call(ObjectNode row) throws Exception {
-    return textValue(row, field);
+    return project.isPresent() ? project.get() : Tasks.NO_PROJECTS;
   }
 
 }

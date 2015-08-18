@@ -26,7 +26,7 @@ import static org.icgc.dcc.etl2.core.job.FileType.SPECIMEN_SURROGATE_KEY_IMAGE;
 import static org.icgc.dcc.etl2.core.job.FileType.SURGERY;
 import static org.icgc.dcc.etl2.core.job.FileType.THERAPY;
 import static org.icgc.dcc.etl2.core.util.JavaRDDs.createRddForJoin;
-import static org.icgc.dcc.etl2.job.join.utils.Tasks.resolveProjectName;
+import static org.icgc.dcc.etl2.core.util.Tasks.resolveProjectName;
 
 import java.util.Map;
 

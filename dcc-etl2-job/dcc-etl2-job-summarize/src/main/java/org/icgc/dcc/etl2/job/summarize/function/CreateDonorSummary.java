@@ -17,63 +17,173 @@
  */
 package org.icgc.dcc.etl2.job.summarize.function;
 
-import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.groupingBy;
-import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENES;
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENE_GENE_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENE_SUMMARY;
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_AFFECTED_GENE_COUNT;
-import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static com.google.common.primitives.Ints.tryParse;
+import static java.lang.String.format;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_AGE_AT_DIAGNOSIS;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE_SEQUENCE_DATA;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE_STUDY;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_AGE_AT_DIAGNOSIS_GROUP;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_EXPERIMENTAL_ANALYSIS;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_EXPERIMENTAL_ANALYSIS_SAMPLE_COUNTS;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_REPOSITORY;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_STUDIES;
+import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_LIBRARY_STRATEGY;
+import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_REPOSITORY;
+import static org.icgc.dcc.etl2.core.function.Unwind.unwind;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.MAPPER;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.createArrayValues;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
-import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
 
-import java.util.Map.Entry;
-import java.util.function.Consumer;
+import java.util.Map;
+import java.util.Set;
 
 import lombok.val;
 
-import org.apache.spark.api.java.function.PairFunction;
+import org.apache.spark.api.java.function.Function;
 
-import scala.Tuple2;
-
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
-public class CreateDonorSummary implements
-    PairFunction<Tuple2<String, Iterable<ObjectNode>>, String, ObjectNode> {
+public final class CreateDonorSummary implements Function<ObjectNode, ObjectNode> {
+
+  private static final int MIN_DONOR_AGE = 0;
 
   @Override
-  public Tuple2<String, ObjectNode> call(Tuple2<String, Iterable<ObjectNode>> tuple) throws Exception {
-    val donorSummary = DEFAULT.createObjectNode();
-    val genes = donorSummary.withArray(DONOR_GENES);
+  public ObjectNode call(ObjectNode row) throws Exception {
+    val resultNode = MAPPER.createObjectNode();
+    val summaryNode = resultNode.with(DONOR_SUMMARY);
 
-    val geneIds = tuple._2;
-    val geneIdCounts = stream(geneIds)
-        .map(gene -> textValue(gene, DONOR_GENE_GENE_ID))
-        .collect(groupingBy(geneId -> geneId, counting()));
+    summarizeDonorRepositories(row, summaryNode);
+    summarizeDonorStudies(row, summaryNode);
+    summarizeDonorLibraryStrategies(row, summaryNode);
+    summarizeDonorAgeGroups(row, summaryNode);
 
-    geneIdCounts.entrySet().stream()
-        .forEach(createAndPutSummaryGene(genes));
-
-    val summary = donorSummary.with(DONOR_GENE_SUMMARY);
-    summary.put(DONOR_SUMMARY_AFFECTED_GENE_COUNT, geneIdCounts.size());
-
-    val donorId = tuple._1;
-    return tuple(donorId, donorSummary);
+    return resultNode;
   }
 
-  private Consumer<? super Entry<String, Long>> createAndPutSummaryGene(ArrayNode genes) {
-    return e -> {
-      ObjectNode result = DEFAULT.createObjectNode();
-      result.put(DONOR_GENE_GENE_ID, e.getKey());
-      ObjectNode summary = DEFAULT.createObjectNode();
-      result.put(DONOR_GENE_SUMMARY, summary);
+  private static void summarizeDonorStudies(ObjectNode row, ObjectNode summaryNode) throws Exception {
+    val studyValues = getDonorStudies(row);
+    val studies = summaryNode.withArray(DONOR_SUMMARY_STUDIES);
+    studies.addAll(createArrayValues(studyValues));
+  }
 
-      summary.put(SSM_TYPE.getSummaryFieldName(), e.getValue());
-      genes.add(result);
-    };
+  private static Set<String> getDonorStudies(ObjectNode row) throws Exception {
+    val studies = Sets.<String> newTreeSet();
+    val unwindPath = DONOR_SPECIMEN + "." + DONOR_SAMPLE;
+    for (val sample : unwind(unwindPath).call(row)) {
+      val study = textValue(sample, DONOR_SAMPLE_STUDY);
+      if (study != null) {
+        studies.add(study);
+      }
+    }
+
+    return studies;
+  }
+
+  private static void summarizeDonorRepositories(ObjectNode row, ObjectNode summaryNode) throws Exception {
+    val repoValues = getDonorRepositories(row);
+    val repos = summaryNode.withArray(DONOR_SUMMARY_REPOSITORY);
+    val createArrayValues = createArrayValues(repoValues);
+    repos.addAll(createArrayValues);
+  }
+
+  private static Set<String> getDonorRepositories(ObjectNode row) throws Exception {
+    val repositories = Sets.<String> newTreeSet();
+    val unwindPath = DONOR_SPECIMEN + "." + DONOR_SAMPLE + "." + DONOR_SAMPLE_SEQUENCE_DATA;
+
+    for (val sequenceData : unwind(unwindPath).call(row)) {
+      val repository = textValue(sequenceData, SEQUENCE_DATA_REPOSITORY);
+      if (repository != null) {
+        repositories.add(repository);
+      }
+    }
+
+    return repositories;
+  }
+
+  private static void summarizeDonorLibraryStrategies(ObjectNode row, ObjectNode summaryNode) throws Exception {
+    val libraryStrategies = createLibraryStrategies(row);
+
+    val experimentalAnalysis = summaryNode.withArray(DONOR_SUMMARY_EXPERIMENTAL_ANALYSIS);
+    experimentalAnalysis.addAll(createArrayValues(libraryStrategies.keySet()));
+
+    val experimentalAnalysisCount = summaryNode.with(DONOR_SUMMARY_EXPERIMENTAL_ANALYSIS_SAMPLE_COUNTS);
+    for (val entry : libraryStrategies.entrySet()) {
+      experimentalAnalysisCount.put(entry.getKey(), entry.getValue());
+    }
+  }
+
+  private static Map<String, Integer> createLibraryStrategies(ObjectNode row) throws Exception {
+    val samples = unwind(DONOR_SPECIMEN + "." + DONOR_SAMPLE).call(row);
+
+    Map<String, Integer> result = Maps.newHashMap();
+    for (val sample : samples) {
+      val sls = getSampleLibraryStragegies(sample);
+      result = mergeLibraryStrategies(result, sls);
+    }
+
+    return result;
+  }
+
+  private static Map<String, Integer> mergeLibraryStrategies(Map<String, Integer> map1, Map<String, Integer> map2) {
+    val result = Maps.newHashMap(map1);
+    for (val entry : map2.entrySet()) {
+      val map1Entry = map1.get(entry.getKey());
+      if (map1Entry != null) {
+        result.put(entry.getKey(), map1Entry + entry.getValue());
+      } else {
+        result.put(entry.getKey(), entry.getValue());
+      }
+    }
+
+    return result;
+  }
+
+  private static Map<String, Integer> getSampleLibraryStragegies(ObjectNode sample) {
+    val result = Maps.<String, Integer> newHashMap();
+
+    for (val sequenceData : sample.path(DONOR_SAMPLE_SEQUENCE_DATA)) {
+      val libStrategy = textValue(sequenceData, SEQUENCE_DATA_LIBRARY_STRATEGY);
+      if (libStrategy != null) {
+        result.put(libStrategy, incrementLibraryStrategyValue(result.get(libStrategy)));
+      }
+    }
+
+    return result;
+  }
+
+  private static Integer incrementLibraryStrategyValue(Integer value) {
+    return value == null ? 1 : value + 1;
+  }
+
+  private static void summarizeDonorAgeGroups(ObjectNode row, ObjectNode summaryNode) {
+    val donorAgeAtDiagnosis = textValue(row, DONOR_AGE_AT_DIAGNOSIS);
+    val ageGroup = getAgeGroup(donorAgeAtDiagnosis);
+    summaryNode.put(DONOR_SUMMARY_AGE_AT_DIAGNOSIS_GROUP, ageGroup);
+  }
+
+  private static String getAgeGroup(String age) {
+    Integer value = age == null ? null : tryParse(age);
+
+    String ageGroup = null;
+    if (value != null) {
+      val interval = 10;
+
+      // Produce values of the form: "1 - 9", "10 - 19", ...
+      int groupStart = (value / interval) * interval;
+      int groupEnd = groupStart + interval - 1;
+      ageGroup = formatAgeGroup(groupStart == MIN_DONOR_AGE ? 1 : groupStart, groupEnd);
+    }
+
+    return ageGroup;
+  }
+
+  private static String formatAgeGroup(int groupStart, int groupEnd) {
+    return format("%s - %s", groupStart, groupEnd);
   }
 
 }

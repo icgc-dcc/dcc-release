@@ -15,40 +15,21 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.utils;
+package org.icgc.dcc.etl2.core.util;
 
-import static java.util.Collections.emptyMap;
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.etl2.core.util.Tasks.resolveProjectName;
 
-import java.util.Map;
+import java.util.List;
 
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.val;
 
-import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.join.model.DonorSample;
-
+// TODO: Move to dcc-common-core
 @NoArgsConstructor(access = PRIVATE)
-public class Tasks {
-
-  @NonNull
-  public static Map<String, DonorSample> resolveDonorSamples(TaskContext taskContext,
-      Broadcast<Map<String, Map<String, DonorSample>>> broadcast) {
-    val projectName = resolveProjectName(taskContext);
-    val result = broadcast.value().get(projectName);
-
-    return result == null ? emptyMap() : result;
-  }
-
-  public static Map<String, String> getSampleSurrogateSampleIds(TaskContext taskContext,
-      Broadcast<Map<String, Map<String, String>>> broadcast) {
-    val projectName = resolveProjectName(taskContext);
-    val result = broadcast.value().get(projectName);
-
-    return result == null ? emptyMap() : result;
+public final class Collections {public static <T> boolean isLast(List<T> elements, T element) {
+    val index = elements.indexOf(element);
+  
+    return elements.size() - 1 == index;
   }
 
 }

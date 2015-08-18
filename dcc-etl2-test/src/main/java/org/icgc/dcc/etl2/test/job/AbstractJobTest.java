@@ -167,6 +167,10 @@ public abstract class AbstractJobTest {
     return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.empty());
   }
 
+  protected TaskContext createTaskContext(JobType jobType, String projectName) {
+    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.of(projectName));
+  }
+
   protected void createInputFile(TestFile inputFile) {
     val fileTypeDirectory = getFileTypeDirectory(inputFile.getFileType());
     if (!fileTypeDirectory.exists()) {

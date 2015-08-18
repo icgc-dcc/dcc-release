@@ -142,6 +142,7 @@ public enum FileType implements Identifiable {
   OBSERVATION_FATHMM(true),
   OBSERVATION_FI(true),
 
+  // TODO: rename to DONOR_SUMMARY?
   DONOR_GENE_OBSERVATION_SUMMARY(true),
   GENE_SET_SUMMARY(false),
 

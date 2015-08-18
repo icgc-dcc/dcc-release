@@ -15,40 +15,52 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.utils;
+package org.icgc.dcc.etl2.job.summarize.function;
 
-import static java.util.Collections.emptyMap;
-import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.etl2.core.util.Tasks.resolveProjectName;
-
-import java.util.Map;
-
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY;
+import static org.icgc.dcc.etl2.core.util.FeatureTypes.createFeatureTypeSummaryValue;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.MAPPER;
+import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
 import lombok.val;
 
-import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.join.model.DonorSample;
+import org.apache.spark.api.java.function.PairFunction;
+import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
+import org.icgc.dcc.common.core.util.Splitters;
 
-@NoArgsConstructor(access = PRIVATE)
-public class Tasks {
+import scala.Tuple2;
 
-  @NonNull
-  public static Map<String, DonorSample> resolveDonorSamples(TaskContext taskContext,
-      Broadcast<Map<String, Map<String, DonorSample>>> broadcast) {
-    val projectName = resolveProjectName(taskContext);
-    val result = broadcast.value().get(projectName);
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Iterables;
 
-    return result == null ? emptyMap() : result;
+public final class CreateFeatureTypeSummary implements PairFunction<Tuple2<String, Integer>, String, ObjectNode> {
+
+  @Override
+  public Tuple2<String, ObjectNode> call(Tuple2<String, Integer> tuple) throws Exception {
+    val donorFeatureType = tuple._1;
+    val featureType = resolveFeatureType(resolveTypeName(donorFeatureType));
+    val donorSummary = MAPPER.createObjectNode();
+    val summary = donorSummary.with(DONOR_SUMMARY);
+    val featureTypeCount = tuple._2;
+    val summaryValue = createFeatureTypeSummaryValue(featureType, featureTypeCount);
+    summary.put(featureType.getSummaryFieldName(), summaryValue);
+
+    return tuple(resolveDonorId(donorFeatureType), donorSummary);
   }
 
-  public static Map<String, String> getSampleSurrogateSampleIds(TaskContext taskContext,
-      Broadcast<Map<String, Map<String, String>>> broadcast) {
-    val projectName = resolveProjectName(taskContext);
-    val result = broadcast.value().get(projectName);
+  private static FeatureType resolveFeatureType(String typeName) {
+    return FeatureType.from(typeName);
+  }
 
-    return result == null ? emptyMap() : result;
+  private static String resolveTypeName(String key) {
+    val parts = Splitters.HASHTAG.split(key);
+
+    return Iterables.get(parts, 1);
+  }
+
+  private static String resolveDonorId(String key) {
+    val parts = Splitters.HASHTAG.split(key);
+
+    return parts.iterator().next();
   }
 
 }

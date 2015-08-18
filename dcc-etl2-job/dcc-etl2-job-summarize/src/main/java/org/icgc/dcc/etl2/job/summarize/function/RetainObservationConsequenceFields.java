@@ -15,40 +15,29 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.utils;
+package org.icgc.dcc.etl2.job.summarize.function;
 
-import static java.util.Collections.emptyMap;
-import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.etl2.core.util.Tasks.resolveProjectName;
-
-import java.util.Map;
-
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENE_GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_DONOR_ID;
+import static org.icgc.dcc.etl2.core.util.FieldNames.SummarizeFieldNames.FAKE_GENE_ID;
 import lombok.val;
 
-import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.etl2.core.task.TaskContext;
-import org.icgc.dcc.etl2.job.join.model.DonorSample;
+import org.apache.spark.api.java.function.Function;
 
-@NoArgsConstructor(access = PRIVATE)
-public class Tasks {
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-  @NonNull
-  public static Map<String, DonorSample> resolveDonorSamples(TaskContext taskContext,
-      Broadcast<Map<String, Map<String, DonorSample>>> broadcast) {
-    val projectName = resolveProjectName(taskContext);
-    val result = broadcast.value().get(projectName);
+public final class RetainObservationConsequenceFields implements Function<ObjectNode, ObjectNode> {
 
-    return result == null ? emptyMap() : result;
-  }
+  @Override
+  public ObjectNode call(ObjectNode row) throws Exception {
+    // Retain _mutation_id to get unique genes per donor-mutation
+    val result = row.retain(OBSERVATION_DONOR_ID, DONOR_GENE_GENE_ID, MUTATION_ID);
+    if (result.path(DONOR_GENE_GENE_ID).isMissingNode()) {
+      result.put(DONOR_GENE_GENE_ID, FAKE_GENE_ID);
+    }
 
-  public static Map<String, String> getSampleSurrogateSampleIds(TaskContext taskContext,
-      Broadcast<Map<String, Map<String, String>>> broadcast) {
-    val projectName = resolveProjectName(taskContext);
-    val result = broadcast.value().get(projectName);
-
-    return result == null ? emptyMap() : result;
+    return result;
   }
 
 }

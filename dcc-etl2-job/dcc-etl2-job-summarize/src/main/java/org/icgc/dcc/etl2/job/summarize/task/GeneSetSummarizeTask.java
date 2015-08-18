@@ -20,16 +20,15 @@ package org.icgc.dcc.etl2.job.summarize.task;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SETS;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SETS_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_ID;
-import static org.icgc.dcc.etl2.core.function.UnwindToPair.unwind;
+import static org.icgc.dcc.etl2.core.function.Unwind.unwind;
 import static org.icgc.dcc.etl2.core.job.FileType.GENE_SET_SUMMARY;
-import static org.icgc.dcc.etl2.core.util.FieldNames.SummarizeFieldNames.GENE_NAME;
 import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaPairRDD;
-import org.icgc.dcc.etl2.core.function.CombineFields;
 import org.icgc.dcc.etl2.core.function.KeyFields;
-import org.icgc.dcc.etl2.core.function.RemoveFields;
+import org.icgc.dcc.etl2.core.function.KeyFieldsFunction;
+import org.icgc.dcc.etl2.core.function.RetainFields;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
@@ -60,12 +59,11 @@ public class GeneSetSummarizeTask extends GenericTask {
 
   private JavaPairRDD<String, String> readGenePairs(TaskContext taskContext) {
     val genes = readInput(taskContext, FileType.GENE);
-    val keyFunction = new CombineFields(GENE_SET_ID, GENE_SETS_TYPE);
     return genes
-        // Remove duplicate fields between gene and gene.sets to allow further unwind
-        .map(new RemoveFields(GENE_NAME))
+        .map(new RetainFields(GENE_SETS))
+        .flatMap(unwind(GENE_SETS))
         // Map value of the pair to empty string as it's not used
-        .flatMapToPair(unwind(GENE_SETS, keyFunction, t -> null));
+        .mapToPair(new KeyFieldsFunction<String>(o -> null, GENE_SET_ID, GENE_SETS_TYPE));
   }
 
 }

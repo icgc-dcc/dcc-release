@@ -17,29 +17,12 @@
  */
 package org.icgc.dcc.etl2.core.function;
 
-import static org.icgc.dcc.etl2.core.util.Keys.getKey;
-import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
-import lombok.val;
-
-import org.apache.spark.api.java.function.PairFunction;
-
-import scala.Tuple2;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class KeyFields implements PairFunction<ObjectNode, String, ObjectNode> {
-
-  private final String[] fieldNames;
+public class KeyFields extends KeyFieldsFunction<ObjectNode> {
 
   public KeyFields(String... fieldNames) {
-    this.fieldNames = fieldNames;
-  }
-
-  @Override
-  public Tuple2<String, ObjectNode> call(ObjectNode row) throws Exception {
-    val key = getKey(row, fieldNames);
-
-    return tuple(key, row);
+    super(o -> o, fieldNames);
   }
 
 }

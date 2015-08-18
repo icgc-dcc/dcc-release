@@ -19,7 +19,7 @@ package org.icgc.dcc.etl2.job.join.task;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.toList;
-import static org.icgc.dcc.etl2.job.join.utils.Tasks.resolveProjectName;
+import static org.icgc.dcc.etl2.core.util.Tasks.resolveProjectName;
 
 import java.util.List;
 import java.util.Map;
