@@ -1,9 +1,14 @@
 package org.icgc.dcc.etl2.job.summarize.core;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SGV_TYPE;
 import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
+import static org.icgc.dcc.common.core.model.FieldNames.AFFECTED_DONOR_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_DATA_TYPES;
+import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_EXPERIMENTAL_ANALYSIS_PERFORMED;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENES;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENE_GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENE_SUMMARY;
@@ -15,20 +20,41 @@ import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_EXPERIMENT
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_EXPERIMENTAL_ANALYSIS_SAMPLE_COUNTS;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_STATE;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_STUDIES;
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_DONORS;
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_DONOR_SUMMARY;
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECTS;
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECT_PROJECT_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECT_SUMMARY;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCE_TYPES;
+import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_SUMMARY;
+import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_SUMMARY_REPOSITORY;
+import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_SUMMARY_STATE;
+import static org.icgc.dcc.common.core.model.FieldNames.RELEASE_DATE;
 import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_REPOSITORY;
+import static org.icgc.dcc.common.core.model.FieldNames.TOTAL_DONOR_COUNT;
+import static org.icgc.dcc.common.core.model.FieldNames.TOTAL_LIVE_DONOR_COUNT;
+import static org.icgc.dcc.common.core.model.FieldNames.TOTAL_SAMPLE_COUNT;
+import static org.icgc.dcc.common.core.model.FieldNames.TOTAL_SPECIMEN_COUNT;
+import static org.icgc.dcc.common.core.model.FieldNames.getTestedTypeCountFieldName;
 import static org.icgc.dcc.common.core.util.Jackson.asArrayNode;
 import static org.icgc.dcc.common.core.util.Jackson.asObjectNode;
+import static org.icgc.dcc.etl2.core.util.FeatureTypes.createFeatureTypeSummaryValue;
 import static org.icgc.dcc.etl2.core.util.FeatureTypes.getFeatureTypes;
 import static org.icgc.dcc.etl2.core.util.FieldNames.SummarizeFieldNames.FAKE_GENE_ID;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.etl2.test.util.TestJsonNodes.$;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
 import org.icgc.dcc.common.core.util.stream.Streams;
@@ -38,11 +64,15 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
+@Slf4j
 public class SummarizeJobTest extends AbstractJobTest {
 
+  private static final String BRCA_PROJECT_NAME = "BRCA-UK";
+  private static final String US_PROJECT_NAME = "ALL-US";
   private static final List<String> DO1_GENE_IDS = ImmutableList.of("GID1", "GID2", "GID3", FAKE_GENE_ID);
   private static final List<String> DO1_REPOS = ImmutableList.of("CGHub", "TCGA", "EGA");
   private static final List<String> DO1_EXPERIMENTAL_ANALYSIS_PERFORMED = ImmutableList.of(
@@ -75,16 +105,261 @@ public class SummarizeJobTest extends AbstractJobTest {
 
   @Test
   public void testExecute() {
-    val projectName = "BRCA-UK";
     given(new File(TEST_FIXTURES_DIR));
 
-    val jobContext = createJobContext(job.getType(), ImmutableList.of(projectName));
+    val jobContext = createJobContext(job.getType(), ImmutableList.of(BRCA_PROJECT_NAME, US_PROJECT_NAME));
     job.execute(jobContext);
 
-    val results = produces(projectName, FileType.DONOR_GENE_OBSERVATION_SUMMARY);
+    assertDonorSummary(BRCA_PROJECT_NAME);
+    assertProjects();
+    assertGenes();
+    assertObservations();
+    assertRelease();
 
-    assertThat(results).hasSize(2);
-    for (val donor : results) {
+  }
+
+  private void assertRelease() {
+    val releases = produces(FileType.RELEASE_SUMMARY);
+    assertThat(releases).hasSize(1);
+    log.debug("{}", releases);
+    val expectedRelease = $("{_id:'ICGC19-0-2',_release_id:'ICGC19-0-2',name:'ICGC19',number:19,project_count:2,"
+        + "live_project_count:1,primary_site_count:2,live_primary_site_count:1,donor_count:2,live_donor_count:0,"
+        + "specimen_count:2,sample_count:3,ssm_count:0,mutated_gene_count:0}");
+    val release = releases.get(0);
+    val releaseDate = release.remove(RELEASE_DATE).textValue();
+    assertThat(releaseDate.length()).isEqualTo(29);
+    assertThat(expectedRelease).isEqualTo(release);
+  }
+
+  private void assertObservations() {
+    val observations = produces(BRCA_PROJECT_NAME, FileType.OBSERVATION_SUMMARY);
+    assertThat(observations).hasSize(3);
+    assertObservation(observations.get(0), asList("downstream_gene_variant", "gene_variant"));
+    assertObservation(observations.get(1), asList("downstream_gene_variant", "synonymous_variant"));
+    assertObservation(observations.get(2), asList("downstream_gene_variant", "inframe_insertion"));
+  }
+
+  private static void assertObservation(ObjectNode observation, List<String> expectedConsequenceTypes) {
+    val consequenceTypes = observation.get(OBSERVATION_CONSEQUENCE_TYPES);
+    assertArray(consequenceTypes, expectedConsequenceTypes);
+  }
+
+  private void assertGenes() {
+    val genes = produces(FileType.GENE_SUMMARY);
+    assertThat(genes).hasSize(3);
+    log.debug("Gene Summary - {}", genes);
+    for (val gene : genes) {
+      val geneId = textValue(gene, GENE_ID);
+      switch (geneId) {
+      case "G1":
+        assertG1gene(gene);
+        break;
+      case "G2":
+        assertG2gene(gene);
+        break;
+      case "G3":
+        assertG3gene(gene);
+        break;
+      }
+    }
+  }
+
+  private static void assertG1gene(ObjectNode gene) {
+    // Donors
+    val donors = getGeneDonors(gene);
+    assertThat(donors).hasSize(4);
+    for (val donor : donors) {
+      val donorId = textValue(donor, DONOR_ID);
+      switch (donorId) {
+      case "DO001":
+        assertGeneDonor(donor, SSM_TYPE, 1);
+        break;
+      case "DO002":
+        assertGeneDonor(donor, SGV_TYPE, 1);
+        break;
+      case "DO003":
+        assertGeneDonor(donor, SSM_TYPE, 1);
+        break;
+      case "DO004":
+        assertGeneDonor(donor, SGV_TYPE, 1);
+        break;
+      }
+    }
+
+    // Projects
+    val projects = getGeneProjects(gene);
+    assertThat(projects).hasSize(2);
+    for (val project : projects) {
+      val projectId = textValue(project, GENE_PROJECT_PROJECT_ID);
+      assertThat(asList(BRCA_PROJECT_NAME, US_PROJECT_NAME)).contains(projectId);
+      assertGeneProject(asObjectNode(project.get(GENE_PROJECT_SUMMARY)), 2, asList(SSM_TYPE, SGV_TYPE));
+    }
+  }
+
+  public static void assertGeneProject(ObjectNode projectSummary, int expectedDonorCount, List<FeatureType> dataTypes) {
+    val donorCount = projectSummary.get(AFFECTED_DONOR_COUNT).asInt();
+    assertThat(donorCount).isEqualTo(expectedDonorCount);
+    assertArray(projectSummary.get(AVAILABLE_DATA_TYPES), resolveFeatureTypeIds(dataTypes));
+  }
+
+  private static void assertGeneDonor(JsonNode donor, FeatureType expectedFeatureType, int expectedValue) {
+    assertGeneDonor(donor, Collections.singletonMap(expectedFeatureType, expectedValue));
+  }
+
+  public static void assertGeneDonor(JsonNode donor, Map<FeatureType, Integer> featureTypeCounts) {
+    val summary = asObjectNode(donor).get(GENE_DONOR_SUMMARY);
+    for (val featureType : FeatureType.values()) {
+      val expectedValue = featureTypeCounts.get(featureType);
+      if (expectedValue != null) {
+        assertFeatrueTypeSummaryField(asObjectNode(summary), featureType, expectedValue);
+      } else {
+        assertFeatrueTypeSummaryField(asObjectNode(summary), featureType, 0);
+      }
+    }
+  }
+
+  private static void assertFeatrueTypeSummaryField(ObjectNode summary, FeatureType featureType, int expectedValue) {
+    val field = summary.path(featureType.getSummaryFieldName());
+    val expectedValueNode = createFeatureTypeSummaryValue(featureType, expectedValue);
+    assertThat(field).isEqualTo(expectedValueNode);
+  }
+
+  private static ArrayNode getGeneDonors(ObjectNode gene) {
+    val donors = gene.get(GENE_DONORS);
+    assertThat(donors.isMissingNode()).isFalse();
+
+    return asArrayNode(donors);
+  }
+
+  private static ArrayNode getGeneProjects(ObjectNode gene) {
+    val donors = gene.get(GENE_PROJECTS);
+    assertThat(donors.isMissingNode()).isFalse();
+
+    return asArrayNode(donors);
+  }
+
+  private static void assertG3gene(ObjectNode gene) {
+    val donors = getGeneDonors(gene);
+    assertThat(donors).hasSize(2);
+    for (val donor : donors) {
+      assertGeneDonor(donor, SSM_TYPE, 1);
+    }
+
+    // Projects
+    val projects = getGeneProjects(gene);
+    assertThat(projects).hasSize(2);
+    for (val project : projects) {
+      val projectId = textValue(project, GENE_PROJECT_PROJECT_ID);
+      assertThat(asList(BRCA_PROJECT_NAME, US_PROJECT_NAME)).contains(projectId);
+      assertGeneProject(asObjectNode(project.get(GENE_PROJECT_SUMMARY)), 1, asList(SSM_TYPE));
+    }
+  }
+
+  private static void assertG2gene(ObjectNode gene) {
+    val donors = getGeneDonors(gene);
+    assertThat(donors).hasSize(4);
+    for (val donor : donors) {
+      val donorId = textValue(donor, DONOR_ID);
+      switch (donorId) {
+      case "DO001":
+        assertGeneDonor(donor, SSM_TYPE, 2);
+        break;
+      case "DO002":
+        assertGeneDonor(donor, SGV_TYPE, 1);
+        break;
+      case "DO003":
+        assertGeneDonor(donor, SSM_TYPE, 2);
+        break;
+      case "DO004":
+        assertGeneDonor(donor, SGV_TYPE, 1);
+        break;
+      }
+    }
+
+    // Projects
+    val projects = getGeneProjects(gene);
+    assertThat(projects).hasSize(2);
+    for (val project : projects) {
+      val projectId = textValue(project, GENE_PROJECT_PROJECT_ID);
+      assertThat(asList(BRCA_PROJECT_NAME, US_PROJECT_NAME)).contains(projectId);
+      assertGeneProject(asObjectNode(project.get(GENE_PROJECT_SUMMARY)), 2, asList(SSM_TYPE, SGV_TYPE));
+    }
+  }
+
+  private void assertProjects() {
+    val projectSummary = produces(FileType.PROJECT_SUMMARY);
+    assertThat(projectSummary).hasSize(2);
+    log.debug("Projects Summary - {}", projectSummary);
+    projectSummary.stream()
+        .forEach(SummarizeJobTest::assertProjectSummary);
+
+  }
+
+  private static void assertProjectSummary(ObjectNode project) {
+    val summary = project.path(PROJECT_SUMMARY);
+    assertThat(summary.isMissingNode()).isFalse();
+    val projectId = textValue(project, PROJECT_ID);
+    if (projectId.equals(BRCA_PROJECT_NAME)) {
+      assertBRCAProjectSummary(asObjectNode(summary));
+    } else {
+      assertUSProjectSummary(asObjectNode(summary));
+    }
+  }
+
+  /**
+   * @param asObjectNode
+   */
+  private static void assertUSProjectSummary(ObjectNode summary) {
+    assertArray(summary.get(AVAILABLE_DATA_TYPES), emptyList());
+    for (val featureType : FeatureType.values()) {
+      assertFeatureTypeCount(featureType, summary, 0);
+    }
+
+    assertThat(summary.get(TOTAL_DONOR_COUNT).asInt()).isEqualTo(0);
+    assertThat(summary.get(TOTAL_SAMPLE_COUNT).asInt()).isEqualTo(0);
+    assertThat(summary.get(TOTAL_SPECIMEN_COUNT).asInt()).isEqualTo(0);
+    assertThat(summary.get(TOTAL_LIVE_DONOR_COUNT).asInt()).isEqualTo(0);
+
+    assertThat(textValue(summary, PROJECT_SUMMARY_STATE)).isEqualTo("pending");
+    assertArray(summary.get(PROJECT_SUMMARY_REPOSITORY), emptyList());
+    assertArray(summary.get(AVAILABLE_EXPERIMENTAL_ANALYSIS_PERFORMED), emptyList());
+    assertThat(asObjectNode(summary.get(DONOR_SUMMARY_EXPERIMENTAL_ANALYSIS_SAMPLE_COUNTS))).isEmpty();
+  }
+
+  private static void assertBRCAProjectSummary(ObjectNode summary) {
+    assertArray(summary.get(AVAILABLE_DATA_TYPES), resolveFeatureTypeIds(DO1_AVAILABLE_DATA_TYPES));
+    for (val featureType : FeatureType.values()) {
+      if (featureType.isSsm()) {
+        assertFeatureTypeCount(featureType, summary, 2);
+      } else if (DO1_AVAILABLE_DATA_TYPES.contains(featureType)) {
+        assertFeatureTypeCount(featureType, summary, 1);
+      } else {
+        assertFeatureTypeCount(featureType, summary, 0);
+      }
+    }
+
+    assertThat(summary.get(TOTAL_DONOR_COUNT).asInt()).isEqualTo(2);
+    assertThat(summary.get(TOTAL_SAMPLE_COUNT).asInt()).isEqualTo(3);
+    assertThat(summary.get(TOTAL_SPECIMEN_COUNT).asInt()).isEqualTo(2);
+    assertThat(summary.get(TOTAL_LIVE_DONOR_COUNT).asInt()).isEqualTo(2);
+
+    assertThat(textValue(summary, PROJECT_SUMMARY_STATE)).isEqualTo("live");
+    assertArray(summary.get(PROJECT_SUMMARY_REPOSITORY), DO1_REPOS);
+    assertArray(summary.get(AVAILABLE_EXPERIMENTAL_ANALYSIS_PERFORMED), DO1_EXPERIMENTAL_ANALYSIS_PERFORMED);
+    assertExperimentalAnalysisCounts(asObjectNode(summary.get(DONOR_SUMMARY_EXPERIMENTAL_ANALYSIS_SAMPLE_COUNTS)));
+  }
+
+  private static void assertFeatureTypeCount(FeatureType featureType, ObjectNode summary, int expectedCount) {
+    val field = summary.get(getTestedTypeCountFieldName(featureType));
+    assertThat(field.asInt()).isEqualTo(expectedCount);
+  }
+
+  private void assertDonorSummary(String projectName) {
+    val donorSummary = produces(projectName, FileType.DONOR_GENE_OBSERVATION_SUMMARY);
+    log.debug("Donor Summary - {}", donorSummary);
+
+    assertThat(donorSummary).hasSize(2);
+    for (val donor : donorSummary) {
       if (textValue(donor, DONOR_ID).equals("DO001")) {
         assertGenes(donor.get(DONOR_GENES));
         assertSummaryDO1(donor.get(DONOR_SUMMARY));
@@ -169,12 +444,12 @@ public class SummarizeJobTest extends AbstractJobTest {
     assertThat(jsonNode.get("WXS").asInt()).isEqualTo(3);
   }
 
-  private static void assertArray(JsonNode resultNode, Iterable<String> valuesList) {
+  private static void assertArray(JsonNode resultNode, Iterable<String> expectedValues) {
     val array = Streams.stream(asArrayNode(resultNode))
         .map(jn -> jn.textValue())
         .collect(Collectors.toList());
 
-    assertThat(valuesList).containsOnlyElementsOf(array);
+    assertThat(expectedValues).containsOnlyElementsOf(array);
   }
 
 }

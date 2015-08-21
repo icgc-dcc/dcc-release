@@ -22,7 +22,6 @@ import static java.lang.String.format;
 import static org.icgc.dcc.common.core.util.Jackson.asObjectNode;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
-import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -61,6 +60,14 @@ public class ObjectNodes {
     val fieldValue = jsonNode.path(fieldName);
 
     return fieldValue.isMissingNode() || fieldValue.isNull() ? null : fieldValue.asText();
+  }
+
+  public static ObjectNode createObject() {
+    return MAPPER.createObjectNode();
+  }
+
+  public static ArrayNode createArray() {
+    return MAPPER.createArrayNode();
   }
 
   public static JsonNode getPath(@NonNull ObjectNode objectNode, @NonNull String path) {
@@ -115,23 +122,6 @@ public class ObjectNodes {
   }
 
   @NonNull
-  public static <T> Collection<JsonNode> createArrayValues(Iterable<T> values) {
-    val result = ImmutableList.<JsonNode> builder();
-
-    for (val value : values) {
-      if (value instanceof String) {
-        result.add(JSON_FACTORY.textNode(String.valueOf(value)));
-      } else if (isNumber(value)) {
-        result.add(createNumberNode(value));
-      } else if (value instanceof Boolean) {
-        result.add(createBooleanNode((Boolean) value));
-      }
-    }
-
-    return result.build();
-  }
-
-  @NonNull
   public static BooleanNode createBooleanNode(Boolean value) {
     return JSON_FACTORY.booleanNode(value);
   }
@@ -148,10 +138,6 @@ public class ObjectNodes {
     }
 
     throw new IllegalArgumentException(format("Failed to create a Json number node from %s", value));
-  }
-
-  private static <T> boolean isNumber(final T value) {
-    return value instanceof Integer;
   }
 
   private static Iterable<String> parsePath(String path) {

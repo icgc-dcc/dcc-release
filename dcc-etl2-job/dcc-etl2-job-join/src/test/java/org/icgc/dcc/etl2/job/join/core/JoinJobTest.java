@@ -83,6 +83,7 @@ import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.THERAPY;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.TOTAL_READ_COUNT;
 import static org.icgc.dcc.etl2.core.util.FieldNames.JoinFieldNames.VARIATION_CALLING_ALGORITHM;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.etl2.test.util.TestJsonNodes.getElements;
 
 import java.io.File;
 import java.util.List;
@@ -351,10 +352,6 @@ public class JoinJobTest extends AbstractJobTest {
     assertThat(donor.findPath(FAMILY).isMissingNode()).isTrue();
     assertThat(donor.findPath(EXPOSURE).isMissingNode()).isTrue();
     assertThat(donor.findPath(DONOR_SPECIMEN).isMissingNode()).isTrue();
-  }
-
-  private static List<JsonNode> getElements(JsonNode node) {
-    return copyOf(node.elements());
   }
 
   private static List<String> keys(JsonNode node) {

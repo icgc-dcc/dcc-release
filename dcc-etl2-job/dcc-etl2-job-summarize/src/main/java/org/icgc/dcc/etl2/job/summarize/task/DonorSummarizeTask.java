@@ -19,6 +19,8 @@ package org.icgc.dcc.etl2.job.summarize.task;
 
 import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_STATE;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_DONOR_ID;
@@ -33,6 +35,7 @@ import static org.icgc.dcc.etl2.core.util.Tasks.resolveProjectName;
 
 import java.util.Map;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -53,12 +56,27 @@ import org.icgc.dcc.etl2.job.summarize.function.RetainObservationConsequenceFiel
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Maps;
 
 @RequiredArgsConstructor
 public class DonorSummarizeTask extends GenericTask {
 
   @NonNull
   private final Broadcast<Map<String, Map<String, ObjectNode>>> projectDonorSummary;
+
+  /**
+   * Used in {@link ReleaseSummarizeTask}
+   */
+  @Getter(lazy = true)
+  private final long donorsCount = countDonors();
+
+  /**
+   * Used in {@link ReleaseSummarizeTask}
+   */
+  @Getter(lazy = true)
+  private final long liveDonorsCount = countLiveDonors();
+  private final Map<String, Long> _donorsCount = Maps.newHashMap();
+  private final Map<String, Long> _liveDonorsCount = Maps.newHashMap();
 
   @Override
   public void execute(TaskContext taskContext) {
@@ -73,8 +91,33 @@ public class DonorSummarizeTask extends GenericTask {
         .mapToPair(new KeyFields(DONOR_ID))
         .join(summary)
         .map(mergeDonorSummary());
+    output.cache();
 
+    _donorsCount.put(projectName, output.count());
+    _liveDonorsCount.put(projectName, output.filter(filterLiveDonors()).count());
     writeOutput(taskContext, output, outputFileType);
+    output.unpersist();
+  }
+
+  private Function<ObjectNode, Boolean> filterLiveDonors() {
+    return o -> o.get(DONOR_SUMMARY).get(DONOR_SUMMARY_STATE).equals("live");
+  }
+
+  private long countDonors() {
+    return countMapValues(_donorsCount);
+  }
+
+  private long countLiveDonors() {
+    return countMapValues(_liveDonorsCount);
+  }
+
+  private static long countMapValues(Map<String, Long> map) {
+    long total = 0L;
+    for (val value : map.values()) {
+      total += value;
+    }
+
+    return total;
   }
 
   private static Function<Tuple2<String, Tuple2<ObjectNode, ObjectNode>>, ObjectNode> mergeDonorSummary() {
