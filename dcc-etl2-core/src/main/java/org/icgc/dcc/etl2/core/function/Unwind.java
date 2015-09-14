@@ -60,18 +60,16 @@ public class Unwind implements FlatMapFunction<ObjectNode, ObjectNode> {
   private final String unwindPath;
   private final boolean includeParent;
 
-  @NonNull
-  public static Unwind unwind(String unwindPath) {
+  public static Unwind unwind(@NonNull String unwindPath) {
     return new Unwind(unwindPath, false);
   }
 
-  @NonNull
-  public static Unwind unwindToParent(String unwindPath) {
+  public static Unwind unwindToParent(@NonNull String unwindPath) {
     return new Unwind(unwindPath, true);
   }
 
   @Override
-  public Iterable<ObjectNode> call(ObjectNode row) throws Exception {
+  public Iterable<ObjectNode> call(@NonNull ObjectNode row) throws Exception {
     val elements = unwindPath(unwindPath, row);
     if (isMissingElements(elements)) {
       return createMissingElementsObject(row);
@@ -119,9 +117,9 @@ public class Unwind implements FlatMapFunction<ObjectNode, ObjectNode> {
           result.addAll(unwindArray(asArrayNode(currentNode), getLeftFieldNames(fieldNames, fieldName)));
         }
       }
-      // Not missing, not array and reached final field? Impossible to unwind
       else if (isLast(fieldNames, fieldName)) {
-        throw new IllegalArgumentException("Failed to unwind non-array field");
+        throw new IllegalArgumentException("Failed to unwind non-array field. Reached the final level field. The field"
+            + " exists but it's not an array one.");
       }
     }
 

@@ -23,6 +23,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_DATA_TYPES;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_TYPE;
+import static org.icgc.dcc.etl2.core.function.PairFunctions.sum;
 import static org.icgc.dcc.etl2.core.util.FeatureTypes.getFeatureTypes;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.MAPPER;
 import static org.icgc.dcc.etl2.core.util.ObjectNodes.mergeObjects;
@@ -38,7 +39,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
-import org.icgc.dcc.etl2.core.function.KeyFieldsFunction;
+import org.icgc.dcc.etl2.core.function.KeyFields;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.GenericTask;
 import org.icgc.dcc.etl2.core.task.TaskContext;
@@ -109,12 +110,15 @@ public class FeatureTypeSummarizeTask extends GenericTask {
   private Map<String, ObjectNode> createMapping(TaskContext taskContext, FeatureType featureType) {
     val fileType = resolveInputFileType(featureType);
 
-    return readInput(taskContext, fileType)
-        .mapToPair(new KeyFieldsFunction<Integer>(o -> 1, DONOR_ID, OBSERVATION_TYPE))
-        .reduceByKey((a, b) -> a + b)
+    // @formatter:off
+    return 
+        sum(
+          readInput(taskContext, fileType)
+          .mapToPair(new KeyFields(DONOR_ID, OBSERVATION_TYPE)))
         .mapToPair(new CreateFeatureTypeSummary())
         .aggregateByKey(MAPPER.createObjectNode(), aggregateFeatureType(), aggregateFeatureType())
         .collectAsMap();
+    // @formatter:on
   }
 
   private Function2<ObjectNode, ObjectNode, ObjectNode> aggregateFeatureType() {

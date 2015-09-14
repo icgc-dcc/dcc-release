@@ -20,9 +20,9 @@ package org.icgc.dcc.etl2.job.summarize.task;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SETS;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SETS_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_ID;
+import static org.icgc.dcc.etl2.core.function.PairFunctions.sum;
 import static org.icgc.dcc.etl2.core.function.Unwind.unwind;
 import static org.icgc.dcc.etl2.core.job.FileType.GENE_SET_SUMMARY;
-import static org.icgc.dcc.etl2.core.util.Tuples.tuple;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaPairRDD;
@@ -48,9 +48,7 @@ public class GeneSetSummarizeTask extends GenericTask {
   public void execute(TaskContext taskContext) {
     val geneSets = readGeneSets(taskContext);
     val genePairs = readGenePairs(taskContext);
-    val geneSetsCount = geneSets.join(genePairs)
-        .mapToPair(t -> tuple(t._1, 1))
-        .reduceByKey((a, b) -> a + b);
+    val geneSetsCount = sum(geneSets.join(genePairs));
 
     val summary = geneSets.leftOuterJoin(geneSetsCount)
         .map(new AddGeneSetSummary());

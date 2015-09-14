@@ -26,9 +26,11 @@ import lombok.val;
 
 // TODO: Move to dcc-common-core
 @NoArgsConstructor(access = PRIVATE)
-public final class Collections {public static <T> boolean isLast(List<T> elements, T element) {
+public final class Collections {
+
+  public static <T> boolean isLast(List<T> elements, T element) {
     val index = elements.indexOf(element);
-  
+
     return elements.size() - 1 == index;
   }
 
