@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.icgc.dcc</groupId>
+    <artifactId>dcc-release-job</artifactId>
+    <version>3.8.2.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dcc-release-job-all</artifactId>
+
+  <name>${project.artifactId}</name>
+  <description>${project.name}</description>
+
+  <dependencies>
+
+    <!-- DCC - Release Core -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-core</artifactId>
+    </dependency>
+
+    <!-- DCC - Release Jobs -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-annotate</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-export</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-fathmm</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-fi</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-id</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-image</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-import</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-index</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-join</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-mask</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-orphan</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-stage</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-summarize</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <transformers combine.children="append">
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>META-INF/spring.handlers</resource>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>META-INF/spring.schemas</resource>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>META-INF/spring.factories</resource>
+                </transformer>
+              </transformers>
+              <artifactSet combine.children="append">
+                <excludes>
+                  <exclude>org.mockito:*</exclude>
+                  <exclude>commons-logging:*</exclude>
+                  <exclude>log4j:*</exclude>
+                  <exclude>org.tachyonproject:*</exclude>
+                  <exclude>org.apache.zookeeper:*</exclude>
+                  <exclude>org.apache.curator:*</exclude>
+                  <exclude>com.jcraft:*</exclude>
+                  <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</exclude>
+                  <exclude>com.google.code.findbugs:*</exclude>
+                  <exclude>org.mortbay.jetty:*</exclude>
+                </excludes>
+              </artifactSet>
+            </configuration>
+              
+              <!-- -->
+              <!-- NOTE: May actually need this if we run into issues due to refactoring. -->
+              <!-- -->
+
+              <!-- <relocations> <relocation> <pattern>com.google.common</pattern> <shadedPattern>org.icgc.dcc.shaded.google.common</shadedPattern> </relocation> </relocations> -->
+
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

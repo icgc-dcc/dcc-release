@@ -1,0 +1,128 @@
+---
+#
+# DCC ETL2 Workflow - Configuration
+#
+
+###################################################################################################
+# Common
+###################################################################################################
+
+# DCC
+dcc:
+   submission:
+      url: http://***REMOVED***/ws
+      dictionaryVersion: 0.11c
+   identifier:
+      url: http://hcache-dcc.oicr.on.ca:5391
+
+# SnpEff
+snpeff:
+   resourceDir: /tmp/dcc-release
+   resourceUrl: https://seqwaremaven.oicr.on.ca/artifactory/simple/dcc-dependencies/org/icgc/dcc
+   version: 3.6c
+   databaseVersion: 3.6c-GRCh37.75
+   referenceGenomeVersion: GRCh37.75.v1
+   geneBuildVersion: 75
+   maxFileSizeMb: 512
+
+# Hadoop
+hadoop:
+   properties:
+      fs.defaultFS: ***REMOVED***
+
+# HBase
+hbase:
+   properties:
+      hbase.zookeeper.quorum: ***REMOVED***
+      hbase.zookeeper.property.clientPort: 2181
+
+# Spark
+spark:
+   properties:
+      spark.task.maxFailures: 0
+      spark.serializer: org.apache.spark.serializer.KryoSerializer
+      spark.kryo.registrator: org.icgc.dcc.release.core.util.CustomKryoRegistrator
+
+# Postgres
+postgres:
+   user: dcc
+   password: <fill in>
+   database: fathmm
+   server: ***REMOVED***
+   url: jdbc:postgresql://${postgres.server}/${postgres.database}?user=${postgres.user}&password=${postgres.password}
+
+mail:
+   recipients: ***REMOVED***
+   properties:
+      mail.smtp.host: smtp.oicr.on.ca
+      mail.smtp.from: no-reply@oicr.on.ca
+
+index:
+  esUri: "es://***REMOVED***:9300"
+  fsUri: "***REMOVED***"
+  outputDir: /tmp
+  fastaFile: "/u/dcc_dev/dcc-etl/data/genome/GRCh37.75/GRCh37.75.fasta"
+  exportVCF: false
+
+---
+
+###################################################################################################
+# Production
+###################################################################################################
+
+# Workflow
+workflow:
+   parallel: true
+
+# Spring
+spring:
+   profiles: production
+   
+# Spark
+spark:
+   master: "spark://***REMOVED***:7077"
+   properties:
+      spark.executor.memory: 10g
+      spark.cores.max: 100
+
+# Mongo
+mongo:
+   uri:
+   userName:
+   password:
+   splitSizeMb: 256
+
+---
+
+###################################################################################################
+# Development
+###################################################################################################
+
+# Spring
+spring:
+   profiles: development
+   
+# Workflow
+workflow:
+   parallel: false
+
+# Spark
+spark:
+   master: "local"
+   properties:
+     spark.default.parallelism: 1
+
+# Mongo
+mongo:
+   uri: mongodb://localhost:27017
+   userName:
+   password:
+   splitSizeMb: 8
+   
+# Hadoop
+hadoop:
+   properties:
+      fs.defaultFS: file:///
+      
+mail:
+   recipients: nobody@example.com
