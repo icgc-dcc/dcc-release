@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.icgc.dcc</groupId>
+    <artifactId>dcc-release</artifactId>
+    <version>3.8.2.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dcc-release-job</artifactId>
+  <packaging>pom</packaging>
+
+  <name>${project.artifactId}</name>
+  <description>${project.name}</description>
+
+  <modules>
+    <module>dcc-release-job-all</module>
+
+    <module>dcc-release-job-annotate</module>
+    <module>dcc-release-job-export</module>
+    <module>dcc-release-job-fathmm</module>
+    <module>dcc-release-job-fi</module>
+    <module>dcc-release-job-id</module>
+    <module>dcc-release-job-image</module>
+    <module>dcc-release-job-import</module>
+    <module>dcc-release-job-index</module>
+    <module>dcc-release-job-join</module>
+    <module>dcc-release-job-mask</module>
+    <module>dcc-release-job-orphan</module>
+    <module>dcc-release-job-stage</module>
+    <module>dcc-release-job-summarize</module>
+  </modules>
+
+  <dependencies>
+
+    <!-- DCC -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-common-core</artifactId>
+    </dependency>
+
+    <!-- Spring -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>
+
+    <!-- Spark -->
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-core_${scala-build.version}</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Hadoop -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-hdfs</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Testing - DCC Release -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+</project>
