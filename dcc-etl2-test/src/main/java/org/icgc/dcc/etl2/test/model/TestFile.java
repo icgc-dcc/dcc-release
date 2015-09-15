@@ -47,4 +47,8 @@ public class TestFile {
     return rows == null;
   }
 
+  public boolean hasFileName() {
+    return fileName != null;
+  }
+
 }

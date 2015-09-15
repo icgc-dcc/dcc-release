@@ -82,6 +82,7 @@ public class Workflow {
       log.info("{}", repeat("-", 100));
 
       // Execute
+      // TODO: wrap in try-catch to mail exception
       job.execute(jobContext);
 
       log.info("{}", repeat("-", 100));

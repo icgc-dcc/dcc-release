@@ -23,8 +23,8 @@ import java.util.List;
 
 import lombok.val;
 
-import org.icgc.dcc.common.core.util.resolver.ArtifactoryCodeListsResolver;
-import org.icgc.dcc.common.core.util.resolver.ArtifactoryDictionaryResolver;
+import org.icgc.dcc.common.core.meta.ArtifactoryCodeListsResolver;
+import org.icgc.dcc.common.core.meta.ArtifactoryDictionaryResolver;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.submission.SubmissionFileSchema;
 import org.icgc.dcc.etl2.core.submission.SubmissionFileSchemas;

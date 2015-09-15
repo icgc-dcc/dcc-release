@@ -17,10 +17,10 @@
  */
 package org.icgc.dcc.etl2.workflow.config;
 
-import org.icgc.dcc.common.core.util.resolver.Resolver.CodeListsResolver;
-import org.icgc.dcc.common.core.util.resolver.Resolver.DictionaryResolver;
-import org.icgc.dcc.common.core.util.resolver.RestfulCodeListsResolver;
-import org.icgc.dcc.common.core.util.resolver.RestfulDictionaryResolver;
+import org.icgc.dcc.common.core.meta.Resolver.CodeListsResolver;
+import org.icgc.dcc.common.core.meta.Resolver.DictionaryResolver;
+import org.icgc.dcc.common.core.meta.RestfulCodeListsResolver;
+import org.icgc.dcc.common.core.meta.RestfulDictionaryResolver;
 import org.icgc.dcc.etl2.core.submission.SubmissionFileSchemas;
 import org.icgc.dcc.etl2.core.submission.SubmissionMetadataService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -18,6 +18,7 @@
 package org.icgc.dcc.etl2.job.join.function;
 
 import org.icgc.dcc.common.core.model.FieldNames;
+import org.icgc.dcc.etl2.core.function.KeyFields;
 
 public class KeyDonorIdField extends KeyFields {
 

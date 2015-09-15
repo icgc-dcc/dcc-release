@@ -19,6 +19,7 @@ package org.icgc.dcc.etl2.job.join.utils;
 
 import static java.util.Collections.emptyMap;
 import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.etl2.core.util.Tasks.resolveProjectName;
 
 import java.util.Map;
 
@@ -32,15 +33,6 @@ import org.icgc.dcc.etl2.job.join.model.DonorSample;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Tasks {
-
-  public static final String NO_PROJECTS = "";
-
-  @NonNull
-  public static String resolveProjectName(TaskContext taskContext) {
-    val project = taskContext.getProjectName();
-
-    return project.isPresent() ? project.get() : NO_PROJECTS;
-  }
 
   @NonNull
   public static Map<String, DonorSample> resolveDonorSamples(TaskContext taskContext,

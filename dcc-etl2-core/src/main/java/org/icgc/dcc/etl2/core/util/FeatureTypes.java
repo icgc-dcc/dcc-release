@@ -15,34 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.join.function;
+package org.icgc.dcc.etl2.core.util;
 
-import static org.icgc.dcc.etl2.core.util.Keys.getKey;
+import static com.google.common.collect.ImmutableList.of;
+import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.CNGV_TYPE;
+import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.STGV_TYPE;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.createBooleanNode;
+import static org.icgc.dcc.etl2.core.util.ObjectNodes.createNumberNode;
+
+import java.util.List;
+
+import lombok.NoArgsConstructor;
 import lombok.val;
 
-import org.apache.spark.api.java.function.PairFunction;
+import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
 
-import scala.Tuple2;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.Lists;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+@NoArgsConstructor(access = PRIVATE)
+public final class FeatureTypes {
 
-public class KeyFields implements PairFunction<ObjectNode, String, ObjectNode> {
+  private static final List<FeatureType> SKIP_TYPE = of(CNGV_TYPE, STGV_TYPE);
 
-  private final String[] fieldNames;
+  public static Iterable<FeatureType> getFeatureTypes() {
+    val featureTypes = Lists.newArrayList(FeatureType.values());
+    featureTypes.removeAll(SKIP_TYPE);
 
-  public KeyFields(String... fieldNames) {
-    this.fieldNames = fieldNames;
+    return featureTypes;
   }
 
-  @Override
-  public Tuple2<String, ObjectNode> call(ObjectNode row) throws Exception {
-    val key = getKey(row, fieldNames);
+  public static JsonNode createFeatureTypeSummaryValue(FeatureType featureType, int featureTypeCount) {
+    val hasFeatureType = featureTypeCount > 0;
 
-    return tuple(key, row);
-  }
-
-  private static Tuple2<String, ObjectNode> tuple(String key, ObjectNode row) {
-    return new Tuple2<String, ObjectNode>(key, row);
+    return featureType.isCountSummary() ? createNumberNode(featureTypeCount) : createBooleanNode(hasFeatureType);
   }
 
 }

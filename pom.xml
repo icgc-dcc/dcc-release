@@ -301,7 +301,7 @@
 
   <properties>
     <!-- Versions - DCC -->
-    <dcc-common.version>3.8.2.1</dcc-common.version>
+    <dcc-common.version>3.8.11.0</dcc-common.version>
 
     <!-- Versions - DCC ETL -->
     <dcc-etl.version>3.8.9.2</dcc-etl.version>

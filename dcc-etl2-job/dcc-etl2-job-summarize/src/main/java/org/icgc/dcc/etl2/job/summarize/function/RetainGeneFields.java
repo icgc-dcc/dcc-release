@@ -15,38 +15,35 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.etl2.job.summarize.task;
+package org.icgc.dcc.etl2.job.summarize.function;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.etl2.core.function.FlattenField;
-import org.icgc.dcc.etl2.core.function.ProjectFields;
-import org.icgc.dcc.etl2.core.function.RemoveFields;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENE_GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
+import static org.icgc.dcc.etl2.core.util.FieldNames.SummarizeFieldNames.FAKE_GENE_ID;
+import lombok.val;
+
 import org.icgc.dcc.etl2.core.function.RetainFields;
-import org.icgc.dcc.etl2.core.function.SelectFields;
-import org.icgc.dcc.etl2.core.job.FileType;
-import org.icgc.dcc.etl2.core.task.GenericProcessTask;
-import org.icgc.dcc.etl2.job.summarize.function.SummarizeDonorGene;
-import org.icgc.dcc.etl2.job.summarize.function.SummarizeDonorGenes;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class DonorGeneObservationSummarizeTask extends GenericProcessTask {
+public final class RetainGeneFields extends RetainFields {
 
-  public DonorGeneObservationSummarizeTask() {
-    super(FileType.OBSERVATION, FileType.DONOR_GENE_OBSERVATION_SUMMARY);
+  // Including _mutation_id to filter unique geneIds in one donor
+  public RetainGeneFields() {
+    super(OBSERVATION_TYPE, MUTATION_ID, DONOR_GENE_GENE_ID);
   }
 
   @Override
-  protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input
-        .map(new RetainFields("_donor_id", "_type", "consequence"))
-        .flatMap(new FlattenField("consequence"))
-        .map(new ProjectFields("_gene_id", "consequence._gene_id"))
-        .map(new RemoveFields("consequence"))
-        .groupBy(new SelectFields("_donor_id", "_gene_id"))
-        .mapToPair(new SummarizeDonorGene())
-        .groupByKey()
-        .map(new SummarizeDonorGenes());
+  public ObjectNode call(ObjectNode row) {
+    val result = super.call(row);
+    val geneId = result.path(DONOR_GENE_GENE_ID);
+    if (geneId.isMissingNode() || isNullOrEmpty(geneId.textValue())) {
+      result.put(DONOR_GENE_GENE_ID, FAKE_GENE_ID);
+    }
+
+    return result;
   }
 
 }

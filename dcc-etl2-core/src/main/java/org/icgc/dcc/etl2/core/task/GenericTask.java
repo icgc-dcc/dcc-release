@@ -100,16 +100,8 @@ public abstract class GenericTask implements Task {
   }
 
   protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath) {
-    log.debug("Saving {} RDD({}) to {}...",
-        processed.isEmpty() ? "empty" : "non-empty",
-        processed.partitions().size(),
-        outputPath);
-
-    // TODO: This leads to shuffles. Should we care about empty files?
-    if (!processed.isEmpty()) {
-      ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath);
-      // ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);
-    }
+    ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath);
+    // ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);
   }
 
 }

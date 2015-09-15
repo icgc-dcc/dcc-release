@@ -33,13 +33,13 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.etl2.core.function.CombineFields;
+import org.icgc.dcc.etl2.core.function.KeyFields;
 import org.icgc.dcc.etl2.core.function.RemoveFields;
 import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.task.TaskContext;
 import org.icgc.dcc.etl2.job.join.function.CreateOccurrenceFromSecondary;
 import org.icgc.dcc.etl2.job.join.function.ExtractAnalysisIdAnalyzedSampleId;
 import org.icgc.dcc.etl2.job.join.function.KeyAnalysisIdAnalyzedSampleIdField;
-import org.icgc.dcc.etl2.job.join.function.KeyFields;
 import org.icgc.dcc.etl2.job.join.model.DonorSample;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;

@@ -46,6 +46,11 @@ public class AnnotationTask extends GenericProcessTask {
   }
 
   @Override
+  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
+    return readInput(taskContext, createJobConf(taskContext));
+  }
+
+  @Override
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf hadoopConf) {
     val maxFileSize = getMaxFileSize();
 

@@ -27,12 +27,28 @@ import org.icgc.dcc.etl2.core.job.FileType;
 import org.icgc.dcc.etl2.core.job.GenericJob;
 import org.icgc.dcc.etl2.core.job.JobContext;
 import org.icgc.dcc.etl2.core.job.JobType;
-import org.icgc.dcc.etl2.job.summarize.task.DonorGeneObservationSummarizeTask;
+import org.icgc.dcc.etl2.job.summarize.task.DonorSummarizeTask;
+import org.icgc.dcc.etl2.job.summarize.task.FeatureTypeSummarizeTask;
+import org.icgc.dcc.etl2.job.summarize.task.GeneSetSummarizeTask;
+import org.icgc.dcc.etl2.job.summarize.task.GeneSummarizeTask;
+import org.icgc.dcc.etl2.job.summarize.task.ObservationSummarizeTask;
+import org.icgc.dcc.etl2.job.summarize.task.ProjectSummarizeTask;
+import org.icgc.dcc.etl2.job.summarize.task.ReleaseSummarizeTask;
+import org.icgc.dcc.etl2.job.summarize.task.ResolveGeneSummaryTask;
+import org.icgc.dcc.etl2.job.summarize.task.ResolveProjectSummaryTask;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 public class SummarizeJob extends GenericJob {
+
+  private static final FileType[] OUTPUT_FILE_TYPES = {
+      FileType.DONOR_GENE_OBSERVATION_SUMMARY,
+      FileType.GENE_SET_SUMMARY,
+      FileType.GENE_SUMMARY,
+      FileType.PROJECT_SUMMARY,
+      FileType.OBSERVATION_SUMMARY,
+      FileType.RELEASE_SUMMARY };
 
   @Override
   public JobType getType() {
@@ -47,15 +63,30 @@ public class SummarizeJob extends GenericJob {
   }
 
   private void clean(JobContext jobContext) {
-    // TODO: Add more
-    delete(jobContext, FileType.DONOR_GENE_OBSERVATION_SUMMARY);
+    delete(jobContext, OUTPUT_FILE_TYPES);
   }
 
-  private void summarize(JobContext jobContext) {
+  private static void summarize(JobContext jobContext) {
     val watch = createStarted();
     log.info("Executing summary job...");
-    // TODO: Add more
-    jobContext.execute(new DonorGeneObservationSummarizeTask());
+    jobContext.execute(new GeneSetSummarizeTask());
+
+    val featureTypeSummary = new FeatureTypeSummarizeTask();
+    jobContext.execute(featureTypeSummary);
+    val donorSummarizeTask = new DonorSummarizeTask(featureTypeSummary.getProjectDonorSummary());
+    jobContext.execute(donorSummarizeTask);
+
+    val resolveProjectSummaryTask = new ResolveProjectSummaryTask();
+    jobContext.execute(resolveProjectSummaryTask);
+    jobContext.execute(new ProjectSummarizeTask(resolveProjectSummaryTask.getProjectSummaryBroadcast()));
+
+    val resolveGeneStatsTask = new ResolveGeneSummaryTask();
+    jobContext.execute(resolveGeneStatsTask);
+    jobContext.execute(
+        new GeneSummarizeTask(resolveGeneStatsTask.getGeneDonorTypeCounts()),
+        new ObservationSummarizeTask());
+    jobContext.execute(new ReleaseSummarizeTask(donorSummarizeTask.getDonorsCount(), donorSummarizeTask
+        .getLiveDonorsCount()));
     log.info("Finished executing summary job in {}", watch);
   }
 

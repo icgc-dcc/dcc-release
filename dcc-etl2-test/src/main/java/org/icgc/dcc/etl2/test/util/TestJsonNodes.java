@@ -20,11 +20,14 @@ package org.icgc.dcc.etl2.test.util;
 import static com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_COMMENTS;
 import static com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_SINGLE_QUOTES;
 import static com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES;
+import static com.google.common.collect.ImmutableList.copyOf;
 
 import java.io.File;
+import java.util.List;
 
 import lombok.SneakyThrows;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -67,6 +70,10 @@ public class TestJsonNodes {
   @SneakyThrows
   public static String toJson(Object object) {
     return MAPPER.writeValueAsString(object);
+  }
+
+  public static List<JsonNode> getElements(JsonNode node) {
+    return copyOf(node.elements());
   }
 
 }

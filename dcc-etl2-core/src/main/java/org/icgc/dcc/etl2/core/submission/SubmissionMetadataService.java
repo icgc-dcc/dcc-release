@@ -13,9 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.icgc.dcc.common.core.meta.Resolver.CodeListsResolver;
+import org.icgc.dcc.common.core.meta.Resolver.DictionaryResolver;
 import org.icgc.dcc.common.core.model.ValueType;
-import org.icgc.dcc.common.core.util.resolver.Resolver.CodeListsResolver;
-import org.icgc.dcc.common.core.util.resolver.Resolver.DictionaryResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
