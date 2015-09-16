@@ -1,15 +1,14 @@
-package org.icgc.dcc.release.workflow.mail;
+package org.icgc.dcc.release.client.mail;
 
 import static org.icgc.dcc.release.core.util.Stopwatches.createStarted;
 import lombok.val;
 
+import org.icgc.dcc.release.client.config.MailConfig;
+import org.icgc.dcc.release.client.config.WorkflowProperties;
+import org.icgc.dcc.release.client.config.WorkflowProperties.MailProperties;
+import org.icgc.dcc.release.client.mail.MailerTest.TestMailConfig;
 import org.icgc.dcc.release.core.job.JobSummary;
 import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.workflow.mail.MailerTest.TestMailConfig;
-import org.icgc.dcc.release.workflow.config.MailConfig;
-import org.icgc.dcc.release.workflow.config.WorkflowProperties;
-import org.icgc.dcc.release.workflow.config.WorkflowProperties.MailProperties;
-import org.icgc.dcc.release.workflow.mail.Mailer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

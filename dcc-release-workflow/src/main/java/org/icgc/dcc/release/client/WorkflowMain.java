@@ -16,7 +16,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.workflow;
+package org.icgc.dcc.release.client;
 
 import static com.google.common.base.Strings.repeat;
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
@@ -28,11 +28,11 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.release.client.cli.Options;
+import org.icgc.dcc.release.client.core.Workflow;
+import org.icgc.dcc.release.client.core.WorkflowContext;
+import org.icgc.dcc.release.client.util.MongoCollectionHDFSImporter;
 import org.icgc.dcc.release.job.imports.config.MongoProperties;
-import org.icgc.dcc.release.workflow.cli.Options;
-import org.icgc.dcc.release.workflow.core.Workflow;
-import org.icgc.dcc.release.workflow.core.WorkflowContext;
-import org.icgc.dcc.release.workflow.util.MongoCollectionHDFSImporter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ComponentScan;

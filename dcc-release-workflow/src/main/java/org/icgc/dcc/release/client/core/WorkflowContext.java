@@ -15,90 +15,28 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.workflow;
+package org.icgc.dcc.release.client.core;
 
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
+import lombok.NonNull;
+import lombok.Value;
 
-/**
- * This is a stub for development.
- */
-public class Temp {
+import org.icgc.dcc.release.core.job.JobType;
 
-  /**
-   * Release 18 name.
-   */
-  public static final String RELEASE_NAME = "ICGC18";
+@Value
+public class WorkflowContext {
 
-  /**
-   * Release 18 project names
-   */
-  public static final List<String> PROJECT_NAMES = ImmutableList.<String> of(
-      "ALL-US",
-      "BLCA-CN",
-      "BLCA-US",
-      "BOCA-FR",
-      "BOCA-UK",
-      "BRCA-UK",
-      "BRCA-US",
-      "CESC-US",
-      "CLLE-ES",
-      "CMDI-UK",
-      "COAD-US",
-      "COCA-CN",
-      "EOPC-DE",
-      "ESAD-UK",
-      "ESCA-CN",
-      "GACA-CN",
-      "GBM-US",
-      "HNSC-US",
-      "KIRC-US",
-      "KIRP-US",
-      "LAML-KR",
-      "LAML-US",
-      "LGG-US",
-      "LIAD-FR",
-      "LICA-FR",
-      "LIHC-US",
-      "LIHM-FR",
-      "LINC-JP",
-      "LIRI-JP",
-      "LUAD-US",
-      "LUSC-CN",
-      "LUSC-KR",
-      "LUSC-US",
-      "MALY-DE",
-      "NBL-US",
-      "ORCA-IN",
-      "OV-AU",
-      "OV-US",
-      "PAAD-US",
-      "PACA-AU",
-      "PACA-CA",
-      "PACA-IT",
-      "PAEN-AU",
-      "PBCA-DE",
-      "PRAD-CA",
-      "PRAD-UK",
-      "PRAD-US",
-      "READ-US",
-      "RECA-CN",
-      "RECA-EU",
-      "SKCM-US",
-      "STAD-US",
-      "THCA-SA",
-      "THCA-US",
-      "UCEC-US");
+  String releaseName;
+  List<String> projectNames;
 
-  /**
-   * Submission dir.
-   */
-  public static final String RELEASE_DIR = "/icgc/submission/ICGC18";
+  String releaseDir;
+  String workingDir;
 
-  /**
-   * Workspace dir.
-   */
-  public static final String STAGING_DIR = "/tmp/dcc-workflow";
+  List<JobType> jobTypes;
+
+  public boolean isIncluded(@NonNull JobType jobType) {
+    return jobTypes.contains(jobType);
+  }
 
 }

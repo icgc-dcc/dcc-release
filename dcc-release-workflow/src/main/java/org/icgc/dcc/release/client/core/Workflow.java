@@ -1,4 +1,4 @@
-package org.icgc.dcc.release.workflow.core;
+package org.icgc.dcc.release.client.core;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.repeat;
@@ -12,6 +12,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.fs.Path;
+import org.icgc.dcc.release.client.mail.Mailer;
 import org.icgc.dcc.release.core.job.DefaultJobContext;
 import org.icgc.dcc.release.core.job.Job;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -22,7 +23,6 @@ import org.icgc.dcc.release.core.submission.SubmissionFileSystem;
 import org.icgc.dcc.release.core.submission.SubmissionMetadataService;
 import org.icgc.dcc.release.core.task.TaskExecutor;
 import org.icgc.dcc.release.core.util.LazyTable;
-import org.icgc.dcc.release.workflow.mail.Mailer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
