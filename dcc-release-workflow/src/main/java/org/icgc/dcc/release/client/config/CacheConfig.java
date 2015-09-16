@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,58 +15,65 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.workflow.config;
+package org.icgc.dcc.release.client.config;
 
-import org.icgc.dcc.common.core.meta.Resolver.CodeListsResolver;
-import org.icgc.dcc.common.core.meta.Resolver.DictionaryResolver;
-import org.icgc.dcc.common.core.meta.RestfulCodeListsResolver;
-import org.icgc.dcc.common.core.meta.RestfulDictionaryResolver;
-import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
-import org.icgc.dcc.release.core.submission.SubmissionMetadataService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
+import static java.util.concurrent.TimeUnit.MINUTES;
+
+import java.util.concurrent.ConcurrentMap;
+
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurer;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.cache.interceptor.KeyGenerator;
+import org.springframework.cache.interceptor.SimpleKeyGenerator;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
 
 /**
- * Submission system configuration.
+ * Server wide caching configuration.
  */
 @Lazy
 @Configuration
-public class SubmissionConfig {
+@EnableCaching
+public class CacheConfig implements CachingConfigurer {
 
-  @Value("${dcc.submission.url}")
-  String submissionUrl;
-  @Value("${dcc.submission.dictionaryVersion}")
-  String dictionaryVersion;
+  /**
+   * Constants.
+   */
+  private static final int CACHE_TTL_MINUTES = 60;
 
-  @Autowired
-  SubmissionMetadataService submissionMetadataService;
-
-  @Bean
-  public SubmissionFileSchemas submissionFileSchemas() {
-    return new SubmissionFileSchemas(submissionMetadataService.getMetadata());
-  }
-
-  @Bean
-  public DictionaryResolver dictionaryResolver() {
-    return new RestfulDictionaryResolver(submissionUrl) {
+  @Override
+  public CacheManager cacheManager() {
+    return new ConcurrentMapCacheManager() {
 
       @Override
-      public ObjectNode get() {
-        return super.apply(Optional.of(dictionaryVersion));
+      protected Cache createConcurrentMapCache(String name) {
+        return new ConcurrentMapCache(name, createStore(), false);
+      }
+
+      /**
+       * @return Guava cache instance with a suitable TTL.
+       */
+      private ConcurrentMap<Object, Object> createStore() {
+        return CacheBuilder
+            .newBuilder()
+            .expireAfterWrite(CACHE_TTL_MINUTES, MINUTES)
+            .maximumSize(100)
+            .build()
+            .asMap();
       }
 
     };
   }
 
-  @Bean
-  public CodeListsResolver codeListsResolver() {
-    return new RestfulCodeListsResolver(submissionUrl);
+  @Override
+  public KeyGenerator keyGenerator() {
+    return new SimpleKeyGenerator();
   }
 
 }

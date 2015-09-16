@@ -15,41 +15,47 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.workflow.cli;
+package org.icgc.dcc.release.client.config;
 
-import static com.google.common.collect.Lists.newArrayList;
+import java.util.Properties;
 
-import java.util.List;
+import lombok.val;
 
-import lombok.ToString;
+import org.icgc.dcc.release.client.config.WorkflowProperties.MailProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 
-import org.icgc.dcc.release.core.job.JobType;
-
-import com.beust.jcommander.Parameter;
-
-@ToString
-public class Options {
-
-  /**
-   * Behavior
-   */
-  @Parameter(names = { "--jobs" }, required = true, converter = JobTypeConverter.class, description = "Comma seperated list of jobs to run. By default all jobs will be run.")
-  public List<JobType> jobs = newArrayList(JobType.values());
-  @Parameter(names = { "--release-dir" }, required = true, description = "The source of the submission files.")
-  public String releaseDir;
-  @Parameter(names = { "--staging-dir" }, description = "The base working directory.")
-  public String stagingDir = "/tmp/dcc-workflow";
-  @Parameter(names = { "--project-names" }, required = true, description = "The list of project names / codes to process. Defaults to all")
-  public List<String> projectNames = newArrayList();
-  @Parameter(names = { "--release" }, required = true, description = "Release name. E.g. ICGC19.")
-  public String release;
+/**
+ * Mail system configuration.
+ * <p>
+ * See {@link ThymeleafAutoConfiguration} for details on mail templating.
+ */
+@Lazy
+@Configuration
+public class MailConfig {
 
   /**
-   * Info
+   * Dependencies.
    */
-  @Parameter(names = { "-v", "--version" }, help = true, description = "Show version information")
-  public boolean version;
-  @Parameter(names = { "-h", "--help" }, help = true, description = "Show help information")
-  public boolean help;
+  @Autowired
+  MailProperties mail;
+
+  @Bean
+  @Primary
+  public JavaMailSender javaMailSender() {
+    val properties = new Properties();
+    properties.putAll(mail.getProperties());
+
+    val sender = new JavaMailSenderImpl();
+    sender.setJavaMailProperties(properties);
+
+    return sender;
+  }
 
 }

@@ -15,44 +15,70 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.workflow.config;
+package org.icgc.dcc.release.client.config;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_SERIALIZATIONS_KEY;
 
+import java.io.IOException;
+
+import lombok.val;
+
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.release.core.task.TaskExecutor;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.io.serializer.WritableSerialization;
+import org.icgc.dcc.release.client.config.WorkflowProperties.HadoopProperties;
+import org.icgc.dcc.release.core.hadoop.ObjectNodeSerialization;
+import org.icgc.dcc.release.core.util.Configurations;
+import org.icgc.dcc.release.job.export.config.HBaseProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-
-import com.google.common.util.concurrent.MoreExecutors;
+import org.springframework.context.annotation.Primary;
 
 /**
- * Application level configuration.
+ * Hadoop configuration.
  * <p>
- * See Spring annotation documentation for details.
+ * See annotation documentation for details.
  */
 @Lazy
-@Configuration
-public class WorkflowConfig {
+@org.springframework.context.annotation.Configuration
+public class HadoopConfig {
+
+  /**
+   * Dependencies.
+   */
+  @Value("#{sparkContext.hadoopConfiguration()}")
+  Configuration conf;
+  @Autowired
+  HadoopProperties hadoop;
+  @Autowired
+  HBaseProperties hbase;
 
   @Bean
-  public ExecutorService executorService(@Value("${workflow.parallel}") boolean parallel) {
-    if (parallel) {
-      // Many threads: spawned
-      return Executors.newCachedThreadPool();
-    } else {
-      // Only one thread: main
-      return MoreExecutors.sameThreadExecutor();
-    }
+  @Primary
+  public Configuration hadoopConf() {
+    Configurations.setAll(conf, hadoop.getProperties());
+
+    // Custom serialization needed for outputs / inputs
+    conf.set(IO_SERIALIZATIONS_KEY,
+        WritableSerialization.class.getName() + "," + ObjectNodeSerialization.class.getName());
+
+    return conf;
   }
 
   @Bean
-  public TaskExecutor taskExecutor(ExecutorService executor, JavaSparkContext sparkContext, FileSystem fileSystem) {
-    return new TaskExecutor(executor, sparkContext, fileSystem);
+  public Configuration hbaseConf() {
+    val config = HBaseConfiguration.create(hadoopConf());
+    Configurations.setAll(config, hbase.getProperties());
+
+    return config;
+  }
+
+  @Bean
+  public FileSystem fileSystem() throws IOException {
+    return FileSystem.get(hadoopConf());
   }
 
 }

@@ -15,71 +15,88 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.workflow.config;
+package org.icgc.dcc.release.client.config;
 
-import static scala.collection.JavaConversions.asScalaMap;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static com.google.common.collect.Maps.newLinkedHashMap;
 
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.release.core.job.Job;
-import org.icgc.dcc.release.workflow.config.WorkflowProperties.SparkProperties;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Map;
+
+import lombok.Data;
+
+import org.icgc.dcc.release.job.export.config.HBaseProperties;
+import org.icgc.dcc.release.job.index.config.IndexProperties;
+import org.icgc.dcc.release.job.annotate.config.SnpEffProperties;
+import org.icgc.dcc.release.job.imports.config.MongoProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 
-/**
- * Spark configuration.
- * <p>
- * See annotation documentation for details.
- */
-@Slf4j
-@Lazy
 @Configuration
-public class SparkConfig {
-
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  SparkProperties spark;
+public class WorkflowProperties {
 
   @Bean
-  public SparkConf sparkConf() {
-    log.info("Creating SparkConf with spark properties '{}'", spark);
-    return new SparkConf()
-        .setAppName("dcc-etl-workflow")
-        .setMaster(spark.getMaster())
-        .setAll(asScalaMap(spark.getProperties()));
+  @ConfigurationProperties(prefix = "mongo")
+  public MongoProperties mongoProperties() {
+    return new MongoProperties();
   }
 
-  @Bean(destroyMethod = "stop")
-  public JavaSparkContext sparkContext() {
-    log.info("Creating JavaSparkContext...");
-    val sparkContext = new JavaSparkContext(sparkConf());
-
-    val jobJar = getJobJar();
-    log.info("Adding job jar: {}", jobJar);
-    sparkContext.addJar(jobJar);
-
-    return sparkContext;
+  @Bean
+  @ConfigurationProperties(prefix = "hbase")
+  public HBaseProperties hbaseProperties() {
+    return new HBaseProperties();
   }
 
-  private String getJobJar() {
-    val jobJarAnchor = Job.class;
-    val path = getPath(jobJarAnchor);
-
-    return isExpoded(path) ? getPath(getClass()) : path;
+  @Bean
+  @ConfigurationProperties(prefix = "snpeff")
+  public SnpEffProperties snpEffProperties() {
+    return new SnpEffProperties();
   }
 
-  private static boolean isExpoded(String path) {
-    return path.contains("classes");
+  @Bean
+  @ConfigurationProperties(prefix = "index")
+  public IndexProperties indexProperties() {
+    return new IndexProperties();
   }
 
-  private static String getPath(Class<?> type) {
-    return type.getProtectionDomain().getCodeSource().getLocation().getPath();
+  @Bean
+  @ConfigurationProperties(prefix = "spark")
+  public SparkProperties sparkProperties() {
+    return new SparkProperties();
+  }
+
+  @Bean
+  @ConfigurationProperties(prefix = "hadoop")
+  public HadoopProperties hadoopProperties() {
+    return new HadoopProperties();
+  }
+
+  @Bean
+  @ConfigurationProperties(prefix = "mail")
+  public MailProperties mailProperties() {
+    return new MailProperties();
+  }
+
+  @Data
+  public static class SparkProperties {
+
+    private String master;
+    private Map<String, String> properties = newLinkedHashMap();
+
+  }
+
+  @Data
+  public static class HadoopProperties {
+
+    private Map<String, String> properties = newLinkedHashMap();
+
+  }
+
+  @Data
+  public static class MailProperties {
+
+    private String recipients;
+    private Map<String, String> properties = newLinkedHashMap();
+
   }
 
 }

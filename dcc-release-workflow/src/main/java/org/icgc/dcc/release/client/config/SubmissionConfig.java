@@ -15,88 +15,58 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.workflow.config;
+package org.icgc.dcc.release.client.config;
 
-import static com.google.common.collect.Maps.newLinkedHashMap;
-
-import java.util.Map;
-
-import lombok.Data;
-
-import org.icgc.dcc.release.job.export.config.HBaseProperties;
-import org.icgc.dcc.release.job.index.config.IndexProperties;
-import org.icgc.dcc.release.job.annotate.config.SnpEffProperties;
-import org.icgc.dcc.release.job.imports.config.MongoProperties;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.icgc.dcc.common.core.meta.Resolver.CodeListsResolver;
+import org.icgc.dcc.common.core.meta.Resolver.DictionaryResolver;
+import org.icgc.dcc.common.core.meta.RestfulCodeListsResolver;
+import org.icgc.dcc.common.core.meta.RestfulDictionaryResolver;
+import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
+import org.icgc.dcc.release.core.submission.SubmissionMetadataService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
+
+/**
+ * Submission system configuration.
+ */
+@Lazy
 @Configuration
-public class WorkflowProperties {
+public class SubmissionConfig {
+
+  @Value("${dcc.submission.url}")
+  String submissionUrl;
+  @Value("${dcc.submission.dictionaryVersion}")
+  String dictionaryVersion;
+
+  @Autowired
+  SubmissionMetadataService submissionMetadataService;
 
   @Bean
-  @ConfigurationProperties(prefix = "mongo")
-  public MongoProperties mongoProperties() {
-    return new MongoProperties();
-  }
-
-  @Bean
-  @ConfigurationProperties(prefix = "hbase")
-  public HBaseProperties hbaseProperties() {
-    return new HBaseProperties();
-  }
-
-  @Bean
-  @ConfigurationProperties(prefix = "snpeff")
-  public SnpEffProperties snpEffProperties() {
-    return new SnpEffProperties();
+  public SubmissionFileSchemas submissionFileSchemas() {
+    return new SubmissionFileSchemas(submissionMetadataService.getMetadata());
   }
 
   @Bean
-  @ConfigurationProperties(prefix = "index")
-  public IndexProperties indexProperties() {
-    return new IndexProperties();
+  public DictionaryResolver dictionaryResolver() {
+    return new RestfulDictionaryResolver(submissionUrl) {
+
+      @Override
+      public ObjectNode get() {
+        return super.apply(Optional.of(dictionaryVersion));
+      }
+
+    };
   }
 
   @Bean
-  @ConfigurationProperties(prefix = "spark")
-  public SparkProperties sparkProperties() {
-    return new SparkProperties();
-  }
-
-  @Bean
-  @ConfigurationProperties(prefix = "hadoop")
-  public HadoopProperties hadoopProperties() {
-    return new HadoopProperties();
-  }
-
-  @Bean
-  @ConfigurationProperties(prefix = "mail")
-  public MailProperties mailProperties() {
-    return new MailProperties();
-  }
-
-  @Data
-  public static class SparkProperties {
-
-    private String master;
-    private Map<String, String> properties = newLinkedHashMap();
-
-  }
-
-  @Data
-  public static class HadoopProperties {
-
-    private Map<String, String> properties = newLinkedHashMap();
-
-  }
-
-  @Data
-  public static class MailProperties {
-
-    private String recipients;
-    private Map<String, String> properties = newLinkedHashMap();
-
+  public CodeListsResolver codeListsResolver() {
+    return new RestfulCodeListsResolver(submissionUrl);
   }
 
 }

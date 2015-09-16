@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,65 +15,71 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.workflow.config;
+package org.icgc.dcc.release.client.config;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
+import static scala.collection.JavaConversions.asScalaMap;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.ConcurrentMap;
-
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CachingConfigurer;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
-import org.springframework.cache.interceptor.KeyGenerator;
-import org.springframework.cache.interceptor.SimpleKeyGenerator;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.release.client.config.WorkflowProperties.SparkProperties;
+import org.icgc.dcc.release.core.job.Job;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import com.google.common.cache.CacheBuilder;
-
 /**
- * Server wide caching configuration.
+ * Spark configuration.
+ * <p>
+ * See annotation documentation for details.
  */
+@Slf4j
 @Lazy
 @Configuration
-@EnableCaching
-public class CacheConfig implements CachingConfigurer {
+public class SparkConfig {
 
   /**
-   * Constants.
+   * Dependencies.
    */
-  private static final int CACHE_TTL_MINUTES = 60;
+  @Autowired
+  SparkProperties spark;
 
-  @Override
-  public CacheManager cacheManager() {
-    return new ConcurrentMapCacheManager() {
-
-      @Override
-      protected Cache createConcurrentMapCache(String name) {
-        return new ConcurrentMapCache(name, createStore(), false);
-      }
-
-      /**
-       * @return Guava cache instance with a suitable TTL.
-       */
-      private ConcurrentMap<Object, Object> createStore() {
-        return CacheBuilder
-            .newBuilder()
-            .expireAfterWrite(CACHE_TTL_MINUTES, MINUTES)
-            .maximumSize(100)
-            .build()
-            .asMap();
-      }
-
-    };
+  @Bean
+  public SparkConf sparkConf() {
+    log.info("Creating SparkConf with spark properties '{}'", spark);
+    return new SparkConf()
+        .setAppName("dcc-etl-workflow")
+        .setMaster(spark.getMaster())
+        .setAll(asScalaMap(spark.getProperties()));
   }
 
-  @Override
-  public KeyGenerator keyGenerator() {
-    return new SimpleKeyGenerator();
+  @Bean(destroyMethod = "stop")
+  public JavaSparkContext sparkContext() {
+    log.info("Creating JavaSparkContext...");
+    val sparkContext = new JavaSparkContext(sparkConf());
+
+    val jobJar = getJobJar();
+    log.info("Adding job jar: {}", jobJar);
+    sparkContext.addJar(jobJar);
+
+    return sparkContext;
+  }
+
+  private String getJobJar() {
+    val jobJarAnchor = Job.class;
+    val path = getPath(jobJarAnchor);
+
+    return isExpoded(path) ? getPath(getClass()) : path;
+  }
+
+  private static boolean isExpoded(String path) {
+    return path.contains("classes");
+  }
+
+  private static String getPath(Class<?> type) {
+    return type.getProtectionDomain().getCodeSource().getLocation().getPath();
   }
 
 }
