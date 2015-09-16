@@ -1,7 +1,7 @@
 ICGC DCC - Release
 ===
 
-Second generation of the ICGC DCC ETL build on Spark
+Second generation of the ICGC DCC ETL build on Spark. For the first generation ETL project, please see the [dcc-etl](https://github.com/icgc-dcc/dcc-etl) repository.
 
 Build
 ---
