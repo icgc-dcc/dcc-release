@@ -1,4 +1,4 @@
-ICGC DCC - ETL2
+ICGC DCC - Release
 ===
 
 Second generation of the ICGC DCC ETL build on Spark
