@@ -19,7 +19,7 @@
     <module>dcc-release-core</module>
     <module>dcc-release-job</module>
     <module>dcc-release-test</module>
-    <module>dcc-release-workflow</module>
+    <module>dcc-release-client</module>
   </modules>
 
   <repositories>

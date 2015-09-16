@@ -9,7 +9,7 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>dcc-release-workflow</artifactId>
+  <artifactId>dcc-release-client</artifactId>
 
   <name>${project.artifactId}</name>
   <description>${project.name}</description>
@@ -136,7 +136,7 @@
 
   <properties>
     <!-- Spring -->
-    <main.class>org.icgc.dcc.release.workflow.WorkflowMain</main.class>
+    <main.class>org.icgc.dcc.release.client.WorkflowMain</main.class>
     <start-class>${main.class}</start-class>
   </properties>
 
