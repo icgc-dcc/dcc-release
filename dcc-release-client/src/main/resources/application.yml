@@ -70,6 +70,10 @@ index:
 # Production
 ###################################################################################################
 
+# DCC
+dcc:
+   identifier:
+      token: <INSERT_TOKEN_HERE>
 # Workflow
 workflow:
    parallel: true

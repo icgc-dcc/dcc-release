@@ -17,7 +17,10 @@
  */
 package org.icgc.dcc.release.job.id.task;
 
+import lombok.NonNull;
+
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.job.id.function.AddSurrogateMutationId;
 
@@ -25,14 +28,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
 
-  public AddSurrogateMutationIdTask(String identifierUrl, String releaseName) {
-    super(FileType.SSM_P_MASKED, FileType.SSM_P_MASKED_SURROGATE_KEY, identifierUrl, releaseName);
+  public AddSurrogateMutationIdTask(@NonNull IdClientFactory idClientFactory) {
+    super(FileType.SSM_P_MASKED, FileType.SSM_P_MASKED_SURROGATE_KEY, idClientFactory);
   }
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
     return input
-        .map(new AddSurrogateMutationId(identifierUrl, releaseName));
+        .map(new AddSurrogateMutationId(idClientFactory));
   }
 
 }

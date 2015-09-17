@@ -20,6 +20,8 @@ package org.icgc.dcc.release.job.id.core;
 import lombok.NonNull;
 import lombok.val;
 
+import org.icgc.dcc.id.client.core.IdClientFactory;
+import org.icgc.dcc.id.client.http.HttpIdClient;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -39,6 +41,10 @@ public class IdJob extends GenericJob {
    */
   @Value("${dcc.identifier.url}")
   private String identifierUrl;
+  @Value("${dcc.identifier.token}")
+  private String identifierAuthToken;
+  @Value("${dcc.identifier.classname}")
+  private String identifierClassName = HttpIdClient.class.getName();
 
   @Override
   public JobType getType() {
@@ -61,12 +67,13 @@ public class IdJob extends GenericJob {
 
   private void id(JobContext jobContext) {
     val releaseName = jobContext.getReleaseName();
+    val idClientFactory = new IdClientFactory(identifierClassName, identifierUrl, releaseName, identifierAuthToken);
 
     jobContext.execute(
-        new AddSurrogateDonorIdTask(identifierUrl, releaseName),
-        new AddSurrogateSpecimenIdTask(identifierUrl, releaseName),
-        new AddSurrogateSampleIdTask(identifierUrl, releaseName),
-        new AddSurrogateMutationIdTask(identifierUrl, releaseName));
+        new AddSurrogateDonorIdTask(idClientFactory),
+        new AddSurrogateSpecimenIdTask(idClientFactory),
+        new AddSurrogateSampleIdTask(idClientFactory),
+        new AddSurrogateMutationIdTask(idClientFactory));
   }
 
 }

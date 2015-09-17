@@ -23,10 +23,10 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_START;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATION_TYPE;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
-import lombok.NonNull;
 import lombok.val;
 
 import org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames;
+import org.icgc.dcc.id.client.core.IdClientFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -34,8 +34,8 @@ public class AddSurrogateMutationId extends AddSurrogateId {
 
   private static final String ASSEMBLY_VERSION = "GRCh37";
 
-  public AddSurrogateMutationId(@NonNull String identifierUrl, @NonNull String releaseName) {
-    super(identifierUrl, releaseName);
+  public AddSurrogateMutationId(IdClientFactory idClientFactory) {
+    super(idClientFactory);
   }
 
   @Override
@@ -50,8 +50,9 @@ public class AddSurrogateMutationId extends AddSurrogateId {
     // TODO: get from meta file
     String assemblyVersion = ASSEMBLY_VERSION;
 
-    val mutationId =
-        client().getMutationId(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion);
+    val mutationId = client()
+        .getMutationId(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion)
+        .get();
 
     row.put(IdentifierFieldNames.SURROGATE_MUTATION_ID, mutationId);
 

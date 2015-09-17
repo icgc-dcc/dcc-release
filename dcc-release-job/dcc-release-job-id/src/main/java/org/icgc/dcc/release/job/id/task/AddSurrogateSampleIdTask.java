@@ -17,7 +17,10 @@
  */
 package org.icgc.dcc.release.job.id.task;
 
+import lombok.NonNull;
+
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.job.id.function.AddSurrogateSampleId;
 
@@ -25,14 +28,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AddSurrogateSampleIdTask extends AddSurrogateIdTask {
 
-  public AddSurrogateSampleIdTask(String identifierUrl, String releaseName) {
-    super(FileType.SAMPLE, FileType.SAMPLE_SURROGATE_KEY, identifierUrl, releaseName);
+  public AddSurrogateSampleIdTask(@NonNull IdClientFactory idClientFactory) {
+    super(FileType.SAMPLE, FileType.SAMPLE_SURROGATE_KEY, idClientFactory);
   }
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
     return input
-        .map(new AddSurrogateSampleId(identifierUrl, releaseName));
+        .map(new AddSurrogateSampleId(idClientFactory));
   }
 
 }

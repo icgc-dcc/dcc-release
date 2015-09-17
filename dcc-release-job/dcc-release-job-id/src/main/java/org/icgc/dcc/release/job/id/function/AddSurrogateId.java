@@ -22,8 +22,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.FieldNames;
-import org.icgc.dcc.etl.core.id.HttpIdentifierClient;
-import org.icgc.dcc.etl.core.id.IdentifierClient;
+import org.icgc.dcc.id.client.core.IdClient;
+import org.icgc.dcc.id.client.core.IdClientFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -34,21 +34,10 @@ public abstract class AddSurrogateId implements Function<ObjectNode, ObjectNode>
    * Configuration.
    */
   @NonNull
-  private final String identifierUrl;
-  @NonNull
-  private final String releaseName;
+  private final IdClientFactory idClientFactory;
 
-  /**
-   * State.
-   */
-  private transient IdentifierClient client;
-
-  protected IdentifierClient client() {
-    if (client == null) {
-      client = new HttpIdentifierClient(identifierUrl, releaseName);
-    }
-
-    return client;
+  protected IdClient client() {
+    return idClientFactory.create();
   }
 
   protected String getSubmittedProjectId(ObjectNode row) {

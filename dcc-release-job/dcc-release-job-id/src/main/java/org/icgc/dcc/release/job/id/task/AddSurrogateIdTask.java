@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.id.task;
 
+import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericProcessTask;
 
@@ -25,13 +26,11 @@ public abstract class AddSurrogateIdTask extends GenericProcessTask {
   /**
    * Configuration.
    */
-  protected final String identifierUrl;
-  protected final String releaseName;
+  protected final IdClientFactory idClientFactory;
 
-  public AddSurrogateIdTask(FileType inputFileType, FileType outputFileType, String identifierUrl, String releaseName) {
+  public AddSurrogateIdTask(FileType inputFileType, FileType outputFileType, IdClientFactory idClientFactory) {
     super(inputFileType, outputFileType);
-    this.identifierUrl = identifierUrl;
-    this.releaseName = releaseName;
+    this.idClientFactory = idClientFactory;
   }
 
 }
