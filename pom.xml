@@ -95,6 +95,13 @@
         <artifactId>dcc-common-client</artifactId>
         <version>${dcc-common.version}</version>
       </dependency>
+      
+      <!-- DCC - ID -->
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-id-client</artifactId>
+        <version>${dcc-id.version}</version>
+      </dependency>
 
       <!-- Spark -->
       <dependency>
@@ -305,6 +312,9 @@
 
     <!-- Versions - DCC ETL -->
     <dcc-etl.version>3.8.9.2</dcc-etl.version>
+
+    <!-- Versions - DCC ID -->
+    <dcc-id.version>0.0.10</dcc-id.version>
 
     <!-- Versions - Spring -->
     <spring.version>4.0.8.RELEASE</spring.version>

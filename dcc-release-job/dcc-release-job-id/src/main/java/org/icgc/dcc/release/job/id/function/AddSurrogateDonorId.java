@@ -17,18 +17,18 @@
  */
 package org.icgc.dcc.release.job.id.function;
 
-import lombok.NonNull;
 import lombok.val;
 
 import org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames;
 import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
+import org.icgc.dcc.id.client.core.IdClientFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AddSurrogateDonorId extends AddSurrogateId {
 
-  public AddSurrogateDonorId(@NonNull String identifierUrl, @NonNull String releaseName) {
-    super(identifierUrl, releaseName);
+  public AddSurrogateDonorId(IdClientFactory idClientFactory) {
+    super(idClientFactory);
   }
 
   @Override
@@ -36,7 +36,7 @@ public class AddSurrogateDonorId extends AddSurrogateId {
     val submittedDonorId = row.get(SubmissionFieldNames.SUBMISSION_DONOR_ID).textValue();
     val submittedProjectId = getSubmittedProjectId(row);
 
-    val donorId = client().getDonorId(submittedDonorId, submittedProjectId);
+    val donorId = client().getDonorId(submittedDonorId, submittedProjectId).get();
 
     row.put(IdentifierFieldNames.SURROGATE_DONOR_ID, donorId);
 

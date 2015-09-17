@@ -18,24 +18,24 @@
 package org.icgc.dcc.release.job.id.function;
 
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_SPECIMEN_ID;
-import lombok.NonNull;
 import lombok.val;
 
 import org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames;
+import org.icgc.dcc.id.client.core.IdClientFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AddSurrogateSpecimenId extends AddSurrogateId {
 
-  public AddSurrogateSpecimenId(@NonNull String identifierUrl, @NonNull String releaseName) {
-    super(identifierUrl, releaseName);
+  public AddSurrogateSpecimenId(IdClientFactory identifierConfig) {
+    super(identifierConfig);
   }
 
   @Override
   public ObjectNode call(ObjectNode row) throws Exception {
     val submittedSpecimenId = row.get(SUBMISSION_SPECIMEN_ID).textValue();
     val submittedProjectId = getSubmittedProjectId(row);
-    val specimenId = client().getSpecimenId(submittedSpecimenId, submittedProjectId);
+    val specimenId = client().getSpecimenId(submittedSpecimenId, submittedProjectId).get();
 
     row.put(IdentifierFieldNames.SURROGATE_SPECIMEN_ID, specimenId);
 

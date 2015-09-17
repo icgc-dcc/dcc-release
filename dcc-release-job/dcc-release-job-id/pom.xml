@@ -19,7 +19,7 @@
     <!-- None. See parent -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>dcc-etl-core</artifactId>
+      <artifactId>dcc-id-client</artifactId>
     </dependency>
 
   </dependencies>

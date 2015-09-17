@@ -17,25 +17,25 @@
  */
 package org.icgc.dcc.release.job.id.function;
 
-import lombok.NonNull;
 import lombok.val;
 
 import org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames;
 import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
+import org.icgc.dcc.id.client.core.IdClientFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AddSurrogateSampleId extends AddSurrogateId {
 
-  public AddSurrogateSampleId(@NonNull String identifierUrl, @NonNull String releaseName) {
-    super(identifierUrl, releaseName);
+  public AddSurrogateSampleId(IdClientFactory idClientFactory) {
+    super(idClientFactory);
   }
 
   @Override
   public ObjectNode call(ObjectNode row) throws Exception {
     val submittedSampleId = row.get(SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID).textValue();
     val submittedProjectId = getSubmittedProjectId(row);
-    val sampleId = client().getSampleId(submittedSampleId, submittedProjectId);
+    val sampleId = client().getSampleId(submittedSampleId, submittedProjectId).get();
 
     row.put(IdentifierFieldNames.SURROGATE_SAMPLE_ID, sampleId);
 
