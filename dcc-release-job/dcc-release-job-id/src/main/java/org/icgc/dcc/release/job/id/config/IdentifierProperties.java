@@ -15,38 +15,23 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.id.function;
+package org.icgc.dcc.release.job.id.config;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import java.io.Serializable;
 
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.core.model.FieldNames;
-import org.icgc.dcc.id.client.core.IdClient;
-import org.icgc.dcc.id.client.core.IdClientFactory;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+@Data
+@Accessors(chain = true)
+@NoArgsConstructor
+public class IdentifierProperties implements Serializable {
 
-@RequiredArgsConstructor
-public abstract class AddSurrogateId implements Function<ObjectNode, ObjectNode> {
-
-  /**
-   * Configuration.
-   */
-  @NonNull
-  private final IdClientFactory idClientFactory;
-  private transient IdClient idClient;
-
-  protected IdClient client() {
-    if (idClient == null) {
-      idClient = idClientFactory.create();
-    }
-
-    return idClient;
-  }
-
-  protected String getSubmittedProjectId(ObjectNode row) {
-    return row.get(FieldNames.PROJECT_ID).textValue();
-  }
+  String url;
+  String token;
+  String classname;
+  boolean requestLoggingEnabled;
+  boolean strictSSLCertificates;
 
 }

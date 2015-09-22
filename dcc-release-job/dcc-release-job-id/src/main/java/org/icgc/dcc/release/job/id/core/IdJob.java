@@ -17,34 +17,33 @@
  */
 package org.icgc.dcc.release.job.id.core;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import lombok.NonNull;
 import lombok.val;
 
 import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.id.client.http.HttpIdClient;
+import org.icgc.dcc.id.client.http.HttpIdClient.Config;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
+import org.icgc.dcc.release.job.id.config.IdentifierProperties;
 import org.icgc.dcc.release.job.id.task.AddSurrogateDonorIdTask;
 import org.icgc.dcc.release.job.id.task.AddSurrogateMutationIdTask;
 import org.icgc.dcc.release.job.id.task.AddSurrogateSampleIdTask;
 import org.icgc.dcc.release.job.id.task.AddSurrogateSpecimenIdTask;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class IdJob extends GenericJob {
 
   /**
-   * Constants.
+   * Dependencies.
    */
-  @Value("${dcc.identifier.url}")
-  private String identifierUrl;
-  @Value("${dcc.identifier.token}")
-  private String identifierAuthToken;
-  @Value("${dcc.identifier.classname}")
-  private String identifierClassName = HttpIdClient.class.getName();
+  @Autowired
+  IdentifierProperties identifierProperties;
 
   @Override
   public JobType getType() {
@@ -67,13 +66,42 @@ public class IdJob extends GenericJob {
 
   private void id(JobContext jobContext) {
     val releaseName = jobContext.getReleaseName();
-    val idClientFactory = new IdClientFactory(identifierClassName, identifierUrl, releaseName, identifierAuthToken);
+    val idClientFactory = createIdClientFactory(releaseName);
 
     jobContext.execute(
         new AddSurrogateDonorIdTask(idClientFactory),
         new AddSurrogateSpecimenIdTask(idClientFactory),
         new AddSurrogateSampleIdTask(idClientFactory),
         new AddSurrogateMutationIdTask(idClientFactory));
+  }
+
+  private IdClientFactory createIdClientFactory(String release) {
+    return new IdClientFactory(resolveIdentifierClassName(), createConfig(release, identifierProperties));
+  }
+
+  private String resolveIdentifierClassName() {
+    val identifierClassName = identifierProperties.getClassname();
+
+    return isNullOrEmpty(identifierClassName) ? HttpIdClient.class.getName() : identifierClassName;
+  }
+
+  private static Config createConfig(String release, IdentifierProperties identifierProperties) {
+    return Config.builder()
+        .serviceUrl(identifierProperties.getUrl())
+        .release(release)
+        .authToken(resolveToken(identifierProperties))
+        .strictSSLCertificates(identifierProperties.isStrictSSLCertificates())
+        .requestLoggingEnabled(identifierProperties.isRequestLoggingEnabled())
+        .build();
+  }
+
+  /**
+   * {@link HttpIdClient} assumes that token is not set when it's null.
+   */
+  private static String resolveToken(IdentifierProperties identifierProperties) {
+    val token = identifierProperties.getToken();
+
+    return isNullOrEmpty(token) ? null : token;
   }
 
 }

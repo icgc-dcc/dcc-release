@@ -23,10 +23,11 @@ import java.util.Map;
 
 import lombok.Data;
 
-import org.icgc.dcc.release.job.export.config.HBaseProperties;
-import org.icgc.dcc.release.job.index.config.IndexProperties;
 import org.icgc.dcc.release.job.annotate.config.SnpEffProperties;
+import org.icgc.dcc.release.job.export.config.HBaseProperties;
+import org.icgc.dcc.release.job.id.config.IdentifierProperties;
 import org.icgc.dcc.release.job.imports.config.MongoProperties;
+import org.icgc.dcc.release.job.index.config.IndexProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -74,6 +75,12 @@ public class WorkflowProperties {
   @ConfigurationProperties(prefix = "mail")
   public MailProperties mailProperties() {
     return new MailProperties();
+  }
+
+  @Bean
+  @ConfigurationProperties(prefix = "dcc.identifier")
+  public IdentifierProperties identifierProperties() {
+    return new IdentifierProperties();
   }
 
   @Data

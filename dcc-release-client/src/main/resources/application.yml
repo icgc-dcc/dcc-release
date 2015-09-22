@@ -13,7 +13,9 @@ dcc:
       url: http://***REMOVED***/ws
       dictionaryVersion: 0.11c
    identifier:
-      url: http://hcache-dcc.oicr.on.ca:5391
+      url: https://id.icgc.org
+      token:
+      requestLoggingEnabled: false
 
 # SnpEff
 snpeff:
@@ -70,10 +72,6 @@ index:
 # Production
 ###################################################################################################
 
-# DCC
-dcc:
-   identifier:
-      token: <INSERT_TOKEN_HERE>
 # Workflow
 workflow:
    parallel: true
