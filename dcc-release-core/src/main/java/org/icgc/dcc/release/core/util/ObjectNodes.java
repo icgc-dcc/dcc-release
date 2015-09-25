@@ -85,9 +85,12 @@ public class ObjectNodes {
     return jsonNode;
   }
 
-  @NonNull
-  public static boolean isEmpty(ArrayNode array) {
+  public static boolean isEmptyArray(@NonNull ArrayNode array) {
     return ImmutableList.copyOf(array).isEmpty();
+  }
+
+  public static boolean isEmptyNode(@NonNull JsonNode node) {
+    return node.size() == 0;
   }
 
   public static boolean contains(@NonNull ArrayNode array, JsonNode element) {
@@ -95,8 +98,7 @@ public class ObjectNodes {
         .anyMatch(e -> e.equals(element));
   }
 
-  @NonNull
-  public static ObjectNode mergeObjects(ObjectNode targetNode, ObjectNode sourceNode) {
+  public static ObjectNode mergeObjects(@NonNull ObjectNode targetNode, @NonNull ObjectNode sourceNode) {
     val result = targetNode.deepCopy();
     val fieldNames = sourceNode.fieldNames();
 
@@ -121,8 +123,7 @@ public class ObjectNodes {
     return result;
   }
 
-  @NonNull
-  public static BooleanNode createBooleanNode(Boolean value) {
+  public static BooleanNode createBooleanNode(@NonNull Boolean value) {
     return JSON_FACTORY.booleanNode(value);
   }
 
@@ -145,8 +146,7 @@ public class ObjectNodes {
     return parts;
   }
 
-  @NonNull
-  public static String toEmptyJsonValue(Set<String> fields) {
+  public static String toEmptyJsonValue(@NonNull Set<String> fields) {
     String joined = fields.stream()
         .map(i -> "\"" + i.toString() + "\":\"\"")
         .collect(Collectors.joining(", "));

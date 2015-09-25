@@ -17,21 +17,34 @@
  */
 package org.icgc.dcc.release.job.index.function;
 
-import java.net.URI;
+import static org.icgc.dcc.release.core.util.Tuples.tuple;
+import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getObservationConsequenceGeneIds;
 
-import org.icgc.dcc.release.job.index.model.DocumentType;
+import java.util.List;
+
+import lombok.val;
+
+import org.apache.spark.api.java.function.PairFlatMapFunction;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
-public class RowTransform extends AbstractRowTransform<ObjectNode> {
-
-  public RowTransform(DocumentType type, String collectionDir, URI fsUri) {
-    super(type, collectionDir, fsUri);
-  }
+public final class PairGeneIdObservation implements PairFlatMapFunction<ObjectNode, String, ObjectNode> {
 
   @Override
-  public ObjectNode call(ObjectNode root) throws Exception {
-    return execute(root, getDocumentContext());
+  public Iterable<Tuple2<String, ObjectNode>> call(ObjectNode observation) throws Exception {
+    val uniqueGeneIds = Sets.newHashSet(getObservationConsequenceGeneIds(observation));
+    List<Tuple2<String, ObjectNode>> values = Lists.newArrayListWithCapacity(uniqueGeneIds.size());
+    for (val observationGeneId : uniqueGeneIds) {
+      if (observationGeneId != null) {
+        values.add(tuple(observationGeneId, observation));
+      }
+    }
+
+    return values;
   }
 
 }

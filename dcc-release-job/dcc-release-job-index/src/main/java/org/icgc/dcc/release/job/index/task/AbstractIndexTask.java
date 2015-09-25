@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.index.task;
 
+import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
@@ -24,41 +25,46 @@ import org.icgc.dcc.release.core.function.FilterFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.job.index.core.Document;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
+import org.icgc.dcc.release.job.index.function.WriteDocument;
 import org.icgc.dcc.release.job.index.model.CollectionFields;
 import org.icgc.dcc.release.job.index.model.DocumentType;
 import org.icgc.dcc.release.job.index.util.CollectionFieldsFilterAdapter;
-
-import scala.Tuple2;
+import org.icgc.dcc.release.job.index.util.DocumentRdds;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public abstract class IndexTask extends GenericTask {
+public abstract class AbstractIndexTask extends GenericTask {
 
   protected final DocumentType type;
+  private final IndexJobContext indexJobContext;
 
-  public IndexTask(DocumentType type) {
+  public AbstractIndexTask(DocumentType type, @NonNull IndexJobContext indexJobContext) {
     super(type.getName());
     this.type = type;
+    this.indexJobContext = indexJobContext;
   }
 
   protected JavaRDD<ObjectNode> readReleases(TaskContext taskContext) {
     val fields = type.getFields().getReleaseFields();
-    return filterFields(readInput(taskContext, FileType.RELEASE), fields);
+    return filterFields(readInput(taskContext, FileType.RELEASE_SUMMARY), fields);
   }
 
   protected JavaRDD<ObjectNode> readProjects(TaskContext taskContext) {
     val fields = type.getFields().getProjectFields();
-    return filterFields(readInput(taskContext, FileType.PROJECT), fields);
+    return filterFields(readInput(taskContext, FileType.PROJECT_SUMMARY), fields);
   }
 
   protected JavaRDD<ObjectNode> readDonors(TaskContext taskContext) {
     val fields = type.getFields().getDonorFields();
-    return filterFields(readInput(taskContext, FileType.DONOR), fields);
+    return filterFields(readInput(taskContext, FileType.DONOR_SUMMARY), fields);
   }
 
   protected JavaRDD<ObjectNode> readGenes(TaskContext taskContext) {
+    // FIXME: ETL1 adds gene-sets to the result
     val fields = type.getFields().getGeneFields();
-    return filterFields(readInput(taskContext, FileType.GENE), fields);
+    return filterFields(readInput(taskContext, FileType.GENE_SUMMARY), fields);
   }
 
   protected JavaRDD<ObjectNode> readGeneSets(TaskContext taskContext) {
@@ -68,7 +74,7 @@ public abstract class IndexTask extends GenericTask {
 
   protected JavaRDD<ObjectNode> readObservations(TaskContext taskContext) {
     val fields = type.getFields().getObservationFields();
-    return filterFields(readInput(taskContext, FileType.OBSERVATION, "/*"), fields);
+    return filterFields(readInput(taskContext, FileType.OBSERVATION_SUMMARY), fields);
   }
 
   protected JavaRDD<ObjectNode> readMutations(TaskContext taskContext) {
@@ -76,16 +82,12 @@ public abstract class IndexTask extends GenericTask {
     return filterFields(readInput(taskContext, FileType.MUTATION), fields);
   }
 
-  protected void writeOutput(JavaRDD<ObjectNode> output) {
-    super.writeOutput(output, "indexer/" + type.getName());
-  }
+  protected void writeDocOutput(TaskContext taskContext, JavaRDD<Document> processed) {
+    processed = processed.mapPartitions(
+        new WriteDocument(type, indexJobContext.getEsUri(), indexJobContext.getIndexName()));
+    val outputPath = taskContext.getPath(type.getOutputFileType());
 
-  protected static Tuple2<String, ObjectNode> pair(String id, ObjectNode row) {
-    return new Tuple2<String, ObjectNode>(id, row);
-  }
-
-  protected static Tuple2<String, Iterable<ObjectNode>> pair(String id, Iterable<ObjectNode> rows) {
-    return new Tuple2<String, Iterable<ObjectNode>>(id, rows);
+    DocumentRdds.saveAsTextObjectNodeFile(processed, outputPath);
   }
 
   private static JavaRDD<ObjectNode> filterFields(JavaRDD<ObjectNode> rdd, CollectionFields fields) {

@@ -24,15 +24,13 @@ import lombok.experimental.Accessors;
 
 import org.icgc.dcc.common.core.model.Entity;
 import org.icgc.dcc.common.core.model.ReleaseCollection;
-import org.icgc.dcc.release.job.index.core.DocumentTransform;
-import org.icgc.dcc.release.job.index.transform.BasicDocumentTransform;
+import org.icgc.dcc.release.core.job.FileType;
 
 @Setter
 @Accessors(fluent = true, chain = true)
 class DocumentTypeAttributes {
 
   private final static DocumentClassifier DEFAULT_CLASSIFIER = DocumentClassifier.BASIC;
-  private final static DocumentTransform DEFAULT_TRANSFORM = new BasicDocumentTransform();
   private final static int DEFAULT_BATCH_SIZE = 1;
   private final static int DEFAULT_STATUS_INTERVAL = 1000;
 
@@ -45,7 +43,9 @@ class DocumentTypeAttributes {
   @NonNull
   DocumentClassifier classifier = DEFAULT_CLASSIFIER;
   @NonNull
-  DocumentTransform transform = DEFAULT_TRANSFORM;
+  String indexClassName;
+  @NonNull
+  FileType outputFileType;
   @NonNull
   DocumentFields fields = DEFAULT_DOCUMENT_FIELDS;
   int batchSize = DEFAULT_BATCH_SIZE;

@@ -15,32 +15,36 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.index.function;
+package org.icgc.dcc.release.job.index.task;
 
-import java.net.URI;
+import lombok.val;
 
-import org.icgc.dcc.release.job.index.core.DocumentContext;
+import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.task.TaskType;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
 import org.icgc.dcc.release.job.index.model.DocumentType;
-import org.icgc.dcc.release.job.index.util.ForwardingDocumentContext;
+import org.icgc.dcc.release.job.index.transform.ProjectTextDocumentTransform;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+public class ProjectTextIndexTask extends AbstractIndexTask {
 
-public class GeneCentricRowTransform extends RowChildrenTransform {
+  private final IndexJobContext indexJobContext;
 
-  public GeneCentricRowTransform(String collectionDir, URI fsUri) {
-    super(DocumentType.GENE_CENTRIC_TYPE, collectionDir, fsUri);
+  public ProjectTextIndexTask(IndexJobContext indexJobContext) {
+    super(DocumentType.PROJECT_TEXT_TYPE, indexJobContext);
+    this.indexJobContext = indexJobContext;
   }
 
   @Override
-  protected DocumentContext createCustomDocumentContext(Iterable<ObjectNode> geneObservations) {
-    return new ForwardingDocumentContext(getDocumentContext()) {
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
+  }
 
-      @Override
-      public Iterable<ObjectNode> getObservationsByGeneId(String geneId) {
-        return geneObservations;
-      }
+  @Override
+  public void execute(TaskContext taskContext) {
+    val projects = readProjects(taskContext);
+    val output = projects.map(new ProjectTextDocumentTransform(indexJobContext));
 
-    };
+    writeDocOutput(taskContext, output);
   }
 
 }

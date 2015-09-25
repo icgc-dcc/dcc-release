@@ -15,40 +15,68 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.index.task;
+package org.icgc.dcc.release.job.index.function;
 
+import java.util.Iterator;
+
+import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.val;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.task.TaskContext;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.icgc.dcc.release.job.index.core.Document;
-import org.icgc.dcc.release.job.index.core.IndexJobContext;
+import org.icgc.dcc.release.job.index.core.DocumentWriter;
+import org.icgc.dcc.release.job.index.factory.TransportClientFactory;
+import org.icgc.dcc.release.job.index.io.ElasticSearchDocumentWriter;
 import org.icgc.dcc.release.job.index.model.DocumentType;
-import org.icgc.dcc.release.job.index.transform.ObservationCentricDocumentTransform;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.clearspring.analytics.util.Lists;
+import com.google.common.collect.ImmutableList;
 
-public class ObservationCentricIndexTask extends AbstractIndexTask {
+public final class WriteDocument implements FlatMapFunction<Iterator<Document>, Document> {
 
-  private final IndexJobContext indexJobContext;
+  @Getter(lazy = true)
+  private final Iterable<DocumentWriter> documentWriters = createDocumentWriters();
+  private final DocumentType type;
+  private final String esUri;
+  private final String indexName;
 
-  public ObservationCentricIndexTask(IndexJobContext indexJobContext) {
-    super(DocumentType.OBSERVATION_CENTRIC_TYPE, indexJobContext);
-    this.indexJobContext = indexJobContext;
+  public WriteDocument(DocumentType type, String esUri, String indexName) {
+    this.type = type;
+    this.esUri = esUri;
+    this.indexName = indexName;
+  }
+
+  private Iterable<DocumentWriter> createDocumentWriters() {
+    val client = TransportClientFactory.newTransportClient(esUri);
+    return ImmutableList.of(new ElasticSearchDocumentWriter(client, indexName, type, 1));
   }
 
   @Override
-  public void execute(TaskContext taskContext) {
-    val observations = readObservations(taskContext);
+  public Iterable<Document> call(Iterator<Document> partition) throws Exception {
+    val result = Lists.<Document> newArrayList();
+    while (partition.hasNext()) {
+      val element = partition.next();
+      write(element);
+      result.add(element);
+    }
+    closeWriters();
 
-    val output = transform(observations);
-    writeDocOutput(taskContext, output);
+    return result;
   }
 
-  private JavaRDD<Document> transform(JavaRDD<ObjectNode> observations) {
-    val transformed = observations.map(new ObservationCentricDocumentTransform(indexJobContext));
+  @SneakyThrows
+  private void closeWriters() {
+    for (val writer : getDocumentWriters()) {
+      writer.close();
+    }
+  }
 
-    return transformed;
+  @SneakyThrows
+  private void write(Document document) {
+    for (val writer : getDocumentWriters()) {
+      writer.write(document);
+    }
   }
 
 }

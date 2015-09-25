@@ -42,7 +42,7 @@ public abstract class AbstractJobTest {
    * Constants.
    */
   protected static final String TEST_FIXTURES_DIR = "src/test/resources/fixtures";
-  private static final String RELEASE_VERSION = "ICGC19-0-2";
+  protected static final String RELEASE_VERSION = "ICGC19-0-2";
 
   /**
    * Collaborators.

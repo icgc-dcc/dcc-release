@@ -21,31 +21,34 @@ import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newT
 
 import java.util.Collection;
 
-import org.icgc.dcc.release.core.job.Job;
+import lombok.Cleanup;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
 import org.icgc.dcc.release.core.task.Task;
-import org.icgc.dcc.release.core.util.Streams;
 import org.icgc.dcc.release.job.index.config.IndexProperties;
 import org.icgc.dcc.release.job.index.model.DocumentType;
 import org.icgc.dcc.release.job.index.service.IndexService;
-import org.icgc.dcc.release.job.index.task.MutationCentricIndexTask;
-import org.icgc.dcc.release.job.index.task.RemoteIndexTask;
+import org.icgc.dcc.release.job.index.task.ResolveDonorsTask;
+import org.icgc.dcc.release.job.index.task.ResolveGenesTask;
+import org.icgc.dcc.release.job.index.task.ResolveProjectsTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableList;
-
-import lombok.Cleanup;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import com.google.common.collect.Lists;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }) )
-public class IndexJob implements Job {
+@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
+public class IndexJob extends GenericJob {
 
   /**
    * Dependencies.
@@ -73,12 +76,15 @@ public class IndexJob implements Job {
     @Cleanup
     val indexService = new IndexService(client);
 
-    // TODOD: Fix this to be tied to a run id:
-    val indexName = "test-release-" + jobContext.getReleaseName().toLowerCase();
+    // TODO: Fix this to be tied to a run id:
+    val indexName = resolveIndexName(jobContext.getReleaseName());
 
     // Prepare
     log.info("Initializing index...");
     indexService.initializeIndex(indexName);
+
+    // Cleanup output directories
+    clean(jobContext);
 
     // Populate
     log.info("Populating index...");
@@ -97,25 +103,64 @@ public class IndexJob implements Job {
     indexService.freezeIndex(indexName);
   }
 
+  private void clean(JobContext jobContext) {
+    delete(jobContext, resolveOutputFileTypes());
+  }
+
+  private static FileType[] resolveOutputFileTypes() {
+    val outputFileTypes = Lists.<FileType> newArrayList();
+    for (val documentType : DocumentType.values()) {
+      outputFileTypes.add(documentType.getOutputFileType());
+    }
+
+    return outputFileTypes.toArray(new FileType[outputFileTypes.size()]);
+  }
+
+  static String resolveIndexName(String releaseName) {
+    return "test-release-" + releaseName.toLowerCase();
+  }
+
   private void write(JobContext jobContext, String indexName) {
-    val tasks = createStreamingTasks(jobContext, indexName);
+    val indexJobContext = createIndexJobContext(jobContext);
+    val tasks = createStreamingTasks(indexJobContext);
 
     jobContext.execute(tasks);
   }
 
-  private Collection<? extends Task> createStreamingTasks(JobContext jobContext, String indexName) {
-    return ImmutableList.of(
-        new MutationCentricIndexTask()
-    // , new GeneCentricIndexTask()
-    // , new DonorCentricIndexTask()
-    );
+  @SneakyThrows
+  private Collection<? extends Task> createStreamingTasks(IndexJobContext indexJobContext) {
+    val tasks = ImmutableList.<Task> builder();
+    val jobContextClassName = IndexJobContext.class;
+    for (val documentType : DocumentType.values()) {
+      val indexClassName = documentType.getIndexClassName();
+      val class_ = Class.forName(indexClassName);
+      val constructor = class_.getConstructor(jobContextClassName);
+      tasks.add((Task) constructor.newInstance(indexJobContext));
+    }
+
+    return tasks.build();
   }
 
-  @SuppressWarnings("unused")
-  private Collection<? extends Task> createRemoteTasks(JobContext jobContext, String indexName) {
-    return Streams.map(DocumentType.values(), type -> {
-      return new RemoteIndexTask(properties, indexName, jobContext.getReleaseName(), type);
-    });
+  private IndexJobContext createIndexJobContext(JobContext jobContext) {
+    val resolveProjectsTask = new ResolveProjectsTask();
+    val resolveDonorsTask = new ResolveDonorsTask();
+    val resolveGenesTask = new ResolveGenesTask();
+
+    jobContext.execute(resolveProjectsTask,
+        resolveDonorsTask,
+        resolveGenesTask);
+
+    val projectsBroadcast = resolveProjectsTask.getProjectsBroadcast();
+    val donorsBroadcast = resolveDonorsTask.getDonorsBroadcast();
+    val genesBroadcast = resolveGenesTask.getGenesBroadcast();
+
+    return IndexJobContext.builder()
+        .esUri(properties.getEsUri())
+        .indexName(resolveIndexName(jobContext.getReleaseName()))
+        .projectsBroadcast(projectsBroadcast)
+        .donorsBroadcast(donorsBroadcast)
+        .genesBroadcast(genesBroadcast)
+        .build();
   }
 
 }

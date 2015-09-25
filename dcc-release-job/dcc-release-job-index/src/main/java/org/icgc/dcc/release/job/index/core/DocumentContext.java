@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.index.core;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import org.icgc.dcc.release.job.index.model.DocumentType;
@@ -26,7 +27,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 /**
  * Reference resources for document construction.
  */
-public interface DocumentContext {
+public interface DocumentContext extends Serializable {
 
   /**
    * Gets the document type under construction.

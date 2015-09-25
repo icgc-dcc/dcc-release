@@ -21,13 +21,28 @@ import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getG
 import lombok.NonNull;
 import lombok.val;
 
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.job.index.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.core.DocumentContext;
 import org.icgc.dcc.release.job.index.core.DocumentTransform;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
+import org.icgc.dcc.release.job.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class GeneSetDocumentTransform implements DocumentTransform {
+public class GeneSetDocumentTransform implements DocumentTransform, Function<ObjectNode, Document> {
+
+  private final DocumentContext documentContext;
+
+  public GeneSetDocumentTransform(IndexJobContext indexJobContext) {
+    this.documentContext = new DefaultDocumentContext(DocumentType.GENE_SET_TYPE, indexJobContext);
+  }
+
+  @Override
+  public Document call(ObjectNode geneSet) throws Exception {
+    return transformDocument(geneSet, documentContext);
+  }
 
   @Override
   public Document transformDocument(@NonNull ObjectNode geneSet, @NonNull DocumentContext context) {

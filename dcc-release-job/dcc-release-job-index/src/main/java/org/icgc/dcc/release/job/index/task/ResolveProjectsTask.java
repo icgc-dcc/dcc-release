@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,24 +15,53 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.index.core;
+package org.icgc.dcc.release.job.index.task;
 
-import java.io.Serializable;
+import static org.icgc.dcc.release.core.util.Tuples.tuple;
+import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getProjectId;
+
+import java.util.Map;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.task.GenericTask;
+import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.task.TaskType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-/**
- * Contract for document creation given a supplied root and surrounding context.
- */
-public interface DocumentTransform extends Serializable {
+@NoArgsConstructor
+public class ResolveProjectsTask extends GenericTask {
 
-  /**
-   * Creates an output document given an input {@code root} and {@code context}.
-   * 
-   * @param root the atomic root of document construction
-   * @param context the reference resources for document creation
-   * @return the created document
-   */
-  Document transformDocument(ObjectNode root, DocumentContext context);
+  @Getter(lazy = true)
+  private final Broadcast<Map<String, ObjectNode>> projectsBroadcast = createBroadcast();
+  private Map<String, ObjectNode> projectsById;
+  private JavaSparkContext sparkContext;
+
+  @Override
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
+  }
+
+  @Override
+  public void execute(TaskContext taskContext) {
+    sparkContext = taskContext.getSparkContext();
+    projectsById = readProjects(taskContext)
+        .mapToPair(project -> tuple(getProjectId(project), project))
+        .collectAsMap();
+  }
+
+  private JavaRDD<ObjectNode> readProjects(TaskContext taskContext) {
+    return readInput(taskContext, FileType.PROJECT_SUMMARY);
+  }
+
+  private Broadcast<Map<String, ObjectNode>> createBroadcast() {
+    return sparkContext.broadcast(projectsById);
+  }
 
 }

@@ -356,7 +356,7 @@ public class SummarizeJobTest extends AbstractJobTest {
   }
 
   private void assertDonorSummary(String projectName) {
-    val donorSummary = produces(projectName, FileType.DONOR_GENE_OBSERVATION_SUMMARY);
+    val donorSummary = produces(projectName, FileType.DONOR_SUMMARY);
     log.debug("Donor Summary - {}", donorSummary);
 
     assertThat(donorSummary).hasSize(2);

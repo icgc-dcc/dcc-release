@@ -215,13 +215,13 @@ public class ResolveProjectSummaryTask extends GenericTask {
   }
 
   private JavaRDD<ObjectNode> readDonorSummary(TaskContext taskContext) {
-    return readInput(taskContext, FileType.DONOR_GENE_OBSERVATION_SUMMARY)
+    return readInput(taskContext, FileType.DONOR_SUMMARY)
         .map(new RetainFields(FieldNames.DONOR_SUMMARY))
         .map(new PullUpField(FieldNames.DONOR_SUMMARY));
   }
 
   private JavaRDD<ObjectNode> readDonors(TaskContext taskContext) {
-    return readInput(taskContext, FileType.DONOR_GENE_OBSERVATION_SUMMARY);
+    return readInput(taskContext, FileType.DONOR_SUMMARY);
   }
 
 }

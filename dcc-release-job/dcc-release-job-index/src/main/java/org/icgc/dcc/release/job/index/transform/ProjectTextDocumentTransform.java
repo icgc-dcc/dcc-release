@@ -25,16 +25,31 @@ import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_TUMOUR_TYPE;
 import lombok.NonNull;
 import lombok.val;
 
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.job.index.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.core.DocumentContext;
 import org.icgc.dcc.release.job.index.core.DocumentTransform;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
+import org.icgc.dcc.release.job.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * {@link DocumentTransform} implementation that creates a project document.
  */
-public class ProjectTextDocumentTransform implements DocumentTransform {
+public class ProjectTextDocumentTransform implements DocumentTransform, Function<ObjectNode, Document> {
+
+  private final DocumentContext documentContext;
+
+  public ProjectTextDocumentTransform(IndexJobContext indexJobContext) {
+    this.documentContext = new DefaultDocumentContext(DocumentType.PROJECT_TEXT_TYPE, indexJobContext);
+  }
+
+  @Override
+  public Document call(ObjectNode project) throws Exception {
+    return transformDocument(project, documentContext);
+  }
 
   @Override
   public Document transformDocument(@NonNull ObjectNode project, @NonNull DocumentContext context) {
@@ -50,4 +65,5 @@ public class ProjectTextDocumentTransform implements DocumentTransform {
 
     return new Document(context.getType(), projectId, project);
   }
+
 }

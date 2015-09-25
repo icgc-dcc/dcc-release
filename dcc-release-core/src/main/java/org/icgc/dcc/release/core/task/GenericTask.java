@@ -20,13 +20,20 @@ package org.icgc.dcc.release.core.task;
 import static org.icgc.dcc.release.core.util.JavaRDDs.emptyRDD;
 import static org.icgc.dcc.release.core.util.JavaRDDs.exists;
 import static org.icgc.dcc.release.core.util.JavaRDDs.logPartitions;
+
+import java.util.List;
+import java.util.regex.Pattern;
+
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.util.ObjectNodeRDDs;
+import org.icgc.dcc.release.core.util.Partitions;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -71,6 +78,10 @@ public abstract class GenericTask implements Task {
   }
 
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType, String path) {
+    if (isReadAll(taskContext, inputFileType)) {
+      return readAllInput(taskContext, conf, inputFileType);
+    }
+
     val sparkContext = taskContext.getSparkContext();
     val filePath = taskContext.getPath(inputFileType) + path;
 
@@ -93,6 +104,25 @@ public abstract class GenericTask implements Task {
     // return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
   }
 
+  private JavaRDD<ObjectNode> readAllInput(TaskContext taskContext, JobConf conf, FileType inputFileType) {
+    val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
+    val inputPaths = resolveInputPaths(taskContext, fileTypePath);
+    val sparkContext = taskContext.getSparkContext();
+    JavaRDD<ObjectNode> result = emptyRDD(sparkContext);
+
+    for (val inputPath : inputPaths) {
+      val input = ObjectNodeRDDs.textObjectNodeFile(sparkContext, inputPath.toString(), conf);
+      result = result.union(input);
+    }
+
+    return result;
+  }
+
+  private List<Path> resolveInputPaths(TaskContext taskContext, Path fileTypePath) {
+    return HadoopUtils.lsDir(taskContext.getFileSystem(), fileTypePath,
+        Pattern.compile(Partitions.PARTITION_NAME + ".*"));
+  }
+
   protected void writeOutput(TaskContext taskContext, JavaRDD<ObjectNode> processed, FileType outputFileType) {
     val outputPath = taskContext.getPath(outputFileType);
 
@@ -102,6 +132,10 @@ public abstract class GenericTask implements Task {
   protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath) {
     ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath);
     // ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);
+  }
+
+  private static boolean isReadAll(TaskContext taskContext, FileType inputFileType) {
+    return inputFileType.isPartitioned() && !taskContext.getProjectName().isPresent();
   }
 
 }

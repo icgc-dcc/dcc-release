@@ -15,44 +15,38 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.index.function;
-
-import static java.util.Collections.emptyList;
-
-import java.net.URI;
+package org.icgc.dcc.release.job.index.task;
 
 import lombok.val;
 
-import org.icgc.dcc.release.job.index.core.DocumentContext;
+import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.job.index.core.Document;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
 import org.icgc.dcc.release.job.index.model.DocumentType;
-
-import scala.Tuple2;
+import org.icgc.dcc.release.job.index.transform.DonorDocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
 
-public class RowChildrenTransform extends
-    AbstractRowTransform<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>> {
+public class DonorIndexTask extends AbstractIndexTask {
 
-  public RowChildrenTransform(DocumentType type, String collectionDir, URI fsUri) {
-    super(type, collectionDir, fsUri);
+  private final IndexJobContext indexJobContext;
+
+  public DonorIndexTask(IndexJobContext indexJobContext) {
+    super(DocumentType.DONOR_TYPE, indexJobContext);
+    this.indexJobContext = indexJobContext;
   }
 
   @Override
-  public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
-    val root = tuple._2._1;
-    val children = tuple._2._2.or(emptyList());
-    val customDocumentContext = createCustomDocumentContext(children);
+  public void execute(TaskContext taskContext) {
+    val donors = readDonors(taskContext);
+    val output = transform(donors);
 
-    return execute(root, customDocumentContext);
+    writeDocOutput(taskContext, output);
   }
 
-  /**
-   * Template method.
-   */
-  protected DocumentContext createCustomDocumentContext(Iterable<ObjectNode> children) {
-    // By default, return the default
-    return getDocumentContext();
+  private JavaRDD<Document> transform(JavaRDD<ObjectNode> donors) {
+    return donors.map(new DonorDocumentTransform(indexJobContext));
   }
 
 }

@@ -1,5 +1,9 @@
 package org.icgc.dcc.release.job.index.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.release.job.index.core.IndexJob.resolveIndexName;
+import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newTransportClient;
+
 import java.io.File;
 
 import lombok.SneakyThrows;
@@ -7,56 +11,96 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.io.FileUtils;
-import org.icgc.dcc.release.core.job.FileType;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.index.query.FilterBuilders;
 import org.icgc.dcc.release.job.index.config.IndexProperties;
-import org.icgc.dcc.release.job.index.core.IndexJob;
+import org.icgc.dcc.release.job.index.model.DocumentType;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+
 @Slf4j
 public class IndexJobTest extends AbstractJobTest {
+
+  private static final String ES_URI = "es://localhost:9300";
 
   /**
    * Class under test.
    */
   IndexJob job;
+  Client esClient;
+  String index;
 
   @Override
   @Before
   public void setUp() {
-    cleanOutputFiles();
     super.setUp();
     val properties = new IndexProperties()
-        .setEsUri("es://localhost:9300")
+        .setEsUri(ES_URI)
         .setOutputDir(new File(workingDir, "output").getAbsolutePath());
 
     this.job = new IndexJob(properties);
-
+    this.index = resolveIndexName(RELEASE_VERSION);
+    this.esClient = newTransportClient(ES_URI);
   }
 
   @After
   public void tearDown() {
-    cleanOutputFiles();
+    esClient.close();
   }
 
   @Test
   public void testExecute() {
-    given(inputFile()
-        .fileType(FileType.RELEASE)
-        .path(resolvePath("working/release"))
-        .fileName("working/release"));
-    given(inputFile()
-        .fileType(FileType.PROJECT)
-        .path(resolvePath("working/project"))
-        .fileName("working/project"));
-    given(inputFile()
-        .fileType(FileType.GENE)
-        .path(resolvePath("working/gene"))
-        .fileName("working/gene"));
+    given(new File(TEST_FIXTURES_DIR));
+    job.execute(createJobContext(job.getType(), ImmutableList.of("BRCA-UK")));
 
-    job.execute(createJobContext(job.getType()));
+    verifyRelease();
+    verifyDonors();
+  }
+
+  private void verifyRelease() {
+    val release = esClient.prepareSearch(index)
+        .setTypes(DocumentType.RELEASE_TYPE.getName())
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(release).isEqualTo(1L);
+  }
+
+  private void verifyDonors() {
+    // verifyDonor();
+    verifyDonorCentric();
+  }
+
+  private void verifyDonorCentric() {
+    // FIXME: resolve type
+    // FIXME: Finish thorough testing that verifies structure
+    val donorsWithProjectCount = esClient
+        .prepareSearch(index)
+        .setTypes("donor-centric")
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(donorsWithProjectCount).isEqualTo(2L);
+  }
+
+  @SuppressWarnings("unused")
+  private void verifyDonor() {
+    // FIXME: resolve type
+    val donorsWithProjectCount = esClient
+        .prepareSearch(index)
+        .setTypes("donor")
+        .setPostFilter(FilterBuilders.existsFilter("project"))
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(donorsWithProjectCount).isEqualTo(2L);
   }
 
   @SneakyThrows

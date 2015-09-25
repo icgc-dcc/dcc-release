@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component;
 public class SummarizeJob extends GenericJob {
 
   private static final FileType[] OUTPUT_FILE_TYPES = {
-      FileType.DONOR_GENE_OBSERVATION_SUMMARY,
+      FileType.DONOR_SUMMARY,
       FileType.GENE_SET_SUMMARY,
       FileType.GENE_SUMMARY,
       FileType.PROJECT_SUMMARY,

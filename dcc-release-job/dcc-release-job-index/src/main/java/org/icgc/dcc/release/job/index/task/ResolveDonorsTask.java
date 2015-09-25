@@ -17,38 +17,59 @@
  */
 package org.icgc.dcc.release.job.index.task;
 
+import static java.util.stream.Collectors.toMap;
+import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;
+import static org.icgc.dcc.release.core.util.Tuples.tuple;
+import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getDonorId;
+
+import java.util.Map;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.index.core.Document;
-import org.icgc.dcc.release.job.index.core.IndexJobContext;
-import org.icgc.dcc.release.job.index.model.DocumentType;
-import org.icgc.dcc.release.job.index.transform.ObservationCentricDocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Maps;
 
-public class ObservationCentricIndexTask extends AbstractIndexTask {
+@NoArgsConstructor
+public class ResolveDonorsTask extends GenericTask {
 
-  private final IndexJobContext indexJobContext;
-
-  public ObservationCentricIndexTask(IndexJobContext indexJobContext) {
-    super(DocumentType.OBSERVATION_CENTRIC_TYPE, indexJobContext);
-    this.indexJobContext = indexJobContext;
-  }
+  @Getter(lazy = true)
+  private final Broadcast<Map<String, ObjectNode>> donorsBroadcast = createBroadcast();
+  private Map<String, Map<String, ObjectNode>> donorsByProject = Maps.newHashMap();
+  private JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {
-    val observations = readObservations(taskContext);
-
-    val output = transform(observations);
-    writeDocOutput(taskContext, output);
+    sparkContext = taskContext.getSparkContext();
+    val donorsById = resolveDonors(taskContext);
+    val projectName = resolveProjectName(taskContext);
+    donorsByProject.put(projectName, donorsById);
   }
 
-  private JavaRDD<Document> transform(JavaRDD<ObjectNode> observations) {
-    val transformed = observations.map(new ObservationCentricDocumentTransform(indexJobContext));
+  private Map<String, ObjectNode> resolveDonors(TaskContext taskContext) {
+    return readDonors(taskContext)
+        .mapToPair(project -> tuple(getDonorId(project), project))
+        .collectAsMap();
+  }
 
-    return transformed;
+  private JavaRDD<ObjectNode> readDonors(TaskContext taskContext) {
+    return readInput(taskContext, FileType.DONOR_SUMMARY);
+  }
+
+  private Broadcast<Map<String, ObjectNode>> createBroadcast() {
+    val donorsById = donorsByProject.entrySet().stream()
+        .flatMap(e -> e.getValue().entrySet().stream())
+        .collect(toMap(e -> e.getKey(), e -> e.getValue()));
+
+    return sparkContext.broadcast(donorsById);
   }
 
 }

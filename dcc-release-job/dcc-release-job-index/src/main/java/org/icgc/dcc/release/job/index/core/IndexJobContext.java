@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -18,21 +18,23 @@
 package org.icgc.dcc.release.job.index.core;
 
 import java.io.Serializable;
+import java.util.Map;
+
+import lombok.Builder;
+import lombok.Value;
+
+import org.apache.spark.broadcast.Broadcast;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-/**
- * Contract for document creation given a supplied root and surrounding context.
- */
-public interface DocumentTransform extends Serializable {
+@Value
+@Builder
+public class IndexJobContext implements Serializable {
 
-  /**
-   * Creates an output document given an input {@code root} and {@code context}.
-   * 
-   * @param root the atomic root of document construction
-   * @param context the reference resources for document creation
-   * @return the created document
-   */
-  Document transformDocument(ObjectNode root, DocumentContext context);
+  String esUri;
+  String indexName;
+  Broadcast<Map<String, ObjectNode>> projectsBroadcast;
+  Broadcast<Map<String, ObjectNode>> donorsBroadcast;
+  Broadcast<Map<String, ObjectNode>> genesBroadcast;
 
 }

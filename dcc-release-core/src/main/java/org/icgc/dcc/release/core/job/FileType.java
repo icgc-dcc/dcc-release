@@ -142,15 +142,35 @@ public enum FileType implements Identifiable {
   OBSERVATION_FATHMM(true),
   OBSERVATION_FI(true),
 
-  // TODO: rename to DONOR_SUMMARY?
-  DONOR_GENE_OBSERVATION_SUMMARY(true),
+  DONOR_SUMMARY(true),
   GENE_SUMMARY(false),
   GENE_SET_SUMMARY(false),
   PROJECT_SUMMARY(false),
   OBSERVATION_SUMMARY(true),
   RELEASE_SUMMARY(false),
 
-  EXPORT_INPUT(true), EXPORT_OUTPUT(true);
+  EXPORT_INPUT(true), EXPORT_OUTPUT(true),
+
+  // Index types
+  DONOR_CENTRIC_INDEX(true),
+  DONOR_INDEX(true),
+  DONOR_TEXT_INDEX(true),
+
+  GENE_CENTRIC_INDEX(false),
+  GENE_TEXT_INDEX(false),
+  GENE_INDEX(false),
+  GENE_SET_TEXT_INDEX(false),
+  GENE_SET_INDEX(false),
+
+  MUTATION_CENTRIC_INDEX(false),
+  MUTATION_TEXT_INDEX(false),
+
+  OBSERVATION_CENTRIC_INDEX(true),
+
+  PROJECT_TEXT_INDEX(false),
+  PROJECT_INDEX(false),
+
+  RELEASE_INDEX(false);
 
   @Getter
   private final boolean partitioned;

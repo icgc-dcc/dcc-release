@@ -18,7 +18,8 @@
 package org.icgc.dcc.release.job.index.task;
 
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
-import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getGeneId;
+import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getMutationId;
+import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getObservationMutationId;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
@@ -26,18 +27,17 @@ import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.core.IndexJobContext;
-import org.icgc.dcc.release.job.index.function.PairGeneIdObservation;
 import org.icgc.dcc.release.job.index.model.DocumentType;
-import org.icgc.dcc.release.job.index.transform.GeneCentricDocumentTransform;
+import org.icgc.dcc.release.job.index.transform.MutationTextDocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class GeneCentricIndexTask extends AbstractIndexTask {
+public class MutationTextIndexTask extends AbstractIndexTask {
 
   private final IndexJobContext indexJobContext;
 
-  public GeneCentricIndexTask(IndexJobContext indexJobContext) {
-    super(DocumentType.GENE_CENTRIC_TYPE, indexJobContext);
+  public MutationTextIndexTask(IndexJobContext indexJobContext) {
+    super(DocumentType.MUTATION_TEXT_TYPE, indexJobContext);
     this.indexJobContext = indexJobContext;
   }
 
@@ -48,29 +48,19 @@ public class GeneCentricIndexTask extends AbstractIndexTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    val genes = readGenes(taskContext);
+    val mutations = readMutations(taskContext);
     val observations = readObservations(taskContext);
 
-    // TODO: This should be configured to give optimum results
-    // val splitSize = Long.toString(48 * 1024 * 1024);
-    // conf.set("mapred.min.split.size", splitSize);
-    // conf.set("mapred.max.split.size", splitSize);
-    //
-    // return ObjectNodeRDDs.combineObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
-    //
-    val output = transform(taskContext, genes, observations);
+    val output = transform(mutations, observations);
     writeDocOutput(taskContext, output);
   }
 
-  private JavaRDD<Document> transform(TaskContext taskContext,
-      JavaRDD<ObjectNode> genes, JavaRDD<ObjectNode> observations) {
-    val genePairs = genes.mapToPair(gene -> tuple(getGeneId(gene), gene));
-    val observationPairs = observations
-        .flatMapToPair(new PairGeneIdObservation())
-        .groupByKey();
+  private JavaRDD<Document> transform(JavaRDD<ObjectNode> mutations, JavaRDD<ObjectNode> observations) {
+    val mutationPairs = mutations.mapToPair(mutation -> tuple(getMutationId(mutation), mutation));
+    val observationPairs = observations.groupBy(observation -> getObservationMutationId(observation));
 
-    val geneObservationsPairs = genePairs.leftOuterJoin(observationPairs);
-    val transformed = geneObservationsPairs.map(new GeneCentricDocumentTransform(indexJobContext));
+    val mutationObservationsPairs = mutationPairs.leftOuterJoin(observationPairs);
+    val transformed = mutationObservationsPairs.map(new MutationTextDocumentTransform(indexJobContext));
 
     return transformed;
   }

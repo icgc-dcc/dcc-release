@@ -56,17 +56,24 @@ import java.util.List;
 import java.util.Set;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
+import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
+import org.icgc.dcc.release.job.index.context.GeneCentricDocumentContext;
 import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.core.DocumentContext;
 import org.icgc.dcc.release.job.index.core.DocumentTransform;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
 import org.icgc.dcc.release.job.index.util.Fakes;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -74,10 +81,23 @@ import com.google.common.collect.Sets;
 /**
  * {@link DocumentTransform} implementation that creates a nested gene-centric document.
  */
-public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransform {
+@RequiredArgsConstructor
+public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransform implements
+    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> {
 
+  private final IndexJobContext indexJobContext;
   private static final List<String> DONOR_PROJECT_FIELD_NAMES =
       of(PROJECT_ID, PROJECT_DISPLAY_NAME, PROJECT_PRIMARY_SITE);
+
+  @Override
+  public Document call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
+    val gene = tuple._2._1;
+    val observations = tuple._2._2;
+    val geneId = getGeneId(gene);
+    val documentContext = new GeneCentricDocumentContext(geneId, indexJobContext, observations);
+
+    return transformDocument(gene, documentContext);
+  }
 
   @Override
   public Document transformDocument(@NonNull ObjectNode gene, @NonNull DocumentContext context) {

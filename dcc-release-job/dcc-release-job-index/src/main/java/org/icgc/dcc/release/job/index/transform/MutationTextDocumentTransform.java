@@ -30,20 +30,42 @@ import static org.icgc.dcc.release.job.index.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.index.util.Fakes.createFakeGene;
 import static org.icgc.dcc.release.job.index.util.Fakes.isFakeGeneId;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
+import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames;
+import org.icgc.dcc.release.job.index.context.MutationCentricDocumentContext;
 import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.core.DocumentContext;
 import org.icgc.dcc.release.job.index.core.DocumentTransform;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
 /**
  * {@link DocumentTransform} implementation that creates a mutation document.
  */
-public class MutationTextDocumentTransform implements DocumentTransform {
+@RequiredArgsConstructor
+public class MutationTextDocumentTransform implements DocumentTransform,
+    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> {
+
+  @NonNull
+  private final IndexJobContext indexJobContext;
+
+  @Override
+  public Document call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
+    val mutation = tuple._2._1;
+    val observations = tuple._2._2;
+    val mutationId = getMutationId(mutation);
+    val documentContext = new MutationCentricDocumentContext(mutationId, indexJobContext, observations);
+
+    return transformDocument(mutation, documentContext);
+  }
 
   @Override
   public Document transformDocument(@NonNull ObjectNode mutation, @NonNull DocumentContext context) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.job.index.transform;
 
 import static com.google.common.base.Objects.firstNonNull;
+import static org.icgc.dcc.release.core.util.ObjectNodes.isEmptyNode;
 import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getDonorGeneId;
 import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getDonorGenes;
 import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getDonorId;
@@ -34,14 +35,20 @@ import java.util.Map;
 import lombok.NonNull;
 import lombok.val;
 
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.job.index.context.DonorCentricDocumentContext;
 import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.core.DocumentContext;
 import org.icgc.dcc.release.job.index.core.DocumentTransform;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
 import org.icgc.dcc.release.job.index.util.Fakes;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
@@ -49,9 +56,27 @@ import com.google.common.collect.Multimap;
 /**
  * {@link DocumentTransform} implementation that creates a nested donor-centric document.
  */
-public class DonorCentricDocumentTransform extends AbstractCentricDocumentTransform {
+public class DonorCentricDocumentTransform extends AbstractCentricDocumentTransform implements
+    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> {
 
-  private final DocumentTransform delegate = new DonorDocumentTransform();
+  @NonNull
+  private final IndexJobContext indexJobContext;
+  private final DocumentTransform delegate;
+
+  public DonorCentricDocumentTransform(IndexJobContext indexJobContext) {
+    this.indexJobContext = indexJobContext;
+    this.delegate = new DonorDocumentTransform(indexJobContext);
+  }
+
+  @Override
+  public Document call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
+    val donor = tuple._2._1;
+    val donorId = getDonorId(donor);
+    val observations = tuple._2._2;
+    val documentContext = new DonorCentricDocumentContext(donorId, indexJobContext, observations);
+
+    return transformDocument(donor, documentContext);
+  }
 
   @Override
   public Document transformDocument(@NonNull ObjectNode donor, @NonNull DocumentContext context) {
@@ -143,7 +168,7 @@ public class DonorCentricDocumentTransform extends AbstractCentricDocumentTransf
     for (val observation : observations) {
       val consequences = getObservationConsequences(observation);
 
-      if (isEmpty(consequences)) {
+      if (isEmptyNode(consequences)) {
         index.put(FAKE_GENE_ID, observation);
       } else {
         for (val consequence : consequences) {
