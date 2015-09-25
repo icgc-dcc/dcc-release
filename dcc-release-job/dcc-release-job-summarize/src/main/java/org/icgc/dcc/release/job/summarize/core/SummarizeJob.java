@@ -31,6 +31,7 @@ import org.icgc.dcc.release.job.summarize.task.DonorSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.FeatureTypeSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.GeneSetSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.GeneSummarizeTask;
+import org.icgc.dcc.release.job.summarize.task.MutationSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.ObservationSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.ProjectSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.ReleaseSummarizeTask;
@@ -85,6 +86,7 @@ public class SummarizeJob extends GenericJob {
     jobContext.execute(
         new GeneSummarizeTask(resolveGeneStatsTask.getGeneDonorTypeCounts()),
         new ObservationSummarizeTask());
+    jobContext.execute(new MutationSummarizeTask());
     jobContext.execute(new ReleaseSummarizeTask(donorSummarizeTask.getDonorsCount(), donorSummarizeTask
         .getLiveDonorsCount()));
     log.info("Finished executing summary job in {}", watch);
