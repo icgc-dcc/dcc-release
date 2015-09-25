@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.index.util;
 
+import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 import lombok.NonNull;
 import lombok.val;
 
@@ -28,7 +29,7 @@ public class DocumentRdds {
 
   @NonNull
   public static void saveAsTextObjectNodeFile(JavaRDD<Document> rdd, String path) {
-    val output = rdd.map(row -> row.toString());
+    val output = rdd.map(row -> MAPPER.writeValueAsString(row.getSource()));
     JavaRDDs.saveAsTextFile(output, path);
   }
 

@@ -5,6 +5,7 @@ import static org.icgc.dcc.release.job.index.core.IndexJob.resolveIndexName;
 import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newTransportClient;
 
 import java.io.File;
+import java.util.Map;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.FilterBuilders;
+import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.job.index.config.IndexProperties;
 import org.icgc.dcc.release.job.index.model.DocumentType;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
@@ -57,8 +59,32 @@ public class IndexJobTest extends AbstractJobTest {
     given(new File(TEST_FIXTURES_DIR));
     job.execute(createJobContext(job.getType(), ImmutableList.of("BRCA-UK")));
 
+    verifyMutations();
     verifyRelease();
     verifyDonors();
+  }
+
+  private void verifyMutations() {
+    verifyMutationsOutput();
+    val hits = esClient.prepareSearch(index)
+        .setTypes(DocumentType.MUTATION_CENTRIC_TYPE.getName())
+        .execute()
+        .actionGet();
+    for (val hit : hits.getHits()) {
+      val source = hit.getSource();
+      verifyMutationCentric(source);
+    }
+  }
+
+  private void verifyMutationsOutput() {
+    val mutationCentric = produces(FileType.MUTATION_CENTRIC_INDEX);
+    log.info("mutation-centric ouput {}", mutationCentric);
+  }
+
+  private static void verifyMutationCentric(Map<String, Object> source) {
+    assertThat(source.get("ssm_occurrence")).isNotNull();
+    assertThat(source.get("transcript")).isNotNull();
+    assertThat(source.get("platform")).isNotNull();
   }
 
   private void verifyRelease() {

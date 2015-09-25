@@ -27,11 +27,15 @@ import java.util.Set;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
 import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.function.KeyFieldsFunction;
 import org.icgc.dcc.release.core.function.RetainFields;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
@@ -50,19 +54,31 @@ public class MutationSummarizeTask extends GenericTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    val valueFunction = new RetainFields(RETAIN_FIELDS);
     val output = readObservations(taskContext)
-        .mapToPair(new KeyFieldsFunction<ObjectNode>(valueFunction, MUTATION_ID))
-        .reduceByKey((a, b) -> {
-          return firstNonNull(a, b);
-        })
-        .map(t -> t._2);
+        .mapToPair(pairMutationIdMutation())
+        .reduceByKey(uniq())
+        .map(value());
 
     writeOutput(taskContext, output, MUTATION);
   }
 
+  private KeyFieldsFunction<ObjectNode> pairMutationIdMutation() {
+    val valueFunction = new RetainFields(RETAIN_FIELDS);
+
+    return new KeyFieldsFunction<ObjectNode>(valueFunction, MUTATION_ID);
+  }
+
+  private Function<Tuple2<String, ObjectNode>, ObjectNode> value() {
+    return t -> t._2;
+  }
+
+  private Function2<ObjectNode, ObjectNode, ObjectNode> uniq() {
+    return (a, b) -> {
+      return firstNonNull(a, b);
+    };
+  }
+
   private JavaRDD<ObjectNode> readObservations(TaskContext taskContext) {
-    // FIXME: Change to correct type
     return readInput(taskContext, OBSERVATION_SUMMARY);
   }
 
