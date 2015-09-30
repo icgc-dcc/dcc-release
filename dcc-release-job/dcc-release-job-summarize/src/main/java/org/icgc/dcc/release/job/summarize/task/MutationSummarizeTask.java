@@ -34,6 +34,7 @@ import org.icgc.dcc.release.core.function.KeyFieldsFunction;
 import org.icgc.dcc.release.core.function.RetainFields;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.task.TaskType;
 
 import scala.Tuple2;
 
@@ -66,6 +67,11 @@ public class MutationSummarizeTask extends GenericTask {
     val valueFunction = new RetainFields(RETAIN_FIELDS);
 
     return new KeyFieldsFunction<ObjectNode>(valueFunction, MUTATION_ID);
+  }
+
+  @Override
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
   }
 
   private Function<Tuple2<String, ObjectNode>, ObjectNode> value() {

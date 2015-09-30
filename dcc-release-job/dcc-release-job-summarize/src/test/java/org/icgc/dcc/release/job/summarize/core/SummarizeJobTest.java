@@ -125,7 +125,7 @@ public class SummarizeJobTest extends AbstractJobTest {
     log.debug("{}", releases);
     val expectedRelease = $("{_id:'ICGC19-0-2',_release_id:'ICGC19-0-2',name:'ICGC19',number:19,project_count:2,"
         + "live_project_count:1,primary_site_count:2,live_primary_site_count:1,donor_count:2,live_donor_count:0,"
-        + "specimen_count:2,sample_count:3,ssm_count:0,mutated_gene_count:0}");
+        + "specimen_count:2,sample_count:3,ssm_count:2,mutated_gene_count:0}");
     val release = releases.get(0);
     val releaseDate = release.remove(RELEASE_DATE).textValue();
     assertThat(releaseDate.length()).isEqualTo(29);
