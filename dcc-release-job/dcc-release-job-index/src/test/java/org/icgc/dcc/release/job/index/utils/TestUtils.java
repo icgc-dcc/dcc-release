@@ -17,17 +17,19 @@
  */
 package org.icgc.dcc.release.job.index.utils;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import java.io.File;
 
+import lombok.NoArgsConstructor;
 import lombok.val;
-import lombok.experimental.UtilityClass;
 
 import org.icgc.dcc.release.core.config.SnpEffProperties;
 
-@UtilityClass
-public class TestUtils {
+@NoArgsConstructor(access = PRIVATE)
+public final class TestUtils {
 
-  public SnpEffProperties createSnpEffProperties() {
+  public static SnpEffProperties createSnpEffProperties() {
     val properties = new SnpEffProperties();
     properties.setReferenceGenomeVersion("GRCh37.75.v1");
     properties.setResourceDir(new File("/tmp/dcc-release"));
