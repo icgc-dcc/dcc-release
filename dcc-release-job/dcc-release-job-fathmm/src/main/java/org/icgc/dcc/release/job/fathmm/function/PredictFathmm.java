@@ -24,6 +24,8 @@ import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCE_TYPES;
 import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Map;
 
 import lombok.NonNull;
@@ -43,20 +45,21 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.Lists;
 
 @RequiredArgsConstructor
-public class PredictFathmm implements Function<ObjectNode, ObjectNode> {
+public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeable {
 
   /**
    * Configuration.
    */
   @NonNull
-  private final FathmmRepository fathmmRepository;
+  private final String fathmmRepositoryUrl;
   @NonNull
   private final BiMap<String, String> transcripts;
 
   /**
    * State.
    */
-  private FathmmPredictor predictor;
+  private transient FathmmRepository fathmmRepository;
+  private transient FathmmPredictor predictor;
 
   @Override
   public ObjectNode call(ObjectNode observation) throws Exception {
@@ -94,8 +97,22 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode> {
       }
     }
 
-    fathmmRepository.close();
     return observation;
+  }
+
+  private FathmmRepository fathmmRepository() {
+    if (fathmmRepository == null) {
+      fathmmRepository = new FathmmRepository(fathmmRepositoryUrl);
+    }
+
+    return fathmmRepository;
+  }
+
+  @Override
+  public void close() throws IOException {
+    if (fathmmRepository != null) {
+      fathmmRepository.close();
+    }
   }
 
   private ObjectNode calculateFATHMM(String translationIdStr, String aaMutationStr) {
@@ -113,7 +130,7 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode> {
 
   private Map<String, String> predict(String translationIdStr, String aaMutationStr) {
     if (predictor == null) {
-      predictor = new FathmmPredictor(fathmmRepository);
+      predictor = new FathmmPredictor(fathmmRepository());
     }
 
     return predictor.predict(translationIdStr, aaMutationStr);

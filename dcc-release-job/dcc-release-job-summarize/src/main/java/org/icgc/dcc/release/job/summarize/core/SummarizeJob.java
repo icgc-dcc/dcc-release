@@ -49,7 +49,8 @@ public class SummarizeJob extends GenericJob {
       FileType.GENE_SUMMARY,
       FileType.PROJECT_SUMMARY,
       FileType.OBSERVATION_SUMMARY,
-      FileType.RELEASE_SUMMARY };
+      FileType.RELEASE_SUMMARY,
+      FileType.MUTATION };
 
   @Override
   public JobType getType() {

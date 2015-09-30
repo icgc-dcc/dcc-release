@@ -28,7 +28,6 @@
     <module>dcc-release-job-index</module>
     <module>dcc-release-job-join</module>
     <module>dcc-release-job-mask</module>
-    <module>dcc-release-job-orphan</module>
     <module>dcc-release-job-stage</module>
     <module>dcc-release-job-summarize</module>
   </modules>

@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.release.job.summarize.task;
 
-import static org.icgc.dcc.release.core.job.FileType.OBSERVATION;
+import static org.icgc.dcc.release.core.job.FileType.OBSERVATION_FI;
 import static org.icgc.dcc.release.core.job.FileType.OBSERVATION_SUMMARY;
 import lombok.val;
 
@@ -39,8 +39,7 @@ public class ObservationSummarizeTask extends GenericTask {
   }
 
   private JavaRDD<ObjectNode> readObservations(TaskContext taskContext) {
-    // FIXME: Change to correct type
-    return readInput(taskContext, OBSERVATION);
+    return readInput(taskContext, OBSERVATION_FI);
   }
 
 }

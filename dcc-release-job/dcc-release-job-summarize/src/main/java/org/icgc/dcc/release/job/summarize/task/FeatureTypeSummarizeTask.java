@@ -18,7 +18,6 @@
 package org.icgc.dcc.release.job.summarize.task;
 
 import static com.google.common.collect.HashBasedTable.create;
-import static com.google.common.collect.Maps.immutableEntry;
 import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_DATA_TYPES;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY;
@@ -29,6 +28,7 @@ import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 import static org.icgc.dcc.release.core.util.ObjectNodes.mergeObjects;
 import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -46,7 +46,6 @@ import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.summarize.function.CreateFeatureTypeSummary;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Table;
 
@@ -68,15 +67,19 @@ public class FeatureTypeSummarizeTask extends GenericTask {
   }
 
   private Broadcast<Map<String, Map<String, ObjectNode>>> createBroadcastaVariable() {
-    val projectDonorSummary = ImmutableMap.<String, Map<String, ObjectNode>> builder();
+    // @formatter:off
+    // Broadcast variabled don't work with all Map implementations.
+    // See http://mail-archives.us.apache.org/mod_mbox/spark-user/201504.mbox/%3CCA+3qhFS0vXgJrfZ+e+yckpNPrm1wep8k=LSwEGNd53A7mPydzQ@mail.gmail.com%3E
+    // @formatter:on
+    val projectDonorSummary = Maps.<String, Map<String, ObjectNode>> newHashMap();
     for (val entry : projectFeatureTypeDonors.rowMap().entrySet()) {
-      projectDonorSummary.put(mergeDonorSummaries(entry));
+      projectDonorSummary.putAll(mergeDonorSummaries(entry));
     }
 
-    return sparkContext.broadcast(projectDonorSummary.build());
+    return sparkContext.broadcast(projectDonorSummary);
   }
 
-  private static Entry<String, Map<String, ObjectNode>> mergeDonorSummaries(
+  private static Map<String, Map<String, ObjectNode>> mergeDonorSummaries(
       Entry<String, Map<FeatureType, Map<String, ObjectNode>>> projectFeatureTypeDonorSummaries) {
     val donorAggregatedSummaries = Maps.<String, ObjectNode> newHashMap();
     for (val featureTypeDonorSummaryEntry : projectFeatureTypeDonorSummaries.getValue().entrySet()) {
@@ -95,8 +98,8 @@ public class FeatureTypeSummarizeTask extends GenericTask {
     }
 
     val projectName = projectFeatureTypeDonorSummaries.getKey();
+    return Collections.singletonMap(projectName, donorAggregatedSummaries);
 
-    return immutableEntry(projectName, donorAggregatedSummaries);
   }
 
   private static ObjectNode populateAvailableDataType(ObjectNode donorSummary, FeatureType featureType) {

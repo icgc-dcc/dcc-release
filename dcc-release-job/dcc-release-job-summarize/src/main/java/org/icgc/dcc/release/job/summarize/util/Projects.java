@@ -19,7 +19,9 @@ package org.icgc.dcc.release.job.summarize.util;
 
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_DATA_TYPES;
+import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_SUMMARY_STATE;
 import static org.icgc.dcc.common.core.model.FieldNames.TOTAL_DONOR_COUNT;
+import static org.icgc.dcc.common.core.model.FieldNames.TOTAL_LIVE_DONOR_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.TOTAL_SAMPLE_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.TOTAL_SPECIMEN_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.getTestedTypeCountFieldName;
@@ -48,8 +50,18 @@ public final class Projects {
     setTotalDonorCount(projectSummary, 0);
     setTotalSampleCount(projectSummary, 0);
     setTotalSpecimenCount(projectSummary, 0);
+    setTotalLiveDonorCount(projectSummary, 0);
+    setProjectState(projectSummary, "pending");
 
     return projectSummary;
+  }
+
+  private static void setProjectState(ObjectNode node, String state) {
+    node.put(PROJECT_SUMMARY_STATE, state);
+  }
+
+  private static void setTotalLiveDonorCount(ObjectNode node, int donorCount) {
+    node.put(TOTAL_LIVE_DONOR_COUNT, donorCount);
   }
 
   private static void setTestedTypeCount(ObjectNode node, FeatureType type, int count) {

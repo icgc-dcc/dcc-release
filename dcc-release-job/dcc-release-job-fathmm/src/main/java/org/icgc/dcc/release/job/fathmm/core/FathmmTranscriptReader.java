@@ -33,9 +33,9 @@ import org.icgc.dcc.release.core.function.FilterFields;
 import org.icgc.dcc.release.core.function.FlattenField;
 import org.icgc.dcc.release.core.function.PullUpField;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.util.ObjectNodeFilter.FilterMode;
-import org.icgc.dcc.release.core.util.ObjectNodeRDDs;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.BiMap;
@@ -46,7 +46,7 @@ import com.google.common.collect.ImmutableBiMap;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class FathmmTranscriptReader {
+public class FathmmTranscriptReader extends GenericTask {
 
   /**
    * Constants.
@@ -61,7 +61,7 @@ public class FathmmTranscriptReader {
   public BiMap<String, String> readTranscripts() {
     val watch = createStarted();
     log.info("Reading transcripts...");
-    val input = readFileType(FileType.GENE);
+    val input = readInput(taskContext, FileType.GENE);
     val transcripts = transform(input).collect();
     log.info("Finished reading {} transcripts in {}", formatCount(transcripts), watch);
 
@@ -90,10 +90,9 @@ public class FathmmTranscriptReader {
     return mapping.build();
   }
 
-  private JavaRDD<ObjectNode> readFileType(FileType fileType) {
-    val metaFileTypePath = taskContext.getPath(fileType);
-
-    return ObjectNodeRDDs.textObjectNodeFile(taskContext.getSparkContext(), metaFileTypePath);
+  @Override
+  public void execute(TaskContext taskContext) {
+    throw new UnsupportedOperationException();
   }
 
 }

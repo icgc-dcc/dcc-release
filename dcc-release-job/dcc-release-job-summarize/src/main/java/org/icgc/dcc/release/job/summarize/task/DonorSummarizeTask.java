@@ -27,7 +27,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
 import static org.icgc.dcc.release.core.function.Unwind.unwindToParent;
 import static org.icgc.dcc.release.core.job.FileType.CLINICAL;
-import static org.icgc.dcc.release.core.job.FileType.OBSERVATION;
+import static org.icgc.dcc.release.core.job.FileType.OBSERVATION_FI;
 import static org.icgc.dcc.release.core.util.ObjectNodes.mergeObjects;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;
@@ -154,7 +154,7 @@ public class DonorSummarizeTask extends GenericTask {
   }
 
   private JavaRDD<ObjectNode> readObservation(TaskContext taskContext) {
-    return readInput(taskContext, OBSERVATION);
+    return readInput(taskContext, OBSERVATION_FI);
   }
 
   private JavaRDD<ObjectNode> readClinical(TaskContext taskContext) {

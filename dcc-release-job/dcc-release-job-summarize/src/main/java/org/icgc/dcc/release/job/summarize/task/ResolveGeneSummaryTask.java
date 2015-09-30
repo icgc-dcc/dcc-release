@@ -115,8 +115,7 @@ public class ResolveGeneSummaryTask extends GenericTask {
   private JavaRDD<ObjectNode> readObservations(TaskContext taskContext) {
     val retainGeneFields = new RetainGeneFields(OBSERVATION_DONOR_ID, OBSERVATION_TYPE, OBSERVATION_CONSEQUENCES,
         GENE_ID, MUTATION_ID);
-    // FIXME: change to proper file type (OBSERVATION_FI ?)
-    return readInput(taskContext, FileType.OBSERVATION)
+    return readInput(taskContext, FileType.OBSERVATION_FI)
         .map(new RetainFields(OBSERVATION_DONOR_ID, OBSERVATION_TYPE, OBSERVATION_CONSEQUENCES, MUTATION_ID))
         .flatMap(unwindToParent(OBSERVATION_CONSEQUENCES))
         .map(retainGeneFields);
