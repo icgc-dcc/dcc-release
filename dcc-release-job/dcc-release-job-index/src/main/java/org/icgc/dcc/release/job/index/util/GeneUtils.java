@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.index.util;
 
+import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_GO_TERM;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_ID;
 import static org.icgc.dcc.release.core.util.FieldNames.IndexFieldNames.GO_TERM_ONTOLOGY;
@@ -24,8 +25,8 @@ import static org.icgc.dcc.release.core.util.Tuples.tuple;
 
 import java.util.Map;
 
+import lombok.NoArgsConstructor;
 import lombok.val;
-import lombok.experimental.UtilityClass;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.PairFunction;
@@ -34,18 +35,18 @@ import org.icgc.dcc.release.job.index.function.PivotGeneGeneSets;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@UtilityClass
-public class GeneUtils {
+@NoArgsConstructor(access = PRIVATE)
+public final class GeneUtils {
 
   private static final String MISSING_VALUE = "";
 
-  public JavaRDD<ObjectNode> pivotGenes(JavaRDD<ObjectNode> genes, JavaRDD<ObjectNode> geneSets) {
+  public static JavaRDD<ObjectNode> pivotGenes(JavaRDD<ObjectNode> genes, JavaRDD<ObjectNode> geneSets) {
     val geneSetIdOntologyPairs = createGeneSetIdOntologyPairs(geneSets);
 
     return genes.map(new PivotGeneGeneSets(geneSetIdOntologyPairs));
   }
 
-  private Map<String, String> createGeneSetIdOntologyPairs(JavaRDD<ObjectNode> geneSets) {
+  private static Map<String, String> createGeneSetIdOntologyPairs(JavaRDD<ObjectNode> geneSets) {
     return geneSets
         .mapToPair(pairGeneSetOntology())
         .distinct()
@@ -53,7 +54,7 @@ public class GeneUtils {
 
   }
 
-  private PairFunction<ObjectNode, String, String> pairGeneSetOntology() {
+  private static PairFunction<ObjectNode, String, String> pairGeneSetOntology() {
     return geneSet -> {
       JsonNode goTerm = geneSet.path(GENE_SET_GO_TERM);
 
