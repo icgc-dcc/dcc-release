@@ -15,58 +15,25 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.annotate.core;
+package org.icgc.dcc.release.job.index.utils;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import java.io.File;
+
+import lombok.val;
+import lombok.experimental.UtilityClass;
 
 import org.icgc.dcc.release.core.config.SnpEffProperties;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.job.GenericJob;
-import org.icgc.dcc.release.core.job.JobContext;
-import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.job.annotate.task.AnnotationTask;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-@Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
-public class AnnotateJob extends GenericJob {
+@UtilityClass
+public class TestUtils {
 
-  /**
-   * Constants.
-   */
-  // TODO: Confirm input time are SSM_P and SGV_P or SSM_P_MASKED and SGV_P_MASKED ?
-  public static final FileType SSM_INPUT_TYPE = FileType.SSM_P_MASKED;
-  public static final FileType SGV_INPUT_TYPE = FileType.SGV_P_MASKED;
+  public SnpEffProperties createSnpEffProperties() {
+    val properties = new SnpEffProperties();
+    properties.setReferenceGenomeVersion("GRCh37.75.v1");
+    properties.setResourceDir(new File("/tmp/dcc-release"));
+    properties.setResourceUrl("https://seqwaremaven.oicr.on.ca/artifactory/simple/dcc-dependencies/org/icgc/dcc");
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final SnpEffProperties properties;
-
-  @Override
-  public JobType getType() {
-    return JobType.ANNOTATE;
-  }
-
-  @Override
-  @SneakyThrows
-  public void execute(@NonNull JobContext jobContext) {
-    clean(jobContext);
-    annotate(jobContext);
-  }
-
-  private void clean(JobContext jobContext) {
-    delete(jobContext, FileType.SSM_S, FileType.SGV_S);
-  }
-
-  private void annotate(JobContext jobContext) {
-    jobContext.execute(
-        new AnnotationTask(properties, SSM_INPUT_TYPE, FileType.SSM_S),
-        new AnnotationTask(properties, SGV_INPUT_TYPE, FileType.SGV_S));
+    return properties;
   }
 
 }

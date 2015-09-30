@@ -24,12 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.core.function.ParseObjectNode;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericProcessTask;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.util.JavaRDDs;
-import org.icgc.dcc.release.job.annotate.config.SnpEffProperties;
 import org.icgc.dcc.release.job.annotate.function.SnpEffAnnotate;
 import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
 

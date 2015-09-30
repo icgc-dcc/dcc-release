@@ -15,58 +15,57 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.annotate.core;
+package org.icgc.dcc.release.job.index.util;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_GO_TERM;
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_ID;
+import static org.icgc.dcc.release.core.util.FieldNames.IndexFieldNames.GO_TERM_ONTOLOGY;
+import static org.icgc.dcc.release.core.util.Tuples.tuple;
 
-import org.icgc.dcc.release.core.config.SnpEffProperties;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.job.GenericJob;
-import org.icgc.dcc.release.core.job.JobContext;
-import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.job.annotate.task.AnnotationTask;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import java.util.Map;
 
-@Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
-public class AnnotateJob extends GenericJob {
+import lombok.val;
+import lombok.experimental.UtilityClass;
 
-  /**
-   * Constants.
-   */
-  // TODO: Confirm input time are SSM_P and SGV_P or SSM_P_MASKED and SGV_P_MASKED ?
-  public static final FileType SSM_INPUT_TYPE = FileType.SSM_P_MASKED;
-  public static final FileType SGV_INPUT_TYPE = FileType.SGV_P_MASKED;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.PairFunction;
+import org.icgc.dcc.release.job.index.function.PivotGeneGeneSets;
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final SnpEffProperties properties;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-  @Override
-  public JobType getType() {
-    return JobType.ANNOTATE;
+@UtilityClass
+public class GeneUtils {
+
+  private static final String MISSING_VALUE = "";
+
+  public JavaRDD<ObjectNode> pivotGenes(JavaRDD<ObjectNode> genes, JavaRDD<ObjectNode> geneSets) {
+    val geneSetIdOntologyPairs = createGeneSetIdOntologyPairs(geneSets);
+
+    return genes.map(new PivotGeneGeneSets(geneSetIdOntologyPairs));
   }
 
-  @Override
-  @SneakyThrows
-  public void execute(@NonNull JobContext jobContext) {
-    clean(jobContext);
-    annotate(jobContext);
+  private Map<String, String> createGeneSetIdOntologyPairs(JavaRDD<ObjectNode> geneSets) {
+    return geneSets
+        .mapToPair(pairGeneSetOntology())
+        .distinct()
+        .collectAsMap();
+
   }
 
-  private void clean(JobContext jobContext) {
-    delete(jobContext, FileType.SSM_S, FileType.SGV_S);
-  }
+  private PairFunction<ObjectNode, String, String> pairGeneSetOntology() {
+    return geneSet -> {
+      JsonNode goTerm = geneSet.path(GENE_SET_GO_TERM);
 
-  private void annotate(JobContext jobContext) {
-    jobContext.execute(
-        new AnnotationTask(properties, SSM_INPUT_TYPE, FileType.SSM_S),
-        new AnnotationTask(properties, SGV_INPUT_TYPE, FileType.SGV_S));
+      if (goTerm.isMissingNode()) {
+        return tuple(MISSING_VALUE, MISSING_VALUE);
+      }
+
+      String id = geneSet.get(GENE_SET_ID).textValue();
+      String ontology = goTerm.get(GO_TERM_ONTOLOGY).textValue();
+
+      return tuple(id, ontology);
+    };
   }
 
 }

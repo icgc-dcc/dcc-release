@@ -41,7 +41,7 @@ public class GeneTextIndexTask extends AbstractIndexTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    val genes = readGenes(taskContext);
+    val genes = readGenesPivoted(taskContext);
     val output = genes.map(new GeneTextDocumentTransform(indexJobContext));
 
     writeDocOutput(taskContext, output);

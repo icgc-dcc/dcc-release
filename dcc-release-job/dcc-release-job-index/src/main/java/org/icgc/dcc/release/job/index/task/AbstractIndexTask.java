@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.index.task;
 
+import static org.icgc.dcc.release.job.index.util.GeneUtils.pivotGenes;
 import lombok.NonNull;
 import lombok.val;
 
@@ -36,6 +37,8 @@ import org.icgc.dcc.release.job.index.util.DocumentRdds;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class AbstractIndexTask extends GenericTask {
+
+  private static final FileType GENE_SET_INPUT_TYPE = FileType.GENE_SET_SUMMARY;
 
   protected final DocumentType type;
   private final IndexJobContext indexJobContext;
@@ -61,15 +64,22 @@ public abstract class AbstractIndexTask extends GenericTask {
     return filterFields(readInput(taskContext, FileType.DONOR_SUMMARY), fields);
   }
 
+  protected JavaRDD<ObjectNode> readGenesPivoted(TaskContext taskContext) {
+    val fields = type.getFields().getGeneFields();
+    val genes = filterFields(readInput(taskContext, FileType.GENE_SUMMARY), fields);
+    val geneSets = readInput(taskContext, GENE_SET_INPUT_TYPE);
+
+    return pivotGenes(genes, geneSets);
+  }
+
   protected JavaRDD<ObjectNode> readGenes(TaskContext taskContext) {
-    // FIXME: ETL1 adds gene-sets to the result
     val fields = type.getFields().getGeneFields();
     return filterFields(readInput(taskContext, FileType.GENE_SUMMARY), fields);
   }
 
   protected JavaRDD<ObjectNode> readGeneSets(TaskContext taskContext) {
     val fields = type.getFields().getGeneSetFields();
-    return filterFields(readInput(taskContext, FileType.GENE_SET), fields);
+    return filterFields(readInput(taskContext, GENE_SET_INPUT_TYPE), fields);
   }
 
   protected JavaRDD<ObjectNode> readObservations(TaskContext taskContext) {

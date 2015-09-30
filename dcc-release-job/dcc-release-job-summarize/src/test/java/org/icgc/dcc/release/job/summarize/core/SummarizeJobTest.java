@@ -59,7 +59,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
 import org.icgc.dcc.common.core.util.stream.Streams;
 import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.job.summarize.core.SummarizeJob;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -114,6 +113,7 @@ public class SummarizeJobTest extends AbstractJobTest {
     assertDonorSummary(BRCA_PROJECT_NAME);
     assertProjects();
     assertGenes();
+    assertGeneSets();
     assertObservations();
     assertRelease();
 
@@ -399,6 +399,12 @@ public class SummarizeJobTest extends AbstractJobTest {
         assertThat(genesCount).isEqualTo(1);
       }
     }
+  }
+
+  private void assertGeneSets() {
+    val geneSets = produces(FileType.GENE_SET_SUMMARY);
+    log.info("GeneSets - {}", geneSets);
+    // TODO: Finish
   }
 
   private static void assertSummaryDO1(JsonNode summary) {

@@ -218,6 +218,13 @@
         </exclusions>
       </dependency>
 
+      <!-- Utilities -->
+      <dependency>
+        <groupId>com.google.code.externalsortinginjava</groupId>
+        <artifactId>externalsortinginjava</artifactId>
+        <version>${externalsort.version}</version>
+      </dependency>
+
       <!-- Database -->
       <dependency>
         <groupId>org.jdbi</groupId>
@@ -332,6 +339,9 @@
 
     <!-- Versions - DB -->
     <jdbi.version>2.53</jdbi.version>
+
+    <!-- Versions - Utils -->
+    <externalsort.version>0.1.9</externalsort.version>
   </properties>
 
 </project>

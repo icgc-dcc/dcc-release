@@ -64,4 +64,10 @@ public class FieldNames {
 
   }
 
+  public static class IndexFieldNames {
+
+    public static final String GO_TERM_ONTOLOGY = "ontology";
+
+  }
+
 }

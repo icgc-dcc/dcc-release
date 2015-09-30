@@ -48,7 +48,7 @@ public class GeneCentricIndexTask extends AbstractIndexTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    val genes = readGenes(taskContext);
+    val genes = readGenesPivoted(taskContext);
     val observations = readObservations(taskContext);
 
     // TODO: This should be configured to give optimum results

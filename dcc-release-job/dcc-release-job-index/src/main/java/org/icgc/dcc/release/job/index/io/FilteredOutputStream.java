@@ -15,58 +15,57 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.annotate.core;
+package org.icgc.dcc.release.job.index.io;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.val;
 
-import org.icgc.dcc.release.core.config.SnpEffProperties;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.job.GenericJob;
-import org.icgc.dcc.release.core.job.JobContext;
-import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.job.annotate.task.AnnotationTask;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+public class FilteredOutputStream extends OutputStream {
 
-@Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
-public class AnnotateJob extends GenericJob {
+  private final OutputStream headerStream;
+  private final OutputStream dataStream;
 
-  /**
-   * Constants.
-   */
-  // TODO: Confirm input time are SSM_P and SGV_P or SSM_P_MASKED and SGV_P_MASKED ?
-  public static final FileType SSM_INPUT_TYPE = FileType.SSM_P_MASKED;
-  public static final FileType SGV_INPUT_TYPE = FileType.SGV_P_MASKED;
-
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final SnpEffProperties properties;
-
-  @Override
-  public JobType getType() {
-    return JobType.ANNOTATE;
+  public FilteredOutputStream(@NonNull File headerFile, @NonNull File dataFile) {
+    this.headerStream = createOutputStream(headerFile);
+    this.dataStream = createOutputStream(dataFile);
   }
 
   @Override
+  public void write(int b) throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void write(byte[] b) throws IOException {
+    val line = new String(b);
+    if (isHeader(line)) {
+      headerStream.write(b);
+    } else {
+      dataStream.write(b);
+    }
+  }
+
+  @Override
+  public void close() throws IOException {
+    headerStream.close();
+    dataStream.close();
+    super.close();
+  }
+
+  private static boolean isHeader(String line) {
+    return line.startsWith("#");
+  }
+
   @SneakyThrows
-  public void execute(@NonNull JobContext jobContext) {
-    clean(jobContext);
-    annotate(jobContext);
-  }
-
-  private void clean(JobContext jobContext) {
-    delete(jobContext, FileType.SSM_S, FileType.SGV_S);
-  }
-
-  private void annotate(JobContext jobContext) {
-    jobContext.execute(
-        new AnnotationTask(properties, SSM_INPUT_TYPE, FileType.SSM_S),
-        new AnnotationTask(properties, SGV_INPUT_TYPE, FileType.SGV_S));
+  private OutputStream createOutputStream(File file) {
+    return new BufferedOutputStream(new FileOutputStream(file));
   }
 
 }

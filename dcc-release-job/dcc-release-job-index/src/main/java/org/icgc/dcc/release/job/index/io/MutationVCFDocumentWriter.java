@@ -23,31 +23,28 @@ import java.io.OutputStream;
 
 import lombok.val;
 
-import org.icgc.dcc.release.job.index.core.Document;
-import org.icgc.dcc.release.job.index.core.DocumentWriter;
 import org.icgc.dcc.release.job.index.util.MutationCentricFeatureConverter;
 import org.icgc.dcc.release.job.index.vcf.MutationVCFWriter;
 
-public class MutationVCFDocumentWriter implements DocumentWriter {
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+public class MutationVCFDocumentWriter {
 
   private final MutationVCFWriter writer;
   private final MutationCentricFeatureConverter converter = new MutationCentricFeatureConverter();
 
-  public MutationVCFDocumentWriter(String releaseName, String indexName, File fastaFile, OutputStream outputStream,
-      int totalSsmTestedDonorCount) throws IOException {
+  public MutationVCFDocumentWriter(String releaseName, File fastaFile, OutputStream outputStream, int totalSsmTestedDonorCount) throws IOException {
     this.writer = new MutationVCFWriter(releaseName, fastaFile, outputStream, true, totalSsmTestedDonorCount);
 
     writer.writeHeader();
   }
 
-  @Override
-  public void write(Document document) throws IOException {
+  public void write(ObjectNode document) throws IOException {
     val feature = converter.convert(document);
 
     writer.writeFeature(feature);
   }
 
-  @Override
   public void close() throws IOException {
     writer.close();
   }

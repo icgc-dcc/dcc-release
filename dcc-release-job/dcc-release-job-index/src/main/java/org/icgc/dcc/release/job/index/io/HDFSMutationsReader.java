@@ -15,58 +15,49 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.annotate.core;
+package org.icgc.dcc.release.job.index.io;
+
+import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
+
+import java.io.InputStream;
+import java.util.Iterator;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.val;
 
-import org.icgc.dcc.release.core.config.SnpEffProperties;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
 import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.job.GenericJob;
-import org.icgc.dcc.release.core.job.JobContext;
-import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.job.annotate.task.AnnotationTask;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-@Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
-public class AnnotateJob extends GenericJob {
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+@RequiredArgsConstructor
+public class HDFSMutationsReader {
+
+  @NonNull
+  private final String workingDir;
+  @NonNull
+  private final FileSystem fileSystem;
 
   /**
    * Constants.
    */
-  // TODO: Confirm input time are SSM_P and SGV_P or SSM_P_MASKED and SGV_P_MASKED ?
-  public static final FileType SSM_INPUT_TYPE = FileType.SSM_P_MASKED;
-  public static final FileType SGV_INPUT_TYPE = FileType.SGV_P_MASKED;
+  private static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final SnpEffProperties properties;
+  public Iterator<ObjectNode> createMutationsIterator() {
+    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_INDEX.getDirName());
+    val inputStream = new FileGlobInputStream(fileSystem, inputPath);
 
-  @Override
-  public JobType getType() {
-    return JobType.ANNOTATE;
+    return readInput(inputStream);
   }
 
-  @Override
   @SneakyThrows
-  public void execute(@NonNull JobContext jobContext) {
-    clean(jobContext);
-    annotate(jobContext);
-  }
-
-  private void clean(JobContext jobContext) {
-    delete(jobContext, FileType.SSM_S, FileType.SGV_S);
-  }
-
-  private void annotate(JobContext jobContext) {
-    jobContext.execute(
-        new AnnotationTask(properties, SSM_INPUT_TYPE, FileType.SSM_S),
-        new AnnotationTask(properties, SGV_INPUT_TYPE, FileType.SGV_S));
+  private static Iterator<ObjectNode> readInput(InputStream inputStream) {
+    return READER.<ObjectNode> readValues(inputStream);
   }
 
 }

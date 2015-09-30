@@ -3,17 +3,16 @@ package org.icgc.dcc.release.job.index.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.release.job.index.core.IndexJob.resolveIndexName;
 import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newTransportClient;
+import static org.icgc.dcc.release.job.index.utils.TestUtils.createSnpEffProperties;
 
 import java.io.File;
 import java.util.Map;
 
-import lombok.SneakyThrows;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.io.FileUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.FilterBuilders;
+import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.job.index.config.IndexProperties;
 import org.icgc.dcc.release.job.index.model.DocumentType;
@@ -24,7 +23,6 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
-@Slf4j
 public class IndexJobTest extends AbstractJobTest {
 
   private static final String ES_URI = "es://localhost:9300";
@@ -44,7 +42,7 @@ public class IndexJobTest extends AbstractJobTest {
         .setEsUri(ES_URI)
         .setOutputDir(new File(workingDir, "output").getAbsolutePath());
 
-    this.job = new IndexJob(properties);
+    this.job = new IndexJob(properties, createSnpEffProperties());
     this.index = resolveIndexName(RELEASE_VERSION);
     this.esClient = newTransportClient(ES_URI);
   }
@@ -59,9 +57,86 @@ public class IndexJobTest extends AbstractJobTest {
     given(new File(TEST_FIXTURES_DIR));
     job.execute(createJobContext(job.getType(), ImmutableList.of("BRCA-UK")));
 
-    verifyMutations();
     verifyRelease();
+    varifyGeneSets();
+    varifyProjects();
     verifyDonors();
+    varifyGenes();
+    varifyObservations();
+    verifyMutations();
+
+  }
+
+  private void varifyObservations() {
+    val observations = esClient.prepareSearch(index)
+        .setTypes(DocumentType.OBSERVATION_CENTRIC_TYPE.getName())
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(observations).isEqualTo(3L);
+  }
+
+  private void varifyProjects() {
+    val projects = esClient.prepareSearch(index)
+        .setTypes(DocumentType.PROJECT_TYPE.getName())
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(projects).isEqualTo(2L);
+
+    val projectsText = esClient.prepareSearch(index)
+        .setTypes(DocumentType.PROJECT_TEXT_TYPE.getName())
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(projectsText).isEqualTo(2L);
+  }
+
+  private void varifyGeneSets() {
+    val geneSets = esClient.prepareSearch(index)
+        .setTypes(DocumentType.GENE_SET_TYPE.getName())
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(geneSets).isEqualTo(3L);
+
+    val geneSetsText = esClient.prepareSearch(index)
+        .setTypes(DocumentType.GENE_SET_TEXT_TYPE.getName())
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(geneSetsText).isEqualTo(3L);
+  }
+
+  private void varifyGenes() {
+    val genes = esClient.prepareSearch(index)
+        .setTypes(DocumentType.GENE_TYPE.getName())
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(genes).isEqualTo(3L);
+
+    val genesText = esClient.prepareSearch(index)
+        .setTypes(DocumentType.GENE_TEXT_TYPE.getName())
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(genesText).isEqualTo(3L);
+
+    val geneCentric = esClient.prepareSearch(index)
+        .setTypes(DocumentType.GENE_CENTRIC_TYPE.getName())
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(geneCentric).isEqualTo(3L);
   }
 
   private void verifyMutations() {
@@ -74,17 +149,26 @@ public class IndexJobTest extends AbstractJobTest {
       val source = hit.getSource();
       verifyMutationCentric(source);
     }
+
+    val mutationTextHits = esClient.prepareSearch(index)
+        .setTypes(DocumentType.MUTATION_TEXT_TYPE.getName())
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(mutationTextHits).isEqualTo(2L);
   }
 
   private void verifyMutationsOutput() {
     val mutationCentric = produces(FileType.MUTATION_CENTRIC_INDEX);
-    log.info("mutation-centric ouput {}", mutationCentric);
+    assertThat(mutationCentric).hasSize(2);
   }
 
   private static void verifyMutationCentric(Map<String, Object> source) {
-    assertThat(source.get("ssm_occurrence")).isNotNull();
-    assertThat(source.get("transcript")).isNotNull();
-    assertThat(source.get("platform")).isNotNull();
+    assertThat(source.get(FieldNames.MUTATION_OCCURRENCES)).isNotNull();
+    assertThat(source.get(FieldNames.MUTATION_TRANSCRIPTS)).isNotNull();
+    assertThat(source.get(FieldNames.MUTATION_PLATFORM)).isNotNull();
+    assertThat(source.get(FieldNames.MUTATION_SUMMARY)).isNotNull();
   }
 
   private void verifyRelease() {
@@ -98,16 +182,15 @@ public class IndexJobTest extends AbstractJobTest {
   }
 
   private void verifyDonors() {
-    // verifyDonor();
+    verifyDonor();
     verifyDonorCentric();
+    verifyDonorText();
   }
 
   private void verifyDonorCentric() {
-    // FIXME: resolve type
-    // FIXME: Finish thorough testing that verifies structure
     val donorsWithProjectCount = esClient
         .prepareSearch(index)
-        .setTypes("donor-centric")
+        .setTypes(DocumentType.DONOR_CENTRIC_TYPE.getName())
         .execute()
         .actionGet()
         .getHits()
@@ -115,28 +198,27 @@ public class IndexJobTest extends AbstractJobTest {
     assertThat(donorsWithProjectCount).isEqualTo(2L);
   }
 
-  @SuppressWarnings("unused")
+  private void verifyDonorText() {
+    val donorsCount = esClient
+        .prepareSearch(index)
+        .setTypes(DocumentType.DONOR_TEXT_TYPE.getName())
+        .execute()
+        .actionGet()
+        .getHits()
+        .getTotalHits();
+    assertThat(donorsCount).isEqualTo(2L);
+  }
+
   private void verifyDonor() {
-    // FIXME: resolve type
     val donorsWithProjectCount = esClient
         .prepareSearch(index)
-        .setTypes("donor")
+        .setTypes(DocumentType.DONOR_TYPE.getName())
         .setPostFilter(FilterBuilders.existsFilter("project"))
         .execute()
         .actionGet()
         .getHits()
         .getTotalHits();
     assertThat(donorsWithProjectCount).isEqualTo(2L);
-  }
-
-  @SneakyThrows
-  private static void cleanOutputFiles() {
-    // FIXME: Implement proper cleanup of files generated by the IndexJob
-    val indexerDir = new File("indexer");
-    if (indexerDir.exists()) {
-      log.debug("Deleting directory: {}", indexerDir.getAbsolutePath());
-      FileUtils.deleteDirectory(indexerDir);
-    }
   }
 
 }

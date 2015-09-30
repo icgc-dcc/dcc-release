@@ -15,58 +15,69 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.annotate.core;
+package org.icgc.dcc.release.job.index.util;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.val;
 
-import org.icgc.dcc.release.core.config.SnpEffProperties;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.job.GenericJob;
-import org.icgc.dcc.release.core.job.JobContext;
-import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.job.annotate.task.AnnotationTask;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import com.google.code.externalsorting.ExternalSort;
 
-@Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
-public class AnnotateJob extends GenericJob {
+@RequiredArgsConstructor
+public class VCFFileSorter {
 
-  /**
-   * Constants.
-   */
-  // TODO: Confirm input time are SSM_P and SGV_P or SSM_P_MASKED and SGV_P_MASKED ?
-  public static final FileType SSM_INPUT_TYPE = FileType.SSM_P_MASKED;
-  public static final FileType SGV_INPUT_TYPE = FileType.SGV_P_MASKED;
+  private static final int DEFAULT_BUFFER_SIZE = 25 * 1024 * 1024; // 25MB
 
-  /**
-   * Dependencies.
-   */
   @NonNull
-  private final SnpEffProperties properties;
+  private final File dataFile;
+  @NonNull
+  private final File headerFile;
 
-  @Override
-  public JobType getType() {
-    return JobType.ANNOTATE;
+  public void sortAndSave(@NonNull OutputStream outputStream) throws IOException {
+    checkState(dataFile.canRead() && headerFile.canRead(), "Either header file %s or data file %s is not readable",
+        headerFile, dataFile);
+    val sorted = createTmpFile();
+    ExternalSort.sort(dataFile, sorted);
+
+    @Cleanup
+    val headerStream = createInputStream(headerFile);
+    copy(headerStream, outputStream);
+
+    @Cleanup
+    val dataStream = createInputStream(sorted);
+    copy(dataStream, outputStream);
   }
 
-  @Override
   @SneakyThrows
-  public void execute(@NonNull JobContext jobContext) {
-    clean(jobContext);
-    annotate(jobContext);
+  private void copy(InputStream inputStream, OutputStream outputStream) {
+    byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+    int readBytes = 0;
+    while ((readBytes = inputStream.read(buffer, 0, DEFAULT_BUFFER_SIZE)) != -1) {
+      outputStream.write(buffer, 0, readBytes);
+    }
   }
 
-  private void clean(JobContext jobContext) {
-    delete(jobContext, FileType.SSM_S, FileType.SGV_S);
+  private static File createTmpFile() throws IOException {
+    val tmpFile = File.createTempFile("vcf-", ".sorted");
+    tmpFile.deleteOnExit();
+
+    return tmpFile;
   }
 
-  private void annotate(JobContext jobContext) {
-    jobContext.execute(
-        new AnnotationTask(properties, SSM_INPUT_TYPE, FileType.SSM_S),
-        new AnnotationTask(properties, SGV_INPUT_TYPE, FileType.SGV_S));
+  @SneakyThrows
+  private static InputStream createInputStream(File file) {
+    return new BufferedInputStream(new FileInputStream(file));
   }
 
 }

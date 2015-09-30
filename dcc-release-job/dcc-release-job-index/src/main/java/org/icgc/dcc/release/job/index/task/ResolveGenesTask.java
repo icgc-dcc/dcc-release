@@ -19,11 +19,13 @@ package org.icgc.dcc.release.job.index.task;
 
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getGeneId;
+import static org.icgc.dcc.release.job.index.util.GeneUtils.pivotGenes;
 
 import java.util.Map;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -58,7 +60,10 @@ public class ResolveGenesTask extends GenericTask {
   }
 
   private JavaRDD<ObjectNode> readGenes(TaskContext taskContext) {
-    return readInput(taskContext, FileType.GENE_SUMMARY);
+    val genes = readInput(taskContext, FileType.GENE_SUMMARY);
+    val geneSets = readInput(taskContext, FileType.GENE_SET_SUMMARY);
+
+    return pivotGenes(genes, geneSets);
   }
 
   private Broadcast<Map<String, ObjectNode>> createBroadcast() {

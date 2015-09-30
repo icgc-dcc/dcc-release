@@ -15,58 +15,54 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.annotate.core;
+package org.icgc.dcc.release.job.index.function;
+
+import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getGeneGeneSetId;
+import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getGeneGeneSetType;
+import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getGeneGeneSets;
+import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.removeGeneGeneSets;
+
+import java.util.Map;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.val;
 
-import org.icgc.dcc.release.core.config.SnpEffProperties;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.job.GenericJob;
-import org.icgc.dcc.release.core.job.JobContext;
-import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.job.annotate.task.AnnotationTask;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.apache.spark.api.java.function.Function;
 
-@Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
-public class AnnotateJob extends GenericJob {
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-  /**
-   * Constants.
-   */
-  // TODO: Confirm input time are SSM_P and SGV_P or SSM_P_MASKED and SGV_P_MASKED ?
-  public static final FileType SSM_INPUT_TYPE = FileType.SSM_P_MASKED;
-  public static final FileType SGV_INPUT_TYPE = FileType.SGV_P_MASKED;
+@RequiredArgsConstructor
+public class PivotGeneGeneSets implements Function<ObjectNode, ObjectNode> {
 
-  /**
-   * Dependencies.
-   */
+  private static final String GO_TERM_TYPE = "go_term";
+
   @NonNull
-  private final SnpEffProperties properties;
+  private final Map<String, String> geneSetOntologies;
 
   @Override
-  public JobType getType() {
-    return JobType.ANNOTATE;
-  }
+  public ObjectNode call(ObjectNode gene) throws Exception {
+    val geneGeneSets = getGeneGeneSets(gene);
+    if (!geneGeneSets.isMissingNode()) {
+      // Transform
+      for (val geneGeneSet : geneGeneSets) {
+        val id = getGeneGeneSetId(geneGeneSet);
+        val type = getGeneGeneSetType(geneGeneSet);
 
-  @Override
-  @SneakyThrows
-  public void execute(@NonNull JobContext jobContext) {
-    clean(jobContext);
-    annotate(jobContext);
-  }
+        val goTerm = GO_TERM_TYPE.equals(type);
+        if (goTerm) {
+          val ontology = geneSetOntologies.get(id);
+          gene.with(type).withArray(ontology).add(id);
+        } else {
+          gene.withArray(type).add(id);
+        }
+      }
+    }
 
-  private void clean(JobContext jobContext) {
-    delete(jobContext, FileType.SSM_S, FileType.SGV_S);
-  }
+    // TODO: This need to only occur if not the "gene" index
+    removeGeneGeneSets(gene);
 
-  private void annotate(JobContext jobContext) {
-    jobContext.execute(
-        new AnnotationTask(properties, SSM_INPUT_TYPE, FileType.SSM_S),
-        new AnnotationTask(properties, SGV_INPUT_TYPE, FileType.SGV_S));
+    return gene;
   }
 
 }

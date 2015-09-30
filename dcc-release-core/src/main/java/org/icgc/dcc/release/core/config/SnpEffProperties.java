@@ -1,4 +1,4 @@
-package org.icgc.dcc.release.job.annotate.config;
+package org.icgc.dcc.release.core.config;
 
 import java.io.File;
 import java.io.Serializable;

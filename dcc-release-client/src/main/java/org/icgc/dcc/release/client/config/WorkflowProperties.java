@@ -23,7 +23,7 @@ import java.util.Map;
 
 import lombok.Data;
 
-import org.icgc.dcc.release.job.annotate.config.SnpEffProperties;
+import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.job.export.config.HBaseProperties;
 import org.icgc.dcc.release.job.id.config.IdentifierProperties;
 import org.icgc.dcc.release.job.imports.config.MongoProperties;

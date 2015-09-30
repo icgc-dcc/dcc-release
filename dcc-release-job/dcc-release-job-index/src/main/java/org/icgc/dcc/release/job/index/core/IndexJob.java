@@ -28,6 +28,7 @@ import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -36,6 +37,7 @@ import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.job.index.config.IndexProperties;
 import org.icgc.dcc.release.job.index.model.DocumentType;
 import org.icgc.dcc.release.job.index.service.IndexService;
+import org.icgc.dcc.release.job.index.task.CreateVCFFileTask;
 import org.icgc.dcc.release.job.index.task.ResolveDonorsTask;
 import org.icgc.dcc.release.job.index.task.ResolveGenesTask;
 import org.icgc.dcc.release.job.index.task.ResolveProjectsTask;
@@ -55,6 +57,8 @@ public class IndexJob extends GenericJob {
    */
   @NonNull
   private final IndexProperties properties;
+  @NonNull
+  private final SnpEffProperties snpEffProperties;
 
   @Override
   public JobType getType() {
@@ -137,6 +141,7 @@ public class IndexJob extends GenericJob {
       val constructor = class_.getConstructor(jobContextClassName);
       tasks.add((Task) constructor.newInstance(indexJobContext));
     }
+    tasks.add(new CreateVCFFileTask(snpEffProperties));
 
     return tasks.build();
   }

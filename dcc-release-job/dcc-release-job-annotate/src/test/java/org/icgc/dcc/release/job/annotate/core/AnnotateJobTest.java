@@ -25,8 +25,8 @@ import java.util.List;
 
 import lombok.val;
 
+import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.job.annotate.config.SnpEffProperties;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Test;
