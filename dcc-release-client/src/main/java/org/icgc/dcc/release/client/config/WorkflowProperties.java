@@ -25,7 +25,7 @@ import lombok.Data;
 
 import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.job.export.config.HBaseProperties;
-import org.icgc.dcc.release.job.id.config.IdentifierProperties;
+import org.icgc.dcc.release.job.id.config.IdProperties;
 import org.icgc.dcc.release.job.imports.config.MongoProperties;
 import org.icgc.dcc.release.job.index.config.IndexProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -78,9 +78,9 @@ public class WorkflowProperties {
   }
 
   @Bean
-  @ConfigurationProperties(prefix = "dcc.identifier")
-  public IdentifierProperties identifierProperties() {
-    return new IdentifierProperties();
+  @ConfigurationProperties(prefix = "dcc.id")
+  public IdProperties identifierProperties() {
+    return new IdProperties();
   }
 
   @Data

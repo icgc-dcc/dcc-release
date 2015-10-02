@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.job.summarize.task;
 
 import static com.google.common.collect.HashBasedTable.create;
+import static java.util.Collections.singletonMap;
 import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_DATA_TYPES;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY;
@@ -28,7 +29,6 @@ import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 import static org.icgc.dcc.release.core.util.ObjectNodes.mergeObjects;
 import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -98,8 +98,8 @@ public class FeatureTypeSummarizeTask extends GenericTask {
     }
 
     val projectName = projectFeatureTypeDonorSummaries.getKey();
-    return Collections.singletonMap(projectName, donorAggregatedSummaries);
 
+    return singletonMap(projectName, donorAggregatedSummaries);
   }
 
   private static ObjectNode populateAvailableDataType(ObjectNode donorSummary, FeatureType featureType) {

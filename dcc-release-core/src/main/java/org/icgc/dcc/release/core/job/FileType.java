@@ -74,14 +74,6 @@ public enum FileType implements Identifiable {
   SGV_S(true),
   SGV(true),
 
-  CNGV_M(true),
-  CNGV_P(true),
-  CNGV_S(true),
-
-  STGV_M(true),
-  STGV_P(true),
-  STGV_S(true),
-
   PEXP_M(true),
   PEXP_P(true),
   PEXP(true),

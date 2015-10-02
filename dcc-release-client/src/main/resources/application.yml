@@ -1,6 +1,6 @@
 ---
 #
-# DCC ETL2 Workflow - Configuration
+# DCC Release Workflow - Configuration
 #
 
 ###################################################################################################
@@ -12,7 +12,7 @@ dcc:
    submission:
       url: http://***REMOVED***/ws
       dictionaryVersion: 0.11c
-   identifier:
+   id:
       url: https://id.icgc.org
       token:
       requestLoggingEnabled: false

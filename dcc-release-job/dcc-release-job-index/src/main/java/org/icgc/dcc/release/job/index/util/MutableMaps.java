@@ -15,23 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.id.config;
+package org.icgc.dcc.release.job.index.util;
 
-import java.io.Serializable;
+import static lombok.AccessLevel.PRIVATE;
 
-import lombok.Data;
+import java.util.Map;
+
 import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+import lombok.val;
 
-@Data
-@Accessors(chain = true)
-@NoArgsConstructor
-public class IdentifierProperties implements Serializable {
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Maps;
 
-  String url;
-  String token;
-  String classname;
-  boolean requestLoggingEnabled;
-  boolean strictSSLCertificates;
+@NoArgsConstructor(access = PRIVATE)
+public final class MutableMaps {
+
+  /**
+   * Broadcast variabled don't work with all Map implementations.
+   * @see <a
+   * href="http://mail-archives.us.apache.org/mod_mbox/spark-user/201504.mbox/%3CCA+3qhFS0vXgJrfZ+e+yckpNPrm1wep8k=LSwEGNd53A7mPydzQ@mail.gmail.com%3E">Spark
+   * discussion</a>
+   */
+  public static Map<String, ObjectNode> toHashMap(Map<String, ObjectNode> projects) {
+    val result = Maps.<String, ObjectNode> newHashMap();
+    result.putAll(projects);
+
+    return result;
+  }
 
 }

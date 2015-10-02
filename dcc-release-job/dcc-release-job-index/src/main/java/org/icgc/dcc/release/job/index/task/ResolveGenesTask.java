@@ -20,6 +20,7 @@ package org.icgc.dcc.release.job.index.task;
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getGeneId;
 import static org.icgc.dcc.release.job.index.util.GeneUtils.pivotGenes;
+import static org.icgc.dcc.release.job.index.util.MutableMaps.toHashMap;
 
 import java.util.Map;
 
@@ -53,10 +54,10 @@ public class ResolveGenesTask extends GenericTask {
   @Override
   public void execute(TaskContext taskContext) {
     sparkContext = taskContext.getSparkContext();
-    genesById = readGenes(taskContext)
+    val genes = readGenes(taskContext)
         .mapToPair(gene -> tuple(getGeneId(gene), gene))
         .collectAsMap();
-
+    genesById = toHashMap(genes);
   }
 
   private JavaRDD<ObjectNode> readGenes(TaskContext taskContext) {

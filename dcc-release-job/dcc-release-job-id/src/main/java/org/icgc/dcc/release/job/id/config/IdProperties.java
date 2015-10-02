@@ -15,42 +15,23 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.util;
+package org.icgc.dcc.release.job.id.config;
 
-import static com.google.common.collect.ImmutableList.of;
-import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.CNGV_TYPE;
-import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.STGV_TYPE;
-import static org.icgc.dcc.release.core.util.ObjectNodes.createBooleanNode;
-import static org.icgc.dcc.release.core.util.ObjectNodes.createNumberNode;
+import java.io.Serializable;
 
-import java.util.List;
-
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.val;
+import lombok.experimental.Accessors;
 
-import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
+@Data
+@Accessors(chain = true)
+@NoArgsConstructor
+public class IdProperties implements Serializable {
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.Lists;
-
-@NoArgsConstructor(access = PRIVATE)
-public final class FeatureTypes {
-
-  // TODO: Types are not present in the dictionary and not displayed on the portal. Must be removed from the ETL 1.
-  private static final List<FeatureType> SKIP_TYPE = of(CNGV_TYPE, STGV_TYPE);
-
-  public static Iterable<FeatureType> getFeatureTypes() {
-    val featureTypes = Lists.newArrayList(FeatureType.values());
-    featureTypes.removeAll(SKIP_TYPE);
-
-    return featureTypes;
-  }
-
-  public static JsonNode createFeatureTypeSummaryValue(FeatureType featureType, int featureTypeCount) {
-    val hasFeatureType = featureTypeCount > 0;
-
-    return featureType.isCountSummary() ? createNumberNode(featureTypeCount) : createBooleanNode(hasFeatureType);
-  }
+  String url;
+  String token;
+  String classname;
+  boolean requestLoggingEnabled;
+  boolean strictSSLCertificates;
 
 }

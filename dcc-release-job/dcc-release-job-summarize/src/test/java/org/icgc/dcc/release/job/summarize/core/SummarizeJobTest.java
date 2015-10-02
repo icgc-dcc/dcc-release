@@ -20,6 +20,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_EXPERIMENT
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_EXPERIMENTAL_ANALYSIS_SAMPLE_COUNTS;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_STATE;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_STUDIES;
+import static org.icgc.dcc.common.core.model.FieldNames.EXPERIMENTAL_ANALYSIS_PERFORMED_DONOR_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_DONORS;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_DONOR_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
@@ -299,6 +300,7 @@ public class SummarizeJobTest extends AbstractJobTest {
   private static void assertProjectSummary(ObjectNode project) {
     val summary = project.path(PROJECT_SUMMARY);
     assertThat(summary.isMissingNode()).isFalse();
+    assertThat(summary.path(EXPERIMENTAL_ANALYSIS_PERFORMED_DONOR_COUNT).isMissingNode()).isFalse();
     val projectId = textValue(project, PROJECT_ID);
     if (projectId.equals(BRCA_PROJECT_NAME)) {
       assertBRCAProjectSummary(asObjectNode(summary));
@@ -348,6 +350,16 @@ public class SummarizeJobTest extends AbstractJobTest {
     assertArray(summary.get(PROJECT_SUMMARY_REPOSITORY), DO1_REPOS);
     assertArray(summary.get(AVAILABLE_EXPERIMENTAL_ANALYSIS_PERFORMED), DO1_EXPERIMENTAL_ANALYSIS_PERFORMED);
     assertExperimentalAnalysisCounts(asObjectNode(summary.get(DONOR_SUMMARY_EXPERIMENTAL_ANALYSIS_SAMPLE_COUNTS)));
+    assertExperimentalAnalysisDonorCounts(asObjectNode(summary.get(EXPERIMENTAL_ANALYSIS_PERFORMED_DONOR_COUNT)));
+  }
+
+  private static void assertExperimentalAnalysisDonorCounts(ObjectNode jsonNode) {
+    assertThat(jsonNode).hasSize(5);
+    assertThat(jsonNode.get("WGS").asInt()).isEqualTo(1);
+    assertThat(jsonNode.get("miRNA-Seq").asInt()).isEqualTo(1);
+    assertThat(jsonNode.get("Bisulfite-Seq").asInt()).isEqualTo(1);
+    assertThat(jsonNode.get("RNA-Seq").asInt()).isEqualTo(1);
+    assertThat(jsonNode.get("WXS").asInt()).isEqualTo(1);
   }
 
   private static void assertFeatureTypeCount(FeatureType featureType, ObjectNode summary, int expectedCount) {

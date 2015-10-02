@@ -28,7 +28,7 @@ import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.job.id.config.IdentifierProperties;
+import org.icgc.dcc.release.job.id.config.IdProperties;
 import org.icgc.dcc.release.job.id.task.AddSurrogateDonorIdTask;
 import org.icgc.dcc.release.job.id.task.AddSurrogateMutationIdTask;
 import org.icgc.dcc.release.job.id.task.AddSurrogateSampleIdTask;
@@ -43,7 +43,7 @@ public class IdJob extends GenericJob {
    * Dependencies.
    */
   @Autowired
-  IdentifierProperties identifierProperties;
+  IdProperties identifierProperties;
 
   @Override
   public JobType getType() {
@@ -85,7 +85,7 @@ public class IdJob extends GenericJob {
     return isNullOrEmpty(identifierClassName) ? HttpIdClient.class.getName() : identifierClassName;
   }
 
-  private static Config createConfig(String release, IdentifierProperties identifierProperties) {
+  private static Config createConfig(String release, IdProperties identifierProperties) {
     return Config.builder()
         .serviceUrl(identifierProperties.getUrl())
         .release(release)
@@ -98,7 +98,7 @@ public class IdJob extends GenericJob {
   /**
    * {@link HttpIdClient} assumes that token is not set when it's null.
    */
-  private static String resolveToken(IdentifierProperties identifierProperties) {
+  private static String resolveToken(IdProperties identifierProperties) {
     val token = identifierProperties.getToken();
 
     return isNullOrEmpty(token) ? null : token;

@@ -20,6 +20,7 @@ package org.icgc.dcc.release.job.summarize.task;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_DATA_TYPES;
 import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_EXPERIMENTAL_ANALYSIS_PERFORMED;
+import static org.icgc.dcc.common.core.model.FieldNames.EXPERIMENTAL_ANALYSIS_PERFORMED_DONOR_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.EXPERIMENTAL_ANALYSIS_PERFORMED_SAMPLE_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.getTestedTypeCountFieldName;
 import static org.icgc.dcc.common.core.util.Jackson.asArrayNode;
@@ -138,6 +139,7 @@ public class ResolveProjectSummaryTask extends GenericTask {
         .reduceByKey((a, b) -> a + b)
         .collectAsMap();
 
+    projectSummary.putPOJO(EXPERIMENTAL_ANALYSIS_PERFORMED_DONOR_COUNT, to(donorLibraryStrategyCounts.build()));
     projectSummary.putPOJO(AVAILABLE_EXPERIMENTAL_ANALYSIS_PERFORMED, to(uniqueLibStrategies));
     projectSummary.put(EXPERIMENTAL_ANALYSIS_PERFORMED_SAMPLE_COUNT, to(sampleLibraryStrategyCounts));
 

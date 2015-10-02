@@ -65,7 +65,7 @@ public class ReferenceGenomeResolver extends DirectoryResourceResolver<File> {
       return fastaFile;
     }
 
-    log.info("Reference genome '{}' does not exist. Creating {}....", versionDir.getAbsolutePath());
+    log.info("Reference genome '{}' does not exist. Creating...", versionDir.getAbsolutePath());
     checkState(versionDir.mkdirs(), "Could not make data version directory '%s'", versionDir);
 
     log.info("Downloading reference genome version '{}'...", version);

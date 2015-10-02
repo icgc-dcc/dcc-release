@@ -19,11 +19,13 @@ package org.icgc.dcc.release.job.index.task;
 
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getProjectId;
+import static org.icgc.dcc.release.job.index.util.MutableMaps.toHashMap;
 
 import java.util.Map;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -51,9 +53,10 @@ public class ResolveProjectsTask extends GenericTask {
   @Override
   public void execute(TaskContext taskContext) {
     sparkContext = taskContext.getSparkContext();
-    projectsById = readProjects(taskContext)
+    val projects = readProjects(taskContext)
         .mapToPair(project -> tuple(getProjectId(project), project))
         .collectAsMap();
+    projectsById = toHashMap(projects);
   }
 
   private JavaRDD<ObjectNode> readProjects(TaskContext taskContext) {
