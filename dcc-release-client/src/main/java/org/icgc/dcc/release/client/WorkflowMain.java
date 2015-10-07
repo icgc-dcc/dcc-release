@@ -27,12 +27,9 @@ import java.util.concurrent.TimeUnit;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.release.client.cli.Options;
 import org.icgc.dcc.release.client.core.Workflow;
 import org.icgc.dcc.release.client.core.WorkflowContext;
-import org.icgc.dcc.release.client.util.MongoCollectionHDFSImporter;
-import org.icgc.dcc.release.job.imports.config.MongoProperties;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ComponentScan;
@@ -91,26 +88,9 @@ public class WorkflowMain {
     workflow.execute(workflowContext);
   }
 
-  @SuppressWarnings("unused")
-  private static void copyMongo(Options options, String[] args) {
-    val applicationContext = new SpringApplicationBuilder(WorkflowMain.class).web(false).run(args);
-    val workflowContext = createWorkflowContext(options);
-    applicationContext.getBean(JavaSparkContext.class);
-
-    val importer = new MongoCollectionHDFSImporter(
-        workflowContext.getWorkingDir(),
-        applicationContext.getBean(JavaSparkContext.class),
-        applicationContext.getBean(MongoProperties.class),
-        "ICGC18-0-3");
-
-    importer.execute();
-  }
-
   private static WorkflowContext createWorkflowContext(Options options) {
-    // TODO: Derive from options
     return new WorkflowContext(
         options.release,
-        // Temp.PROJECT_NAMES,
         options.projectNames,
         options.releaseDir,
         options.stagingDir,

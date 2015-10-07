@@ -82,8 +82,15 @@ public class Workflow {
       log.info("{}", repeat("-", 100));
 
       // Execute
-      // TODO: wrap in try-catch to mail exception
-      job.execute(jobContext);
+      try {
+        job.execute(jobContext);
+      } catch (Exception e) {
+        log.warn("Emailing '{}' failed job summary...", jobType);
+        val summary = new JobSummary(jobType, watch);
+        mailer.sendFailedJob(summary, e);
+
+        throw e;
+      }
 
       log.info("{}", repeat("-", 100));
       log.info("Finished executing job '{}' in {}", jobType, watch);

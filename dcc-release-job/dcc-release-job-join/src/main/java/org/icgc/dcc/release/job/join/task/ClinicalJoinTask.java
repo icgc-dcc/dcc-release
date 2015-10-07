@@ -113,14 +113,14 @@ public class ClinicalJoinTask extends GenericTask {
 
   private JavaPairRDD<String, Tuple2<Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>, Optional<Iterable<ObjectNode>>>,
       Optional<Iterable<ObjectNode>>>> joinSpecimenSample(JavaRDD<ObjectNode> specimen, JavaRDD<ObjectNode> sample,
-          JavaRDD<ObjectNode> biomarker, JavaRDD<ObjectNode> therapy) {
+          JavaRDD<ObjectNode> biomarker, JavaRDD<ObjectNode> surgery) {
     val extractSpecimenId = new ExtractSpecimenId();
 
     return specimen
         .mapToPair(new KeySpecimenIdField())
         .leftOuterJoin(createRddForJoin(sample.groupBy(extractSpecimenId), sparkContext))
         .leftOuterJoin(createRddForJoin(biomarker.groupBy(extractSpecimenId), sparkContext))
-        .leftOuterJoin(createRddForJoin(therapy.groupBy(extractSpecimenId), sparkContext));
+        .leftOuterJoin(createRddForJoin(surgery.groupBy(extractSpecimenId), sparkContext));
   }
 
   private JavaRDD<ObjectNode> joinSample(TaskContext taskContext, JavaRDD<ObjectNode> sample) {

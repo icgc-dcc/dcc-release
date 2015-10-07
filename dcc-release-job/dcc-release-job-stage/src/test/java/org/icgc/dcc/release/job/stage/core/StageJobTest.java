@@ -19,23 +19,42 @@ package org.icgc.dcc.release.job.stage.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
 import java.util.List;
 
+import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-import org.icgc.dcc.common.core.meta.ArtifactoryCodeListsResolver;
-import org.icgc.dcc.common.core.meta.ArtifactoryDictionaryResolver;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.fs.Path;
+import org.icgc.dcc.common.core.meta.FileCodeListsResolver;
+import org.icgc.dcc.common.core.meta.FileDictionaryResolver;
+import org.icgc.dcc.common.core.model.FieldNames;
+import org.icgc.dcc.release.core.job.DefaultJobContext;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.job.JobContext;
+import org.icgc.dcc.release.core.job.JobType;
 import org.icgc.dcc.release.core.submission.SubmissionFileSchema;
 import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
+import org.icgc.dcc.release.core.submission.SubmissionFileSystem;
 import org.icgc.dcc.release.core.submission.SubmissionMetadataService;
-import org.icgc.dcc.release.job.stage.core.StageJob;
+import org.icgc.dcc.release.core.util.LazyTable;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Table;
+
+@Slf4j
 public class StageJobTest extends AbstractJobTest {
+
+  private static final String DICTIONARY_FILE = TEST_FIXTURES_DIR + "/dictionary.json.gz";
+  private static final String CODE_LISTS_FILE = TEST_FIXTURES_DIR + "/codelists.json.gz";
+  private static final List<String> PROJECTS = ImmutableList.of("PROJ-01", "PROJ-02", "PROJ-03");
+
+  SubmissionFileSystem submissionFileSystem;
 
   /**
    * Class under test.
@@ -47,18 +66,37 @@ public class StageJobTest extends AbstractJobTest {
   public void setUp() {
     super.setUp();
     this.job = new StageJob(getSchemas());
+    this.submissionFileSystem = new SubmissionFileSystem(fileSystem);
   }
 
   @Test
-  @Ignore("requires proper input")
   public void testExecute() {
-    val jobContext = createJobContext(job.getType());
+    // copySubmissionFiles();
+    val jobContext = createJobContext();
     job.execute(jobContext);
 
-    val results = produces(FileType.SSM_M);
+    assertProj1();
+  }
 
-    assertThat(results).hasSize(1);
-    assertThat(results.get(0).get("gene")).isNotNull();
+  private void assertProj1() {
+    val results = produces("PROJ-01", FileType.SSM_P);
+    assertThat(results).hasSize(8);
+    log.info("{}", results.get(0));
+    assertThat(results.get(0).get(FieldNames.PROJECT_ID).textValue()).isEqualTo("PROJ-01");
+  }
+
+  private JobContext createJobContext() {
+    return new DefaultJobContext(JobType.STAGE, RELEASE_VERSION, PROJECTS, TEST_FIXTURES_DIR,
+        workingDir.toString(), resolveSubmissionFiles(), taskExecutor);
+  }
+
+  private Table<String, String, List<Path>> resolveSubmissionFiles() {
+    return new LazyTable<String, String, List<Path>>(() -> {
+      List<SubmissionFileSchema> metadata = getMetadata();
+
+      return submissionFileSystem.getFiles(TEST_FIXTURES_DIR, PROJECTS,
+          metadata);
+    });
   }
 
   private SubmissionFileSchemas getSchemas() {
@@ -67,9 +105,14 @@ public class StageJobTest extends AbstractJobTest {
 
   private List<SubmissionFileSchema> getMetadata() {
     return new SubmissionMetadataService(
-        new ArtifactoryDictionaryResolver(),
-        new ArtifactoryCodeListsResolver())
+        new FileDictionaryResolver(DICTIONARY_FILE),
+        new FileCodeListsResolver(CODE_LISTS_FILE))
         .getMetadata();
+  }
+
+  @SneakyThrows
+  private void copySubmissionFiles() {
+    FileUtils.copyDirectory(new File(TEST_FIXTURES_DIR), workingDir);
   }
 
 }
