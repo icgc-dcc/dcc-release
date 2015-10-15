@@ -17,13 +17,14 @@
  */
 package org.icgc.dcc.release.job.index.task;
 
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getDonorId;
-import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getObservationDonorId;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.release.core.function.KeyFieldsFunction;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.core.IndexJobContext;
@@ -64,10 +65,20 @@ public class DonorCentricIndexTask extends AbstractIndexTask {
       JavaRDD<ObjectNode> donors,
       JavaRDD<ObjectNode> observations) {
     val donorPairs = donors.mapToPair(donor -> tuple(getDonorId(donor), donor));
-    val observationPairs = observations.groupBy(observation -> getObservationDonorId(observation));
+    val observationPairs = observations
+        .mapToPair(pairByDonorId())
+        .groupByKey();
     val donorObservationsPairs = donorPairs.leftOuterJoin(observationPairs);
 
     return donorObservationsPairs;
+  }
+
+  private static KeyFieldsFunction<ObjectNode> pairByDonorId() {
+    return new KeyFieldsFunction<ObjectNode>(row -> {
+      row.remove(DONOR_ID);
+      return row;
+    },
+        DONOR_ID);
   }
 
 }

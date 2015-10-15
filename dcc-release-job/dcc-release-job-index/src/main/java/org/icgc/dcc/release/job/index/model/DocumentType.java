@@ -22,8 +22,10 @@ import static org.icgc.dcc.common.core.model.Entity.GENE;
 import static org.icgc.dcc.common.core.model.Entity.GENE_SET;
 import static org.icgc.dcc.common.core.model.Entity.MUTATION;
 import static org.icgc.dcc.common.core.model.Entity.OBSERVATION;
+import static org.icgc.dcc.common.core.model.Entity.PATHWAY;
 import static org.icgc.dcc.common.core.model.Entity.PROJECT;
 import static org.icgc.dcc.common.core.model.Entity.RELEASE;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.DIAGRAM_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.DONOR_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.GENE_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.GENE_SET_COLLECTION;
@@ -40,6 +42,7 @@ import org.icgc.dcc.common.core.model.Entity;
 import org.icgc.dcc.common.core.model.IndexType;
 import org.icgc.dcc.common.core.model.ReleaseCollection;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.job.index.task.DiagramIndexTask;
 import org.icgc.dcc.release.job.index.task.DonorCentricIndexTask;
 import org.icgc.dcc.release.job.index.task.DonorIndexTask;
 import org.icgc.dcc.release.job.index.task.DonorTextIndexTask;
@@ -64,6 +67,20 @@ import com.google.common.collect.ImmutableList;
  */
 @Getter
 public enum DocumentType {
+
+  /**
+   * Diagram type(s).
+   */
+  DIAGRAM_TYPE(
+      attributes()
+          .name("diagram")
+          .entity(PATHWAY)
+          .collection(DIAGRAM_COLLECTION)
+          .indexClassName(DiagramIndexTask.class.getName())
+          .outputFileType(FileType.DIAGRAM_INDEX)
+          .batchSize(100)
+          .statusInterval(100)
+  ),
 
   /**
    * Release type(s).
@@ -168,7 +185,8 @@ public enum DocumentType {
                               "project_name",
                               "tumour_type",
                               "tumour_subtype",
-                              "primary_site")
+                              "primary_site",
+                              "_summary._state")
                   )
           )
   ),
@@ -215,7 +233,8 @@ public enum DocumentType {
                               "specimen._specimen_id",
                               "specimen.specimen_id",
                               "specimen.sample._sample_id",
-                              "specimen.sample.analyzed_sample_id")
+                              "specimen.sample.analyzed_sample_id",
+                              "_summary._state")
                   )
           )
   ),

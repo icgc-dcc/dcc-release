@@ -129,6 +129,7 @@ public class IndexJob extends GenericJob {
     val tasks = createStreamingTasks(indexJobContext);
 
     jobContext.execute(tasks);
+    jobContext.execute(new CreateVCFFileTask(snpEffProperties));
   }
 
   @SneakyThrows
@@ -141,7 +142,6 @@ public class IndexJob extends GenericJob {
       val constructor = class_.getConstructor(jobContextClassName);
       tasks.add((Task) constructor.newInstance(indexJobContext));
     }
-    tasks.add(new CreateVCFFileTask(snpEffProperties));
 
     return tasks.build();
   }

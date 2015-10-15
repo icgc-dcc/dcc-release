@@ -15,26 +15,33 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.mask.task;
+package org.icgc.dcc.release.job.index.task;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.task.GenericProcessTask;
-import org.icgc.dcc.release.job.mask.function.AddSurrogateObservationId;
+import lombok.val;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.task.TaskType;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
+import org.icgc.dcc.release.job.index.model.DocumentType;
+import org.icgc.dcc.release.job.index.transform.BasicDocumentTransform;
 
-public class SgvPMaskingTask extends GenericProcessTask {
+public class DiagramIndexTask extends AbstractIndexTask {
 
-  public SgvPMaskingTask() {
-    super(FileType.SGV_P, FileType.SGV_P_MASKED);
+  public DiagramIndexTask(IndexJobContext indexJobContext) {
+    super(DocumentType.DIAGRAM_TYPE, indexJobContext);
   }
 
   @Override
-  protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    // TODO: Check how the observation_id is used. Possibly remove
-    return input
-        .map(new AddSurrogateObservationId());
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
+  }
+
+  @Override
+  public void execute(TaskContext taskContext) {
+    val diagrams = readDiagrams(taskContext);
+    val output = diagrams.map(new BasicDocumentTransform(type));
+
+    writeDocOutput(taskContext, output);
   }
 
 }

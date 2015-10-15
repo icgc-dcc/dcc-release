@@ -147,6 +147,7 @@ public enum FileType implements Identifiable {
   DONOR_CENTRIC_INDEX(true),
   DONOR_INDEX(true),
   DONOR_TEXT_INDEX(true),
+  DIAGRAM_INDEX(false),
 
   GENE_CENTRIC_INDEX(false),
   GENE_TEXT_INDEX(false),

@@ -15,26 +15,50 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.mask.task;
+package org.icgc.dcc.release.job.stage.function;
 
-import org.apache.spark.api.java.JavaRDD;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+
+import java.util.Collections;
+import java.util.List;
+
+import lombok.NonNull;
+
+import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.task.GenericProcessTask;
-import org.icgc.dcc.release.job.mask.function.AddSurrogateObservationId;
+import org.icgc.dcc.release.core.submission.SubmissionFileSchema;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class SgvPMaskingTask extends GenericProcessTask {
+public final class CleanSensitiveFields implements Function<ObjectNode, ObjectNode> {
 
-  public SgvPMaskingTask() {
-    super(FileType.SGV_P, FileType.SGV_P_MASKED);
+  /**
+   * Don't clean SSM_P as its controlled fields required to run annotation.
+   */
+  private final boolean skipCleanup;
+  private final List<String> controlledFields;
+
+  public CleanSensitiveFields(@NonNull SubmissionFileSchema schema) {
+    skipCleanup = schema.getName().equals(FileType.SSM_P.getId());
+
+    if (skipCleanup) {
+      controlledFields = Collections.emptyList();
+    } else {
+      controlledFields = schema.getFields().stream()
+          .filter(f -> f.isControlled())
+          .map(f -> f.getName())
+          .collect(toImmutableList());
+    }
   }
 
   @Override
-  protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    // TODO: Check how the observation_id is used. Possibly remove
-    return input
-        .map(new AddSurrogateObservationId());
+  public ObjectNode call(ObjectNode row) throws Exception {
+    if (!skipCleanup) {
+      controlledFields.stream()
+          .forEach(fieldName -> row.remove(fieldName));
+    }
+
+    return row;
   }
 
 }

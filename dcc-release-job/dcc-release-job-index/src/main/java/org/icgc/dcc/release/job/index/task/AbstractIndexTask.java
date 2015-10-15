@@ -49,6 +49,11 @@ public abstract class AbstractIndexTask extends GenericTask {
     this.indexJobContext = indexJobContext;
   }
 
+  protected JavaRDD<ObjectNode> readDiagrams(TaskContext taskContext) {
+    val fields = type.getFields().getReleaseFields();
+    return filterFields(readInput(taskContext, FileType.DIAGRAM), fields);
+  }
+
   protected JavaRDD<ObjectNode> readReleases(TaskContext taskContext) {
     val fields = type.getFields().getReleaseFields();
     return filterFields(readInput(taskContext, FileType.RELEASE_SUMMARY), fields);

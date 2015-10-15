@@ -18,19 +18,17 @@
 package org.icgc.dcc.release.job.stage.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
 
-import java.io.File;
 import java.util.List;
 
-import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.common.core.meta.FileCodeListsResolver;
 import org.icgc.dcc.common.core.meta.FileDictionaryResolver;
-import org.icgc.dcc.common.core.model.FieldNames;
+import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
 import org.icgc.dcc.release.core.job.DefaultJobContext;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -71,7 +69,6 @@ public class StageJobTest extends AbstractJobTest {
 
   @Test
   public void testExecute() {
-    // copySubmissionFiles();
     val jobContext = createJobContext();
     job.execute(jobContext);
 
@@ -79,10 +76,29 @@ public class StageJobTest extends AbstractJobTest {
   }
 
   private void assertProj1() {
-    val results = produces("PROJ-01", FileType.SSM_P);
-    assertThat(results).hasSize(8);
-    log.info("{}", results.get(0));
-    assertThat(results.get(0).get(FieldNames.PROJECT_ID).textValue()).isEqualTo("PROJ-01");
+    assertControlledFields();
+    assertSsm();
+  }
+
+  private void assertSsm() {
+    val ssms = produces("PROJ-01", FileType.SSM_P);
+    assertThat(ssms).hasSize(8);
+
+    for (val ssm : ssms) {
+      assertThat(ssm.get(PROJECT_ID).textValue()).isEqualTo("PROJ-01");
+      assertThat(ssm.path(SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE).isMissingNode()).isFalse();
+      assertThat(ssm.path(SubmissionFieldNames.SUBMISSION_OBSERVATION_CONTROL_GENOTYPE).isMissingNode()).isFalse();
+      assertThat(ssm.path(SubmissionFieldNames.SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE).isMissingNode()).isFalse();
+    }
+
+  }
+
+  private void assertControlledFields() {
+    val donors = produces("PROJ-01", FileType.DONOR);
+    for (val donor : donors) {
+      assertThat(donor.path(" donor_region_of_residence").isMissingNode()).isTrue();
+      assertThat(donor.path("donor_notes").isMissingNode()).isTrue();
+    }
   }
 
   private JobContext createJobContext() {
@@ -108,11 +124,6 @@ public class StageJobTest extends AbstractJobTest {
         new FileDictionaryResolver(DICTIONARY_FILE),
         new FileCodeListsResolver(CODE_LISTS_FILE))
         .getMetadata();
-  }
-
-  @SneakyThrows
-  private void copySubmissionFiles() {
-    FileUtils.copyDirectory(new File(TEST_FIXTURES_DIR), workingDir);
   }
 
 }

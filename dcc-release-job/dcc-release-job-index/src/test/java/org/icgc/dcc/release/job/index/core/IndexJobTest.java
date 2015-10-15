@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 
 public class IndexJobTest extends AbstractJobTest {
 
+  private static final String PROJECT = "BRCA-UK";
   private static final String ES_URI = "es://localhost:9300";
 
   /**
@@ -55,7 +56,7 @@ public class IndexJobTest extends AbstractJobTest {
   @Test
   public void testExecute() {
     given(new File(TEST_FIXTURES_DIR));
-    job.execute(createJobContext(job.getType(), ImmutableList.of("BRCA-UK")));
+    job.execute(createJobContext(job.getType(), ImmutableList.of(PROJECT)));
 
     verifyRelease();
     varifyGeneSets();
@@ -196,6 +197,15 @@ public class IndexJobTest extends AbstractJobTest {
         .getHits()
         .getTotalHits();
     assertThat(donorsWithProjectCount).isEqualTo(2L);
+
+    val donors = produces(PROJECT, FileType.DONOR_CENTRIC_INDEX);
+    val sgvDonor = donors.get(0);
+    val sgvGeneDonorId = sgvDonor.get(FieldNames.DONOR_GENES).get(0).get("sgv").get(0).path(FieldNames.DONOR_ID);
+    assertThat(sgvGeneDonorId.isMissingNode()).isTrue();
+
+    val ssmDonor = donors.get(1);
+    val ssmGeneDonorId = ssmDonor.get(FieldNames.DONOR_GENES).get(0).get("ssm").get(0).path(FieldNames.DONOR_ID);
+    assertThat(ssmGeneDonorId.isMissingNode()).isTrue();
   }
 
   private void verifyDonorText() {

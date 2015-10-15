@@ -86,13 +86,26 @@ public class IdJob extends GenericJob {
   }
 
   private static Config createConfig(String release, IdProperties identifierProperties) {
-    return Config.builder()
+    val builder = Config.builder()
         .serviceUrl(identifierProperties.getUrl())
         .release(release)
         .authToken(resolveToken(identifierProperties))
         .strictSSLCertificates(identifierProperties.isStrictSSLCertificates())
-        .requestLoggingEnabled(identifierProperties.isRequestLoggingEnabled())
-        .build();
+        .requestLoggingEnabled(identifierProperties.isRequestLoggingEnabled());
+
+    if (identifierProperties.getMaxRetries() != 0) {
+      builder.maxRetries(identifierProperties.getMaxRetries());
+    }
+
+    if (identifierProperties.getRetryMultiplier() != 0f) {
+      builder.retryMultiplier(identifierProperties.getRetryMultiplier());
+    }
+
+    if (identifierProperties.getWaitBeforeRetrySeconds() != 0) {
+      builder.waitBeforeRetrySeconds(identifierProperties.getWaitBeforeRetrySeconds());
+    }
+
+    return builder.build();
   }
 
   /**

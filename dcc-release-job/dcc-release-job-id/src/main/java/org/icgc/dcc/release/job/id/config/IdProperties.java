@@ -31,6 +31,9 @@ public class IdProperties implements Serializable {
   String url;
   String token;
   String classname;
+  int maxRetries;
+  int waitBeforeRetrySeconds;
+  float retryMultiplier;
   boolean requestLoggingEnabled;
   boolean strictSSLCertificates;
 

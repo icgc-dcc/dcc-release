@@ -15,6 +15,7 @@ public class SubmissionFileField implements Serializable {
   String name;
   @NonNull
   ValueType type;
+  boolean controlled;
 
   Map<String, String> terms;
 

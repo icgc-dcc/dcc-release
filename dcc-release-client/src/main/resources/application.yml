@@ -56,7 +56,7 @@ postgres:
 mail:
    recipients: ***REMOVED***
    properties:
-      mail.smtp.host: smtp.oicr.on.ca
+      mail.smtp.host: ***REMOVED***
       mail.smtp.from: no-reply@oicr.on.ca
 
 index:
