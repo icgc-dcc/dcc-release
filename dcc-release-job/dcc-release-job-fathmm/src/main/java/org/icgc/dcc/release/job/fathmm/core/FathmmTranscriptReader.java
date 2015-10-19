@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.fathmm.core;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.core.util.Stopwatches.createStarted;
@@ -83,6 +84,9 @@ public class FathmmTranscriptReader extends GenericTask {
     for (val transcript : transcripts) {
       val transcriptId = textValue(transcript, GENE_TRANSCRIPT_ID);
       val translationId = textValue(transcript, GENE_TRANSCRIPT_TRANSLATION_ID);
+      if (isNullOrEmpty(translationId) || isNullOrEmpty(transcriptId)) {
+        continue;
+      }
 
       mapping.put(transcriptId, translationId);
     }

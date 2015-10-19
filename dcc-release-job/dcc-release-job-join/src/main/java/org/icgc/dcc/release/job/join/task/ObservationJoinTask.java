@@ -21,6 +21,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NOR
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 import static org.icgc.dcc.release.job.join.utils.Tasks.resolveDonorSamples;
 
+import java.util.List;
 import java.util.Map;
 
 import lombok.NonNull;
@@ -36,6 +37,7 @@ import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.join.function.CreateOccurrence;
+import org.icgc.dcc.release.job.join.function.FilterControlledSsmFields;
 import org.icgc.dcc.release.job.join.function.KeyAnalysisIdAnalyzedSampleIdField;
 import org.icgc.dcc.release.job.join.function.KeyDonorMutataionId;
 import org.icgc.dcc.release.job.join.function.PairAnalysisIdSampleId;
@@ -51,7 +53,9 @@ public class ObservationJoinTask extends GenericTask {
   @NonNull
   private final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesBroadcast;
   @NonNull
-  Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIdsBroadcast;
+  private final Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIdsBroadcast;
+  @NonNull
+  private final List<String> controlledFields;
 
   @Override
   public void execute(TaskContext taskContext) {
@@ -67,8 +71,16 @@ public class ObservationJoinTask extends GenericTask {
     val output = joinSsm(ssmM, ssmP, ssmS, donorSamples, sampleSurrogageSampleIds);
 
     output.cache();
-    writeOutput(taskContext, output, outputFileType);
     writeSsmOutput(taskContext, output);
+
+    val controlledOutput = filterControlledFields(output);
+    writeOutput(taskContext, controlledOutput, outputFileType);
+
+    output.unpersist();
+  }
+
+  private JavaRDD<ObjectNode> filterControlledFields(JavaRDD<ObjectNode> output) {
+    return output.map(new FilterControlledSsmFields(controlledFields));
   }
 
   private void writeSsmOutput(TaskContext taskContext, JavaRDD<ObjectNode> output) {

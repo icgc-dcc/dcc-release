@@ -23,33 +23,26 @@ import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
 import java.util.List;
 
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.common.core.meta.FileCodeListsResolver;
-import org.icgc.dcc.common.core.meta.FileDictionaryResolver;
 import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
 import org.icgc.dcc.release.core.job.DefaultJobContext;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
 import org.icgc.dcc.release.core.submission.SubmissionFileSchema;
-import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
 import org.icgc.dcc.release.core.submission.SubmissionFileSystem;
-import org.icgc.dcc.release.core.submission.SubmissionMetadataService;
 import org.icgc.dcc.release.core.util.LazyTable;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
+import org.icgc.dcc.release.test.util.SubmissionFiles;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 
-@Slf4j
 public class StageJobTest extends AbstractJobTest {
 
-  private static final String DICTIONARY_FILE = TEST_FIXTURES_DIR + "/dictionary.json.gz";
-  private static final String CODE_LISTS_FILE = TEST_FIXTURES_DIR + "/codelists.json.gz";
   private static final List<String> PROJECTS = ImmutableList.of("PROJ-01", "PROJ-02", "PROJ-03");
 
   SubmissionFileSystem submissionFileSystem;
@@ -63,7 +56,7 @@ public class StageJobTest extends AbstractJobTest {
   @Before
   public void setUp() {
     super.setUp();
-    this.job = new StageJob(getSchemas());
+    this.job = new StageJob(SubmissionFiles.getSchemas());
     this.submissionFileSystem = new SubmissionFileSystem(fileSystem);
   }
 
@@ -108,22 +101,10 @@ public class StageJobTest extends AbstractJobTest {
 
   private Table<String, String, List<Path>> resolveSubmissionFiles() {
     return new LazyTable<String, String, List<Path>>(() -> {
-      List<SubmissionFileSchema> metadata = getMetadata();
+      List<SubmissionFileSchema> metadata = SubmissionFiles.getMetadata();
 
-      return submissionFileSystem.getFiles(TEST_FIXTURES_DIR, PROJECTS,
-          metadata);
+      return submissionFileSystem.getFiles(TEST_FIXTURES_DIR, PROJECTS, metadata);
     });
-  }
-
-  private SubmissionFileSchemas getSchemas() {
-    return new SubmissionFileSchemas(getMetadata());
-  }
-
-  private List<SubmissionFileSchema> getMetadata() {
-    return new SubmissionMetadataService(
-        new FileDictionaryResolver(DICTIONARY_FILE),
-        new FileCodeListsResolver(CODE_LISTS_FILE))
-        .getMetadata();
   }
 
 }

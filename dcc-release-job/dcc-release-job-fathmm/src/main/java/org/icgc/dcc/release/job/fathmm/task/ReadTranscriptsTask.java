@@ -21,6 +21,7 @@ import lombok.Getter;
 
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.job.fathmm.core.FathmmTranscriptReader;
 
 import com.google.common.collect.BiMap;
@@ -29,6 +30,11 @@ public class ReadTranscriptsTask extends GenericTask {
 
   @Getter
   private BiMap<String, String> transcripts;
+
+  @Override
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
+  }
 
   @Override
   public void execute(TaskContext taskContext) {

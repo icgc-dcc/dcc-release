@@ -15,57 +15,34 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.annotate.core;
+package org.icgc.dcc.release.test.util;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import java.util.List;
 
-import org.icgc.dcc.release.core.config.SnpEffProperties;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.job.GenericJob;
-import org.icgc.dcc.release.core.job.JobContext;
-import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.job.annotate.task.AnnotationTask;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import lombok.experimental.UtilityClass;
 
-@Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
-public class AnnotateJob extends GenericJob {
+import org.icgc.dcc.common.core.meta.FileCodeListsResolver;
+import org.icgc.dcc.common.core.meta.FileDictionaryResolver;
+import org.icgc.dcc.release.core.submission.SubmissionFileSchema;
+import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
+import org.icgc.dcc.release.core.submission.SubmissionMetadataService;
 
-  /**
-   * Constants.
-   */
-  public static final FileType SSM_INPUT_TYPE = FileType.SSM_P_MASKED;
-  public static final FileType SGV_INPUT_TYPE = FileType.SGV_P_MASKED;
+@UtilityClass
+public class SubmissionFiles {
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final SnpEffProperties properties;
+  private static final String TEST_FIXTURES_DIR = "../../dcc-release-test/src/main/resources/fixtures";
+  private static final String DICTIONARY_FILE = TEST_FIXTURES_DIR + "/dictionary.json.gz";
+  private static final String CODE_LISTS_FILE = TEST_FIXTURES_DIR + "/codelists.json.gz";
 
-  @Override
-  public JobType getType() {
-    return JobType.ANNOTATE;
+  public static SubmissionFileSchemas getSchemas() {
+    return new SubmissionFileSchemas(SubmissionFiles.getMetadata());
   }
 
-  @Override
-  @SneakyThrows
-  public void execute(@NonNull JobContext jobContext) {
-    clean(jobContext);
-    annotate(jobContext);
-  }
-
-  private void clean(JobContext jobContext) {
-    delete(jobContext, FileType.SSM_S, FileType.SGV_S);
-  }
-
-  private void annotate(JobContext jobContext) {
-    jobContext.execute(
-        new AnnotationTask(properties, SSM_INPUT_TYPE, FileType.SSM_S),
-        new AnnotationTask(properties, SGV_INPUT_TYPE, FileType.SGV_S));
+  public static List<SubmissionFileSchema> getMetadata() {
+    return new SubmissionMetadataService(
+        new FileDictionaryResolver(DICTIONARY_FILE),
+        new FileCodeListsResolver(CODE_LISTS_FILE))
+        .getMetadata();
   }
 
 }

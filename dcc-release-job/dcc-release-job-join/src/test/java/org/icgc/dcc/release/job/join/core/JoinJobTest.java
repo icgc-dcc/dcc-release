@@ -57,14 +57,11 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_END;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_START;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_STRAND;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CONTROL_GENOTYPE;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATION_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_REPOSITORY;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.ALIGNMENT_ALGORITHM;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.BASE_CALLING_ALGORITHM;
@@ -72,7 +69,6 @@ import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.BIOLOGICA
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.BIOLOGICAL_VALIDATION_STATUS;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.EXPERIMENTAL_PROTOCOL;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.EXPOSURE;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.EXPRESSED_ALLELE;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.FAMILY;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.MUTANT_ALLELE_READ_COUNT;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.OTHER_ANALYSIS_ALGORITHM;
@@ -93,8 +89,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.util.ObjectNodes;
-import org.icgc.dcc.release.job.join.core.JoinJob;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
+import org.icgc.dcc.release.test.util.SubmissionFiles;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -119,13 +115,10 @@ public class JoinJobTest extends AbstractJobTest {
 
   private static final ImmutableList<String> VALID_OBSERVATION_FIELDS = ImmutableList.of(
       BIOLOGICAL_VALIDATION_PLATFORM,
-      EXPRESSED_ALLELE,
       PROBABILITY,
       QUALITY_SCORE,
       EXPERIMENTAL_PROTOCOL,
       OBSERVATION_VERIFICATION_PLATFORM,
-      SUBMISSION_OBSERVATION_CONTROL_GENOTYPE,
-      SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE,
       SURROGATE_MATCHED_SAMPLE_ID,
       SURROGATE_SAMPLE_ID,
       SURROGATE_SPECIMEN_ID,
@@ -159,7 +152,6 @@ public class JoinJobTest extends AbstractJobTest {
       SUBMISSION_OBSERVATION_CHROMOSOME_START,
       SUBMISSION_OBSERVATION_CHROMOSOME_STRAND,
       CONSEQUENCE_ARRAY_NAME,
-      SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE,
       SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE,
       NORMALIZER_MUTATION,
       SUBMISSION_OBSERVATION_MUTATION_TYPE,
@@ -176,7 +168,7 @@ public class JoinJobTest extends AbstractJobTest {
   @Override
   public void setUp() {
     super.setUp();
-    this.job = new JoinJob();
+    this.job = new JoinJob(SubmissionFiles.getSchemas());
   }
 
   @Test

@@ -15,57 +15,38 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.annotate.core;
+package org.icgc.dcc.release.job.join.function;
+
+import static org.icgc.dcc.common.core.util.Jackson.asArrayNode;
+
+import java.util.List;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.val;
 
-import org.icgc.dcc.release.core.config.SnpEffProperties;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.job.GenericJob;
-import org.icgc.dcc.release.core.job.JobContext;
-import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.job.annotate.task.AnnotationTask;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.common.core.model.FieldNames;
+import org.icgc.dcc.common.core.util.Jackson;
 
-@Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
-public class AnnotateJob extends GenericJob {
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-  /**
-   * Constants.
-   */
-  public static final FileType SSM_INPUT_TYPE = FileType.SSM_P_MASKED;
-  public static final FileType SGV_INPUT_TYPE = FileType.SGV_P_MASKED;
+@RequiredArgsConstructor
+public class FilterControlledSsmFields implements Function<ObjectNode, ObjectNode> {
 
-  /**
-   * Dependencies.
-   */
   @NonNull
-  private final SnpEffProperties properties;
+  private final List<String> controlledFields;
 
   @Override
-  public JobType getType() {
-    return JobType.ANNOTATE;
-  }
+  public ObjectNode call(ObjectNode row) throws Exception {
+    row.remove(controlledFields);
+    val observations = asArrayNode(row.get(FieldNames.LoaderFieldNames.OBSERVATION_ARRAY_NAME));
+    for (val element : observations) {
+      val observation = Jackson.asObjectNode(element);
+      observation.remove(controlledFields);
+    }
 
-  @Override
-  @SneakyThrows
-  public void execute(@NonNull JobContext jobContext) {
-    clean(jobContext);
-    annotate(jobContext);
-  }
-
-  private void clean(JobContext jobContext) {
-    delete(jobContext, FileType.SSM_S, FileType.SGV_S);
-  }
-
-  private void annotate(JobContext jobContext) {
-    jobContext.execute(
-        new AnnotationTask(properties, SSM_INPUT_TYPE, FileType.SSM_S),
-        new AnnotationTask(properties, SGV_INPUT_TYPE, FileType.SGV_S));
+    return row;
   }
 
 }

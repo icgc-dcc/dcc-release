@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.core.task;
 
+import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 import static org.icgc.dcc.release.core.util.JavaRDDs.emptyRDD;
 import static org.icgc.dcc.release.core.util.JavaRDDs.exists;
 import static org.icgc.dcc.release.core.util.JavaRDDs.logPartitions;
@@ -31,7 +32,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
+import org.icgc.dcc.release.core.function.ParseObjectNode;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.util.JavaRDDs;
 import org.icgc.dcc.release.core.util.ObjectNodeRDDs;
 import org.icgc.dcc.release.core.util.Partitions;
 
@@ -75,6 +78,28 @@ public abstract class GenericTask implements Task {
 
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType) {
     return readInput(taskContext, conf, inputFileType, "");
+  }
+
+  /**
+   * @param size split/combine size in MBytes
+   */
+  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf hadoopConf, FileType inputFileType, long size) {
+    val maxFileSize = size * 1024L * 1024L;
+
+    log.info("Setting input split size of {}", formatBytes(maxFileSize));
+    val splitSize = Long.toString(maxFileSize);
+    hadoopConf.set("mapred.min.split.size", splitSize);
+    hadoopConf.set("mapred.max.split.size", splitSize);
+
+    val sparkContext = taskContext.getSparkContext();
+    val path = taskContext.getPath(inputFileType);
+    val input = JavaRDDs.combineTextFile(sparkContext, path, hadoopConf)
+        .map(tuple -> tuple._2.toString())
+        .map(new ParseObjectNode());
+
+    JavaRDDs.logPartitions(log, input.partitions());
+
+    return input;
   }
 
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType, String path) {
