@@ -17,11 +17,22 @@
  */
 package org.icgc.dcc.release.job.id.task;
 
+import lombok.val;
+
+import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericProcessTask;
+import org.icgc.dcc.release.core.task.TaskContext;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class AddSurrogateIdTask extends GenericProcessTask {
+
+  /**
+   * Constants.
+   */
+  private static final long MAX_INPUT_FILE_SIZE_MB = 32L;
 
   /**
    * Configuration.
@@ -31,6 +42,13 @@ public abstract class AddSurrogateIdTask extends GenericProcessTask {
   public AddSurrogateIdTask(FileType inputFileType, FileType outputFileType, IdClientFactory idClientFactory) {
     super(inputFileType, outputFileType);
     this.idClientFactory = idClientFactory;
+  }
+
+  @Override
+  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
+    val conf = createJobConf(taskContext);
+
+    return readInput(taskContext, conf, inputFileType, MAX_INPUT_FILE_SIZE_MB);
   }
 
 }

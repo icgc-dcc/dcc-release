@@ -15,53 +15,29 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.index.task;
-
-import static org.icgc.dcc.release.core.util.Tuples.tuple;
-import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getProjectId;
-import static org.icgc.dcc.release.job.index.util.MutableMaps.toHashMap;
-
-import java.util.Map;
+package org.icgc.dcc.release.job.index.model;
 
 import lombok.Getter;
-import lombok.val;
 
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.core.task.TaskType;
-import org.icgc.dcc.release.job.index.core.IndexJobContext;
-import org.icgc.dcc.release.job.index.model.DocumentType;
+import org.icgc.dcc.release.core.task.Task;
+import org.icgc.dcc.release.job.index.task.ResolveDonorsTask;
+import org.icgc.dcc.release.job.index.task.ResolveGenesTask;
+import org.icgc.dcc.release.job.index.task.ResolveProjectsTask;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+/**
+ * Type of broadcast a particular index task depends on.
+ */
+public enum BroadcastType {
 
-public class ResolveProjectsTask extends AbstractIndexTask {
+  PROJECT(ResolveProjectsTask.class),
+  DONOR(ResolveDonorsTask.class),
+  GENE(ResolveGenesTask.class);
 
-  public ResolveProjectsTask(DocumentType type) {
-    super(type, IndexJobContext.builder().build());
-  }
+  @Getter
+  Class<? extends Task> dependencyClass;
 
-  @Getter(lazy = true)
-  private final Broadcast<Map<String, ObjectNode>> projectsBroadcast = createBroadcast();
-  private Map<String, ObjectNode> projectsById;
-  private JavaSparkContext sparkContext;
-
-  @Override
-  public TaskType getType() {
-    return TaskType.FILE_TYPE;
-  }
-
-  @Override
-  public void execute(TaskContext taskContext) {
-    sparkContext = taskContext.getSparkContext();
-    val projects = readProjects(taskContext)
-        .mapToPair(project -> tuple(getProjectId(project), project))
-        .collectAsMap();
-    projectsById = toHashMap(projects);
-  }
-
-  private Broadcast<Map<String, ObjectNode>> createBroadcast() {
-    return sparkContext.broadcast(projectsById);
+  private BroadcastType(Class<? extends Task> dependencyClass) {
+    this.dependencyClass = dependencyClass;
   }
 
 }

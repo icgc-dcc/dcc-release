@@ -56,9 +56,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ResolveGeneSummaryTask extends GenericTask {
 
-  /**
-   * 
-   */
   private static final String MATCH_MUTATION_ID_REGEX = "[\\d\\w]*#";
   @Getter(lazy = true)
   private final Broadcast<JavaPairRDD<String, ObjectNode>> geneDonorTypeCounts = createBroadcastVariable();

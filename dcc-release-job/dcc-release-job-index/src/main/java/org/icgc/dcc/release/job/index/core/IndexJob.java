@@ -17,9 +17,12 @@
  */
 package org.icgc.dcc.release.job.index.core;
 
+import static java.lang.String.format;
 import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newTransportClient;
 
+import java.lang.reflect.Constructor;
 import java.util.Collection;
+import java.util.Map;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -35,6 +38,8 @@ import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
 import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.job.index.config.IndexProperties;
+import org.icgc.dcc.release.job.index.core.IndexJobContext.IndexJobContextBuilder;
+import org.icgc.dcc.release.job.index.model.BroadcastType;
 import org.icgc.dcc.release.job.index.model.DocumentType;
 import org.icgc.dcc.release.job.index.service.IndexService;
 import org.icgc.dcc.release.job.index.task.CreateVCFFileTask;
@@ -45,6 +50,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 @Slf4j
@@ -125,47 +131,86 @@ public class IndexJob extends GenericJob {
   }
 
   private void write(JobContext jobContext, String indexName) {
-    val indexJobContext = createIndexJobContext(jobContext);
-    val tasks = createStreamingTasks(indexJobContext);
+    for (val task : createStreamingTasks(jobContext)) {
+      jobContext.execute(task);
+    }
 
-    jobContext.execute(tasks);
+    // Generate SSM VCF file
     jobContext.execute(new CreateVCFFileTask(snpEffProperties));
   }
 
   @SneakyThrows
-  private Collection<? extends Task> createStreamingTasks(IndexJobContext indexJobContext) {
+  private Collection<? extends Task> createStreamingTasks(JobContext jobContext) {
     val tasks = ImmutableList.<Task> builder();
-    val jobContextClassName = IndexJobContext.class;
     for (val documentType : DocumentType.values()) {
-      val indexClassName = documentType.getIndexClassName();
-      val class_ = Class.forName(indexClassName);
-      val constructor = class_.getConstructor(jobContextClassName);
+      val constructor = getConstructor(documentType);
+      val indexJobContext = createIndexJobContext(jobContext, documentType);
       tasks.add((Task) constructor.newInstance(indexJobContext));
     }
 
     return tasks.build();
   }
 
-  private IndexJobContext createIndexJobContext(JobContext jobContext) {
-    val resolveProjectsTask = new ResolveProjectsTask();
-    val resolveDonorsTask = new ResolveDonorsTask();
-    val resolveGenesTask = new ResolveGenesTask();
+  private static Constructor<?> getConstructor(DocumentType documentType) throws ClassNotFoundException,
+      NoSuchMethodException {
+    val indexClassName = documentType.getIndexClassName();
+    val clazz = Class.forName(indexClassName);
+    val constructor = clazz.getConstructor(IndexJobContext.class);
 
-    jobContext.execute(resolveProjectsTask,
-        resolveDonorsTask,
-        resolveGenesTask);
+    return constructor;
+  }
 
-    val projectsBroadcast = resolveProjectsTask.getProjectsBroadcast();
-    val donorsBroadcast = resolveDonorsTask.getDonorsBroadcast();
-    val genesBroadcast = resolveGenesTask.getGenesBroadcast();
-
-    return IndexJobContext.builder()
+  private IndexJobContext createIndexJobContext(JobContext jobContext, DocumentType documentType) {
+    val indexJobBuilder = IndexJobContext.builder()
         .esUri(properties.getEsUri())
-        .indexName(resolveIndexName(jobContext.getReleaseName()))
-        .projectsBroadcast(projectsBroadcast)
-        .donorsBroadcast(donorsBroadcast)
-        .genesBroadcast(genesBroadcast)
-        .build();
+        .indexName(resolveIndexName(jobContext.getReleaseName()));
+
+    val indexJobDependencies = resolveDependencies(jobContext, documentType);
+    setDependencies(indexJobBuilder, indexJobDependencies);
+
+    return indexJobBuilder.build();
+  }
+
+  private static void setDependencies(IndexJobContextBuilder indexJobBuilder,
+      Map<BroadcastType, ? extends Task> indexJobDependencies) {
+    for (val entry : indexJobDependencies.entrySet()) {
+      switch (entry.getKey()) {
+      case PROJECT:
+        val resolveProjectsTask = (ResolveProjectsTask) entry.getValue();
+        indexJobBuilder.projectsBroadcast(resolveProjectsTask.getProjectsBroadcast());
+        break;
+      case DONOR:
+        val resolveDonorsTask = (ResolveDonorsTask) entry.getValue();
+        indexJobBuilder.donorsBroadcast(resolveDonorsTask.getDonorsBroadcast());
+        break;
+      case GENE:
+        val resolveGenesTask = (ResolveGenesTask) entry.getValue();
+        indexJobBuilder.genesBroadcast(resolveGenesTask.getGenesBroadcast());
+        break;
+      default:
+        throw new IllegalArgumentException(format("Unrecoginzed broadcast type %s", entry.getKey()));
+      }
+    }
+  }
+
+  private static Map<BroadcastType, ? extends Task> resolveDependencies(JobContext jobContext, DocumentType documentType) {
+    val tasksBuilder = ImmutableMap.<BroadcastType, Task> builder();
+    for (val dependencyTask : documentType.getBroadcastDependencies()) {
+      tasksBuilder.put(dependencyTask, createDependentyTask(dependencyTask, documentType));
+    }
+
+    val tasks = tasksBuilder.build();
+    jobContext.execute(tasks.values());
+
+    return tasks;
+  }
+
+  @SneakyThrows
+  private static Task createDependentyTask(BroadcastType dependencyTask, DocumentType documentType) {
+    val clazz = dependencyTask.getDependencyClass();
+    val constructor = clazz.getConstructor(DocumentType.class);
+
+    return constructor.newInstance(documentType);
   }
 
 }

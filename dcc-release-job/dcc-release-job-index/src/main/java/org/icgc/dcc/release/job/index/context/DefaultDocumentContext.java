@@ -26,17 +26,12 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 
-import org.icgc.dcc.release.core.function.FilterFields;
 import org.icgc.dcc.release.job.index.core.DocumentContext;
 import org.icgc.dcc.release.job.index.core.IndexJobContext;
-import org.icgc.dcc.release.job.index.model.CollectionFields;
 import org.icgc.dcc.release.job.index.model.DocumentType;
-import org.icgc.dcc.release.job.index.util.CollectionFieldsFilterAdapter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableMap;
 
 @RequiredArgsConstructor
 public class DefaultDocumentContext implements DocumentContext {
@@ -98,31 +93,15 @@ public class DefaultDocumentContext implements DocumentContext {
   }
 
   private Map<String, ObjectNode> filterGenes() {
-    val fields = type.getFields().getGeneFields();
-
-    return filterFields(indexJobContext.getGenesBroadcast().getValue(), fields);
+    return indexJobContext.getGenesBroadcast().getValue();
   }
 
   private Map<String, ObjectNode> filterProjects() {
-    val fields = type.getFields().getProjectFields();
-
-    return filterFields(indexJobContext.getProjectsBroadcast().getValue(), fields);
+    return indexJobContext.getProjectsBroadcast().getValue();
   }
 
   private Map<String, ObjectNode> filterDonors() {
-    val fields = type.getFields().getDonorFields();
-
-    return filterFields(indexJobContext.getDonorsBroadcast().getValue(), fields);
-  }
-
-  private static Map<String, ObjectNode> filterFields(Map<String, ObjectNode> sourceCollection, CollectionFields fields) {
-    val filterFieldsFunction = new FilterFields(new CollectionFieldsFilterAdapter(fields));
-    val filteredCollection = ImmutableMap.<String, ObjectNode> builder();
-    for (val entry : sourceCollection.entrySet()) {
-      filteredCollection.put(entry.getKey(), filterFieldsFunction.call(entry.getValue().deepCopy()));
-    }
-
-    return filteredCollection.build();
+    return indexJobContext.getDonorsBroadcast().getValue();
   }
 
 }

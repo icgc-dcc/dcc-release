@@ -19,27 +19,27 @@ package org.icgc.dcc.release.job.index.task;
 
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getGeneId;
-import static org.icgc.dcc.release.job.index.util.GeneUtils.pivotGenes;
 import static org.icgc.dcc.release.job.index.util.MutableMaps.toHashMap;
 
 import java.util.Map;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.val;
 
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
+import org.icgc.dcc.release.job.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@NoArgsConstructor
-public class ResolveGenesTask extends GenericTask {
+public class ResolveGenesTask extends AbstractIndexTask {
+
+  public ResolveGenesTask(DocumentType type) {
+    super(type, IndexJobContext.builder().build());
+  }
 
   @Getter(lazy = true)
   private final Broadcast<Map<String, ObjectNode>> genesBroadcast = createBroadcast();
@@ -54,17 +54,10 @@ public class ResolveGenesTask extends GenericTask {
   @Override
   public void execute(TaskContext taskContext) {
     sparkContext = taskContext.getSparkContext();
-    val genes = readGenes(taskContext)
+    val genes = readGenesPivoted(taskContext)
         .mapToPair(gene -> tuple(getGeneId(gene), gene))
         .collectAsMap();
     genesById = toHashMap(genes);
-  }
-
-  private JavaRDD<ObjectNode> readGenes(TaskContext taskContext) {
-    val genes = readInput(taskContext, FileType.GENE_SUMMARY);
-    val geneSets = readInput(taskContext, FileType.GENE_SET_SUMMARY);
-
-    return pivotGenes(genes, geneSets);
   }
 
   private Broadcast<Map<String, ObjectNode>> createBroadcast() {

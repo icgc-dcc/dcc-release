@@ -15,53 +15,31 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.index.task;
+package org.icgc.dcc.release.job.summarize.function;
 
-import static org.icgc.dcc.release.core.util.Tuples.tuple;
-import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getProjectId;
-import static org.icgc.dcc.release.job.index.util.MutableMaps.toHashMap;
-
-import java.util.Map;
-
-import lombok.Getter;
+import static org.icgc.dcc.release.core.util.ObjectNodes.mergeObjects;
 import lombok.val;
 
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.core.task.TaskType;
-import org.icgc.dcc.release.job.index.core.IndexJobContext;
-import org.icgc.dcc.release.job.index.model.DocumentType;
+import org.apache.spark.api.java.function.Function;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 
-public class ResolveProjectsTask extends AbstractIndexTask {
-
-  public ResolveProjectsTask(DocumentType type) {
-    super(type, IndexJobContext.builder().build());
-  }
-
-  @Getter(lazy = true)
-  private final Broadcast<Map<String, ObjectNode>> projectsBroadcast = createBroadcast();
-  private Map<String, ObjectNode> projectsById;
-  private JavaSparkContext sparkContext;
+public class MergeGeneGeneSummary implements
+    Function<Tuple2<String, Tuple2<ObjectNode, Optional<ObjectNode>>>, ObjectNode> {
 
   @Override
-  public TaskType getType() {
-    return TaskType.FILE_TYPE;
-  }
+  public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<ObjectNode>>> tuple) throws Exception {
+    val gene = tuple._2._1;
+    val geneSummary = tuple._2._2;
 
-  @Override
-  public void execute(TaskContext taskContext) {
-    sparkContext = taskContext.getSparkContext();
-    val projects = readProjects(taskContext)
-        .mapToPair(project -> tuple(getProjectId(project), project))
-        .collectAsMap();
-    projectsById = toHashMap(projects);
-  }
+    if (geneSummary.isPresent()) {
+      return mergeObjects(gene, geneSummary.get());
+    }
 
-  private Broadcast<Map<String, ObjectNode>> createBroadcast() {
-    return sparkContext.broadcast(projectsById);
+    return gene;
   }
 
 }

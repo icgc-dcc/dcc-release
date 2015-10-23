@@ -34,6 +34,9 @@ import static org.icgc.dcc.common.core.model.ReleaseCollection.OBSERVATION_COLLE
 import static org.icgc.dcc.common.core.model.ReleaseCollection.PROJECT_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.RELEASE_COLLECTION;
 import static org.icgc.dcc.release.job.index.model.DocumentClassifier.CENTRIC;
+
+import java.util.Collection;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
@@ -201,6 +204,7 @@ public enum DocumentType {
           .collection(DONOR_COLLECTION)
           .indexClassName(DonorIndexTask.class.getName())
           .outputFileType(FileType.DONOR_INDEX)
+          .broadcastDependencies(ImmutableList.of(BroadcastType.PROJECT))
           .batchSize(10000)
           .statusInterval(1000)
           .fields(
@@ -246,6 +250,7 @@ public enum DocumentType {
           .classifier(CENTRIC)
           .indexClassName(DonorCentricIndexTask.class.getName())
           .outputFileType(FileType.DONOR_CENTRIC_INDEX)
+          .broadcastDependencies(ImmutableList.of(BroadcastType.GENE, BroadcastType.PROJECT))
           .statusInterval(1000)
           .batchSize(1)
           .fields(
@@ -389,6 +394,7 @@ public enum DocumentType {
           .classifier(CENTRIC)
           .indexClassName(GeneCentricIndexTask.class.getName())
           .outputFileType(FileType.GENE_CENTRIC_INDEX)
+          .broadcastDependencies(ImmutableList.of(BroadcastType.DONOR, BroadcastType.PROJECT))
           .batchSize(1000)
           .statusInterval(1000)
           .fields(
@@ -422,6 +428,7 @@ public enum DocumentType {
           .classifier(CENTRIC)
           .indexClassName(ObservationCentricIndexTask.class.getName())
           .outputFileType(FileType.OBSERVATION_CENTRIC_INDEX)
+          .broadcastDependencies(ImmutableList.of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
           .batchSize(200)
           .statusInterval(100000)
           .fields(
@@ -470,6 +477,7 @@ public enum DocumentType {
           .collection(MUTATION_COLLECTION)
           .indexClassName(MutationTextIndexTask.class.getName())
           .outputFileType(FileType.MUTATION_TEXT_INDEX)
+          .broadcastDependencies(ImmutableList.of(BroadcastType.GENE))
           .batchSize(1000)
           .statusInterval(100000)
           .fields(
@@ -507,6 +515,7 @@ public enum DocumentType {
           .classifier(CENTRIC)
           .indexClassName(MutationCentricIndexTask.class.getName())
           .outputFileType(FileType.MUTATION_CENTRIC_INDEX)
+          .broadcastDependencies(ImmutableList.of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
           .batchSize(1000)
           .statusInterval(100000)
           .fields(
@@ -576,6 +585,11 @@ public enum DocumentType {
    */
   private final DocumentFields fields;
 
+  /**
+   * Documents required to perform the index job for this document type.
+   */
+  private final Collection<BroadcastType> broadcastDependencies;
+
   private DocumentType(@NonNull DocumentTypeAttributes attributes) {
     this.entity = attributes.entity;
     this.name = attributes.name;
@@ -585,6 +599,7 @@ public enum DocumentType {
     this.batchSize = attributes.batchSize;
     this.statusInterval = attributes.statusInterval;
     this.collection = attributes.collection;
+    this.broadcastDependencies = attributes.broadcastDependencies;
     this.fields = attributes.fields;
   }
 

@@ -25,21 +25,22 @@ import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getD
 import java.util.Map;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.val;
 
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
+import org.icgc.dcc.release.job.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
-@NoArgsConstructor
-public class ResolveDonorsTask extends GenericTask {
+public class ResolveDonorsTask extends AbstractIndexTask {
+
+  public ResolveDonorsTask(DocumentType type) {
+    super(type, IndexJobContext.builder().build());
+  }
 
   @Getter(lazy = true)
   private final Broadcast<Map<String, ObjectNode>> donorsBroadcast = createBroadcast();
@@ -58,10 +59,6 @@ public class ResolveDonorsTask extends GenericTask {
     return readDonors(taskContext)
         .mapToPair(project -> tuple(getDonorId(project), project))
         .collectAsMap();
-  }
-
-  private JavaRDD<ObjectNode> readDonors(TaskContext taskContext) {
-    return readInput(taskContext, FileType.DONOR_SUMMARY);
   }
 
   private Broadcast<Map<String, ObjectNode>> createBroadcast() {
