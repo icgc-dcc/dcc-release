@@ -26,7 +26,7 @@ public class CustomKryoRegistrator implements KryoRegistrator {
 
   @Override
   public void registerClasses(Kryo kryo) {
-    kryo.register(ObjectNode.class);
+    kryo.register(ObjectNode.class, new SmileSerializer());
   }
 
 }

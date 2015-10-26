@@ -10,11 +10,13 @@ import lombok.val;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.google.common.collect.ImmutableList;
 
+@Ignore("Mint test data")
 public class FathmmJobTest extends AbstractJobTest {
 
   private static final String PROJECT_NAME = "BRCA-UK";

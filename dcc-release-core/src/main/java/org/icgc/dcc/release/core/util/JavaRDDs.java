@@ -23,12 +23,6 @@ import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 import java.util.Collections;
 import java.util.List;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.Text;
@@ -48,6 +42,14 @@ import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
 import org.icgc.dcc.release.core.hadoop.CombineTextInputFormat;
 import org.slf4j.Logger;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class JavaRDDs {
 
@@ -116,7 +118,10 @@ public final class JavaRDDs {
     // Compress
     SequenceFileOutputFormat.setCompressOutput(conf, true);
     SequenceFileOutputFormat.setOutputCompressionType(conf, CompressionType.BLOCK);
-    SequenceFileOutputFormat.setOutputCompressorClass(conf, SnappyCodec.class);
+    if (SnappyCodec.isNativeCodeLoaded()) {
+      log.debug("Saving output with Snappy compression");
+      SequenceFileOutputFormat.setOutputCompressorClass(conf, SnappyCodec.class);
+    }
 
     rdd.saveAsHadoopFile(path, keyClass, valueClass, SequenceFileOutputFormat.class, conf);
   }
