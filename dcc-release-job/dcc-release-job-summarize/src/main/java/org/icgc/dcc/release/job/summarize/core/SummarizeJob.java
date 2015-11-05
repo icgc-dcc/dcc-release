@@ -47,7 +47,6 @@ public class SummarizeJob extends GenericJob {
       FileType.GENE_SET_SUMMARY,
       FileType.GENE_SUMMARY,
       FileType.PROJECT_SUMMARY,
-      FileType.OBSERVATION_SUMMARY,
       FileType.RELEASE_SUMMARY,
       FileType.MUTATION };
 
@@ -83,12 +82,8 @@ public class SummarizeJob extends GenericJob {
 
     val resolveGeneStatsTask = new ResolveGeneSummaryTask();
     jobContext.execute(resolveGeneStatsTask);
-    jobContext.execute(
-        new GeneSummarizeTask(resolveGeneStatsTask.getGeneDonorTypeCounts())
-        // Disabled because results of the summarization are not used
-        // ,new ObservationSummarizeTask()
-        );
-    jobContext.execute(new MutationSummarizeTask());
+    jobContext.execute(new GeneSummarizeTask(resolveGeneStatsTask.getGeneDonorTypeCounts()),
+        new MutationSummarizeTask());
     jobContext.execute(new ReleaseSummarizeTask(donorSummarizeTask.getDonorsCount(), donorSummarizeTask
         .getLiveDonorsCount()));
     log.info("Finished executing summary job in {}", watch);

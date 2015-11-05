@@ -32,7 +32,6 @@ import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS_GEN
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY;
-import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCE_TYPES;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_IS_ANNOTATED;
@@ -282,7 +281,6 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     List<String> migratedFields =
         newArrayList(
             OBSERVATION_MUTATION_ID,
-            OBSERVATION_CONSEQUENCE_TYPES,
             OBSERVATION_CONSEQUENCES,
             OBSERVATION_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY,
             OBSERVATION_IS_ANNOTATED);

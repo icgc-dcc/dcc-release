@@ -32,11 +32,11 @@ public class MutationSummarizeTaskTest extends AbstractJobTest {
     task.execute(createTaskContext(JobType.SUMMARIZE));
 
     val result = produces(FileType.MUTATION);
-    assertThat(result).hasSize(3);
+    assertThat(result).hasSize(2);
 
     val mutationIds = result.stream()
         .map(o -> o.get(FieldNames.MUTATION_ID).textValue())
         .collect(Collectors.toImmutableList());
-    assertThat(mutationIds).containsOnly("MU1", "MU2", "MU3");
+    assertThat(mutationIds).containsOnly("MU1", "MU2");
   }
 }

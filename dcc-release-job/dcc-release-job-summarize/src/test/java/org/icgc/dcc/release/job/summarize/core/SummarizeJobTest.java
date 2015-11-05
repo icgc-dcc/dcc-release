@@ -27,7 +27,6 @@ import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECTS;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECT_PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECT_SUMMARY;
-import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCE_TYPES;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_SUMMARY_REPOSITORY;
@@ -115,7 +114,6 @@ public class SummarizeJobTest extends AbstractJobTest {
     assertProjects();
     assertGenes();
     assertGeneSets();
-    assertObservations();
     assertRelease();
 
   }
@@ -126,30 +124,17 @@ public class SummarizeJobTest extends AbstractJobTest {
     log.debug("{}", releases);
     val expectedRelease = $("{_id:'ICGC19-0-2',_release_id:'ICGC19-0-2',name:'ICGC19',number:19,project_count:2,"
         + "live_project_count:1,primary_site_count:2,live_primary_site_count:1,donor_count:2,live_donor_count:0,"
-        + "specimen_count:2,sample_count:3,ssm_count:2,mutated_gene_count:0}");
+        + "specimen_count:2,sample_count:3,ssm_count:2,mutated_gene_count:3}");
     val release = releases.get(0);
     val releaseDate = release.remove(RELEASE_DATE).textValue();
     assertThat(releaseDate.length()).isEqualTo(29);
     assertThat(expectedRelease).isEqualTo(release);
   }
 
-  private void assertObservations() {
-    val observations = produces(BRCA_PROJECT_NAME, FileType.OBSERVATION_SUMMARY);
-    assertThat(observations).hasSize(3);
-    assertObservation(observations.get(0), asList("downstream_gene_variant", "gene_variant"));
-    assertObservation(observations.get(1), asList("downstream_gene_variant", "synonymous_variant"));
-    assertObservation(observations.get(2), asList("downstream_gene_variant", "inframe_insertion"));
-  }
-
-  private static void assertObservation(ObjectNode observation, List<String> expectedConsequenceTypes) {
-    val consequenceTypes = observation.get(OBSERVATION_CONSEQUENCE_TYPES);
-    assertArray(consequenceTypes, expectedConsequenceTypes);
-  }
-
   private void assertGenes() {
     val genes = produces(FileType.GENE_SUMMARY);
-    assertThat(genes).hasSize(3);
-    log.debug("Gene Summary - {}", genes);
+    log.debug("Gene Summary: {}", genes);
+    assertThat(genes).hasSize(4);
     for (val gene : genes) {
       val geneId = textValue(gene, GENE_ID);
       switch (geneId) {

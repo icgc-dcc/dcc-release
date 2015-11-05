@@ -89,7 +89,7 @@ public abstract class AbstractIndexTask extends GenericTask {
 
   protected JavaRDD<ObjectNode> readObservations(TaskContext taskContext) {
     val fields = type.getFields().getObservationFields();
-    return filterFields(readInput(taskContext, FileType.OBSERVATION_SUMMARY), fields);
+    return filterFields(readInput(taskContext, FileType.OBSERVATION_FI), fields);
   }
 
   protected JavaRDD<ObjectNode> readMutations(TaskContext taskContext) {

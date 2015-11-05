@@ -20,7 +20,7 @@ package org.icgc.dcc.release.job.summarize.task;
 import static com.google.common.base.Objects.firstNonNull;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_ID;
 import static org.icgc.dcc.release.core.job.FileType.MUTATION;
-import static org.icgc.dcc.release.core.job.FileType.OBSERVATION_SUMMARY;
+import static org.icgc.dcc.release.core.job.FileType.OBSERVATION_FI;
 
 import java.util.Set;
 
@@ -85,7 +85,7 @@ public class MutationSummarizeTask extends GenericTask {
   }
 
   private JavaRDD<ObjectNode> readObservations(TaskContext taskContext) {
-    return readInput(taskContext, OBSERVATION_SUMMARY);
+    return readInput(taskContext, OBSERVATION_FI);
   }
 
 }
