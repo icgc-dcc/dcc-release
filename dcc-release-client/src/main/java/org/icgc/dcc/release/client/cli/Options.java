@@ -43,6 +43,8 @@ public class Options {
   public List<String> projectNames = newArrayList();
   @Parameter(names = { "--release" }, required = true, description = "Release name. E.g. ICGC19.")
   public String release;
+  @Parameter(names = { "--compress-output" }, arity = 1, required = false, description = "Sets if the output should be compressed.")
+  public boolean compressOutput = true;
 
   /**
    * Info

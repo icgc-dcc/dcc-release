@@ -40,4 +40,6 @@ public interface TaskContext {
 
   boolean exists(FileType fileType);
 
+  boolean isCompressOutput();
+
 }

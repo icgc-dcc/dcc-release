@@ -160,15 +160,15 @@ public abstract class AbstractJobTest {
   @SuppressWarnings("unchecked")
   protected JobContext createJobContext(JobType type, List<String> projectNames) {
     return new DefaultJobContext(type, RELEASE_VERSION, projectNames, "/dev/null",
-        workingDir.toString(), mock(Table.class), taskExecutor);
+        workingDir.toString(), mock(Table.class), taskExecutor, false);
   }
 
   protected TaskContext createTaskContext(JobType jobType) {
-    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.empty());
+    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.empty(), false);
   }
 
   protected TaskContext createTaskContext(JobType jobType, String projectName) {
-    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.of(projectName));
+    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.of(projectName), false);
   }
 
   protected void createInputFile(TestFile inputFile) {

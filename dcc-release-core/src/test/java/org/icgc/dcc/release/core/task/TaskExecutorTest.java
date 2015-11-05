@@ -27,10 +27,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.release.core.job.DefaultJobContext;
 import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.core.task.Task;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.core.task.TaskExecutor;
-import org.icgc.dcc.release.core.task.TaskType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -53,7 +49,7 @@ public class TaskExecutorTest {
   public void testExecute() {
     val jobContext = new DefaultJobContext(
         JobType.STAGE, "", ImmutableList.<String> of(), "", "", null,
-        new TaskExecutor(executorService, sparkContext, fileSystem));
+        new TaskExecutor(executorService, sparkContext, fileSystem), false);
 
     jobContext.execute(
         task(() -> System.out.println("task 1")),

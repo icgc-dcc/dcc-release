@@ -211,7 +211,7 @@ public class ExportJobTest {
   @SuppressWarnings("unchecked")
   private JobContext createJobContext(JobType type, String release, List<String> projects, String workingDir) {
     return new DefaultJobContext(type, release, projects, "/dev/null", workingDir, mock(Table.class),
-        taskExecutor);
+        taskExecutor, false);
   }
 
   @SneakyThrows

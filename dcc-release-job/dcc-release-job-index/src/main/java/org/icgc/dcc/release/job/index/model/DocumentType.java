@@ -411,8 +411,7 @@ public enum DocumentType {
                           .excludedFields(
                               "_id",
                               "functional_impact_prediction_summary",
-                              "consequence.functional_impact_prediction",
-                              "consequence_type")
+                              "consequence.functional_impact_prediction")
                   )
           )
   ),
@@ -461,8 +460,7 @@ public enum DocumentType {
                           .excludedFields(
                               "_id",
                               "functional_impact_prediction_summary",
-                              "consequence.functional_impact_prediction",
-                              "consequence_type")
+                              "consequence.functional_impact_prediction")
                   )
           )
   ),

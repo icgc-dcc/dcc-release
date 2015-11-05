@@ -43,4 +43,6 @@ public interface JobContext {
 
   void execute(Collection<? extends Task> tasks);
 
+  boolean isCompressOutput();
+
 }

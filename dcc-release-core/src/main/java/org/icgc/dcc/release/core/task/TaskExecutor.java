@@ -127,7 +127,7 @@ public class TaskExecutor {
   }
 
   private TaskContext createTaskContext(JobContext jobContext, Optional<String> projectName) {
-    return new DefaultTaskContext(jobContext, sparkContext, fileSystem, projectName);
+    return new DefaultTaskContext(jobContext, sparkContext, fileSystem, projectName, jobContext.isCompressOutput());
   }
 
   private ExecutorCompletionService<String> createCompletionService() {

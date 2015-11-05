@@ -94,7 +94,8 @@ public class WorkflowMain {
         options.projectNames,
         options.releaseDir,
         options.stagingDir,
-        options.jobs);
+        options.jobs,
+        options.compressOutput);
   }
 
   private static void usage(JCommander cli) {

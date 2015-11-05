@@ -16,7 +16,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.google.common.collect.ImmutableList;
 
-@Ignore("Mint test data")
+@Ignore("Prepare test data")
 public class FathmmJobTest extends AbstractJobTest {
 
   private static final String PROJECT_NAME = "BRCA-UK";

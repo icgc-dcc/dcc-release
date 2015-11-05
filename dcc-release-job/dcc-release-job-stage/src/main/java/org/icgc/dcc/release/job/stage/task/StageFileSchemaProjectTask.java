@@ -73,7 +73,7 @@ public class StageFileSchemaProjectTask extends GenericTask {
     val input = readInput(taskContext);
     val processed = transform(input);
 
-    writeOutput(processed, getOutputPath(taskContext));
+    writeOutput(processed, getOutputPath(taskContext), taskContext.isCompressOutput());
   }
 
   private JavaRDD<ObjectNode> readInput(TaskContext taskContext) {

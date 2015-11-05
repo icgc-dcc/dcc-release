@@ -25,11 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.config.SnpEffProperties;
-import org.icgc.dcc.release.core.function.ParseObjectNode;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericProcessTask;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.util.JavaRDDs;
+import org.icgc.dcc.release.core.util.ObjectNodeRDDs;
 import org.icgc.dcc.release.job.annotate.function.SnpEffAnnotate;
 import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
 
@@ -45,10 +45,11 @@ public class AnnotationTask extends GenericProcessTask {
     this.properties = properties;
   }
 
-  @Override
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
-    return readInput(taskContext, createJobConf(taskContext));
-  }
+  // TODO: Enable after combine/split is implemented for sequence files
+  // @Override
+  // protected JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
+  // return readInput(taskContext, createJobConf(taskContext));
+  // }
 
   @Override
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf hadoopConf) {
@@ -62,9 +63,7 @@ public class AnnotationTask extends GenericProcessTask {
 
     val sparkContext = taskContext.getSparkContext();
     val path = taskContext.getPath(inputFileType);
-    val input = JavaRDDs.combineTextFile(sparkContext, path, hadoopConf)
-        .map(tuple -> tuple._2.toString())
-        .map(new ParseObjectNode());
+    val input = ObjectNodeRDDs.combineObjectNodeFile(sparkContext, path, hadoopConf);
 
     JavaRDDs.logPartitions(log, input.partitions());
 

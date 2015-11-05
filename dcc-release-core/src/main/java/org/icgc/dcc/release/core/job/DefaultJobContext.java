@@ -26,6 +26,8 @@ public class DefaultJobContext implements JobContext {
 
   TaskExecutor executor;
 
+  boolean compressOutput;
+
   @Override
   public void execute(Task... tasks) {
     execute(ImmutableList.copyOf(tasks));

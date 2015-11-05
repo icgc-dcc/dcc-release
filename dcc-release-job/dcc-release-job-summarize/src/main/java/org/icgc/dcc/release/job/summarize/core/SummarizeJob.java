@@ -32,7 +32,6 @@ import org.icgc.dcc.release.job.summarize.task.FeatureTypeSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.GeneSetSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.GeneSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.MutationSummarizeTask;
-import org.icgc.dcc.release.job.summarize.task.ObservationSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.ProjectSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.ReleaseSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.ResolveGeneSummaryTask;
@@ -85,8 +84,10 @@ public class SummarizeJob extends GenericJob {
     val resolveGeneStatsTask = new ResolveGeneSummaryTask();
     jobContext.execute(resolveGeneStatsTask);
     jobContext.execute(
-        new GeneSummarizeTask(resolveGeneStatsTask.getGeneDonorTypeCounts()),
-        new ObservationSummarizeTask());
+        new GeneSummarizeTask(resolveGeneStatsTask.getGeneDonorTypeCounts())
+        // Disabled because results of the summarization are not used
+        // ,new ObservationSummarizeTask()
+        );
     jobContext.execute(new MutationSummarizeTask());
     jobContext.execute(new ReleaseSummarizeTask(donorSummarizeTask.getDonorsCount(), donorSummarizeTask
         .getLiveDonorsCount()));

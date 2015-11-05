@@ -121,7 +121,8 @@ public class Workflow {
         workflowContext.getReleaseDir(),
         workflowContext.getWorkingDir(),
         submissionFiles,
-        taskExecutor);
+        taskExecutor,
+        workflowContext.isCompressOutput());
   }
 
   private Job findJob(JobType jobType) {

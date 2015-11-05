@@ -96,7 +96,7 @@ public class StageJobTest extends AbstractJobTest {
 
   private JobContext createJobContext() {
     return new DefaultJobContext(JobType.STAGE, RELEASE_VERSION, PROJECTS, TEST_FIXTURES_DIR,
-        workingDir.toString(), resolveSubmissionFiles(), taskExecutor);
+        workingDir.toString(), resolveSubmissionFiles(), taskExecutor, false);
   }
 
   private Table<String, String, List<Path>> resolveSubmissionFiles() {
