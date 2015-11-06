@@ -25,6 +25,7 @@ import static org.icgc.dcc.release.job.join.utils.JsonNodes.populateArrayNode;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.common.core.model.FieldNames;
 
 import scala.Tuple2;
 
@@ -47,13 +48,13 @@ public class CombineSpecimen implements Function<Tuple2<String, Tuple2<Tuple2<Tu
     val biomarkerTuple = tuple._2._1;
     if (biomarkerTuple._2.isPresent()) {
       val biomarker = specimen.withArray(BIOMARKER);
-      populateArrayNode(biomarker, biomarkerTuple._2.get());
+      populateArrayNode(biomarker, biomarkerTuple._2.get(), CombineSpecimen::trimDonorFields);
     }
 
     val surgeryTuple = tuple._2;
     if (surgeryTuple._2.isPresent()) {
       val surgery = specimen.withArray(SURGERY);
-      populateArrayNode(surgery, surgeryTuple._2.get());
+      populateArrayNode(surgery, surgeryTuple._2.get(), CombineSpecimen::trimDonorFields);
     }
 
     return specimen;
@@ -61,6 +62,13 @@ public class CombineSpecimen implements Function<Tuple2<String, Tuple2<Tuple2<Tu
 
   private static ObjectNode trimSample(ObjectNode node) {
     node.remove(SUBMISSION_SPECIMEN_ID);
+
+    return node;
+  }
+
+  private static ObjectNode trimDonorFields(ObjectNode node) {
+    node.remove(FieldNames.SubmissionFieldNames.SUBMISSION_DONOR_ID);
+    node.remove(FieldNames.PROJECT_ID);
 
     return node;
   }

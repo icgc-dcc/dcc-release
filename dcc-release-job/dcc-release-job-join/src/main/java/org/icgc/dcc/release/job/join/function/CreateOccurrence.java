@@ -118,7 +118,8 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
 
       if (occurrence == null) {
         val donorIdMutationId = tuple._1;
-        occurrence = createOccurrence(primary, meta, donorIdMutationId);
+        val assemblyVersion = textValue(meta, SUBMISSION_OBSERVATION_ASSEMBLY_VERSION);
+        occurrence = createOccurrence(primary, donorIdMutationId, assemblyVersion);
       }
 
       val observation = createObservation(primary.deepCopy(), meta.deepCopy());
@@ -136,12 +137,12 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
     return occurrence;
   }
 
-  private static ObjectNode createOccurrence(ObjectNode primary, ObjectNode meta, String donorIdMutationId) {
+  private static ObjectNode createOccurrence(ObjectNode primary, String donorIdMutationId, String assemblyVersion) {
     val occurrence = trimOccurrence(primary.deepCopy());
 
     // Enrich with additional fields
     occurrence.put(SURROGATE_DONOR_ID, resolveDonorId(donorIdMutationId));
-    occurrence.put(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION, textValue(meta, SUBMISSION_OBSERVATION_ASSEMBLY_VERSION));
+    occurrence.put(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION, assemblyVersion);
     occurrence.put(OBSERVATION_TYPE, SSM_TYPE.getId());
 
     return occurrence;

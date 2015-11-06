@@ -72,7 +72,9 @@ public class AnnotationTask extends GenericProcessTask {
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input.mapPartitions(new SnpEffAnnotate(properties, getAnnotatedFileType()));
+    return input
+        .mapPartitions(new SnpEffAnnotate(properties, getAnnotatedFileType()))
+        .filter(row -> !row.equals(SnpEffAnnotate.SENTINEL_VALUE));
   }
 
   private AnnotatedFileType getAnnotatedFileType() {
