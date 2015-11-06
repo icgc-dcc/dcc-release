@@ -64,11 +64,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 @RequiredArgsConstructor
 public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2<String, Tuple2<Tuple2<ObjectNode,
-    Iterable<ObjectNode>>, ObjectNode>>>>, ObjectNode> {
+    Optional<Iterable<ObjectNode>>>, ObjectNode>>>>, ObjectNode> {
 
   private static final int DONOR_ID_INDEX = 0;
   private static final ObjectMapper MAPPER = DEFAULT;
@@ -105,8 +106,8 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
   private final Map<String, String> sampleSurrogageSampleIds;
 
   @Override
-  public ObjectNode call(Tuple2<String, Iterable<Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>,
-      ObjectNode>>>> tuple) throws Exception {
+  public ObjectNode call(Tuple2<String, Iterable<Tuple2<String, Tuple2<Tuple2<ObjectNode,
+      Optional<Iterable<ObjectNode>>>, ObjectNode>>>> tuple) throws Exception {
     ObjectNode occurrence = null;
     ArrayNode consequences = null;
     val observations = createObservations();
@@ -175,11 +176,13 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
     return observation.remove(OBSERVATION_REMOVE_FIELDS);
   }
 
-  private static ArrayNode createConsequences(Iterable<ObjectNode> secondaries) {
+  private static ArrayNode createConsequences(Optional<Iterable<ObjectNode>> secondaries) {
     val consequences = MAPPER.createArrayNode();
-    for (val secondary : secondaries) {
-      enrichConsequenceFields(secondary);
-      consequences.add(secondary);
+    if (secondaries.isPresent()) {
+      for (val secondary : secondaries.get()) {
+        enrichConsequenceFields(secondary);
+        consequences.add(secondary);
+      }
     }
 
     return consequences;

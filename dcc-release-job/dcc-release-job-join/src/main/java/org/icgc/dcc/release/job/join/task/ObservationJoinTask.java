@@ -46,6 +46,7 @@ import org.icgc.dcc.release.job.join.model.DonorSample;
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 
 @RequiredArgsConstructor
 public class ObservationJoinTask extends GenericTask {
@@ -114,11 +115,11 @@ public class ObservationJoinTask extends GenericTask {
     return donorMutationObservations.map(new CreateOccurrence(donorSamples, sampleSurrogageSampleIds));
   }
 
-  private static JavaPairRDD<String, Tuple2<ObjectNode, Iterable<ObjectNode>>> joinSsmPrimarySecondary(
+  private static JavaPairRDD<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> joinSsmPrimarySecondary(
       JavaRDD<ObjectNode> ssmP, JavaRDD<ObjectNode> ssmS) {
     return ssmP
         .mapToPair(new KeyFields(NORMALIZER_OBSERVATION_ID))
-        .join(
+        .leftOuterJoin(
             ssmS.groupBy(new CombineFields(NORMALIZER_OBSERVATION_ID)));
   }
 

@@ -33,15 +33,16 @@ import org.icgc.dcc.release.job.join.model.DonorSample;
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 
 @RequiredArgsConstructor
 public class KeyDonorMutataionId implements
-    Function<Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>, ObjectNode>>, String> {
+    Function<Tuple2<String, Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>, ObjectNode>>, String> {
 
   private final Map<String, DonorSample> donorSamples;
 
   @Override
-  public String call(Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>, ObjectNode>> tuple)
+  public String call(Tuple2<String, Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>, ObjectNode>> tuple)
       throws Exception {
     val primary = tuple._2._1._1;
     val mutationId = textValue(primary, SURROGATE_MUTATION_ID);

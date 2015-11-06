@@ -45,11 +45,11 @@ public class AnnotationTask extends GenericProcessTask {
     this.properties = properties;
   }
 
-  // TODO: Enable after combine/split is implemented for sequence files
-  // @Override
-  // protected JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
-  // return readInput(taskContext, createJobConf(taskContext));
-  // }
+  // TODO: Will not work properly until combine/split is implemented for sequence files
+  @Override
+  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
+    return readInput(taskContext, createJobConf(taskContext));
+  }
 
   @Override
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf hadoopConf) {
