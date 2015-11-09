@@ -19,11 +19,15 @@ package org.icgc.dcc.release.job.mask.function;
 
 import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_MARKING;
+import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CONTROL_GENOTYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE;
 import static org.icgc.dcc.common.core.model.Marking.CONTROLLED;
+
+import java.util.UUID;
+
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,6 +57,7 @@ public class GenerateMaskedRow implements FlatMapFunction<ObjectNode, ObjectNode
 
       log.debug("Creating mask for '{}'", row);
       val mask = mask(row.deepCopy(), referenceGenomeAllele);
+      regenerateId(mask);
 
       log.debug("Resulting mask for '{}': '{}'", row, mask);
       rows.add(mask);
@@ -84,6 +89,10 @@ public class GenerateMaskedRow implements FlatMapFunction<ObjectNode, ObjectNode
     checkState(marking.isPresent(), "There should be a '%s' field at this stage, instead: '%s'", NORMALIZER_MARKING,
         entry);
     return marking.get();
+  }
+
+  private static void regenerateId(ObjectNode mask) {
+    mask.put(NORMALIZER_OBSERVATION_ID, UUID.randomUUID().toString());
   }
 
 }
