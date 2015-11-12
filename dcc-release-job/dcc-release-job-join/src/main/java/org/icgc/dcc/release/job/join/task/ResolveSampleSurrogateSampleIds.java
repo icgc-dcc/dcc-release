@@ -38,6 +38,9 @@ import org.icgc.dcc.release.core.task.TaskContext;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
+/**
+ * Creates mapping {@code analyzed_sample_id -> _sample_id}
+ */
 public class ResolveSampleSurrogateSampleIds extends GenericTask {
 
   @Getter(lazy = true)

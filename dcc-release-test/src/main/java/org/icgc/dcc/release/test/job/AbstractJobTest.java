@@ -1,5 +1,6 @@
 package org.icgc.dcc.release.test.job;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
@@ -42,6 +43,8 @@ public abstract class AbstractJobTest {
    * Constants.
    */
   protected static final String TEST_FIXTURES_DIR = "src/test/resources/fixtures";
+  protected static final String INPUT_TEST_FIXTURES_DIR = TEST_FIXTURES_DIR + "/input";
+  protected static final String OUTPUT_TEST_FIXTURES_DIR = TEST_FIXTURES_DIR + "/output";
   protected static final String RELEASE_VERSION = "ICGC19-0-2";
 
   /**
@@ -260,6 +263,43 @@ public abstract class AbstractJobTest {
 
   protected String resolvePath(String fileName) {
     return new File(TEST_FIXTURES_DIR + "/" + fileName).getAbsolutePath();
+  }
+
+  /**
+   * Compares actual output with output located in {@link OUTPUT_TEST_FIXTURES_DIR}.
+   */
+  protected void verifyResult(FileType fileType) {
+    val actualResult = produces(fileType);
+    val expectedFile = resolveExpectedFile(fileType);
+    val expectedResult = TestFiles.readInputFile(expectedFile);
+    compareResults(expectedResult, actualResult);
+  }
+
+  /**
+   * Compares actual output with output located in {@link OUTPUT_TEST_FIXTURES_DIR}.
+   */
+  protected void verifyResult(String projectName, FileType fileType) {
+    val actualResult = produces(projectName, fileType);
+    val expectedFile = resolveExpectedFile(projectName, fileType);
+    val expectedResult = TestFiles.readInputFile(expectedFile);
+    compareResults(expectedResult, actualResult);
+  }
+
+  private static void compareResults(List<ObjectNode> expectedResult, List<ObjectNode> actualResult) {
+    assertThat(actualResult).hasSameSizeAs(expectedResult);
+    assertThat(actualResult).containsExactlyElementsOf(expectedResult);
+  }
+
+  private static File resolveExpectedFile(FileType fileType) {
+    return resolveExpectedFile(null, fileType);
+  }
+
+  private static File resolveExpectedFile(String projectName, FileType fileType) {
+    val parentDir = projectName == null ?
+        new File(OUTPUT_TEST_FIXTURES_DIR) :
+        new File(OUTPUT_TEST_FIXTURES_DIR, Partitions.getPartitionName(projectName));
+
+    return new File(parentDir, fileType.getDirName());
   }
 
 }

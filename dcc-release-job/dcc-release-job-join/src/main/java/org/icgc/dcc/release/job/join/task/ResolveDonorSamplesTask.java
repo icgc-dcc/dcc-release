@@ -42,6 +42,9 @@ import org.icgc.dcc.release.job.join.model.DonorSample;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
+/**
+ * Creates mapping from {@code 'analyzed_sample_id'} to {@code (_donor_id, _specimen_id, _sample_id)}.
+ */
 public class ResolveDonorSamplesTask extends GenericTask {
 
   @Getter(lazy = true)

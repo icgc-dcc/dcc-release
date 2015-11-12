@@ -23,62 +23,13 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
-import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_VERIFICATION_STATUS;
-import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_TYPE;
-import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_PLATFORM;
-import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_SEQUENCING_STRATEGY;
-import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_VERIFICATION_PLATFORM;
-import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_AMINO_ACID_CHANGE;
-import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_CDS_CHANGE;
-import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_GENE_BUILD_VERSION;
-import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_NOTE;
-import static org.icgc.dcc.common.core.model.FieldNames.AnnotatorFieldNames.ANNOTATOR_PROTEIN_DOMAIN_AFFECTED;
-import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_DONOR_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_MUTATION_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SAMPLE_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SPECIMEN_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.AVAILABLE_RAW_SEQUENCE_DATA;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_ARRAY_NAME;
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_TYPE;
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.PROJECT_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.SURROGATE_MATCHED_SAMPLE_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.TRANSCRIPT_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_MARKING;
-import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_MUTATION;
-import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MATCHED_SAMPLE_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ASSEMBLY_VERSION;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_END;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_START;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_CHROMOSOME_STRAND;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATION_TYPE;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_REPOSITORY;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.ALIGNMENT_ALGORITHM;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.BASE_CALLING_ALGORITHM;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.BIOLOGICAL_VALIDATION_PLATFORM;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.BIOLOGICAL_VALIDATION_STATUS;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.EXPERIMENTAL_PROTOCOL;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.EXPOSURE;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.FAMILY;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.MUTANT_ALLELE_READ_COUNT;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.OTHER_ANALYSIS_ALGORITHM;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.PROBABILITY;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.QUALITY_SCORE;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.SEQ_COVERAGE;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.THERAPY;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.TOTAL_READ_COUNT;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.VARIATION_CALLING_ALGORITHM;
-import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.test.util.TestJsonNodes.getElements;
 
 import java.io.File;
@@ -101,63 +52,6 @@ import com.google.common.collect.ImmutableList;
 @Slf4j
 public class JoinJobTest extends AbstractJobTest {
 
-  private static final ImmutableList<String> VALID_CONSEQUENCE_FIELDS = ImmutableList.of(
-      GENE_ID,
-      TRANSCRIPT_ID,
-      ANNOTATOR_AMINO_ACID_CHANGE,
-      ANNOTATOR_CDS_CHANGE,
-      OBSERVATION_CONSEQUENCES_CONSEQUENCE_TYPE,
-      SUBMISSION_GENE_AFFECTED,
-      ANNOTATOR_GENE_BUILD_VERSION,
-      ANNOTATOR_NOTE,
-      ANNOTATOR_PROTEIN_DOMAIN_AFFECTED,
-      SUBMISSION_TRANSCRIPT_AFFECTED);
-
-  private static final ImmutableList<String> VALID_OBSERVATION_FIELDS = ImmutableList.of(
-      BIOLOGICAL_VALIDATION_PLATFORM,
-      PROBABILITY,
-      QUALITY_SCORE,
-      EXPERIMENTAL_PROTOCOL,
-      OBSERVATION_VERIFICATION_PLATFORM,
-      SURROGATE_MATCHED_SAMPLE_ID,
-      SURROGATE_SAMPLE_ID,
-      SURROGATE_SPECIMEN_ID,
-      ALIGNMENT_ALGORITHM,
-      SUBMISSION_OBSERVATION_ANALYSIS_ID,
-      SUBMISSION_ANALYZED_SAMPLE_ID,
-      BASE_CALLING_ALGORITHM,
-      BIOLOGICAL_VALIDATION_STATUS,
-      NORMALIZER_MARKING,
-      SUBMISSION_MATCHED_SAMPLE_ID,
-      MUTANT_ALLELE_READ_COUNT,
-      NORMALIZER_OBSERVATION_ID,
-      OTHER_ANALYSIS_ALGORITHM,
-      OBSERVATION_PLATFORM,
-      SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION,
-      SUBMISSION_OBSERVATION_RAW_DATA_REPOSITORY,
-      SEQ_COVERAGE,
-      OBSERVATION_SEQUENCING_STRATEGY,
-      TOTAL_READ_COUNT,
-      VARIATION_CALLING_ALGORITHM,
-      MUTATION_VERIFICATION_STATUS);
-
-  private static final ImmutableList<String> VALID_OCCURRENCE_FIELDS = ImmutableList.of(
-      SURROGATE_DONOR_ID,
-      SURROGATE_MUTATION_ID,
-      PROJECT_ID,
-      OBSERVATION_TYPE,
-      SUBMISSION_OBSERVATION_ASSEMBLY_VERSION,
-      SUBMISSION_OBSERVATION_CHROMOSOME,
-      SUBMISSION_OBSERVATION_CHROMOSOME_END,
-      SUBMISSION_OBSERVATION_CHROMOSOME_START,
-      SUBMISSION_OBSERVATION_CHROMOSOME_STRAND,
-      CONSEQUENCE_ARRAY_NAME,
-      SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE,
-      NORMALIZER_MUTATION,
-      SUBMISSION_OBSERVATION_MUTATION_TYPE,
-      OBSERVATION_ARRAY_NAME,
-      SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE);
-
   private static final String PROJECT_NAME = "BRCA-UK";
   private static final String EMPTY_PROJECT_NAME = "EMPTY";
   private static final List<String> VALID_SAMPLES = ImmutableList.of("ASID1", "ASID2");
@@ -173,14 +67,14 @@ public class JoinJobTest extends AbstractJobTest {
 
   @Test
   public void executeTest() {
-    given(new File(TEST_FIXTURES_DIR));
+    given(new File(INPUT_TEST_FIXTURES_DIR));
     val jobContext = createJobContext(job.getType(), asList(PROJECT_NAME, EMPTY_PROJECT_NAME));
     job.execute(jobContext);
 
     validateClinicalResults(produces(PROJECT_NAME, FileType.CLINICAL));
     validateEmptyProjectClinicalResults(produces(EMPTY_PROJECT_NAME, FileType.CLINICAL));
 
-    validateOccurrences(produces(PROJECT_NAME, FileType.OBSERVATION));
+    validateOccurrences();
 
     validatePrimaryMeta(produces(PROJECT_NAME, FileType.PEXP), 20);
     validatePrimaryMeta(produces(PROJECT_NAME, FileType.JCN), 45);
@@ -195,6 +89,10 @@ public class JoinJobTest extends AbstractJobTest {
     validateStsm(produces(PROJECT_NAME, FileType.STSM), 46);
 
     validateSsm(produces(PROJECT_NAME, FileType.SSM));
+  }
+
+  private void validateOccurrences() {
+    verifyResult(PROJECT_NAME, FileType.OBSERVATION);
   }
 
   private static void validateSsm(List<ObjectNode> results) {
@@ -228,57 +126,6 @@ public class JoinJobTest extends AbstractJobTest {
     assertThat(results).hasSize(1);
     val joined = results.get(0);
     assertThat(keys(joined)).hasSize(expectedFieldsCount);
-  }
-
-  private static void validateOccurrences(List<ObjectNode> results) {
-    assertThat(results).hasSize(2);
-
-    for (val occurrence : results) {
-      validateOccurrenceStructure(occurrence);
-
-      if (textValue(occurrence, SURROGATE_DONOR_ID).equals("DO001")) {
-        validateDO1Occurrence(occurrence);
-      }
-      else {
-        validateDO2Occurrence(occurrence);
-      }
-    }
-  }
-
-  private static void validateDO2Occurrence(ObjectNode occurrence) {
-    assertThat(occurrence.get(OBSERVATION_ARRAY_NAME).size()).isEqualTo(2);
-  }
-
-  private static void validateDO1Occurrence(ObjectNode occurrence) {
-    assertThat(occurrence.get(OBSERVATION_ARRAY_NAME).size()).isEqualTo(1);
-  }
-
-  private static void validateOccurrenceStructure(ObjectNode occurrence) {
-    val fields = ImmutableList.copyOf(occurrence.fieldNames());
-    assertThat(VALID_OCCURRENCE_FIELDS).containsOnlyElementsOf(fields);
-
-    validateArrayNode(occurrence.get(CONSEQUENCE_ARRAY_NAME));
-    validateArrayNode(occurrence.get(OBSERVATION_ARRAY_NAME));
-
-    validateConsequenceStructure(occurrence.get(CONSEQUENCE_ARRAY_NAME).get(0));
-    validateObservationStructure(occurrence.get(OBSERVATION_ARRAY_NAME).get(0));
-  }
-
-  private static void validateObservationStructure(JsonNode observation) {
-    assertThat(VALID_OBSERVATION_FIELDS).containsOnlyElementsOf(getFields(observation));
-  }
-
-  private static void validateConsequenceStructure(JsonNode consequence) {
-    assertThat(VALID_CONSEQUENCE_FIELDS).containsOnlyElementsOf(getFields(consequence));
-  }
-
-  private static List<String> getFields(JsonNode node) {
-    return ImmutableList.copyOf(node.fieldNames());
-  }
-
-  private static void validateArrayNode(JsonNode arrayNode) {
-    assertThat(arrayNode.isArray()).isTrue();
-    assertThat(arrayNode).isNotEmpty();
   }
 
   private static void validateClinicalResults(List<ObjectNode> results) {

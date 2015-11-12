@@ -126,9 +126,11 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
       val observation = createObservation(primary.deepCopy(), meta.deepCopy());
       observations.add(observation);
 
+      val secondaries = ssm._2._1._2;
       if (consequences == null) {
-        val secondaries = ssm._2._1._2;
         consequences = createConsequences(secondaries);
+      } else {
+        appendConsequences(consequences, secondaries);
       }
     }
 
@@ -178,6 +180,17 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
 
   private static ArrayNode createConsequences(Optional<Iterable<ObjectNode>> secondaries) {
     val consequences = MAPPER.createArrayNode();
+    if (secondaries.isPresent()) {
+      for (val secondary : secondaries.get()) {
+        enrichConsequenceFields(secondary);
+        consequences.add(secondary);
+      }
+    }
+
+    return consequences;
+  }
+
+  private static ArrayNode appendConsequences(ArrayNode consequences, Optional<Iterable<ObjectNode>> secondaries) {
     if (secondaries.isPresent()) {
       for (val secondary : secondaries.get()) {
         enrichConsequenceFields(secondary);
