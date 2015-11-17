@@ -138,7 +138,7 @@ public class MutationVCFWriter implements Closeable {
           .stop(converted.pos + converted.ref.length() - 1)
           .id(feature.getId())
           .alleles(createAlleles(converted.ref, converted.alt))
-          .attributes(createAttributes(feature.getMutation(), converted.mutation, totalSsmTestedDonorCount))
+          .attributes(createAttributes(feature.getMutation(), totalSsmTestedDonorCount))
           .make());
     } catch (Exception e) {
       log.error("Exception writing feature " + feature + " with converted value + " + converted + ":", e);
@@ -152,12 +152,11 @@ public class MutationVCFWriter implements Closeable {
     sequenceFile.close();
   }
 
-  private static Map<String, Object> createAttributes(Mutation mutation, String vcfMutation,
-      int totalSsmTestedDonorCount) {
+  private static Map<String, Object> createAttributes(Mutation mutation, int totalSsmTestedDonorCount) {
     val attributes = ImmutableMap.<String, Object> builder();
 
     // @formatter:off
-    attributes.put("mutation",        vcfMutation);
+    attributes.put("mutation",        mutation.getMutation());
     attributes.put("affected_donors", mutation.getAffectedDonors());
     attributes.put("tested_donors",   totalSsmTestedDonorCount);
     attributes.put("project_count",   mutation.getProjectCount());
