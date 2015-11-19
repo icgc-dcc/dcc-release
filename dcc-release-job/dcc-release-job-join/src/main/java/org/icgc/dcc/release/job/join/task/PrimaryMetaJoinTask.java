@@ -18,7 +18,7 @@
 package org.icgc.dcc.release.job.join.task;
 
 import static java.lang.String.format;
-import static org.icgc.dcc.release.core.util.JavaRDDs.createRddForJoin;
+import static org.icgc.dcc.release.core.util.Keys.getKey;
 import static org.icgc.dcc.release.job.join.utils.Tasks.resolveDonorSamples;
 
 import java.util.Map;
@@ -30,15 +30,16 @@ import lombok.val;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.join.function.CombinePrimaryMeta;
 import org.icgc.dcc.release.job.join.function.EnrichPrimaryMeta;
 import org.icgc.dcc.release.job.join.function.KeyAnalysisIdAnalyzedSampleIdField;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Maps;
 
 @RequiredArgsConstructor
 public class PrimaryMetaJoinTask extends GenericTask {
@@ -70,22 +71,38 @@ public class PrimaryMetaJoinTask extends GenericTask {
     val primary = parsePrimary(primaryFileType, taskContext);
     val meta = parseMeta(resolveMetaFileType(primaryFileType), taskContext);
     val donorSamples = resolveDonorSamples(taskContext, donorSamplesbyProject);
-    val output = join(primary, meta, donorSamples);
+    val output = join(primary, meta, donorSamples, taskContext);
 
     return output;
   }
 
   private JavaRDD<ObjectNode> join(JavaRDD<ObjectNode> primary, JavaRDD<ObjectNode> meta,
-      Map<String, DonorSample> donorSamples) {
+      Map<String, DonorSample> donorSamples, TaskContext taskContext) {
     val keyFunction = new KeyAnalysisIdAnalyzedSampleIdField();
     val outputFileType = resolveOutputFileType(primaryFileType);
     val type = outputFileType.getId();
+    val metaPairs = meta.mapToPair(keyFunction).collectAsMap();
+    final Broadcast<Map<String, ObjectNode>> metaPairsBroadcast = taskContext
+        .getSparkContext()
+        .broadcast(Maps.newHashMap(metaPairs));
 
-    return primary
-        .mapToPair(keyFunction)
-        .join(createRddForJoin(meta.mapToPair(keyFunction), sparkContext))
-        .map(new CombinePrimaryMeta())
+    return joinPrimaryMeta(primary, metaPairsBroadcast)
         .map(new EnrichPrimaryMeta(type, donorSamples));
+  }
+
+  private static JavaRDD<ObjectNode> joinPrimaryMeta(
+      JavaRDD<ObjectNode> primary,
+      Broadcast<Map<String, ObjectNode>> metaPairsBroadcast) {
+    return primary
+        .map(p -> {
+          String key = getKey(p,
+              FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID,
+              FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID);
+          ObjectNode metaValue = metaPairsBroadcast.value().get(key);
+          p.setAll(metaValue);
+
+          return p;
+        });
   }
 
   private JavaRDD<ObjectNode> parsePrimary(FileType primaryFileType, TaskContext taskContext) {
