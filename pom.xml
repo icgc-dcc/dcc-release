@@ -314,7 +314,8 @@
     <!-- Testing - DCC -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>dcc-resources</artifactId>
+      <artifactId>dcc-etl-resources</artifactId>
+      <version>${dcc-etl.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -324,7 +325,7 @@
     <dcc-common.version>3.8.15.1</dcc-common.version>
 
     <!-- Versions - DCC ETL -->
-    <dcc-etl.version>3.8.9.2</dcc-etl.version>
+    <dcc-etl.version>3.8.17.8</dcc-etl.version>
 
     <!-- Versions - DCC ID -->
     <dcc-id.version>0.0.17</dcc-id.version>
