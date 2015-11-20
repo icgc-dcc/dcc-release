@@ -20,8 +20,8 @@ package org.icgc.dcc.release.job.summarize.function;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCE_TYPES;
-import static org.icgc.dcc.common.core.util.Jackson.asArrayNode;
-import static org.icgc.dcc.common.core.util.Jackson.to;
+import static org.icgc.dcc.common.json.Jackson.asArrayNode;
+import static org.icgc.dcc.common.json.Jackson.to;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import lombok.val;
 

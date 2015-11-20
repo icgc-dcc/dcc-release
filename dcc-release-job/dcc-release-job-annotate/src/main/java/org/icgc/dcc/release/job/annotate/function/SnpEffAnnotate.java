@@ -32,7 +32,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.icgc.dcc.common.core.util.Jackson;
+import org.icgc.dcc.common.json.Jackson;
 import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.job.annotate.converter.ICGCToVCFConverter.MutationType;
 import org.icgc.dcc.release.job.annotate.converter.SecondaryObjectNodeConverter;

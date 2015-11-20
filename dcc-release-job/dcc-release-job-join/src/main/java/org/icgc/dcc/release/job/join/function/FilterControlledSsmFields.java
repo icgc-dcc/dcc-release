@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.release.job.join.function;
 
-import static org.icgc.dcc.common.core.util.Jackson.asArrayNode;
+import static org.icgc.dcc.common.json.Jackson.asArrayNode;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.FieldNames;
-import org.icgc.dcc.common.core.util.Jackson;
+import org.icgc.dcc.common.json.Jackson;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 

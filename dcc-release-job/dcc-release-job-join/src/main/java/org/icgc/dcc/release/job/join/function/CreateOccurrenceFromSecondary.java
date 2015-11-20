@@ -24,7 +24,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
-import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
+import static org.icgc.dcc.common.json.Jackson.DEFAULT;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;

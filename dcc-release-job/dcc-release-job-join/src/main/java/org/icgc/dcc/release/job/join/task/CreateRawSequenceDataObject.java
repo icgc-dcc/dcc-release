@@ -29,7 +29,7 @@ import java.util.Map;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.core.util.Jackson;
+import org.icgc.dcc.common.json.Jackson;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;

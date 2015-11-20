@@ -1,10 +1,12 @@
 package org.icgc.dcc.release.core.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.common.core.util.Jackson.toObjectNode;
+import static org.icgc.dcc.common.json.Jackson.toObjectNode;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+
+import lombok.val;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -13,8 +15,6 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import lombok.val;
 
 public class SmileSerializerTest {
 

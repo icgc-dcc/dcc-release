@@ -23,9 +23,9 @@ import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_EXPERIMENTAL_A
 import static org.icgc.dcc.common.core.model.FieldNames.EXPERIMENTAL_ANALYSIS_PERFORMED_DONOR_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.EXPERIMENTAL_ANALYSIS_PERFORMED_SAMPLE_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.getTestedTypeCountFieldName;
-import static org.icgc.dcc.common.core.util.Jackson.asArrayNode;
-import static org.icgc.dcc.common.core.util.Jackson.from;
-import static org.icgc.dcc.common.core.util.Jackson.to;
+import static org.icgc.dcc.common.json.Jackson.asArrayNode;
+import static org.icgc.dcc.common.json.Jackson.from;
+import static org.icgc.dcc.common.json.Jackson.to;
 import static org.icgc.dcc.release.core.util.FeatureTypes.getFeatureTypes;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;

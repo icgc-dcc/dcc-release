@@ -22,7 +22,7 @@ import static org.icgc.dcc.release.core.util.FieldNames.SummarizeFieldNames.GENE
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.core.util.Jackson;
+import org.icgc.dcc.common.json.Jackson;
 
 import scala.Tuple2;
 

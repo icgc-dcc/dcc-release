@@ -30,7 +30,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECTS;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECT_PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECT_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
-import static org.icgc.dcc.common.core.util.Jackson.asObjectNode;
+import static org.icgc.dcc.common.json.Jackson.asObjectNode;
 import static org.icgc.dcc.release.core.util.FeatureTypes.createFeatureTypeSummaryValue;
 import static org.icgc.dcc.release.core.util.ObjectNodes.createArray;
 import static org.icgc.dcc.release.core.util.ObjectNodes.createObject;

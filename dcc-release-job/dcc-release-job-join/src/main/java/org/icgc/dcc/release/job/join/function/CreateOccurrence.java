@@ -45,7 +45,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATION_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
-import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
+import static org.icgc.dcc.common.json.Jackson.DEFAULT;
 import static org.icgc.dcc.release.core.util.Keys.KEY_SEPARATOR;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 

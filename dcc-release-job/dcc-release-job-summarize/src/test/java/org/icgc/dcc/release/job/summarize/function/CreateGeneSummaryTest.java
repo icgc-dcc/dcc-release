@@ -6,7 +6,7 @@ import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_DONORS;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECTS;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECT_SUMMARY;
-import static org.icgc.dcc.common.core.util.Jackson.asObjectNode;
+import static org.icgc.dcc.common.json.Jackson.asObjectNode;
 import static org.icgc.dcc.release.job.summarize.core.SummarizeJobTest.assertGeneDonor;
 import static org.icgc.dcc.release.job.summarize.core.SummarizeJobTest.assertGeneProject;
 import static org.icgc.dcc.release.test.util.TestJsonNodes.$;
