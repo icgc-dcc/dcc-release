@@ -19,7 +19,6 @@ package org.icgc.dcc.release.job.join.task;
 
 import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
-import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 import static org.icgc.dcc.release.job.join.utils.Tasks.resolveDonorSamples;
 
@@ -34,13 +33,13 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.common.core.model.Marking;
 import org.icgc.dcc.release.core.function.CombineFields;
 import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.util.Observations;
 import org.icgc.dcc.release.job.join.function.CreateOccurrence;
 import org.icgc.dcc.release.job.join.function.KeyAnalysisIdAnalyzedSampleIdField;
 import org.icgc.dcc.release.job.join.function.KeyDonorMutataionId;
@@ -104,8 +103,7 @@ public class ObservationJoinTask extends GenericTask {
 
   private static Function<ObjectNode, Boolean> filterControlledRecords() {
     return row -> {
-      String markingValue = textValue(row, FieldNames.NormalizerFieldNames.NORMALIZER_MARKING);
-      Optional<Marking> marking = Marking.from(markingValue);
+      Optional<Marking> marking = Observations.getMarking(row);
       checkState(marking.isPresent(), "Failed to resolve marking from {}", row);
 
       return !marking.get().isControlled();

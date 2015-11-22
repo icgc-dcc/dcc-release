@@ -35,17 +35,25 @@ import java.util.Map.Entry;
 import lombok.Getter;
 import lombok.val;
 
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
+import org.icgc.dcc.common.core.model.FieldNames;
+import org.icgc.dcc.common.core.model.Marking;
 import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.util.Observations;
 import org.icgc.dcc.release.job.summarize.function.CreateFeatureTypeSummary;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Table;
 
@@ -112,16 +120,34 @@ public class FeatureTypeSummarizeTask extends GenericTask {
 
   private Map<String, ObjectNode> createMapping(TaskContext taskContext, FeatureType featureType) {
     val fileType = resolveInputFileType(featureType);
+    JavaRDD<ObjectNode> input = readInput(taskContext, fileType);
+    if (FeatureType.SSM_TYPE.equals(featureType)) {
+      input = input.filter(filterControlled());
+    }
 
     // @formatter:off
     return 
         sum(
-          readInput(taskContext, fileType)
+          input
           .mapToPair(new KeyFields(DONOR_ID, OBSERVATION_TYPE)))
         .mapToPair(new CreateFeatureTypeSummary())
         .aggregateByKey(MAPPER.createObjectNode(), aggregateFeatureType(), aggregateFeatureType())
         .collectAsMap();
     // @formatter:on
+  }
+
+  private static Function<ObjectNode, Boolean> filterControlled() {
+    return o -> {
+      ArrayNode observations = o.withArray(FieldNames.LoaderFieldNames.OBSERVATION_ARRAY_NAME);
+      for (JsonNode observation : observations) {
+        Optional<Marking> marking = Observations.getMarking(observation);
+        if (marking.get().isControlled()) {
+          return Boolean.FALSE;
+        }
+      }
+
+      return Boolean.TRUE;
+    };
   }
 
   private Function2<ObjectNode, ObjectNode, ObjectNode> aggregateFeatureType() {
