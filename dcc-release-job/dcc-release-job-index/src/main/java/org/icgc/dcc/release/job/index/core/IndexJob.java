@@ -73,6 +73,16 @@ public class IndexJob extends GenericJob {
 
   @Override
   public void execute(@NonNull JobContext jobContext) {
+    // Cleanup output directories
+    clean(jobContext);
+
+    // TODO: Fix this to be tied to a run id:
+    val indexName = resolveIndexName(jobContext.getReleaseName());
+    if (properties.isSkipIndexing()) {
+      write(jobContext, indexName);
+
+      return;
+    }
 
     //
     // TODO: Need to use spark.dynamicAllocation.enabled to dynamically increase memory for this job
@@ -86,15 +96,9 @@ public class IndexJob extends GenericJob {
     @Cleanup
     val indexService = new IndexService(client);
 
-    // TODO: Fix this to be tied to a run id:
-    val indexName = resolveIndexName(jobContext.getReleaseName());
-
     // Prepare
     log.info("Initializing index...");
     indexService.initializeIndex(indexName);
-
-    // Cleanup output directories
-    clean(jobContext);
 
     // Populate
     log.info("Populating index...");
@@ -136,7 +140,9 @@ public class IndexJob extends GenericJob {
     }
 
     // Generate SSM VCF file
-    jobContext.execute(new CreateVCFFileTask(snpEffProperties));
+    if (properties.isExportVCF()) {
+      jobContext.execute(new CreateVCFFileTask(snpEffProperties));
+    }
   }
 
   @SneakyThrows
@@ -163,7 +169,8 @@ public class IndexJob extends GenericJob {
   private IndexJobContext createIndexJobContext(JobContext jobContext, DocumentType documentType) {
     val indexJobBuilder = IndexJobContext.builder()
         .esUri(properties.getEsUri())
-        .indexName(resolveIndexName(jobContext.getReleaseName()));
+        .indexName(resolveIndexName(jobContext.getReleaseName()))
+        .skipIndexing(properties.isSkipIndexing());
 
     val indexJobDependencies = resolveDependencies(jobContext, documentType);
     setDependencies(indexJobBuilder, indexJobDependencies);

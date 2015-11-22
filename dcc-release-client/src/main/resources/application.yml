@@ -65,6 +65,7 @@ index:
   outputDir: /tmp
   fastaFile: "/u/dcc_dev/dcc-etl/data/genome/GRCh37.75/GRCh37.75.fasta"
   exportVCF: false
+  skipIndexing: false
 
 ---
 

@@ -98,10 +98,12 @@ public abstract class AbstractIndexTask extends GenericTask {
   }
 
   protected void writeDocOutput(TaskContext taskContext, JavaRDD<Document> processed) {
-    processed = processed.mapPartitions(
-        new WriteDocument(type, indexJobContext.getEsUri(), indexJobContext.getIndexName()));
-    val outputPath = taskContext.getPath(type.getOutputFileType());
+    if (!indexJobContext.isSkipIndexing()) {
+      processed = processed.mapPartitions(
+          new WriteDocument(type, indexJobContext.getEsUri(), indexJobContext.getIndexName()));
+    }
 
+    val outputPath = taskContext.getPath(type.getOutputFileType());
     DocumentRdds.saveAsTextObjectNodeFile(processed, outputPath);
   }
 

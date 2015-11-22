@@ -33,6 +33,7 @@ public class IndexJobContext implements Serializable {
 
   String esUri;
   String indexName;
+  boolean skipIndexing;
   Broadcast<Map<String, ObjectNode>> projectsBroadcast;
   Broadcast<Map<String, ObjectNode>> donorsBroadcast;
   Broadcast<Map<String, ObjectNode>> genesBroadcast;
