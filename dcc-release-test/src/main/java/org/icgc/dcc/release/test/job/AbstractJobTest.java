@@ -15,6 +15,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.common.core.util.stream.Collectors;
 import org.icgc.dcc.release.core.job.DefaultJobContext;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -32,6 +33,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
@@ -272,7 +274,7 @@ public abstract class AbstractJobTest {
     val actualResult = produces(fileType);
     val expectedFile = resolveExpectedFile(fileType);
     val expectedResult = TestFiles.readInputFile(expectedFile);
-    compareResults(expectedResult, actualResult);
+    compareResults(normalizeJson(expectedResult), normalizeJson(actualResult));
   }
 
   /**
@@ -282,10 +284,16 @@ public abstract class AbstractJobTest {
     val actualResult = produces(projectName, fileType);
     val expectedFile = resolveExpectedFile(projectName, fileType);
     val expectedResult = TestFiles.readInputFile(expectedFile);
-    compareResults(expectedResult, actualResult);
+    compareResults(normalizeJson(expectedResult), normalizeJson(actualResult));
   }
 
-  private static void compareResults(List<ObjectNode> expectedResult, List<ObjectNode> actualResult) {
+  private static List<JsonNode> normalizeJson(List<? extends JsonNode> expectedResult) {
+    return expectedResult.stream()
+        .map(j -> TestJsonNodes.sortFields(j))
+        .collect(Collectors.toImmutableList());
+  }
+
+  private static void compareResults(List<JsonNode> expectedResult, List<JsonNode> actualResult) {
     assertThat(actualResult).hasSameSizeAs(expectedResult);
     assertThat(actualResult).containsExactlyElementsOf(expectedResult);
   }

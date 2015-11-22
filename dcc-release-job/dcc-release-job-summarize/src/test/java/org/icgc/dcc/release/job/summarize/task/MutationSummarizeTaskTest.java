@@ -28,7 +28,7 @@ public class MutationSummarizeTaskTest extends AbstractJobTest {
 
   @Test
   public void testExecute() {
-    given(new File(TEST_FIXTURES_DIR));
+    given(new File(INPUT_TEST_FIXTURES_DIR));
     task.execute(createTaskContext(JobType.SUMMARIZE));
 
     val result = produces(FileType.MUTATION);

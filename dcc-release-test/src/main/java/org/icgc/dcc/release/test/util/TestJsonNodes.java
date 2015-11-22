@@ -23,13 +23,17 @@ import static com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_FIELD
 import static com.google.common.collect.ImmutableList.copyOf;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import lombok.SneakyThrows;
+import lombok.val;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 
 public class TestJsonNodes {
 
@@ -74,6 +78,93 @@ public class TestJsonNodes {
 
   public static List<JsonNode> getElements(JsonNode node) {
     return copyOf(node.elements());
+  }
+
+  public static JsonNode sortFields(JsonNode json) {
+    val fields = Lists.newArrayList(json.fieldNames());
+    Collections.sort(fields);
+    val result = MAPPER.createObjectNode();
+
+    for (val fieldName : fields) {
+      val value = json.get(fieldName);
+      if (value.isObject()) {
+        result.put(fieldName, sortFields(value));
+      } else if (value.isArray()) {
+        result.put(fieldName, sortArrayNode(value));
+      } else {
+        result.put(fieldName, value);
+      }
+    }
+
+    return result;
+  }
+
+  private static JsonNode sortArrayNode(JsonNode value) {
+    val elementsList = arrayToList(value);
+    Collections.sort(elementsList, new Comparator<JsonNode>() {
+
+      @Override
+      public int compare(JsonNode left, JsonNode right) {
+        val leftId = resolveIdValue(left);
+        val rightId = resolveIdValue(right);
+        return leftId.compareTo(rightId);
+      }
+    });
+
+    val result = MAPPER.createArrayNode();
+    for (val node : elementsList) {
+      result.add(sortFields(node));
+    }
+
+    return result;
+  }
+
+  private static String resolveIdValue(JsonNode json) {
+    if (!json.path("donor_id").isMissingNode()) {
+      return json.get("donor_id").textValue();
+    }
+
+    if (!json.path("_specimen_id").isMissingNode()) {
+      return json.get("_specimen_id").textValue();
+    }
+
+    if (!json.path("_sample_id").isMissingNode()) {
+      return json.get("_sample_id").textValue();
+    }
+
+    if (!json.path("_gene_id").isMissingNode()) {
+      val geneId = json.get("_gene_id").textValue();
+      val transcript = json.path("_transcript_id");
+
+      return transcript.isMissingNode() ? geneId : geneId + transcript.textValue();
+    }
+
+    if (!json.path("_mutation_id").isMissingNode()) {
+      return json.get("_mutation_id").textValue();
+    }
+
+    if (!json.path("id").isMissingNode()) {
+      return json.get("id").textValue();
+    }
+
+    if (!json.path("consequence_type").isMissingNode()) {
+      val consType = json.get("consequence_type").textValue();
+      val funcImpact = json.path("functional_impact_prediction_summary");
+
+      return funcImpact.isMissingNode() ? consType : consType + funcImpact.textValue();
+    }
+
+    return "";
+  }
+
+  private static List<JsonNode> arrayToList(JsonNode value) {
+    val result = Lists.<JsonNode> newArrayList();
+
+    for (val node : value) {
+      result.add(node);
+    }
+
+    return result;
   }
 
 }

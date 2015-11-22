@@ -10,7 +10,6 @@ import lombok.val;
 
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.job.summarize.task.GeneSetSummarizeTask;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +29,7 @@ public class GeneSetSummarizeTaskTest extends AbstractJobTest {
 
   @Test
   public void testExecute() {
-    given(new File(TEST_FIXTURES_DIR));
+    given(new File(INPUT_TEST_FIXTURES_DIR));
     task.execute(createTaskContext(JobType.SUMMARIZE));
 
     val result = produces(FileType.GENE_SET_SUMMARY);
