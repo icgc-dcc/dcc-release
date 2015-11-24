@@ -136,17 +136,24 @@ public class FeatureTypeSummarizeTask extends GenericTask {
     // @formatter:on
   }
 
+  /**
+   * Filter out occurrences that have only 'controlled' observations. If an occurrence has both 'controlled' and
+   * 'masked' it's passed downstream.
+   */
   private static Function<ObjectNode, Boolean> filterControlled() {
     return o -> {
       ArrayNode observations = o.withArray(FieldNames.LoaderFieldNames.OBSERVATION_ARRAY_NAME);
+      boolean hasControlled = false;
       for (JsonNode observation : observations) {
         Optional<Marking> marking = Observations.getMarking(observation);
         if (marking.get().isControlled()) {
-          return Boolean.FALSE;
+          hasControlled = true;
+        } else {
+          return Boolean.TRUE;
         }
       }
 
-      return Boolean.TRUE;
+      return !hasControlled;
     };
   }
 
