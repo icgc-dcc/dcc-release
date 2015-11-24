@@ -51,6 +51,7 @@ import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -66,6 +67,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 
 @RequiredArgsConstructor
 public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2<String, Tuple2<Tuple2<ObjectNode,
@@ -109,7 +111,7 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
   public ObjectNode call(Tuple2<String, Iterable<Tuple2<String, Tuple2<Tuple2<ObjectNode,
       Optional<Iterable<ObjectNode>>>, ObjectNode>>>> tuple) throws Exception {
     ObjectNode occurrence = null;
-    ArrayNode consequences = null;
+    val consequences = Sets.<JsonNode> newHashSet();
     val observations = createObservations();
 
     val ssms = tuple._2;
@@ -127,14 +129,11 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
       observations.add(observation);
 
       val secondaries = ssm._2._1._2;
-      if (consequences == null) {
-        consequences = createConsequences(secondaries);
-      } else {
-        appendConsequences(consequences, secondaries);
-      }
+      consequences.addAll(createConsequences(secondaries));
     }
 
-    occurrence.put(CONSEQUENCE_ARRAY_NAME, consequences);
+    val consequenceArray = occurrence.withArray(CONSEQUENCE_ARRAY_NAME);
+    consequenceArray.addAll(consequences);
     occurrence.put(OBSERVATION_ARRAY_NAME, observations);
 
     return occurrence;
@@ -178,8 +177,8 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
     return observation.remove(OBSERVATION_REMOVE_FIELDS);
   }
 
-  private static ArrayNode createConsequences(Optional<Iterable<ObjectNode>> secondaries) {
-    val consequences = MAPPER.createArrayNode();
+  private static Set<JsonNode> createConsequences(Optional<Iterable<ObjectNode>> secondaries) {
+    val consequences = Sets.<JsonNode> newHashSet();
     if (secondaries.isPresent()) {
       for (val secondary : secondaries.get()) {
         enrichConsequenceFields(secondary);
