@@ -15,7 +15,7 @@
     <File>${log.dir}/${log.name}.log</File>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <FileNamePattern>${log.name}.%d{yyyy-MM-dd}.%d{HHmmss,aux}.log</FileNamePattern>
-      <timeBasedFileNamingAndTriggeringPolicy class="org.icgc.dcc.release.workflow.util.CustomStartupTriggeringPolicy"></timeBasedFileNamingAndTriggeringPolicy>
+      <timeBasedFileNamingAndTriggeringPolicy class="org.icgc.dcc.release.client.util.CustomStartupTriggeringPolicy"></timeBasedFileNamingAndTriggeringPolicy>
     </rollingPolicy>
     <encoder>
       <pattern>${pattern}</pattern>
@@ -26,7 +26,7 @@
     <File>${log.dir}/${log.debug.name}.log</File>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <FileNamePattern>${log.debug.name}.%d{yyyy-MM-dd}.%d{HHmmss,aux}.log</FileNamePattern>
-      <timeBasedFileNamingAndTriggeringPolicy class="org.icgc.dcc.release.workflow.util.CustomStartupTriggeringPolicy"></timeBasedFileNamingAndTriggeringPolicy>
+      <timeBasedFileNamingAndTriggeringPolicy class="org.icgc.dcc.release.client.util.CustomStartupTriggeringPolicy"></timeBasedFileNamingAndTriggeringPolicy>
     </rollingPolicy>
     <encoder>
       <pattern>${pattern}</pattern>

@@ -27,8 +27,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
 import static org.icgc.dcc.release.core.function.Unwind.unwindToParent;
 import static org.icgc.dcc.release.core.job.FileType.CLINICAL;
-import static org.icgc.dcc.release.core.job.FileType.DONOR_GENE_OBSERVATION_SUMMARY;
-import static org.icgc.dcc.release.core.job.FileType.OBSERVATION;
+import static org.icgc.dcc.release.core.job.FileType.OBSERVATION_FI;
 import static org.icgc.dcc.release.core.util.ObjectNodes.mergeObjects;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;
@@ -46,6 +45,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.function.RetainFields;
+import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.summarize.function.CreateDonorGenesSummary;
@@ -80,7 +80,7 @@ public class DonorSummarizeTask extends GenericTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    val outputFileType = DONOR_GENE_OBSERVATION_SUMMARY;
+    val outputFileType = FileType.DONOR_SUMMARY;
 
     val projectName = resolveProjectName(taskContext);
     val summary = createDonorSummary(taskContext)
@@ -100,7 +100,7 @@ public class DonorSummarizeTask extends GenericTask {
   }
 
   private Function<ObjectNode, Boolean> filterLiveDonors() {
-    return o -> o.get(DONOR_SUMMARY).get(DONOR_SUMMARY_STATE).equals("live");
+    return o -> o.get(DONOR_SUMMARY).get(DONOR_SUMMARY_STATE).textValue().equals("live");
   }
 
   private long countDonors() {
@@ -154,7 +154,7 @@ public class DonorSummarizeTask extends GenericTask {
   }
 
   private JavaRDD<ObjectNode> readObservation(TaskContext taskContext) {
-    return readInput(taskContext, OBSERVATION);
+    return readInput(taskContext, OBSERVATION_FI);
   }
 
   private JavaRDD<ObjectNode> readClinical(TaskContext taskContext) {

@@ -21,16 +21,31 @@ import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
 import lombok.NonNull;
 import lombok.val;
 
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.job.index.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.core.DocumentContext;
 import org.icgc.dcc.release.job.index.core.DocumentTransform;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
+import org.icgc.dcc.release.job.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * {@link DocumentTransform} implementation that creates a gene document.
  */
-public class GeneTextDocumentTransform implements DocumentTransform {
+public class GeneTextDocumentTransform implements DocumentTransform, Function<ObjectNode, Document> {
+
+  private final DocumentContext documentContext;
+
+  public GeneTextDocumentTransform(IndexJobContext indexJobContext) {
+    this.documentContext = new DefaultDocumentContext(DocumentType.GENE_TEXT_TYPE, indexJobContext);
+  }
+
+  @Override
+  public Document call(ObjectNode gene) throws Exception {
+    return transformDocument(gene, documentContext);
+  }
 
   @Override
   public Document transformDocument(@NonNull ObjectNode gene, @NonNull DocumentContext context) {

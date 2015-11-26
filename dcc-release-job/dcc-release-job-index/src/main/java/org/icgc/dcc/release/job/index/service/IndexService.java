@@ -61,7 +61,7 @@ public class IndexService implements Closeable {
   /**
    * Mapping / index files base path.
    */
-  private static final String ES_CONFIG_BASE_PATH = "org/icgc/dcc/etl/indexer";
+  private static final String ES_CONFIG_BASE_PATH = "org/icgc/dcc/etl/resources/mappings";
 
   /**
    * Dependencies.

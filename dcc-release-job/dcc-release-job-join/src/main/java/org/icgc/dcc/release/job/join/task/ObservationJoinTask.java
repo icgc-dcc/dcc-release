@@ -17,10 +17,12 @@
  */
 package org.icgc.dcc.release.job.join.task;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 import static org.icgc.dcc.release.job.join.utils.Tasks.resolveDonorSamples;
 
+import java.util.List;
 import java.util.Map;
 
 import lombok.NonNull;
@@ -29,12 +31,15 @@ import lombok.val;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.common.core.model.Marking;
 import org.icgc.dcc.release.core.function.CombineFields;
 import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.util.Observations;
 import org.icgc.dcc.release.job.join.function.CreateOccurrence;
 import org.icgc.dcc.release.job.join.function.KeyAnalysisIdAnalyzedSampleIdField;
 import org.icgc.dcc.release.job.join.function.KeyDonorMutataionId;
@@ -44,6 +49,7 @@ import org.icgc.dcc.release.job.join.model.DonorSample;
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 
 @RequiredArgsConstructor
 public class ObservationJoinTask extends GenericTask {
@@ -51,28 +57,66 @@ public class ObservationJoinTask extends GenericTask {
   @NonNull
   private final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesBroadcast;
   @NonNull
-  Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIdsBroadcast;
+  private final Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIdsBroadcast;
+  @NonNull
+  private final List<String> controlledFields;
 
   @Override
   public void execute(TaskContext taskContext) {
-    val outputFileType = FileType.OBSERVATION;
-
     val donorSamples = resolveDonorSamples(taskContext, donorSamplesBroadcast);
-    val sampleSurrogageSampleIds = getSampleSurrogateSampleIds(taskContext, sampleSurrogateSampleIdsBroadcast);
+    val sampleToSurrogageSampleId = getSampleSurrogateSampleIds(taskContext, sampleSurrogateSampleIdsBroadcast);
 
     val ssmM = parseSsmM(taskContext);
+    ssmM.cache();
     val ssmP = parseSsmP(taskContext);
+    ssmP.cache();
     val ssmS = parseSsmS(taskContext);
+    ssmS.cache();
 
-    val output = joinSsm(ssmM, ssmP, ssmS, donorSamples, sampleSurrogageSampleIds);
+    // Create SSM
+    val ssm = joinSsm(ssmM, ssmP, ssmS, donorSamples, sampleToSurrogageSampleId);
+    writeSsm(taskContext, ssm);
 
-    output.cache();
-    writeOutput(taskContext, output, outputFileType);
-    writeSsmOutput(taskContext, output);
+    // Create Observations
+    val ssmPOpen = filterControlledData(ssmP, controlledFields);
+    val observations = joinSsm(ssmM, ssmPOpen, ssmS, donorSamples, sampleToSurrogageSampleId);
+    writeObservation(taskContext, observations);
+
+    ssmM.unpersist();
+    ssmP.unpersist();
+    ssmS.unpersist();
   }
 
-  private void writeSsmOutput(TaskContext taskContext, JavaRDD<ObjectNode> output) {
+  private JavaRDD<ObjectNode> filterControlledData(JavaRDD<ObjectNode> ssmP, List<String> controlledFields) {
+    return ssmP
+        .filter(filterControlledRecords())
+        .map(removeControlledFields(controlledFields));
+  }
+
+  private static Function<ObjectNode, ObjectNode> removeControlledFields(List<String> controlledFields) {
+    return row -> {
+      row.remove(controlledFields);
+
+      return row;
+    };
+  }
+
+  private static Function<ObjectNode, Boolean> filterControlledRecords() {
+    return row -> {
+      Optional<Marking> marking = Observations.getMarking(row);
+      checkState(marking.isPresent(), "Failed to resolve marking from {}", row);
+
+      return !marking.get().isControlled();
+    };
+  }
+
+  private void writeSsm(TaskContext taskContext, JavaRDD<ObjectNode> output) {
     val outputFileType = FileType.SSM;
+    writeOutput(taskContext, output, outputFileType);
+  }
+
+  private void writeObservation(TaskContext taskContext, JavaRDD<ObjectNode> output) {
+    val outputFileType = FileType.OBSERVATION;
     writeOutput(taskContext, output, outputFileType);
   }
 
@@ -91,7 +135,6 @@ public class ObservationJoinTask extends GenericTask {
   private static JavaRDD<ObjectNode> joinSsm(JavaRDD<ObjectNode> ssmM, JavaRDD<ObjectNode> ssmP,
       JavaRDD<ObjectNode> ssmS, Map<String, DonorSample> donorSamples, Map<String, String> sampleSurrogageSampleIds) {
     val ssmPrimarySecondary = joinSsmPrimarySecondary(ssmP, ssmS);
-
     val observations = ssmPrimarySecondary
         .mapToPair(new PairAnalysisIdSampleId())
         .join(ssmM
@@ -102,11 +145,11 @@ public class ObservationJoinTask extends GenericTask {
     return donorMutationObservations.map(new CreateOccurrence(donorSamples, sampleSurrogageSampleIds));
   }
 
-  private static JavaPairRDD<String, Tuple2<ObjectNode, Iterable<ObjectNode>>> joinSsmPrimarySecondary(
+  private static JavaPairRDD<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> joinSsmPrimarySecondary(
       JavaRDD<ObjectNode> ssmP, JavaRDD<ObjectNode> ssmS) {
     return ssmP
         .mapToPair(new KeyFields(NORMALIZER_OBSERVATION_ID))
-        .join(
+        .leftOuterJoin(
             ssmS.groupBy(new CombineFields(NORMALIZER_OBSERVATION_ID)));
   }
 

@@ -1,5 +1,6 @@
 package org.icgc.dcc.release.test.job;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
@@ -14,6 +15,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.common.core.util.stream.Collectors;
 import org.icgc.dcc.release.core.job.DefaultJobContext;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -31,6 +33,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
@@ -42,7 +45,9 @@ public abstract class AbstractJobTest {
    * Constants.
    */
   protected static final String TEST_FIXTURES_DIR = "src/test/resources/fixtures";
-  private static final String RELEASE_VERSION = "ICGC19-0-2";
+  protected static final String INPUT_TEST_FIXTURES_DIR = TEST_FIXTURES_DIR + "/input";
+  protected static final String OUTPUT_TEST_FIXTURES_DIR = TEST_FIXTURES_DIR + "/output";
+  protected static final String RELEASE_VERSION = "ICGC19-0-2";
 
   /**
    * Collaborators.
@@ -160,15 +165,15 @@ public abstract class AbstractJobTest {
   @SuppressWarnings("unchecked")
   protected JobContext createJobContext(JobType type, List<String> projectNames) {
     return new DefaultJobContext(type, RELEASE_VERSION, projectNames, "/dev/null",
-        workingDir.toString(), mock(Table.class), taskExecutor);
+        workingDir.toString(), mock(Table.class), taskExecutor, false);
   }
 
   protected TaskContext createTaskContext(JobType jobType) {
-    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.empty());
+    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.empty(), false);
   }
 
   protected TaskContext createTaskContext(JobType jobType, String projectName) {
-    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.of(projectName));
+    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.of(projectName), false);
   }
 
   protected void createInputFile(TestFile inputFile) {
@@ -260,6 +265,49 @@ public abstract class AbstractJobTest {
 
   protected String resolvePath(String fileName) {
     return new File(TEST_FIXTURES_DIR + "/" + fileName).getAbsolutePath();
+  }
+
+  /**
+   * Compares actual output with output located in {@link OUTPUT_TEST_FIXTURES_DIR}.
+   */
+  protected void verifyResult(FileType fileType) {
+    val actualResult = produces(fileType);
+    val expectedFile = resolveExpectedFile(fileType);
+    val expectedResult = TestFiles.readInputFile(expectedFile);
+    compareResults(normalizeJson(expectedResult), normalizeJson(actualResult));
+  }
+
+  /**
+   * Compares actual output with output located in {@link OUTPUT_TEST_FIXTURES_DIR}.
+   */
+  protected void verifyResult(String projectName, FileType fileType) {
+    val actualResult = produces(projectName, fileType);
+    val expectedFile = resolveExpectedFile(projectName, fileType);
+    val expectedResult = TestFiles.readInputFile(expectedFile);
+    compareResults(normalizeJson(expectedResult), normalizeJson(actualResult));
+  }
+
+  private static List<JsonNode> normalizeJson(List<? extends JsonNode> expectedResult) {
+    return expectedResult.stream()
+        .map(j -> TestJsonNodes.sortFields(j))
+        .collect(Collectors.toImmutableList());
+  }
+
+  private static void compareResults(List<JsonNode> expectedResult, List<JsonNode> actualResult) {
+    assertThat(actualResult).hasSameSizeAs(expectedResult);
+    assertThat(actualResult).containsExactlyElementsOf(expectedResult);
+  }
+
+  private static File resolveExpectedFile(FileType fileType) {
+    return resolveExpectedFile(null, fileType);
+  }
+
+  private static File resolveExpectedFile(String projectName, FileType fileType) {
+    val parentDir = projectName == null ?
+        new File(OUTPUT_TEST_FIXTURES_DIR) :
+        new File(OUTPUT_TEST_FIXTURES_DIR, Partitions.getPartitionName(projectName));
+
+    return new File(parentDir, fileType.getDirName());
   }
 
 }

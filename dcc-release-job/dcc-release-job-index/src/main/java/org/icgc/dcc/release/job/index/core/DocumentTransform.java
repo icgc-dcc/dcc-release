@@ -17,12 +17,14 @@
  */
 package org.icgc.dcc.release.job.index.core;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Contract for document creation given a supplied root and surrounding context.
  */
-public interface DocumentTransform {
+public interface DocumentTransform extends Serializable {
 
   /**
    * Creates an output document given an input {@code root} and {@code context}.

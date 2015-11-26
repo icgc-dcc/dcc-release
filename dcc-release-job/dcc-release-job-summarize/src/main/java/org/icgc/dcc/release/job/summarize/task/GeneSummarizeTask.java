@@ -18,7 +18,6 @@
 package org.icgc.dcc.release.job.summarize.task;
 
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
-import static org.icgc.dcc.release.core.util.ObjectNodes.mergeObjects;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -31,6 +30,7 @@ import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.job.summarize.function.CreateGeneSummary;
+import org.icgc.dcc.release.job.summarize.function.MergeGeneGeneSummary;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -52,8 +52,8 @@ public class GeneSummarizeTask extends GenericTask {
     val genes = readGenes(taskContext);
 
     val output = genes
-        .join(geneStats)
-        .map(t -> mergeObjects(t._2._1, t._2._2));
+        .leftOuterJoin(geneStats)
+        .map(new MergeGeneGeneSummary());
     writeOutput(taskContext, output, FileType.GENE_SUMMARY);
   }
 

@@ -20,9 +20,12 @@ package org.icgc.dcc.release.job.index.transform;
 import lombok.NonNull;
 import lombok.val;
 
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.job.index.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.core.DocumentContext;
 import org.icgc.dcc.release.job.index.core.DocumentTransform;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
 import org.icgc.dcc.release.job.index.model.DocumentClassifier;
 import org.icgc.dcc.release.job.index.model.DocumentType;
 
@@ -34,7 +37,18 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * <p>
  * Intended to be used with {@link DocumentClassifier#BASIC} document types.
  */
-public class BasicDocumentTransform implements DocumentTransform {
+public class BasicDocumentTransform implements DocumentTransform, Function<ObjectNode, Document> {
+
+  private final DocumentContext documentContext;
+
+  public BasicDocumentTransform(DocumentType type) {
+    this.documentContext = new DefaultDocumentContext(type, IndexJobContext.builder().build());
+  }
+
+  @Override
+  public Document call(ObjectNode root) throws Exception {
+    return transformDocument(root, documentContext);
+  }
 
   @Override
   public Document transformDocument(@NonNull ObjectNode root, @NonNull DocumentContext context) {

@@ -37,7 +37,6 @@ public enum JobType {
   INDEX,
   JOIN,
   MASK,
-  ORPHAN,
   STAGE,
   SUMMARIZE;
 
@@ -47,16 +46,14 @@ public enum JobType {
         JobType.MASK,
         JobType.ID,
         JobType.IMAGE,
-        // This was removed in release ICGC19 (DCC-3506)
-        JobType.ORPHAN,
         JobType.ANNOTATE,
         JobType.JOIN,
+        JobType.IMPORT,
         JobType.FATHMM,
         JobType.FI,
-        JobType.IMPORT,
-        JobType.EXPORT,
         JobType.SUMMARIZE,
-        JobType.INDEX
+        JobType.INDEX,
+        JobType.EXPORT
         );
 
     checkState(order.size() == values().length);

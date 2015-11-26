@@ -32,7 +32,6 @@ import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS_GEN
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY;
-import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCE_TYPES;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_IS_ANNOTATED;
@@ -61,16 +60,23 @@ import java.util.List;
 import java.util.TreeMap;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
+import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.BusinessKeys;
+import org.icgc.dcc.release.job.index.context.MutationCentricDocumentContext;
 import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.core.DocumentCallback;
 import org.icgc.dcc.release.job.index.core.DocumentContext;
 import org.icgc.dcc.release.job.index.core.DocumentTransform;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
 import org.icgc.dcc.release.job.index.util.Fakes;
 
+import scala.Tuple2;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 
 /**
@@ -115,9 +121,23 @@ import com.google.common.collect.Maps;
  * }
  * </pre>
  */
-public class MutationCentricDocumentTransform extends AbstractCentricDocumentTransform {
+@RequiredArgsConstructor
+public class MutationCentricDocumentTransform extends AbstractCentricDocumentTransform implements
+    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> {
 
+  @NonNull
+  private final IndexJobContext indexJobContext;
   private static DocumentCallback SUMMARY_CALLBACK = new MutationCentricSummaryCallback();
+
+  @Override
+  public Document call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
+    val mutation = tuple._2._1;
+    val observations = tuple._2._2;
+    val mutationId = getMutationId(mutation);
+    val documentContext = new MutationCentricDocumentContext(mutationId, indexJobContext, observations);
+
+    return transformDocument(mutation, documentContext);
+  }
 
   @Override
   public Document transformDocument(@NonNull ObjectNode mutation, @NonNull DocumentContext context) {
@@ -261,7 +281,6 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     List<String> migratedFields =
         newArrayList(
             OBSERVATION_MUTATION_ID,
-            OBSERVATION_CONSEQUENCE_TYPES,
             OBSERVATION_CONSEQUENCES,
             OBSERVATION_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY,
             OBSERVATION_IS_ANNOTATED);

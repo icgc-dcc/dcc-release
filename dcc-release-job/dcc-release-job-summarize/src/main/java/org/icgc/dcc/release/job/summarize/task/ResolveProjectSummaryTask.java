@@ -20,11 +20,12 @@ package org.icgc.dcc.release.job.summarize.task;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_DATA_TYPES;
 import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_EXPERIMENTAL_ANALYSIS_PERFORMED;
+import static org.icgc.dcc.common.core.model.FieldNames.EXPERIMENTAL_ANALYSIS_PERFORMED_DONOR_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.EXPERIMENTAL_ANALYSIS_PERFORMED_SAMPLE_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.getTestedTypeCountFieldName;
-import static org.icgc.dcc.common.core.util.Jackson.asArrayNode;
-import static org.icgc.dcc.common.core.util.Jackson.from;
-import static org.icgc.dcc.common.core.util.Jackson.to;
+import static org.icgc.dcc.common.json.Jackson.asArrayNode;
+import static org.icgc.dcc.common.json.Jackson.from;
+import static org.icgc.dcc.common.json.Jackson.to;
 import static org.icgc.dcc.release.core.util.FeatureTypes.getFeatureTypes;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;
@@ -138,6 +139,7 @@ public class ResolveProjectSummaryTask extends GenericTask {
         .reduceByKey((a, b) -> a + b)
         .collectAsMap();
 
+    projectSummary.putPOJO(EXPERIMENTAL_ANALYSIS_PERFORMED_DONOR_COUNT, to(donorLibraryStrategyCounts.build()));
     projectSummary.putPOJO(AVAILABLE_EXPERIMENTAL_ANALYSIS_PERFORMED, to(uniqueLibStrategies));
     projectSummary.put(EXPERIMENTAL_ANALYSIS_PERFORMED_SAMPLE_COUNT, to(sampleLibraryStrategyCounts));
 
@@ -215,13 +217,13 @@ public class ResolveProjectSummaryTask extends GenericTask {
   }
 
   private JavaRDD<ObjectNode> readDonorSummary(TaskContext taskContext) {
-    return readInput(taskContext, FileType.DONOR_GENE_OBSERVATION_SUMMARY)
+    return readInput(taskContext, FileType.DONOR_SUMMARY)
         .map(new RetainFields(FieldNames.DONOR_SUMMARY))
         .map(new PullUpField(FieldNames.DONOR_SUMMARY));
   }
 
   private JavaRDD<ObjectNode> readDonors(TaskContext taskContext) {
-    return readInput(taskContext, FileType.DONOR_GENE_OBSERVATION_SUMMARY);
+    return readInput(taskContext, FileType.DONOR_SUMMARY);
   }
 
 }

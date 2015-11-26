@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.core.util;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import lombok.val;
 import lombok.experimental.UtilityClass;
@@ -30,6 +31,7 @@ import com.google.common.collect.Lists;
 public class Keys {
 
   public static final String KEY_SEPARATOR = "#";
+  public static final String NULL_KEY = "NULL_KEY";
 
   private static final Joiner KEY_JOINER = Joiner.on(KEY_SEPARATOR);
 
@@ -37,6 +39,12 @@ public class Keys {
     val values = Lists.<String> newArrayListWithCapacity(fieldNames.length);
     for (val fieldName : fieldNames) {
       val value = textValue(row, fieldName);
+      // Null keys might come for the 'surgery' and 'biomarker' datatype.
+      // FIXME: https://jira.oicr.on.ca/browse/DCC-3956
+      if (isNullOrEmpty(value)) {
+        values.add(NULL_KEY);
+        continue;
+      }
 
       values.add(value);
     }

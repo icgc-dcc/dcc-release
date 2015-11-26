@@ -18,21 +18,24 @@
 package org.icgc.dcc.release.job.index.model;
 
 import static org.icgc.dcc.release.job.index.model.DocumentFields.DEFAULT_DOCUMENT_FIELDS;
+
+import java.util.Collection;
+import java.util.Collections;
+
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import org.icgc.dcc.common.core.model.Entity;
 import org.icgc.dcc.common.core.model.ReleaseCollection;
-import org.icgc.dcc.release.job.index.core.DocumentTransform;
-import org.icgc.dcc.release.job.index.transform.BasicDocumentTransform;
+import org.icgc.dcc.release.core.job.FileType;
 
 @Setter
 @Accessors(fluent = true, chain = true)
 class DocumentTypeAttributes {
 
+  private static final Collection<BroadcastType> DEFAULT_BROADCASTS = Collections.emptyList();
   private final static DocumentClassifier DEFAULT_CLASSIFIER = DocumentClassifier.BASIC;
-  private final static DocumentTransform DEFAULT_TRANSFORM = new BasicDocumentTransform();
   private final static int DEFAULT_BATCH_SIZE = 1;
   private final static int DEFAULT_STATUS_INTERVAL = 1000;
 
@@ -45,7 +48,11 @@ class DocumentTypeAttributes {
   @NonNull
   DocumentClassifier classifier = DEFAULT_CLASSIFIER;
   @NonNull
-  DocumentTransform transform = DEFAULT_TRANSFORM;
+  String indexClassName;
+  @NonNull
+  FileType outputFileType;
+  @NonNull
+  Collection<BroadcastType> broadcastDependencies = DEFAULT_BROADCASTS;
   @NonNull
   DocumentFields fields = DEFAULT_DOCUMENT_FIELDS;
   int batchSize = DEFAULT_BATCH_SIZE;

@@ -1,6 +1,6 @@
 ---
 #
-# DCC ETL2 Workflow - Configuration
+# DCC Release Workflow - Configuration
 #
 
 ###################################################################################################
@@ -12,8 +12,10 @@ dcc:
    submission:
       url: http://***REMOVED***/ws
       dictionaryVersion: 0.11c
-   identifier:
-      url: http://hcache-dcc.oicr.on.ca:5391
+   id:
+      url: https://id.icgc.org
+      token:
+      requestLoggingEnabled: false
 
 # SnpEff
 snpeff:
@@ -54,7 +56,7 @@ postgres:
 mail:
    recipients: ***REMOVED***
    properties:
-      mail.smtp.host: smtp.oicr.on.ca
+      mail.smtp.host: ***REMOVED***
       mail.smtp.from: no-reply@oicr.on.ca
 
 index:
@@ -63,6 +65,7 @@ index:
   outputDir: /tmp
   fastaFile: "/u/dcc_dev/dcc-etl/data/genome/GRCh37.75/GRCh37.75.fasta"
   exportVCF: false
+  skipIndexing: false
 
 ---
 
@@ -70,10 +73,6 @@ index:
 # Production
 ###################################################################################################
 
-# DCC
-dcc:
-   identifier:
-      token: <INSERT_TOKEN_HERE>
 # Workflow
 workflow:
    parallel: true

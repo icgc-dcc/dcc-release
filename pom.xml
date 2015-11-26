@@ -131,6 +131,12 @@
         <artifactId>spring-boot</artifactId>
         <version>${spring-boot.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-test</artifactId>
+        <version>${spring.version}</version>
+        <scope>test</scope>
+      </dependency>
 
       <!-- Hadoop -->
       <dependency>
@@ -218,6 +224,13 @@
         </exclusions>
       </dependency>
 
+      <!-- Utilities -->
+      <dependency>
+        <groupId>com.google.code.externalsortinginjava</groupId>
+        <artifactId>externalsortinginjava</artifactId>
+        <version>${externalsort.version}</version>
+      </dependency>
+
       <!-- Database -->
       <dependency>
         <groupId>org.jdbi</groupId>
@@ -301,20 +314,21 @@
     <!-- Testing - DCC -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>dcc-resources</artifactId>
+      <artifactId>dcc-etl-resources</artifactId>
+      <version>${dcc-etl.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <properties>
     <!-- Versions - DCC -->
-    <dcc-common.version>3.8.11.0</dcc-common.version>
+    <dcc-common.version>3.8.18.0</dcc-common.version>
 
     <!-- Versions - DCC ETL -->
-    <dcc-etl.version>3.8.9.2</dcc-etl.version>
+    <dcc-etl.version>3.8.19</dcc-etl.version>
 
     <!-- Versions - DCC ID -->
-    <dcc-id.version>0.0.10</dcc-id.version>
+    <dcc-id.version>0.0.17</dcc-id.version>
 
     <!-- Versions - Spring -->
     <spring.version>4.0.8.RELEASE</spring.version>
@@ -332,6 +346,9 @@
 
     <!-- Versions - DB -->
     <jdbi.version>2.53</jdbi.version>
+
+    <!-- Versions - Utils -->
+    <externalsort.version>0.1.9</externalsort.version>
   </properties>
 
 </project>

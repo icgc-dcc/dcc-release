@@ -59,4 +59,9 @@ public class IndexProperties implements Serializable {
    */
   boolean exportVCF;
 
+  /**
+   * Whether to index data into Elasticsearch.
+   */
+  boolean skipIndexing;
+
 }

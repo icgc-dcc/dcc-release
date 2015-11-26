@@ -24,8 +24,8 @@ import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENES;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENE_GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENE_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_AFFECTED_GENE_COUNT;
-import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static org.icgc.dcc.common.json.Jackson.DEFAULT;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 

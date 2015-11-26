@@ -22,22 +22,29 @@ import static java.util.Collections.emptyList;
 import static org.icgc.dcc.common.core.util.Splitters.COMMA;
 import static org.icgc.dcc.release.core.job.FileType.CLINICAL;
 import static org.icgc.dcc.release.core.job.FileType.OBSERVATION;
+import static org.icgc.dcc.release.core.job.FileType.SSM_P;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.common.core.util.Joiners;
+import org.icgc.dcc.common.core.util.stream.Collectors;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
+import org.icgc.dcc.release.core.submission.SubmissionFileField;
+import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
 import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 import org.icgc.dcc.release.job.join.task.ClinicalJoinTask;
@@ -49,6 +56,7 @@ import org.icgc.dcc.release.job.join.task.ResolveRawSequenceDataTask;
 import org.icgc.dcc.release.job.join.task.ResolveSampleSurrogateSampleIds;
 import org.icgc.dcc.release.job.join.task.SecondaryJoinTask;
 import org.icgc.dcc.release.job.join.task.SgvJoinTask;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableList;
@@ -59,7 +67,14 @@ import com.google.common.collect.Sets;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class JoinJob extends GenericJob {
+
+  /**
+   * Metadata.
+   */
+  @NonNull
+  private final SubmissionFileSchemas schemas;
 
   private static final Set<FileType> ANALYSIS_FILE_TYPES = ImmutableSet.of(
       FileType.MIRNA_SEQ,
@@ -122,7 +137,7 @@ public class JoinJob extends GenericJob {
     delete(jobContext, getDeleteFileTypes());
   }
 
-  private static void join(JobContext jobContext) {
+  private void join(JobContext jobContext) {
     val resolveRawSequenceDataTask = new ResolveRawSequenceDataTask();
     jobContext.execute(resolveRawSequenceDataTask);
     val rawSequenceDataBroadcast = resolveRawSequenceDataTask.getRawSequenceDataBroadcast();
@@ -145,7 +160,7 @@ public class JoinJob extends GenericJob {
     jobContext.execute(tasks);
   }
 
-  private static List<Task> createTasks(JobContext jobContext, List<FileType> executeFileTypes,
+  private List<Task> createTasks(JobContext jobContext, List<FileType> executeFileTypes,
       ResolveSampleSurrogateSampleIds resolveSampleIds,
       Broadcast<Map<String, Map<String, DonorSample>>> donorSamples) {
     val tasks = ImmutableList.<Task> builder();
@@ -168,17 +183,33 @@ public class JoinJob extends GenericJob {
     return tasks.build();
   }
 
-  private static Task createSecondaryTask(FileType executeFileType,
+  private Task createSecondaryTask(FileType executeFileType,
       Broadcast<Map<String, Map<String, DonorSample>>> donorSamples,
       Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIds) {
     switch (executeFileType) {
     case SSM_P:
-      return new ObservationJoinTask(donorSamples, sampleSurrogateSampleIds);
+      return new ObservationJoinTask(donorSamples, sampleSurrogateSampleIds, resolveControlledFields());
     case SGV_P:
       return new SgvJoinTask(donorSamples, sampleSurrogateSampleIds);
     default:
       return new SecondaryJoinTask(donorSamples, sampleSurrogateSampleIds, executeFileType);
     }
+  }
+
+  private List<String> resolveControlledFields() {
+    val schema = schemas.get(SSM_P.getId());
+
+    return schema.getFields().stream()
+        .filter(filterControlledFields())
+        .map(field -> field.getName())
+        .collect(Collectors.toImmutableList());
+  }
+
+  private static Predicate<? super SubmissionFileField> filterControlledFields() {
+    return field -> field.isControlled()
+        // This field is excluded from 'controlled' because an observation is created from a 'MASKED' ssm_p
+        // which has 'mutated_from_allele' field masked
+        && !field.getName().equals(FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE);
   }
 
   private static Task createPrimaryTask(FileType executeFileType,

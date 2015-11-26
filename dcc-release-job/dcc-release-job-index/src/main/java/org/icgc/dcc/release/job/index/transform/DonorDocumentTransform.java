@@ -23,16 +23,31 @@ import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.setD
 import lombok.NonNull;
 import lombok.val;
 
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.job.index.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.core.DocumentContext;
 import org.icgc.dcc.release.job.index.core.DocumentTransform;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
+import org.icgc.dcc.release.job.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * {@link DocumentTransform} implementation that creates a donor document.
  */
-public class DonorDocumentTransform implements DocumentTransform {
+public class DonorDocumentTransform implements DocumentTransform, Function<ObjectNode, Document> {
+
+  private DocumentContext documentContext;
+
+  public DonorDocumentTransform(IndexJobContext indexJobContext) {
+    documentContext = new DefaultDocumentContext(DocumentType.DONOR_TYPE, indexJobContext);
+  }
+
+  @Override
+  public Document call(ObjectNode donor) throws Exception {
+    return transformDocument(donor, documentContext);
+  }
 
   @Override
   public Document transformDocument(@NonNull ObjectNode donor, @NonNull DocumentContext context) {

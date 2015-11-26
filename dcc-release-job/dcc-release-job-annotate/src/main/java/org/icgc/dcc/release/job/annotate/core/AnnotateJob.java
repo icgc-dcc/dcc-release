@@ -21,11 +21,11 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
+import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.job.annotate.config.SnpEffProperties;
 import org.icgc.dcc.release.job.annotate.task.AnnotationTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -37,7 +37,6 @@ public class AnnotateJob extends GenericJob {
   /**
    * Constants.
    */
-  // TODO: Confirm input time are SSM_P and SGV_P or SSM_P_MASKED and SGV_P_MASKED ?
   public static final FileType SSM_INPUT_TYPE = FileType.SSM_P_MASKED;
   public static final FileType SGV_INPUT_TYPE = FileType.SGV_P_MASKED;
 

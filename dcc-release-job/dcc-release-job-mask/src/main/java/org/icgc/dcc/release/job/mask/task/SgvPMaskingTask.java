@@ -32,6 +32,7 @@ public class SgvPMaskingTask extends GenericProcessTask {
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
+    // TODO: Check how the observation_id is used. Possibly remove
     return input
         .map(new AddSurrogateObservationId());
   }

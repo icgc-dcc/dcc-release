@@ -24,6 +24,12 @@ import org.icgc.dcc.release.core.task.GenericProcessTask;
 public abstract class AddSurrogateIdTask extends GenericProcessTask {
 
   /**
+   * Constants.
+   */
+  @SuppressWarnings("unused")
+  private static final long MAX_INPUT_FILE_SIZE_MB = 32L;
+
+  /**
    * Configuration.
    */
   protected final IdClientFactory idClientFactory;
@@ -32,5 +38,13 @@ public abstract class AddSurrogateIdTask extends GenericProcessTask {
     super(inputFileType, outputFileType);
     this.idClientFactory = idClientFactory;
   }
+
+  // TODO: Implement combine/split sequence file and uncomment
+  // @Override
+  // protected JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
+  // val conf = createJobConf(taskContext);
+  //
+  // return readInput(taskContext, conf, inputFileType, MAX_INPUT_FILE_SIZE_MB);
+  // }
 
 }

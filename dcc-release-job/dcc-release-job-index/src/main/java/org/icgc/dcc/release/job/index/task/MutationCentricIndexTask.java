@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.index.task;
 
+import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getMutationId;
 import static org.icgc.dcc.release.job.index.model.CollectionFieldAccessors.getObservationMutationId;
 import lombok.val;
@@ -24,15 +25,20 @@ import lombok.val;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
-import org.icgc.dcc.release.job.index.function.MutationCentricRowTransform;
+import org.icgc.dcc.release.job.index.core.Document;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
 import org.icgc.dcc.release.job.index.model.DocumentType;
+import org.icgc.dcc.release.job.index.transform.MutationCentricDocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class MutationCentricIndexTask extends IndexTask {
+public class MutationCentricIndexTask extends AbstractIndexTask {
 
-  public MutationCentricIndexTask() {
-    super(DocumentType.MUTATION_CENTRIC_TYPE);
+  private final IndexJobContext indexJobContext;
+
+  public MutationCentricIndexTask(IndexJobContext indexJobContext) {
+    super(DocumentType.MUTATION_CENTRIC_TYPE, indexJobContext);
+    this.indexJobContext = indexJobContext;
   }
 
   @Override
@@ -45,26 +51,18 @@ public class MutationCentricIndexTask extends IndexTask {
     val mutations = readMutations(taskContext);
     val observations = readObservations(taskContext);
 
-    val output = transform(taskContext, mutations, observations);
-    writeOutput(output);
+    val output = transform(mutations, observations);
+    writeDocOutput(taskContext, output);
   }
 
-  private JavaRDD<ObjectNode> transform(TaskContext taskContext,
-      JavaRDD<ObjectNode> mutations, JavaRDD<ObjectNode> observations) {
-    val mutationPairs = mutations.mapToPair(mutation -> pair(getMutationId(mutation), mutation));
+  private JavaRDD<Document> transform(JavaRDD<ObjectNode> mutations, JavaRDD<ObjectNode> observations) {
+    val mutationPairs = mutations.mapToPair(mutation -> tuple(getMutationId(mutation), mutation));
     val observationPairs = observations.groupBy(observation -> getObservationMutationId(observation));
 
     val mutationObservationsPairs = mutationPairs.leftOuterJoin(observationPairs);
-    val transformed = mutationObservationsPairs.map(createTransform(taskContext));
+    val transformed = mutationObservationsPairs.map(new MutationCentricDocumentTransform(indexJobContext));
 
     return transformed;
-  }
-
-  private MutationCentricRowTransform createTransform(TaskContext taskContext) {
-    val collectionDir = taskContext.getJobContext().getWorkingDir();
-    val fsUri = taskContext.getFileSystem().getUri();
-
-    return new MutationCentricRowTransform(collectionDir, fsUri);
   }
 
 }

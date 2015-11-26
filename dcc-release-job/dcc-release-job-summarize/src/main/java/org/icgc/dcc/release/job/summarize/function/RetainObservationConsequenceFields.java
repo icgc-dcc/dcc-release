@@ -33,7 +33,8 @@ public final class RetainObservationConsequenceFields implements Function<Object
   public ObjectNode call(ObjectNode row) throws Exception {
     // Retain _mutation_id to get unique genes per donor-mutation
     val result = row.retain(OBSERVATION_DONOR_ID, DONOR_GENE_GENE_ID, MUTATION_ID);
-    if (result.path(DONOR_GENE_GENE_ID).isMissingNode()) {
+    val geneId = result.path(DONOR_GENE_GENE_ID);
+    if (geneId.isMissingNode() || geneId.isNull()) {
       result.put(DONOR_GENE_GENE_ID, FAKE_GENE_ID);
     }
 

@@ -92,6 +92,7 @@ public class SubmissionMetadataService {
     try {
       val name = field.get("name").asText();
       val type = ValueType.valueOf(field.get("valueType").asText());
+      val controlled = field.get("controlled").asBoolean();
       val restrictions = field.get("restrictions");
       val terms = getFieldTerms(restrictions);
 
@@ -99,7 +100,7 @@ public class SubmissionMetadataService {
       val inconsistent = terms != null && type != ValueType.TEXT;
       val effectiveType = inconsistent ? ValueType.TEXT : type;
 
-      return new SubmissionFileField(name, effectiveType, terms);
+      return new SubmissionFileField(name, effectiveType, controlled, terms);
     } catch (Exception e) {
       val mesage = "Error getting submission file field from JSON: " + field;
       log.error(mesage, e);

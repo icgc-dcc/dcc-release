@@ -28,14 +28,14 @@ import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 
-public class PairAnalysisIdSampleId implements PairFunction<Tuple2<String, Tuple2<ObjectNode, Iterable<ObjectNode>>>,
-    String, Tuple2<ObjectNode, Iterable<ObjectNode>>> {
+public class PairAnalysisIdSampleId implements PairFunction<Tuple2<String, Tuple2<ObjectNode,
+    Optional<Iterable<ObjectNode>>>>, String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> {
 
   @Override
-  public Tuple2<String, Tuple2<ObjectNode, Iterable<ObjectNode>>> call(
-      Tuple2<String, Tuple2<ObjectNode, Iterable<ObjectNode>>> tuple) throws Exception {
-
+  public Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> call(Tuple2<String, Tuple2<ObjectNode,
+      Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
     val value = tuple._2;
     val primary = value._1;
     val key = getKey(primary, SUBMISSION_OBSERVATION_ANALYSIS_ID, SUBMISSION_ANALYZED_SAMPLE_ID);

@@ -38,6 +38,7 @@ import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.core.util.Configurations;
 import org.icgc.dcc.release.core.util.JavaRDDs;
 import org.icgc.dcc.release.core.util.Partitions;
+import org.icgc.dcc.release.job.stage.function.CleanSensitiveFields;
 import org.icgc.dcc.release.job.stage.function.ConvertValueType;
 import org.icgc.dcc.release.job.stage.function.ParseFileSplit;
 import org.icgc.dcc.release.job.stage.function.TranslateCodeListTerm;
@@ -72,7 +73,7 @@ public class StageFileSchemaProjectTask extends GenericTask {
     val input = readInput(taskContext);
     val processed = transform(input);
 
-    writeOutput(processed, getOutputPath(taskContext));
+    writeOutput(processed, getOutputPath(taskContext), taskContext.isCompressOutput());
   }
 
   private JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
@@ -114,7 +115,8 @@ public class StageFileSchemaProjectTask extends GenericTask {
         .map(new TrimValues())
         .map(new TranslateMissingCode())
         .map(new TranslateCodeListTerm(schema))
-        .map(new ConvertValueType(schema));
+        .map(new ConvertValueType(schema))
+        .map(new CleanSensitiveFields(schema));
   }
 
   private String getOutputPath(TaskContext taskContext) {

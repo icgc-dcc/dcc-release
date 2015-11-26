@@ -24,7 +24,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_STATE;
 import static org.icgc.dcc.release.core.util.FeatureTypes.createFeatureTypeSummaryValue;
 import static org.icgc.dcc.release.core.util.FeatureTypes.getFeatureTypes;
 import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
-import static org.icgc.dcc.release.core.util.ObjectNodes.isEmpty;
+import static org.icgc.dcc.release.core.util.ObjectNodes.isEmptyArray;
 import static org.icgc.dcc.release.core.util.ObjectNodes.mergeObjects;
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 
@@ -73,7 +73,7 @@ public final class MergeDonorSummary implements
     val resultSummaryNode = featureTypeSummary == null ? MAPPER.createObjectNode() : featureTypeSummary;
     val summary = resultSummaryNode.with(DONOR_SUMMARY);
     val availableDataTypes = summary.withArray(AVAILABLE_DATA_TYPES);
-    val state = isEmpty(availableDataTypes) ? "pending" : "live";
+    val state = isEmptyArray(availableDataTypes) ? "pending" : "live";
     summary.put(DONOR_SUMMARY_STATE, state);
 
     for (val featureType : getFeatureTypes()) {

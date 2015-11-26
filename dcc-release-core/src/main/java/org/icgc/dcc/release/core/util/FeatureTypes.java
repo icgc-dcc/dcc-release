@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 @NoArgsConstructor(access = PRIVATE)
 public final class FeatureTypes {
 
+  // TODO: Types are not present in the dictionary and not displayed on the portal. Must be removed from the ETL 1.
   private static final List<FeatureType> SKIP_TYPE = of(CNGV_TYPE, STGV_TYPE);
 
   public static Iterable<FeatureType> getFeatureTypes() {

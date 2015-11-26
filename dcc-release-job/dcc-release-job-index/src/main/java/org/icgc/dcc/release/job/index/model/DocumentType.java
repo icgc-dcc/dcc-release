@@ -22,8 +22,10 @@ import static org.icgc.dcc.common.core.model.Entity.GENE;
 import static org.icgc.dcc.common.core.model.Entity.GENE_SET;
 import static org.icgc.dcc.common.core.model.Entity.MUTATION;
 import static org.icgc.dcc.common.core.model.Entity.OBSERVATION;
+import static org.icgc.dcc.common.core.model.Entity.PATHWAY;
 import static org.icgc.dcc.common.core.model.Entity.PROJECT;
 import static org.icgc.dcc.common.core.model.Entity.RELEASE;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.DIAGRAM_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.DONOR_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.GENE_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.GENE_SET_COLLECTION;
@@ -32,6 +34,9 @@ import static org.icgc.dcc.common.core.model.ReleaseCollection.OBSERVATION_COLLE
 import static org.icgc.dcc.common.core.model.ReleaseCollection.PROJECT_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.RELEASE_COLLECTION;
 import static org.icgc.dcc.release.job.index.model.DocumentClassifier.CENTRIC;
+
+import java.util.Collection;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
@@ -39,18 +44,22 @@ import lombok.val;
 import org.icgc.dcc.common.core.model.Entity;
 import org.icgc.dcc.common.core.model.IndexType;
 import org.icgc.dcc.common.core.model.ReleaseCollection;
-import org.icgc.dcc.release.job.index.core.DocumentTransform;
-import org.icgc.dcc.release.job.index.transform.DonorCentricDocumentTransform;
-import org.icgc.dcc.release.job.index.transform.DonorDocumentTransform;
-import org.icgc.dcc.release.job.index.transform.DonorTextDocumentTransform;
-import org.icgc.dcc.release.job.index.transform.GeneCentricDocumentTransform;
-import org.icgc.dcc.release.job.index.transform.GeneSetDocumentTransform;
-import org.icgc.dcc.release.job.index.transform.GeneSetTextDocumentTransform;
-import org.icgc.dcc.release.job.index.transform.GeneTextDocumentTransform;
-import org.icgc.dcc.release.job.index.transform.MutationCentricDocumentTransform;
-import org.icgc.dcc.release.job.index.transform.MutationTextDocumentTransform;
-import org.icgc.dcc.release.job.index.transform.ObservationCentricDocumentTransform;
-import org.icgc.dcc.release.job.index.transform.ProjectTextDocumentTransform;
+import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.job.index.task.DiagramIndexTask;
+import org.icgc.dcc.release.job.index.task.DonorCentricIndexTask;
+import org.icgc.dcc.release.job.index.task.DonorIndexTask;
+import org.icgc.dcc.release.job.index.task.DonorTextIndexTask;
+import org.icgc.dcc.release.job.index.task.GeneCentricIndexTask;
+import org.icgc.dcc.release.job.index.task.GeneIndexTask;
+import org.icgc.dcc.release.job.index.task.GeneSetIndexTask;
+import org.icgc.dcc.release.job.index.task.GeneSetTextIndexTask;
+import org.icgc.dcc.release.job.index.task.GeneTextIndexTask;
+import org.icgc.dcc.release.job.index.task.MutationCentricIndexTask;
+import org.icgc.dcc.release.job.index.task.MutationTextIndexTask;
+import org.icgc.dcc.release.job.index.task.ObservationCentricIndexTask;
+import org.icgc.dcc.release.job.index.task.ProjectIndexTask;
+import org.icgc.dcc.release.job.index.task.ProjectTextIndexTask;
+import org.icgc.dcc.release.job.index.task.ReleaseIndexTask;
 
 import com.google.common.collect.ImmutableList;
 
@@ -63,6 +72,20 @@ import com.google.common.collect.ImmutableList;
 public enum DocumentType {
 
   /**
+   * Diagram type(s).
+   */
+  DIAGRAM_TYPE(
+      attributes()
+          .name("diagram")
+          .entity(PATHWAY)
+          .collection(DIAGRAM_COLLECTION)
+          .indexClassName(DiagramIndexTask.class.getName())
+          .outputFileType(FileType.DIAGRAM_INDEX)
+          .batchSize(100)
+          .statusInterval(100)
+  ),
+
+  /**
    * Release type(s).
    */
   RELEASE_TYPE(
@@ -70,6 +93,8 @@ public enum DocumentType {
           .name("release")
           .entity(RELEASE)
           .collection(RELEASE_COLLECTION)
+          .indexClassName(ReleaseIndexTask.class.getName())
+          .outputFileType(FileType.RELEASE_INDEX)
           .batchSize(1000)
           .statusInterval(1)
   ),
@@ -81,7 +106,8 @@ public enum DocumentType {
       .name("gene-set")
       .entity(GENE_SET)
       .collection(GENE_SET_COLLECTION)
-      .transform(new GeneSetDocumentTransform())
+      .indexClassName(GeneSetIndexTask.class.getName())
+      .outputFileType(FileType.GENE_SET_INDEX)
       .statusInterval(1000)
       .batchSize(1000)
       .fields(
@@ -114,7 +140,8 @@ public enum DocumentType {
       .name("gene-set-text")
       .entity(GENE_SET)
       .collection(GENE_SET_COLLECTION)
-      .transform(new GeneSetTextDocumentTransform())
+      .indexClassName(GeneSetTextIndexTask.class.getName())
+      .outputFileType(FileType.GENE_SET_TEXT_INDEX)
       .statusInterval(1000)
       .batchSize(1000)
       .fields(
@@ -138,6 +165,8 @@ public enum DocumentType {
           .name("project")
           .entity(PROJECT)
           .collection(PROJECT_COLLECTION)
+          .indexClassName(ProjectIndexTask.class.getName())
+          .outputFileType(FileType.PROJECT_INDEX)
           .batchSize(100)
           .statusInterval(10)
   ),
@@ -146,7 +175,8 @@ public enum DocumentType {
           .name("project-text")
           .entity(PROJECT)
           .collection(PROJECT_COLLECTION)
-          .transform(new ProjectTextDocumentTransform())
+          .indexClassName(ProjectTextIndexTask.class.getName())
+          .outputFileType(FileType.PROJECT_TEXT_INDEX)
           .batchSize(100)
           .statusInterval(10)
           .fields(
@@ -158,7 +188,8 @@ public enum DocumentType {
                               "project_name",
                               "tumour_type",
                               "tumour_subtype",
-                              "primary_site")
+                              "primary_site",
+                              "_summary._state")
                   )
           )
   ),
@@ -171,7 +202,9 @@ public enum DocumentType {
           .name("donor")
           .entity(DONOR)
           .collection(DONOR_COLLECTION)
-          .transform(new DonorDocumentTransform())
+          .indexClassName(DonorIndexTask.class.getName())
+          .outputFileType(FileType.DONOR_INDEX)
+          .broadcastDependencies(ImmutableList.of(BroadcastType.PROJECT))
           .batchSize(10000)
           .statusInterval(1000)
           .fields(
@@ -189,7 +222,8 @@ public enum DocumentType {
           .name("donor-text")
           .entity(DONOR)
           .collection(DONOR_COLLECTION)
-          .transform(new DonorTextDocumentTransform())
+          .indexClassName(DonorTextIndexTask.class.getName())
+          .outputFileType(FileType.DONOR_TEXT_INDEX)
           .batchSize(10000)
           .statusInterval(1000)
           .fields(
@@ -203,7 +237,8 @@ public enum DocumentType {
                               "specimen._specimen_id",
                               "specimen.specimen_id",
                               "specimen.sample._sample_id",
-                              "specimen.sample.analyzed_sample_id")
+                              "specimen.sample.analyzed_sample_id",
+                              "_summary._state")
                   )
           )
   ),
@@ -213,7 +248,9 @@ public enum DocumentType {
           .entity(DONOR)
           .collection(DONOR_COLLECTION)
           .classifier(CENTRIC)
-          .transform(new DonorCentricDocumentTransform())
+          .indexClassName(DonorCentricIndexTask.class.getName())
+          .outputFileType(FileType.DONOR_CENTRIC_INDEX)
+          .broadcastDependencies(ImmutableList.of(BroadcastType.GENE, BroadcastType.PROJECT))
           .statusInterval(1000)
           .batchSize(1)
           .fields(
@@ -308,6 +345,8 @@ public enum DocumentType {
           .name("gene")
           .entity(GENE)
           .collection(GENE_COLLECTION)
+          .indexClassName(GeneIndexTask.class.getName())
+          .outputFileType(FileType.GENE_INDEX)
           .batchSize(1000)
           .statusInterval(1000)
           .fields(
@@ -330,7 +369,8 @@ public enum DocumentType {
           .name("gene-text")
           .entity(GENE)
           .collection(GENE_COLLECTION)
-          .transform(new GeneTextDocumentTransform())
+          .indexClassName(GeneTextIndexTask.class.getName())
+          .outputFileType(FileType.GENE_TEXT_INDEX)
           .batchSize(1000)
           .statusInterval(1000)
           .fields(
@@ -352,7 +392,9 @@ public enum DocumentType {
           .entity(GENE)
           .collection(GENE_COLLECTION)
           .classifier(CENTRIC)
-          .transform(new GeneCentricDocumentTransform())
+          .indexClassName(GeneCentricIndexTask.class.getName())
+          .outputFileType(FileType.GENE_CENTRIC_INDEX)
+          .broadcastDependencies(ImmutableList.of(BroadcastType.DONOR, BroadcastType.PROJECT))
           .batchSize(1000)
           .statusInterval(1000)
           .fields(
@@ -369,8 +411,7 @@ public enum DocumentType {
                           .excludedFields(
                               "_id",
                               "functional_impact_prediction_summary",
-                              "consequence.functional_impact_prediction",
-                              "consequence_type")
+                              "consequence.functional_impact_prediction")
                   )
           )
   ),
@@ -384,7 +425,9 @@ public enum DocumentType {
           .entity(OBSERVATION)
           .collection(OBSERVATION_COLLECTION)
           .classifier(CENTRIC)
-          .transform(new ObservationCentricDocumentTransform())
+          .indexClassName(ObservationCentricIndexTask.class.getName())
+          .outputFileType(FileType.OBSERVATION_CENTRIC_INDEX)
+          .broadcastDependencies(ImmutableList.of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
           .batchSize(200)
           .statusInterval(100000)
           .fields(
@@ -417,8 +460,7 @@ public enum DocumentType {
                           .excludedFields(
                               "_id",
                               "functional_impact_prediction_summary",
-                              "consequence.functional_impact_prediction",
-                              "consequence_type")
+                              "consequence.functional_impact_prediction")
                   )
           )
   ),
@@ -431,7 +473,9 @@ public enum DocumentType {
           .name("mutation-text")
           .entity(MUTATION)
           .collection(MUTATION_COLLECTION)
-          .transform(new MutationTextDocumentTransform())
+          .indexClassName(MutationTextIndexTask.class.getName())
+          .outputFileType(FileType.MUTATION_TEXT_INDEX)
+          .broadcastDependencies(ImmutableList.of(BroadcastType.GENE))
           .batchSize(1000)
           .statusInterval(100000)
           .fields(
@@ -467,7 +511,9 @@ public enum DocumentType {
           .entity(MUTATION)
           .collection(MUTATION_COLLECTION)
           .classifier(CENTRIC)
-          .transform(new MutationCentricDocumentTransform())
+          .indexClassName(MutationCentricIndexTask.class.getName())
+          .outputFileType(FileType.MUTATION_CENTRIC_INDEX)
+          .broadcastDependencies(ImmutableList.of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
           .batchSize(1000)
           .statusInterval(100000)
           .fields(
@@ -508,9 +554,14 @@ public enum DocumentType {
   private final DocumentClassifier classifier;
 
   /**
-   * The document transform.
+   * The document index class name.
    */
-  private final DocumentTransform transform;
+  private final String indexClassName;
+
+  /**
+   * Output file type of the document.
+   */
+  private final FileType outputFileType;
 
   /**
    * The document status interval.
@@ -532,14 +583,21 @@ public enum DocumentType {
    */
   private final DocumentFields fields;
 
+  /**
+   * Documents required to perform the index job for this document type.
+   */
+  private final Collection<BroadcastType> broadcastDependencies;
+
   private DocumentType(@NonNull DocumentTypeAttributes attributes) {
     this.entity = attributes.entity;
     this.name = attributes.name;
     this.classifier = attributes.classifier;
-    this.transform = attributes.transform;
+    this.indexClassName = attributes.indexClassName;
+    this.outputFileType = attributes.outputFileType;
     this.batchSize = attributes.batchSize;
     this.statusInterval = attributes.statusInterval;
     this.collection = attributes.collection;
+    this.broadcastDependencies = attributes.broadcastDependencies;
     this.fields = attributes.fields;
   }
 

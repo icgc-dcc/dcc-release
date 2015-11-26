@@ -21,36 +21,34 @@ import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.index.function.RowTransform;
+import org.icgc.dcc.release.job.index.core.Document;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
 import org.icgc.dcc.release.job.index.model.DocumentType;
+import org.icgc.dcc.release.job.index.transform.ObservationCentricDocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ObservationCentricIndexTask extends IndexTask {
+public class ObservationCentricIndexTask extends AbstractIndexTask {
 
-  public ObservationCentricIndexTask() {
-    super(DocumentType.OBSERVATION_CENTRIC_TYPE);
+  private final IndexJobContext indexJobContext;
+
+  public ObservationCentricIndexTask(IndexJobContext indexJobContext) {
+    super(DocumentType.OBSERVATION_CENTRIC_TYPE, indexJobContext);
+    this.indexJobContext = indexJobContext;
   }
 
   @Override
   public void execute(TaskContext taskContext) {
     val observations = readObservations(taskContext);
 
-    val output = transform(taskContext, observations);
-    writeOutput(output);
+    val output = transform(observations);
+    writeDocOutput(taskContext, output);
   }
 
-  private JavaRDD<ObjectNode> transform(TaskContext taskContext, JavaRDD<ObjectNode> observations) {
-    val transformed = observations.map(createTransform(taskContext));
+  private JavaRDD<Document> transform(JavaRDD<ObjectNode> observations) {
+    val transformed = observations.map(new ObservationCentricDocumentTransform(indexJobContext));
 
     return transformed;
-  }
-
-  private RowTransform createTransform(TaskContext taskContext) {
-    val collectionDir = taskContext.getJobContext().getWorkingDir();
-    val fsUri = taskContext.getFileSystem().getUri();
-
-    return new RowTransform(type, collectionDir, fsUri);
   }
 
 }

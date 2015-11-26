@@ -32,7 +32,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_REPOSITORY
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_STUDIES;
 import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_LIBRARY_STRATEGY;
 import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_REPOSITORY;
-import static org.icgc.dcc.common.core.util.Jackson.to;
+import static org.icgc.dcc.common.json.Jackson.to;
 import static org.icgc.dcc.release.core.function.Unwind.unwind;
 import static org.icgc.dcc.release.core.util.ObjectNodes.createObject;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;

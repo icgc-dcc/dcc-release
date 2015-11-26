@@ -31,7 +31,7 @@ import org.icgc.dcc.release.job.summarize.task.DonorSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.FeatureTypeSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.GeneSetSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.GeneSummarizeTask;
-import org.icgc.dcc.release.job.summarize.task.ObservationSummarizeTask;
+import org.icgc.dcc.release.job.summarize.task.MutationSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.ProjectSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.ReleaseSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.ResolveGeneSummaryTask;
@@ -43,12 +43,12 @@ import org.springframework.stereotype.Component;
 public class SummarizeJob extends GenericJob {
 
   private static final FileType[] OUTPUT_FILE_TYPES = {
-      FileType.DONOR_GENE_OBSERVATION_SUMMARY,
+      FileType.DONOR_SUMMARY,
       FileType.GENE_SET_SUMMARY,
       FileType.GENE_SUMMARY,
       FileType.PROJECT_SUMMARY,
-      FileType.OBSERVATION_SUMMARY,
-      FileType.RELEASE_SUMMARY };
+      FileType.RELEASE_SUMMARY,
+      FileType.MUTATION };
 
   @Override
   public JobType getType() {
@@ -82,9 +82,8 @@ public class SummarizeJob extends GenericJob {
 
     val resolveGeneStatsTask = new ResolveGeneSummaryTask();
     jobContext.execute(resolveGeneStatsTask);
-    jobContext.execute(
-        new GeneSummarizeTask(resolveGeneStatsTask.getGeneDonorTypeCounts()),
-        new ObservationSummarizeTask());
+    jobContext.execute(new GeneSummarizeTask(resolveGeneStatsTask.getGeneDonorTypeCounts()),
+        new MutationSummarizeTask());
     jobContext.execute(new ReleaseSummarizeTask(donorSummarizeTask.getDonorsCount(), donorSummarizeTask
         .getLiveDonorsCount()));
     log.info("Finished executing summary job in {}", watch);

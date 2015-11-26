@@ -46,6 +46,7 @@ public class DefaultTaskContext implements TaskContext {
   private final FileSystem fileSystem;
   @NonNull
   private final Optional<String> projectName;
+  private final boolean compressOutput;
 
   @Override
   public Optional<String> getProjectName() {

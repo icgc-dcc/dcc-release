@@ -23,7 +23,6 @@ import java.util.List;
 
 import lombok.val;
 
-import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.vcf.model.Consequence;
 import org.icgc.dcc.release.job.index.vcf.model.Feature;
 import org.icgc.dcc.release.job.index.vcf.model.Mutation;
@@ -38,9 +37,7 @@ import com.google.common.collect.Maps;
 
 public class MutationCentricFeatureConverter {
 
-  public Feature convert(Document document) {
-    ObjectNode source = document.getSource();
-
+  public Feature convert(ObjectNode source) {
     // Build
     List<Occurrence> occurrences = createOccurrences(source);
     List<Consequence> consequences = createConsequences(source);
@@ -135,7 +132,7 @@ public class MutationCentricFeatureConverter {
   }
 
   private static String text(JsonNode jsonNode) {
-    return nullToEmpty(jsonNode.textValue());
+    return nullToEmpty(jsonNode.asText());
   }
 
 }

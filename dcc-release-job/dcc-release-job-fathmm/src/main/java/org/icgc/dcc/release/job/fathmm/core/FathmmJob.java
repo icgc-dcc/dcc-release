@@ -17,7 +17,9 @@
  */
 package org.icgc.dcc.release.job.fathmm.core;
 
+import lombok.Cleanup;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,8 +69,11 @@ public class FathmmJob extends GenericJob {
     return task.getTranscripts();
   }
 
+  @SneakyThrows
   private void predict(JobContext jobContext, BiMap<String, String> transcripts) {
-    jobContext.execute(new PredictFathmmTask(jdbcUrl, transcripts));
+    @Cleanup
+    val predictFathmTask = new PredictFathmmTask(jdbcUrl, transcripts);
+    jobContext.execute(predictFathmTask);
   }
 
 }

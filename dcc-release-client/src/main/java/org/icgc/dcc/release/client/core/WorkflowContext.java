@@ -35,6 +35,8 @@ public class WorkflowContext {
 
   List<JobType> jobTypes;
 
+  boolean compressOutput;
+
   public boolean isIncluded(@NonNull JobType jobType) {
     return jobTypes.contains(jobType);
   }

@@ -26,7 +26,7 @@ public class Partitions {
   /**
    * Constants.
    */
-  private static final String PARTITION_NAME = "project_name";
+  public static final String PARTITION_NAME = "project_name";
 
   public static String getPartitionName(@NonNull String projectName) {
     return PARTITION_NAME + "=" + projectName;

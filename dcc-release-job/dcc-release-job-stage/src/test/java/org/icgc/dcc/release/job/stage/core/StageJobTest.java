@@ -18,24 +18,34 @@
 package org.icgc.dcc.release.job.stage.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
 
 import java.util.List;
 
 import lombok.val;
 
-import org.icgc.dcc.common.core.meta.ArtifactoryCodeListsResolver;
-import org.icgc.dcc.common.core.meta.ArtifactoryDictionaryResolver;
+import org.apache.hadoop.fs.Path;
+import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
+import org.icgc.dcc.release.core.job.DefaultJobContext;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.job.JobContext;
+import org.icgc.dcc.release.core.job.JobType;
 import org.icgc.dcc.release.core.submission.SubmissionFileSchema;
-import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
-import org.icgc.dcc.release.core.submission.SubmissionMetadataService;
-import org.icgc.dcc.release.job.stage.core.StageJob;
+import org.icgc.dcc.release.core.submission.SubmissionFileSystem;
+import org.icgc.dcc.release.core.util.LazyTable;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
+import org.icgc.dcc.release.test.util.SubmissionFiles;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Table;
+
 public class StageJobTest extends AbstractJobTest {
+
+  private static final List<String> PROJECTS = ImmutableList.of("PROJ-01", "PROJ-02", "PROJ-03");
+
+  SubmissionFileSystem submissionFileSystem;
 
   /**
    * Class under test.
@@ -46,30 +56,55 @@ public class StageJobTest extends AbstractJobTest {
   @Before
   public void setUp() {
     super.setUp();
-    this.job = new StageJob(getSchemas());
+    this.job = new StageJob(SubmissionFiles.getSchemas());
+    this.submissionFileSystem = new SubmissionFileSystem(fileSystem);
   }
 
   @Test
-  @Ignore("requires proper input")
   public void testExecute() {
-    val jobContext = createJobContext(job.getType());
+    val jobContext = createJobContext();
     job.execute(jobContext);
 
-    val results = produces(FileType.SSM_M);
-
-    assertThat(results).hasSize(1);
-    assertThat(results.get(0).get("gene")).isNotNull();
+    assertProj1();
   }
 
-  private SubmissionFileSchemas getSchemas() {
-    return new SubmissionFileSchemas(getMetadata());
+  private void assertProj1() {
+    assertControlledFields();
+    assertSsm();
   }
 
-  private List<SubmissionFileSchema> getMetadata() {
-    return new SubmissionMetadataService(
-        new ArtifactoryDictionaryResolver(),
-        new ArtifactoryCodeListsResolver())
-        .getMetadata();
+  private void assertSsm() {
+    val ssms = produces("PROJ-01", FileType.SSM_P);
+    assertThat(ssms).hasSize(8);
+
+    for (val ssm : ssms) {
+      assertThat(ssm.get(PROJECT_ID).textValue()).isEqualTo("PROJ-01");
+      assertThat(ssm.path(SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE).isMissingNode()).isFalse();
+      assertThat(ssm.path(SubmissionFieldNames.SUBMISSION_OBSERVATION_CONTROL_GENOTYPE).isMissingNode()).isFalse();
+      assertThat(ssm.path(SubmissionFieldNames.SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE).isMissingNode()).isFalse();
+    }
+
+  }
+
+  private void assertControlledFields() {
+    val donors = produces("PROJ-01", FileType.DONOR);
+    for (val donor : donors) {
+      assertThat(donor.path(" donor_region_of_residence").isMissingNode()).isTrue();
+      assertThat(donor.path("donor_notes").isMissingNode()).isTrue();
+    }
+  }
+
+  private JobContext createJobContext() {
+    return new DefaultJobContext(JobType.STAGE, RELEASE_VERSION, PROJECTS, TEST_FIXTURES_DIR,
+        workingDir.toString(), resolveSubmissionFiles(), taskExecutor, false);
+  }
+
+  private Table<String, String, List<Path>> resolveSubmissionFiles() {
+    return new LazyTable<String, String, List<Path>>(() -> {
+      List<SubmissionFileSchema> metadata = SubmissionFiles.getMetadata();
+
+      return submissionFileSystem.getFiles(TEST_FIXTURES_DIR, PROJECTS, metadata);
+    });
   }
 
 }

@@ -125,7 +125,7 @@ public class ReleaseSummarizeTask extends GenericTask {
 
   private long getUniqueAffectedGeneCount(TaskContext taskContext) {
     return readInput(taskContext, GENE_SUMMARY)
-        .filter(o -> o.path(GENE_PROJECTS).isMissingNode())
+        .filter(o -> !o.path(GENE_PROJECTS).isMissingNode())
         .count();
   }
 

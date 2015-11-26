@@ -23,12 +23,12 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.common.core.util.Jackson.asArrayNode;
-import static org.icgc.dcc.common.core.util.Jackson.asObjectNode;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static org.icgc.dcc.common.json.Jackson.asArrayNode;
+import static org.icgc.dcc.common.json.Jackson.asObjectNode;
 import static org.icgc.dcc.release.core.util.Collections.isLast;
 import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
-import static org.icgc.dcc.release.core.util.ObjectNodes.isEmpty;
+import static org.icgc.dcc.release.core.util.ObjectNodes.isEmptyArray;
 
 import java.util.List;
 
@@ -92,7 +92,7 @@ public class Unwind implements FlatMapFunction<ObjectNode, ObjectNode> {
   }
 
   private boolean isMissingElements(JsonNode elements) {
-    return elements.isMissingNode() || (elements.isArray() && isEmpty(asArrayNode(elements)));
+    return elements.isMissingNode() || (elements.isArray() && isEmptyArray(asArrayNode(elements)));
   }
 
   private static JsonNode unwindPath(String path, ObjectNode row) {
@@ -107,7 +107,7 @@ public class Unwind implements FlatMapFunction<ObjectNode, ObjectNode> {
     for (val fieldName : fieldNames) {
       currentNode = currentNode == null ? row.path(fieldName) : currentNode.path(fieldName);
       if (currentNode.isMissingNode()) {
-        return isEmpty(result) ? currentNode : result;
+        return isEmptyArray(result) ? currentNode : result;
       }
 
       if (currentNode.isArray()) {

@@ -18,22 +18,21 @@
 package org.icgc.dcc.release.job.join.task;
 
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.PROBE_ID;
-import static org.icgc.dcc.release.core.util.JavaRDDs.createRddForJoin;
+import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 
 import java.util.Map;
 
 import lombok.val;
 
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 
-import scala.Tuple2;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 
 public class MethArrayJoinTask extends PrimaryMetaJoinTask {
 
@@ -47,25 +46,37 @@ public class MethArrayJoinTask extends PrimaryMetaJoinTask {
   public void execute(TaskContext taskContext) {
     sparkContext = taskContext.getSparkContext();
     val primaryMeta = joinPrimaryMeta(taskContext);
-    val probes = readInput(taskContext, FileType.METH_ARRAY_PROBES);
-
-    val keyFunction = new KeyFields(PROBE_ID);
-    val output = primaryMeta
-        .mapToPair(keyFunction)
-        .leftOuterJoin(createRddForJoin(probes.mapToPair(keyFunction), sparkContext))
-        .map(MethArrayJoinTask::combineProbes);
+    val probes = resolveProbes(taskContext);
+    val output = joinProbes(primaryMeta, probes);
 
     writeOutput(taskContext, output, FileType.METH_ARRAY);
   }
 
-  private static ObjectNode combineProbes(Tuple2<String, Tuple2<ObjectNode, Optional<ObjectNode>>> tuple) {
-    val primary = tuple._2._1;
-    val probe = tuple._2._2;
-    if (probe.isPresent()) {
-      primary.putAll(probe.get());
-    }
+  private Broadcast<Map<String, ObjectNode>> resolveProbes(TaskContext taskContext) {
+    val probes = readInput(taskContext, FileType.METH_ARRAY_PROBES)
+        .mapToPair(new KeyFields(PROBE_ID))
+        .collectAsMap();
+    val sparkContext = taskContext.getSparkContext();
 
-    return primary;
+    return sparkContext.broadcast(Maps.newHashMap(probes));
+  }
+
+  private static JavaRDD<ObjectNode> joinProbes(JavaRDD<ObjectNode> primaryMeta,
+      Broadcast<Map<String, ObjectNode>> probes) {
+    return primaryMeta
+        .map(row -> {
+          String probeId = textValue(row, PROBE_ID);
+          if (probeId == null) {
+            return row;
+          }
+
+          ObjectNode probe = probes.value().get(probeId);
+          if (probe != null) {
+            row.setAll(probe);
+          }
+
+          return row;
+        });
   }
 
 }

@@ -75,11 +75,6 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>dcc-release-job-orphan</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
       <artifactId>dcc-release-job-stage</artifactId>
       <version>${project.version}</version>
     </dependency>

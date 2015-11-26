@@ -22,7 +22,7 @@ import static org.icgc.dcc.release.core.util.FieldNames.SummarizeFieldNames.GENE
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.core.util.Jackson;
+import org.icgc.dcc.common.json.Jackson;
 
 import scala.Tuple2;
 
@@ -32,6 +32,8 @@ import com.google.common.base.Optional;
 public final class AddGeneSetSummary implements
     Function<Tuple2<String, Tuple2<ObjectNode, Optional<Integer>>>, ObjectNode> {
 
+  private static final ObjectNode DEFAULT_SUMMARY = Jackson.toObjectNode("{\"id\" : \"\" , \"_gene_count\" : 0}");
+
   @Override
   public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Integer>>> tuple) throws Exception {
     val geneSet = tuple._2._1;
@@ -39,6 +41,8 @@ public final class AddGeneSetSummary implements
     if (count.isPresent()) {
       val summary = createSummary(count.get());
       geneSet.put(SUMMARY, summary);
+    } else {
+      geneSet.put(SUMMARY, DEFAULT_SUMMARY);
     }
 
     return geneSet;

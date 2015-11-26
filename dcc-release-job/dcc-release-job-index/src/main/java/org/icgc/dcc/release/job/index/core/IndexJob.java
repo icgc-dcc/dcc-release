@@ -17,41 +17,54 @@
  */
 package org.icgc.dcc.release.job.index.core;
 
+import static java.lang.String.format;
 import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newTransportClient;
 
+import java.lang.reflect.Constructor;
 import java.util.Collection;
-
-import org.icgc.dcc.release.core.job.Job;
-import org.icgc.dcc.release.core.job.JobContext;
-import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.core.task.Task;
-import org.icgc.dcc.release.core.util.Streams;
-import org.icgc.dcc.release.job.index.config.IndexProperties;
-import org.icgc.dcc.release.job.index.model.DocumentType;
-import org.icgc.dcc.release.job.index.service.IndexService;
-import org.icgc.dcc.release.job.index.task.MutationCentricIndexTask;
-import org.icgc.dcc.release.job.index.task.RemoteIndexTask;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import com.google.common.collect.ImmutableList;
+import java.util.Map;
 
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.icgc.dcc.release.core.config.SnpEffProperties;
+import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.job.GenericJob;
+import org.icgc.dcc.release.core.job.JobContext;
+import org.icgc.dcc.release.core.job.JobType;
+import org.icgc.dcc.release.core.task.Task;
+import org.icgc.dcc.release.job.index.config.IndexProperties;
+import org.icgc.dcc.release.job.index.core.IndexJobContext.IndexJobContextBuilder;
+import org.icgc.dcc.release.job.index.model.BroadcastType;
+import org.icgc.dcc.release.job.index.model.DocumentType;
+import org.icgc.dcc.release.job.index.service.IndexService;
+import org.icgc.dcc.release.job.index.task.CreateVCFFileTask;
+import org.icgc.dcc.release.job.index.task.ResolveDonorsTask;
+import org.icgc.dcc.release.job.index.task.ResolveGenesTask;
+import org.icgc.dcc.release.job.index.task.ResolveProjectsTask;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+
 @Slf4j
 @Component
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }) )
-public class IndexJob implements Job {
+@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
+public class IndexJob extends GenericJob {
 
   /**
    * Dependencies.
    */
   @NonNull
   private final IndexProperties properties;
+  @NonNull
+  private final SnpEffProperties snpEffProperties;
 
   @Override
   public JobType getType() {
@@ -60,6 +73,16 @@ public class IndexJob implements Job {
 
   @Override
   public void execute(@NonNull JobContext jobContext) {
+    // Cleanup output directories
+    clean(jobContext);
+
+    // TODO: Fix this to be tied to a run id:
+    val indexName = resolveIndexName(jobContext.getReleaseName());
+    if (properties.isSkipIndexing()) {
+      write(jobContext, indexName);
+
+      return;
+    }
 
     //
     // TODO: Need to use spark.dynamicAllocation.enabled to dynamically increase memory for this job
@@ -72,9 +95,6 @@ public class IndexJob implements Job {
     val client = newTransportClient(properties.getEsUri());
     @Cleanup
     val indexService = new IndexService(client);
-
-    // TODOD: Fix this to be tied to a run id:
-    val indexName = "test-release-" + jobContext.getReleaseName().toLowerCase();
 
     // Prepare
     log.info("Initializing index...");
@@ -97,25 +117,107 @@ public class IndexJob implements Job {
     indexService.freezeIndex(indexName);
   }
 
+  private void clean(JobContext jobContext) {
+    delete(jobContext, resolveOutputFileTypes());
+  }
+
+  private static FileType[] resolveOutputFileTypes() {
+    val outputFileTypes = Lists.<FileType> newArrayList();
+    for (val documentType : DocumentType.values()) {
+      outputFileTypes.add(documentType.getOutputFileType());
+    }
+
+    return outputFileTypes.toArray(new FileType[outputFileTypes.size()]);
+  }
+
+  static String resolveIndexName(String releaseName) {
+    return "test-release-" + releaseName.toLowerCase();
+  }
+
   private void write(JobContext jobContext, String indexName) {
-    val tasks = createStreamingTasks(jobContext, indexName);
+    for (val task : createStreamingTasks(jobContext)) {
+      jobContext.execute(task);
+    }
 
-    jobContext.execute(tasks);
+    // Generate SSM VCF file
+    if (properties.isExportVCF()) {
+      jobContext.execute(new CreateVCFFileTask(snpEffProperties));
+    }
   }
 
-  private Collection<? extends Task> createStreamingTasks(JobContext jobContext, String indexName) {
-    return ImmutableList.of(
-        new MutationCentricIndexTask()
-    // , new GeneCentricIndexTask()
-    // , new DonorCentricIndexTask()
-    );
+  @SneakyThrows
+  private Collection<? extends Task> createStreamingTasks(JobContext jobContext) {
+    val tasks = ImmutableList.<Task> builder();
+    for (val documentType : DocumentType.values()) {
+      val constructor = getConstructor(documentType);
+      val indexJobContext = createIndexJobContext(jobContext, documentType);
+      tasks.add((Task) constructor.newInstance(indexJobContext));
+    }
+
+    return tasks.build();
   }
 
-  @SuppressWarnings("unused")
-  private Collection<? extends Task> createRemoteTasks(JobContext jobContext, String indexName) {
-    return Streams.map(DocumentType.values(), type -> {
-      return new RemoteIndexTask(properties, indexName, jobContext.getReleaseName(), type);
-    });
+  private static Constructor<?> getConstructor(DocumentType documentType) throws ClassNotFoundException,
+      NoSuchMethodException {
+    val indexClassName = documentType.getIndexClassName();
+    val clazz = Class.forName(indexClassName);
+    val constructor = clazz.getConstructor(IndexJobContext.class);
+
+    return constructor;
+  }
+
+  private IndexJobContext createIndexJobContext(JobContext jobContext, DocumentType documentType) {
+    val indexJobBuilder = IndexJobContext.builder()
+        .esUri(properties.getEsUri())
+        .indexName(resolveIndexName(jobContext.getReleaseName()))
+        .skipIndexing(properties.isSkipIndexing());
+
+    val indexJobDependencies = resolveDependencies(jobContext, documentType);
+    setDependencies(indexJobBuilder, indexJobDependencies);
+
+    return indexJobBuilder.build();
+  }
+
+  private static void setDependencies(IndexJobContextBuilder indexJobBuilder,
+      Map<BroadcastType, ? extends Task> indexJobDependencies) {
+    for (val entry : indexJobDependencies.entrySet()) {
+      switch (entry.getKey()) {
+      case PROJECT:
+        val resolveProjectsTask = (ResolveProjectsTask) entry.getValue();
+        indexJobBuilder.projectsBroadcast(resolveProjectsTask.getProjectsBroadcast());
+        break;
+      case DONOR:
+        val resolveDonorsTask = (ResolveDonorsTask) entry.getValue();
+        indexJobBuilder.donorsBroadcast(resolveDonorsTask.getDonorsBroadcast());
+        break;
+      case GENE:
+        val resolveGenesTask = (ResolveGenesTask) entry.getValue();
+        indexJobBuilder.genesBroadcast(resolveGenesTask.getGenesBroadcast());
+        break;
+      default:
+        throw new IllegalArgumentException(format("Unrecoginzed broadcast type %s", entry.getKey()));
+      }
+    }
+  }
+
+  private static Map<BroadcastType, ? extends Task> resolveDependencies(JobContext jobContext, DocumentType documentType) {
+    val tasksBuilder = ImmutableMap.<BroadcastType, Task> builder();
+    for (val dependencyTask : documentType.getBroadcastDependencies()) {
+      tasksBuilder.put(dependencyTask, createDependentyTask(dependencyTask, documentType));
+    }
+
+    val tasks = tasksBuilder.build();
+    jobContext.execute(tasks.values());
+
+    return tasks;
+  }
+
+  @SneakyThrows
+  private static Task createDependentyTask(BroadcastType dependencyTask, DocumentType documentType) {
+    val clazz = dependencyTask.getDependencyClass();
+    val constructor = clazz.getConstructor(DocumentType.class);
+
+    return constructor.newInstance(documentType);
   }
 
 }

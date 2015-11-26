@@ -32,7 +32,8 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.icgc.dcc.release.job.annotate.config.SnpEffProperties;
+import org.icgc.dcc.common.json.Jackson;
+import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.job.annotate.converter.ICGCToVCFConverter.MutationType;
 import org.icgc.dcc.release.job.annotate.converter.SecondaryObjectNodeConverter;
 import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
@@ -45,6 +46,11 @@ import com.google.common.collect.Lists;
 @Slf4j
 @RequiredArgsConstructor
 public class SnpEffAnnotate implements FlatMapFunction<Iterator<ObjectNode>, ObjectNode> {
+
+  /**
+   * Returned instead of empty result produced by the Annotator.
+   */
+  public static final ObjectNode SENTINEL_VALUE = Jackson.DEFAULT.createObjectNode();
 
   private static final String MISSING_ALLELE = "-";
 
@@ -128,8 +134,15 @@ public class SnpEffAnnotate implements FlatMapFunction<Iterator<ObjectNode>, Obj
     public void predict(ObjectNode row) {
       // Determine the prediction
       val predictions = predict(row, predictor);
+      postprocessEmptyResults(predictions);
       for (val prediction : predictions) {
         results.add(SecondaryObjectNodeConverter.convert(prediction, fileType));
+      }
+    }
+
+    private void postprocessEmptyResults(List<SecondaryEntity> predictions) {
+      if (predictions.isEmpty()) {
+        results.add(SENTINEL_VALUE);
       }
     }
 

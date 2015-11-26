@@ -39,9 +39,13 @@ import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.job.index.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.index.core.Document;
 import org.icgc.dcc.release.job.index.core.DocumentContext;
 import org.icgc.dcc.release.job.index.core.DocumentTransform;
+import org.icgc.dcc.release.job.index.core.IndexJobContext;
+import org.icgc.dcc.release.job.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
@@ -49,7 +53,18 @@ import com.google.common.collect.Maps;
 /**
  * {@link DocumentTransform} implementation that creates a nested observation-centric document.
  */
-public class ObservationCentricDocumentTransform implements DocumentTransform {
+public class ObservationCentricDocumentTransform implements DocumentTransform, Function<ObjectNode, Document> {
+
+  private final DocumentContext documentContext;
+
+  public ObservationCentricDocumentTransform(IndexJobContext indexJobContext) {
+    this.documentContext = new DefaultDocumentContext(DocumentType.OBSERVATION_CENTRIC_TYPE, indexJobContext);
+  }
+
+  @Override
+  public Document call(ObjectNode observation) throws Exception {
+    return transformDocument(observation, documentContext);
+  }
 
   @Override
   public Document transformDocument(@NonNull ObjectNode observation, @NonNull DocumentContext context) {

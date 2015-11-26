@@ -17,21 +17,24 @@
  */
 package org.icgc.dcc.release.job.fathmm.task;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import lombok.NonNull;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericProcessTask;
 import org.icgc.dcc.release.job.fathmm.function.PredictFathmm;
-import org.icgc.dcc.release.job.fathmm.model.FathmmRepository;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.BiMap;
 
-public class PredictFathmmTask extends GenericProcessTask {
+public class PredictFathmmTask extends GenericProcessTask implements Closeable {
 
   private final String jdbcUrl;
   private final BiMap<String, String> transcripts;
+  private transient PredictFathmm fathmmPredictor;
 
   public PredictFathmmTask(@NonNull String jdbcUrl, @NonNull BiMap<String, String> transcripts) {
     super(FileType.OBSERVATION, FileType.OBSERVATION_FATHMM);
@@ -41,7 +44,22 @@ public class PredictFathmmTask extends GenericProcessTask {
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input.map(new PredictFathmm(new FathmmRepository(jdbcUrl), transcripts));
+    return input.map(fathmmPredictor());
+  }
+
+  private PredictFathmm fathmmPredictor() {
+    if (fathmmPredictor == null) {
+      fathmmPredictor = new PredictFathmm(jdbcUrl, transcripts);
+    }
+
+    return fathmmPredictor;
+  }
+
+  @Override
+  public void close() throws IOException {
+    if (fathmmPredictor != null) {
+      fathmmPredictor.close();
+    }
   }
 
 }

@@ -17,16 +17,26 @@
  */
 package org.icgc.dcc.release.core.task;
 
+import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 import static org.icgc.dcc.release.core.util.JavaRDDs.emptyRDD;
 import static org.icgc.dcc.release.core.util.JavaRDDs.exists;
 import static org.icgc.dcc.release.core.util.JavaRDDs.logPartitions;
+
+import java.util.List;
+import java.util.regex.Pattern;
+
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
+import org.icgc.dcc.release.core.function.ParseObjectNode;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.util.JavaRDDs;
 import org.icgc.dcc.release.core.util.ObjectNodeRDDs;
+import org.icgc.dcc.release.core.util.Partitions;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -60,19 +70,36 @@ public abstract class GenericTask implements Task {
     return readInput(taskContext, conf, inputFileType);
   }
 
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, FileType inputFileType, String path) {
-    val conf = createJobConf(taskContext);
+  /**
+   * @param size split/combine size in MBytes
+   */
+  // TODO: split sequence files
+  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf hadoopConf, FileType inputFileType, long size) {
+    val maxFileSize = size * 1024L * 1024L;
 
-    return readInput(taskContext, conf, inputFileType, path);
+    log.info("Setting input split size of {}", formatBytes(maxFileSize));
+    val splitSize = Long.toString(maxFileSize);
+    hadoopConf.set("mapred.min.split.size", splitSize);
+    hadoopConf.set("mapred.max.split.size", splitSize);
+
+    val sparkContext = taskContext.getSparkContext();
+    val path = taskContext.getPath(inputFileType);
+    val input = JavaRDDs.combineTextFile(sparkContext, path, hadoopConf)
+        .map(tuple -> tuple._2.toString())
+        .map(new ParseObjectNode());
+
+    JavaRDDs.logPartitions(log, input.partitions());
+
+    return input;
   }
 
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType) {
-    return readInput(taskContext, conf, inputFileType, "");
-  }
+    if (isReadAll(taskContext, inputFileType)) {
+      return readAllInput(taskContext, conf, inputFileType);
+    }
 
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType, String path) {
     val sparkContext = taskContext.getSparkContext();
-    val filePath = taskContext.getPath(inputFileType) + path;
+    val filePath = taskContext.getPath(inputFileType);
 
     if (!exists(sparkContext, filePath)) {
       log.warn("{} does not exist. Skipping...", filePath);
@@ -80,28 +107,56 @@ public abstract class GenericTask implements Task {
       return emptyRDD(sparkContext);
     }
 
-    // TODO: Revisit during the Index Job
-    // val splitSize = Long.toString(48 * 1024 * 1024);
-    // conf.set("mapred.min.split.size", splitSize);
-    // conf.set("mapred.max.split.size", splitSize);
-    // val input = combineObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
-
-    val input = ObjectNodeRDDs.textObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
+    val input = readInput(taskContext, taskContext.getPath(inputFileType), conf);
     logPartitions(log, input.partitions());
 
     return input;
-    // return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, taskContext.getPath(inputFileType), conf);
+  }
+
+  private static JavaRDD<ObjectNode> readAllInput(TaskContext taskContext, JobConf conf, FileType inputFileType) {
+    val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
+    val inputPaths = resolveInputPaths(taskContext, fileTypePath);
+    val sparkContext = taskContext.getSparkContext();
+    JavaRDD<ObjectNode> result = emptyRDD(sparkContext);
+
+    for (val inputPath : inputPaths) {
+      val input = readInput(taskContext, inputPath.toString(), conf);
+      result = result.union(input);
+    }
+
+    return result;
+  }
+
+  private static List<Path> resolveInputPaths(TaskContext taskContext, Path fileTypePath) {
+    return HadoopUtils.lsDir(taskContext.getFileSystem(), fileTypePath,
+        Pattern.compile(Partitions.PARTITION_NAME + ".*"));
   }
 
   protected void writeOutput(TaskContext taskContext, JavaRDD<ObjectNode> processed, FileType outputFileType) {
     val outputPath = taskContext.getPath(outputFileType);
 
-    writeOutput(processed, outputPath);
+    writeOutput(processed, outputPath, taskContext.isCompressOutput());
   }
 
-  protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath) {
-    ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath);
-    // ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);
+  protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath, boolean compressOutput) {
+    if (compressOutput) {
+      ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);
+    } else {
+      ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath);
+    }
+  }
+
+  private static JavaRDD<ObjectNode> readInput(TaskContext taskContext, String path, JobConf conf) {
+    val sparkContext = taskContext.getSparkContext();
+    if (taskContext.isCompressOutput()) {
+      return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, path, conf);
+    } else {
+      return ObjectNodeRDDs.textObjectNodeFile(sparkContext, path, conf);
+    }
+  }
+
+  private static boolean isReadAll(TaskContext taskContext, FileType inputFileType) {
+    return inputFileType.isPartitioned() && !taskContext.getProjectName().isPresent();
   }
 
 }

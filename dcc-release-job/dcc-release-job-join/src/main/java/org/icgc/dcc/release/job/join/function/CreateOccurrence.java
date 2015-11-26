@@ -45,12 +45,13 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATION_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
-import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
+import static org.icgc.dcc.common.json.Jackson.DEFAULT;
 import static org.icgc.dcc.release.core.util.Keys.KEY_SEPARATOR;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -64,11 +65,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 
 @RequiredArgsConstructor
 public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2<String, Tuple2<Tuple2<ObjectNode,
-    Iterable<ObjectNode>>, ObjectNode>>>>, ObjectNode> {
+    Optional<Iterable<ObjectNode>>>, ObjectNode>>>>, ObjectNode> {
 
   private static final int DONOR_ID_INDEX = 0;
   private static final ObjectMapper MAPPER = DEFAULT;
@@ -105,10 +108,10 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
   private final Map<String, String> sampleSurrogageSampleIds;
 
   @Override
-  public ObjectNode call(Tuple2<String, Iterable<Tuple2<String, Tuple2<Tuple2<ObjectNode, Iterable<ObjectNode>>,
-      ObjectNode>>>> tuple) throws Exception {
+  public ObjectNode call(Tuple2<String, Iterable<Tuple2<String, Tuple2<Tuple2<ObjectNode,
+      Optional<Iterable<ObjectNode>>>, ObjectNode>>>> tuple) throws Exception {
     ObjectNode occurrence = null;
-    ArrayNode consequences = null;
+    val consequences = Sets.<JsonNode> newHashSet();
     val observations = createObservations();
 
     val ssms = tuple._2;
@@ -118,30 +121,30 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
 
       if (occurrence == null) {
         val donorIdMutationId = tuple._1;
-        occurrence = createOccurrence(primary, meta, donorIdMutationId);
+        val assemblyVersion = textValue(meta, SUBMISSION_OBSERVATION_ASSEMBLY_VERSION);
+        occurrence = createOccurrence(primary, donorIdMutationId, assemblyVersion);
       }
 
       val observation = createObservation(primary.deepCopy(), meta.deepCopy());
       observations.add(observation);
 
-      if (consequences == null) {
-        val secondaries = ssm._2._1._2;
-        consequences = createConsequences(secondaries);
-      }
+      val secondaries = ssm._2._1._2;
+      consequences.addAll(createConsequences(secondaries));
     }
 
-    occurrence.put(CONSEQUENCE_ARRAY_NAME, consequences);
+    val consequenceArray = occurrence.withArray(CONSEQUENCE_ARRAY_NAME);
+    consequenceArray.addAll(consequences);
     occurrence.put(OBSERVATION_ARRAY_NAME, observations);
 
     return occurrence;
   }
 
-  private static ObjectNode createOccurrence(ObjectNode primary, ObjectNode meta, String donorIdMutationId) {
+  private static ObjectNode createOccurrence(ObjectNode primary, String donorIdMutationId, String assemblyVersion) {
     val occurrence = trimOccurrence(primary.deepCopy());
 
     // Enrich with additional fields
     occurrence.put(SURROGATE_DONOR_ID, resolveDonorId(donorIdMutationId));
-    occurrence.put(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION, textValue(meta, SUBMISSION_OBSERVATION_ASSEMBLY_VERSION));
+    occurrence.put(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION, assemblyVersion);
     occurrence.put(OBSERVATION_TYPE, SSM_TYPE.getId());
 
     return occurrence;
@@ -174,11 +177,13 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
     return observation.remove(OBSERVATION_REMOVE_FIELDS);
   }
 
-  private static ArrayNode createConsequences(Iterable<ObjectNode> secondaries) {
-    val consequences = MAPPER.createArrayNode();
-    for (val secondary : secondaries) {
-      enrichConsequenceFields(secondary);
-      consequences.add(secondary);
+  private static Set<JsonNode> createConsequences(Optional<Iterable<ObjectNode>> secondaries) {
+    val consequences = Sets.<JsonNode> newHashSet();
+    if (secondaries.isPresent()) {
+      for (val secondary : secondaries.get()) {
+        enrichConsequenceFields(secondary);
+        consequences.add(secondary);
+      }
     }
 
     return consequences;

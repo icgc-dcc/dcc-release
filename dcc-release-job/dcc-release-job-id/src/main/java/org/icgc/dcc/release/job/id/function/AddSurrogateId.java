@@ -35,9 +35,14 @@ public abstract class AddSurrogateId implements Function<ObjectNode, ObjectNode>
    */
   @NonNull
   private final IdClientFactory idClientFactory;
+  private transient IdClient idClient;
 
   protected IdClient client() {
-    return idClientFactory.create();
+    if (idClient == null) {
+      idClient = idClientFactory.create();
+    }
+
+    return idClient;
   }
 
   protected String getSubmittedProjectId(ObjectNode row) {

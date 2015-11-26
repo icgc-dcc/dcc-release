@@ -37,9 +37,9 @@ public class SsmPMaskingTask extends GenericProcessTask {
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
     return input
         .map(new AddSurrogateObservationId())
-        .map(new RebuildMutation())
         .map(new MarkSensitiveRow())
-        .flatMap(new GenerateMaskedRow());
+        .flatMap(new GenerateMaskedRow())
+        .map(new RebuildMutation());
   }
 
 }

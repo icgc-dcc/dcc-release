@@ -58,6 +58,7 @@ public class Mailer {
    */
   private static final String SUBJECT_PREFIX = "DCC Workflow - ";
   private static final String JOB_SUMMARY_TEMPLATE_NAME = "job-summary";
+  private static final String FAILED_JOB_SUMMARY_TEMPLATE_NAME = "failed-job-summary";
   private static final Resource ICGC_LOGO = new ClassPathResource("/templates/icgc-logo-no-text.png");
 
   /**
@@ -72,6 +73,21 @@ public class Mailer {
 
   public void sendJobSummary(@NonNull JobSummary summary) {
     send(JOB_SUMMARY_TEMPLATE_NAME, of("summary", summary));
+  }
+
+  public void sendFailedJob(@NonNull JobSummary summary, Exception e) {
+    sendFailed(FAILED_JOB_SUMMARY_TEMPLATE_NAME, of("summary", summary), e);
+  }
+
+  @SneakyThrows
+  private void sendFailed(String templateName, Map<String, ?> of, Exception e) {
+    // TODO: Format nicely
+    val message = new MimeMessageHelper(mailSender.createMimeMessage(), true, UTF_8.name());
+    message.setSubject(createSubject(templateName));
+    message.setText(e.toString(), true);
+    message.setTo(mail.getRecipients());
+
+    mailSender.send(message.getMimeMessage());
   }
 
   @SneakyThrows
