@@ -189,17 +189,6 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
     return consequences;
   }
 
-  private static ArrayNode appendConsequences(ArrayNode consequences, Optional<Iterable<ObjectNode>> secondaries) {
-    if (secondaries.isPresent()) {
-      for (val secondary : secondaries.get()) {
-        enrichConsequenceFields(secondary);
-        consequences.add(secondary);
-      }
-    }
-
-    return consequences;
-  }
-
   private static void enrichConsequenceFields(ObjectNode consequence) {
     consequence.remove(NORMALIZER_OBSERVATION_ID);
     consequence.put(GENE_ID, consequence.get(SUBMISSION_GENE_AFFECTED));

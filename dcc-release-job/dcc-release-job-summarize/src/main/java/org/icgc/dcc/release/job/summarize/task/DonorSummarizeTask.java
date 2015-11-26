@@ -100,7 +100,7 @@ public class DonorSummarizeTask extends GenericTask {
   }
 
   private Function<ObjectNode, Boolean> filterLiveDonors() {
-    return o -> o.get(DONOR_SUMMARY).get(DONOR_SUMMARY_STATE).equals("live");
+    return o -> o.get(DONOR_SUMMARY).get(DONOR_SUMMARY_STATE).textValue().equals("live");
   }
 
   private long countDonors() {

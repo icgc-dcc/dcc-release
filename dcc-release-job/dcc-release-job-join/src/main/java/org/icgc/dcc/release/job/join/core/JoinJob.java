@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -35,12 +36,14 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.common.core.util.Joiners;
 import org.icgc.dcc.common.core.util.stream.Collectors;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
+import org.icgc.dcc.release.core.submission.SubmissionFileField;
 import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
 import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.job.join.model.DonorSample;
@@ -197,9 +200,16 @@ public class JoinJob extends GenericJob {
     val schema = schemas.get(SSM_P.getId());
 
     return schema.getFields().stream()
-        .filter(field -> field.isControlled())
+        .filter(filterControlledFields())
         .map(field -> field.getName())
         .collect(Collectors.toImmutableList());
+  }
+
+  private static Predicate<? super SubmissionFileField> filterControlledFields() {
+    return field -> field.isControlled()
+        // This field is excluded from 'controlled' because an observation is created from a 'MASKED' ssm_p
+        // which has 'mutated_from_allele' field masked
+        && !field.getName().equals(FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE);
   }
 
   private static Task createPrimaryTask(FileType executeFileType,

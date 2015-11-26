@@ -18,23 +18,32 @@
 package org.icgc.dcc.release.job.imports.task;
 
 import static org.icgc.dcc.release.job.imports.util.MongoJavaRDDs.javaMongoCollection;
+
+import java.util.List;
+
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.common.core.model.FieldNames;
+import org.icgc.dcc.common.core.model.ReleaseCollection;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
+import org.icgc.dcc.release.core.util.ObjectNodes;
 import org.icgc.dcc.release.job.imports.config.MongoProperties;
 import org.icgc.dcc.release.job.imports.util.MongoClientURIBuilder;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mongodb.hadoop.MongoConfig;
 
+@RequiredArgsConstructor
 public class MongoImportTask extends GenericTask {
 
   @NonNull
@@ -45,13 +54,6 @@ public class MongoImportTask extends GenericTask {
   private final String collection;
   @NonNull
   private final FileType outputFileType;
-
-  public MongoImportTask(MongoProperties properties, String database, String collection, FileType outputFileType) {
-    this.properties = properties;
-    this.database = database;
-    this.collection = collection;
-    this.outputFileType = outputFileType;
-  }
 
   @Override
   public TaskType getType() {
@@ -65,9 +67,26 @@ public class MongoImportTask extends GenericTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    val input = readInput(taskContext, createJobConf(taskContext), null);
+    JavaRDD<ObjectNode> input = readInput(taskContext, createJobConf(taskContext), null);
+
+    if (isProjectCollection(collection)) {
+      input = input.filter(filterProjects(taskContext.getJobContext().getProjectNames()));
+    }
 
     writeOutput(taskContext, input);
+  }
+
+  private static Function<ObjectNode, Boolean> filterProjects(List<String> projects) {
+
+    return o -> {
+      String projectId = ObjectNodes.textValue(o, FieldNames.PROJECT_ID);
+
+      return projects.contains(projectId);
+    };
+  }
+
+  private static boolean isProjectCollection(String collectionName) {
+    return ReleaseCollection.PROJECT_COLLECTION.getId().equals(collectionName);
   }
 
   @Override
