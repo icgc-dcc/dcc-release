@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.release.job.document.core;
 
+import org.icgc.dcc.release.core.document.Document;
+
 /**
  * Callback interface for document construction events.
  */

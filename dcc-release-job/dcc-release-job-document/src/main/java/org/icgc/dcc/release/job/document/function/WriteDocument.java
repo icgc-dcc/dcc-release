@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.document.function;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 import lombok.Getter;
@@ -24,24 +25,22 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.icgc.dcc.release.job.document.core.Document;
-import org.icgc.dcc.release.job.document.core.DocumentWriter;
+import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentWriter;
 import org.icgc.dcc.release.job.document.factory.TransportClientFactory;
-import org.icgc.dcc.release.job.document.io.ElasticSearchDocumentWriter;
-import org.icgc.dcc.release.job.document.model.DocumentType;
 
 import com.clearspring.analytics.util.Lists;
-import com.google.common.collect.ImmutableList;
 
 public final class WriteDocument implements FlatMapFunction<Iterator<Document>, Document> {
 
   @Getter(lazy = true)
   private final Iterable<DocumentWriter> documentWriters = createDocumentWriters();
-  private final DocumentType type;
+  private final BaseDocumentType type;
   private final String esUri;
   private final String indexName;
 
-  public WriteDocument(DocumentType type, String esUri, String indexName) {
+  public WriteDocument(BaseDocumentType type, String esUri, String indexName) {
     this.type = type;
     this.esUri = esUri;
     this.indexName = indexName;
@@ -49,7 +48,8 @@ public final class WriteDocument implements FlatMapFunction<Iterator<Document>, 
 
   private Iterable<DocumentWriter> createDocumentWriters() {
     val client = TransportClientFactory.newTransportClient(esUri);
-    return ImmutableList.of(new ElasticSearchDocumentWriter(client, indexName, type, 1));
+    // return ImmutableList.of(new ElasticSearchDocumentWriter(client, indexName, type, 1));
+    return Collections.emptyList();
   }
 
   @Override

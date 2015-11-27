@@ -22,8 +22,8 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.util.JavaRDDs;
-import org.icgc.dcc.release.job.document.core.Document;
 
 public class DocumentRdds {
 

@@ -29,16 +29,16 @@ import lombok.val;
 
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.release.core.document.BaseDocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
 public class ResolveDonorsTask extends AbstractIndexTask {
 
-  public ResolveDonorsTask(DocumentType type) {
+  public ResolveDonorsTask(BaseDocumentType type) {
     super(type, DocumentJobContext.builder().build());
   }
 

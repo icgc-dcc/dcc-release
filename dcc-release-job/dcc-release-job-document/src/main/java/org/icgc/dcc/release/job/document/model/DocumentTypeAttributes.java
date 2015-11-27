@@ -22,17 +22,21 @@ import static org.icgc.dcc.release.job.document.model.DocumentFields.DEFAULT_DOC
 import java.util.Collection;
 import java.util.Collections;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import org.icgc.dcc.common.core.model.Entity;
 import org.icgc.dcc.common.core.model.ReleaseCollection;
+import org.icgc.dcc.release.core.document.DocumentClassifier;
 import org.icgc.dcc.release.core.job.FileType;
 
-@Setter
+@Data
+// @FieldDefaults(level = AccessLevel.PRIVATE)
 @Accessors(fluent = true, chain = true)
-class DocumentTypeAttributes {
+@NoArgsConstructor
+public class DocumentTypeAttributes {
 
   private static final Collection<BroadcastType> DEFAULT_BROADCASTS = Collections.emptyList();
   private final static DocumentClassifier DEFAULT_CLASSIFIER = DocumentClassifier.BASIC;
@@ -58,7 +62,7 @@ class DocumentTypeAttributes {
   int batchSize = DEFAULT_BATCH_SIZE;
   int statusInterval = DEFAULT_STATUS_INTERVAL;
 
-  DocumentTypeAttributes fields(@NonNull DocumentFields.Builder builder) {
+  public DocumentTypeAttributes fields(@NonNull DocumentFields.Builder builder) {
     this.fields = builder.build();
     return this;
   }

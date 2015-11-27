@@ -33,7 +33,7 @@ import static org.icgc.dcc.common.core.model.ReleaseCollection.MUTATION_COLLECTI
 import static org.icgc.dcc.common.core.model.ReleaseCollection.OBSERVATION_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.PROJECT_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.RELEASE_COLLECTION;
-import static org.icgc.dcc.release.job.document.model.DocumentClassifier.CENTRIC;
+import static org.icgc.dcc.release.core.document.DocumentClassifier.CENTRIC;
 
 import java.util.Collection;
 
@@ -44,6 +44,7 @@ import lombok.val;
 import org.icgc.dcc.common.core.model.Entity;
 import org.icgc.dcc.common.core.model.IndexType;
 import org.icgc.dcc.common.core.model.ReleaseCollection;
+import org.icgc.dcc.release.core.document.DocumentClassifier;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.job.document.task.DiagramIndexTask;
 import org.icgc.dcc.release.job.document.task.DonorCentricIndexTask;
@@ -69,6 +70,7 @@ import com.google.common.collect.ImmutableList;
  * Eventually this entire class can be externalized and data driven.
  */
 @Getter
+@Deprecated
 public enum DocumentType {
 
   /**

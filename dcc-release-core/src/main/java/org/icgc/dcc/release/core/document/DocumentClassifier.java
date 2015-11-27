@@ -15,47 +15,21 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.core;
-
-import lombok.NonNull;
-import lombok.Value;
-
-import org.icgc.dcc.release.job.document.model.DocumentType;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+package org.icgc.dcc.release.core.document;
 
 /**
- * Default implementation for the {@link Document} abstraction.
+ * Discrete values for <em>the</em> major classification of document types.
  */
-@Value
-public class Document {
+public enum DocumentClassifier {
 
   /**
-   * The document type.
+   * Associated documents contain "transformed properties-only" documents
    */
-  DocumentType type;
+  BASIC,
 
   /**
-   * The document identifier.
+   * Associated documents contain "transformed properties and nested" documents
    */
-  String id;
-
-  /**
-   * The document source.
-   */
-  ObjectNode source;
-
-  @JsonCreator
-  public Document(
-      @NonNull @JsonProperty("type") DocumentType type,
-      @NonNull @JsonProperty("id") String id,
-      @NonNull @JsonProperty("source") ObjectNode source)
-  {
-    this.type = type;
-    this.id = id;
-    this.source = source;
-  }
+  CENTRIC;
 
 }

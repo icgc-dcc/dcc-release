@@ -19,6 +19,8 @@ package org.icgc.dcc.release.job.document.core;
 
 import java.io.Serializable;
 
+import org.icgc.dcc.release.core.document.Document;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**

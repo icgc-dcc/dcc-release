@@ -56,7 +56,7 @@ import lombok.val;
 
 import org.icgc.dcc.common.core.fi.CompositeImpactCategory;
 import org.icgc.dcc.common.core.model.ConsequenceType;
-import org.icgc.dcc.release.job.document.core.Document;
+import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.job.document.core.DocumentCallback;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;

@@ -17,20 +17,21 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
+import static org.icgc.dcc.release.job.document.util.DocumentTypes.getFields;
 import static org.icgc.dcc.release.job.document.util.GeneUtils.pivotGenes;
 import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.function.FilterFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.document.core.Document;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.function.WriteDocument;
 import org.icgc.dcc.release.job.document.model.CollectionFields;
-import org.icgc.dcc.release.job.document.model.DocumentType;
 import org.icgc.dcc.release.job.document.util.CollectionFieldsFilterAdapter;
 import org.icgc.dcc.release.job.document.util.DocumentRdds;
 
@@ -40,37 +41,37 @@ public abstract class AbstractIndexTask extends GenericTask {
 
   private static final FileType GENE_SET_INPUT_TYPE = FileType.GENE_SET_SUMMARY;
 
-  protected final DocumentType type;
+  protected final BaseDocumentType type;
   private final DocumentJobContext indexJobContext;
 
-  public AbstractIndexTask(DocumentType type, @NonNull DocumentJobContext indexJobContext) {
+  public AbstractIndexTask(BaseDocumentType type, @NonNull DocumentJobContext indexJobContext) {
     super(type.getName());
     this.type = type;
     this.indexJobContext = indexJobContext;
   }
 
   protected JavaRDD<ObjectNode> readDiagrams(TaskContext taskContext) {
-    val fields = type.getFields().getReleaseFields();
+    val fields = getFields(type).getReleaseFields();
     return filterFields(readInput(taskContext, FileType.DIAGRAM), fields);
   }
 
   protected JavaRDD<ObjectNode> readReleases(TaskContext taskContext) {
-    val fields = type.getFields().getReleaseFields();
+    val fields = getFields(type).getReleaseFields();
     return filterFields(readInput(taskContext, FileType.RELEASE_SUMMARY), fields);
   }
 
   protected JavaRDD<ObjectNode> readProjects(TaskContext taskContext) {
-    val fields = type.getFields().getProjectFields();
+    val fields = getFields(type).getProjectFields();
     return filterFields(readInput(taskContext, FileType.PROJECT_SUMMARY), fields);
   }
 
   protected JavaRDD<ObjectNode> readDonors(TaskContext taskContext) {
-    val fields = type.getFields().getDonorFields();
+    val fields = getFields(type).getDonorFields();
     return filterFields(readInput(taskContext, FileType.DONOR_SUMMARY), fields);
   }
 
   protected JavaRDD<ObjectNode> readGenesPivoted(TaskContext taskContext) {
-    val fields = type.getFields().getGeneFields();
+    val fields = getFields(type).getGeneFields();
     val genes = filterFields(readInput(taskContext, FileType.GENE_SUMMARY), fields);
     val geneSets = readInput(taskContext, GENE_SET_INPUT_TYPE);
 
@@ -78,22 +79,22 @@ public abstract class AbstractIndexTask extends GenericTask {
   }
 
   protected JavaRDD<ObjectNode> readGenes(TaskContext taskContext) {
-    val fields = type.getFields().getGeneFields();
+    val fields = getFields(type).getGeneFields();
     return filterFields(readInput(taskContext, FileType.GENE_SUMMARY), fields);
   }
 
   protected JavaRDD<ObjectNode> readGeneSets(TaskContext taskContext) {
-    val fields = type.getFields().getGeneSetFields();
+    val fields = getFields(type).getGeneSetFields();
     return filterFields(readInput(taskContext, GENE_SET_INPUT_TYPE), fields);
   }
 
   protected JavaRDD<ObjectNode> readObservations(TaskContext taskContext) {
-    val fields = type.getFields().getObservationFields();
+    val fields = getFields(type).getObservationFields();
     return filterFields(readInput(taskContext, FileType.OBSERVATION_FI), fields);
   }
 
   protected JavaRDD<ObjectNode> readMutations(TaskContext taskContext) {
-    val fields = type.getFields().getMutationFields();
+    val fields = getFields(type).getMutationFields();
     return filterFields(readInput(taskContext, FileType.MUTATION), fields);
   }
 

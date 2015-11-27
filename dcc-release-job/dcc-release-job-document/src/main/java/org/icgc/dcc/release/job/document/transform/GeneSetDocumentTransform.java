@@ -22,12 +22,12 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
-import org.icgc.dcc.release.job.document.core.Document;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
-import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.model.DocumentType;
+import org.icgc.dcc.release.job.document.core.DocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -36,7 +36,7 @@ public class GeneSetDocumentTransform implements DocumentTransform, Function<Obj
   private final DocumentContext documentContext;
 
   public GeneSetDocumentTransform(DocumentJobContext indexJobContext) {
-    this.documentContext = new DefaultDocumentContext(DocumentType.GENE_SET_TYPE, indexJobContext);
+    this.documentContext = new DefaultDocumentContext(BaseDocumentType.GENE_SET_TYPE, indexJobContext);
   }
 
   @Override

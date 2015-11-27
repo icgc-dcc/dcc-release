@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,40 +15,19 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.task;
+package org.icgc.dcc.release.core.document;
 
-import lombok.val;
+import java.io.Closeable;
+import java.io.IOException;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
-import org.icgc.dcc.release.core.document.Document;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.transform.ObservationCentricDocumentTransform;
+/**
+ * Abstract document output writer contract.
+ */
+public interface DocumentWriter extends Closeable {
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class ObservationCentricIndexTask extends AbstractIndexTask {
-
-  private final DocumentJobContext indexJobContext;
-
-  public ObservationCentricIndexTask(DocumentJobContext indexJobContext) {
-    super(BaseDocumentType.OBSERVATION_CENTRIC_TYPE, indexJobContext);
-    this.indexJobContext = indexJobContext;
-  }
+  void write(Document document) throws IOException;
 
   @Override
-  public void execute(TaskContext taskContext) {
-    val observations = readObservations(taskContext);
-
-    val output = transform(observations);
-    writeDocOutput(taskContext, output);
-  }
-
-  private JavaRDD<Document> transform(JavaRDD<ObjectNode> observations) {
-    val transformed = observations.map(new ObservationCentricDocumentTransform(indexJobContext));
-
-    return transformed;
-  }
+  void close() throws IOException;
 
 }

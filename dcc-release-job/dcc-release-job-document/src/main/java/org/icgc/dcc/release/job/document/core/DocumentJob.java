@@ -19,6 +19,8 @@ package org.icgc.dcc.release.job.document.core;
 
 import static java.lang.String.format;
 import static org.icgc.dcc.release.job.document.factory.TransportClientFactory.newTransportClient;
+import static org.icgc.dcc.release.job.document.util.DocumentTypes.getBroadcastDependencies;
+import static org.icgc.dcc.release.job.document.util.DocumentTypes.getIndexClassName;
 
 import java.lang.reflect.Constructor;
 import java.util.Collection;
@@ -32,6 +34,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.release.core.config.SnpEffProperties;
+import org.icgc.dcc.release.core.document.BaseDocumentType;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -40,7 +43,6 @@ import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.job.document.config.DocumentProperties;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext.DocumentJobContextBuilder;
 import org.icgc.dcc.release.job.document.model.BroadcastType;
-import org.icgc.dcc.release.job.document.model.DocumentType;
 import org.icgc.dcc.release.job.document.service.IndexService;
 import org.icgc.dcc.release.job.document.task.CreateVCFFileTask;
 import org.icgc.dcc.release.job.document.task.ResolveDonorsTask;
@@ -123,7 +125,7 @@ public class DocumentJob extends GenericJob {
 
   private static FileType[] resolveOutputFileTypes() {
     val outputFileTypes = Lists.<FileType> newArrayList();
-    for (val documentType : DocumentType.values()) {
+    for (val documentType : BaseDocumentType.values()) {
       outputFileTypes.add(documentType.getOutputFileType());
     }
 
@@ -148,7 +150,7 @@ public class DocumentJob extends GenericJob {
   @SneakyThrows
   private Collection<? extends Task> createStreamingTasks(JobContext jobContext) {
     val tasks = ImmutableList.<Task> builder();
-    for (val documentType : DocumentType.values()) {
+    for (val documentType : BaseDocumentType.values()) {
       val constructor = getConstructor(documentType);
       val indexJobContext = createIndexJobContext(jobContext, documentType);
       tasks.add((Task) constructor.newInstance(indexJobContext));
@@ -157,16 +159,16 @@ public class DocumentJob extends GenericJob {
     return tasks.build();
   }
 
-  private static Constructor<?> getConstructor(DocumentType documentType) throws ClassNotFoundException,
+  private static Constructor<?> getConstructor(BaseDocumentType documentType) throws ClassNotFoundException,
       NoSuchMethodException {
-    val indexClassName = documentType.getIndexClassName();
+    val indexClassName = getIndexClassName(documentType);
     val clazz = Class.forName(indexClassName);
     val constructor = clazz.getConstructor(DocumentJobContext.class);
 
     return constructor;
   }
 
-  private DocumentJobContext createIndexJobContext(JobContext jobContext, DocumentType documentType) {
+  private DocumentJobContext createIndexJobContext(JobContext jobContext, BaseDocumentType documentType) {
     val indexJobBuilder = DocumentJobContext.builder()
         .esUri(properties.getEsUri())
         .indexName(resolveIndexName(jobContext.getReleaseName()))
@@ -200,9 +202,10 @@ public class DocumentJob extends GenericJob {
     }
   }
 
-  private static Map<BroadcastType, ? extends Task> resolveDependencies(JobContext jobContext, DocumentType documentType) {
+  private static Map<BroadcastType, ? extends Task> resolveDependencies(JobContext jobContext,
+      BaseDocumentType documentType) {
     val tasksBuilder = ImmutableMap.<BroadcastType, Task> builder();
-    for (val dependencyTask : documentType.getBroadcastDependencies()) {
+    for (val dependencyTask : getBroadcastDependencies(documentType)) {
       tasksBuilder.put(dependencyTask, createDependentyTask(dependencyTask, documentType));
     }
 
@@ -213,9 +216,9 @@ public class DocumentJob extends GenericJob {
   }
 
   @SneakyThrows
-  private static Task createDependentyTask(BroadcastType dependencyTask, DocumentType documentType) {
+  private static Task createDependentyTask(BroadcastType dependencyTask, BaseDocumentType documentType) {
     val clazz = dependencyTask.getDependencyClass();
-    val constructor = clazz.getConstructor(DocumentType.class);
+    val constructor = clazz.getConstructor(BaseDocumentType.class);
 
     return constructor.newInstance(documentType);
   }

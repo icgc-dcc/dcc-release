@@ -15,40 +15,31 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.task;
+package org.icgc.dcc.release.core.document;
 
-import lombok.val;
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
-import org.icgc.dcc.release.core.document.Document;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.transform.ObservationCentricDocumentTransform;
+import org.icgc.dcc.common.core.model.Entity;
+import org.icgc.dcc.common.core.model.ReleaseCollection;
+import org.icgc.dcc.release.core.job.FileType;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+@Setter
+@Accessors(fluent = true, chain = true)
+public class DocumentTypeAttributes {
 
-public class ObservationCentricIndexTask extends AbstractIndexTask {
+  private final static DocumentClassifier DEFAULT_CLASSIFIER = DocumentClassifier.BASIC;
 
-  private final DocumentJobContext indexJobContext;
-
-  public ObservationCentricIndexTask(DocumentJobContext indexJobContext) {
-    super(BaseDocumentType.OBSERVATION_CENTRIC_TYPE, indexJobContext);
-    this.indexJobContext = indexJobContext;
-  }
-
-  @Override
-  public void execute(TaskContext taskContext) {
-    val observations = readObservations(taskContext);
-
-    val output = transform(observations);
-    writeDocOutput(taskContext, output);
-  }
-
-  private JavaRDD<Document> transform(JavaRDD<ObjectNode> observations) {
-    val transformed = observations.map(new ObservationCentricDocumentTransform(indexJobContext));
-
-    return transformed;
-  }
+  @NonNull
+  String name;
+  @NonNull
+  Entity entity;
+  @NonNull
+  ReleaseCollection collection;
+  @NonNull
+  DocumentClassifier classifier = DEFAULT_CLASSIFIER;
+  @NonNull
+  FileType outputFileType;
 
 }

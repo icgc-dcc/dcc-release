@@ -65,8 +65,8 @@ import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.BusinessKeys;
+import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.job.document.context.MutationCentricDocumentContext;
-import org.icgc.dcc.release.job.document.core.Document;
 import org.icgc.dcc.release.job.document.core.DocumentCallback;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;

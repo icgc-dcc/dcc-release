@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.io;
+package org.icgc.dcc.release.job.index.io;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
@@ -27,7 +27,7 @@ import static org.elasticsearch.common.unit.ByteSizeUnit.MB;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
-import static org.icgc.dcc.release.job.document.factory.JacksonFactory.newSmileWriter;
+import static org.icgc.dcc.release.job.index.factory.JacksonFactory.newSmileWriter;
 
 import java.io.IOException;
 import java.util.concurrent.Semaphore;
@@ -44,9 +44,9 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.ByteSizeValue;
+import org.icgc.dcc.release.core.document.BaseDocumentType;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentWriter;
-import org.icgc.dcc.release.job.document.model.DocumentType;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -69,7 +69,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
    * Meta data.
    */
   private final String indexName;
-  private final DocumentType type;
+  private final BaseDocumentType type;
 
   /**
    * Configuration.
@@ -88,7 +88,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
    */
   private int documentCount;
 
-  public ElasticSearchDocumentWriter(Client client, String indexName, DocumentType type, int concurrentRequests) {
+  public ElasticSearchDocumentWriter(Client client, String indexName, BaseDocumentType type, int concurrentRequests) {
     this.indexName = indexName;
     this.type = type;
     this.concurrentRequests = concurrentRequests;

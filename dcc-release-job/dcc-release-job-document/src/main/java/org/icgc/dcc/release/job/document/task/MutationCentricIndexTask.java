@@ -23,11 +23,11 @@ import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.g
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
-import org.icgc.dcc.release.job.document.core.Document;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.model.DocumentType;
 import org.icgc.dcc.release.job.document.transform.MutationCentricDocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -37,7 +37,7 @@ public class MutationCentricIndexTask extends AbstractIndexTask {
   private final DocumentJobContext indexJobContext;
 
   public MutationCentricIndexTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.MUTATION_CENTRIC_TYPE, indexJobContext);
+    super(BaseDocumentType.MUTATION_CENTRIC_TYPE, indexJobContext);
     this.indexJobContext = indexJobContext;
   }
 

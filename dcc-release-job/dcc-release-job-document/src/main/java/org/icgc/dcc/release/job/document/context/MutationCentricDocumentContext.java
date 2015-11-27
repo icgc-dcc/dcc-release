@@ -20,8 +20,8 @@ package org.icgc.dcc.release.job.document.context;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Collections.emptyList;
 
+import org.icgc.dcc.release.core.document.BaseDocumentType;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
@@ -33,7 +33,7 @@ public class MutationCentricDocumentContext extends DefaultDocumentContext {
 
   public MutationCentricDocumentContext(String mutationId, DocumentJobContext indexJobContext,
       Optional<Iterable<ObjectNode>> observations) {
-    super(DocumentType.MUTATION_CENTRIC_TYPE, indexJobContext);
+    super(BaseDocumentType.MUTATION_CENTRIC_TYPE, indexJobContext);
     this.mutationId = mutationId;
     this.observations = observations;
   }

@@ -24,11 +24,11 @@ import lombok.val;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.function.KeyFieldsFunction;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.document.core.Document;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.model.DocumentType;
 import org.icgc.dcc.release.job.document.transform.DonorCentricDocumentTransform;
 
 import scala.Tuple2;
@@ -41,7 +41,7 @@ public class DonorCentricIndexTask extends AbstractIndexTask {
   private final DocumentJobContext indexJobContext;
 
   public DonorCentricIndexTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.DONOR_CENTRIC_TYPE, indexJobContext);
+    super(BaseDocumentType.DONOR_CENTRIC_TYPE, indexJobContext);
     this.indexJobContext = indexJobContext;
   }
 

@@ -20,10 +20,10 @@ package org.icgc.dcc.release.job.document.task;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.document.core.Document;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.model.DocumentType;
 import org.icgc.dcc.release.job.document.transform.DonorDocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -33,7 +33,7 @@ public class DonorIndexTask extends AbstractIndexTask {
   private final DocumentJobContext indexJobContext;
 
   public DonorIndexTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.DONOR_TYPE, indexJobContext);
+    super(BaseDocumentType.DONOR_TYPE, indexJobContext);
     this.indexJobContext = indexJobContext;
   }
 

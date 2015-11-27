@@ -19,10 +19,10 @@ package org.icgc.dcc.release.job.document.task;
 
 import lombok.val;
 
+import org.icgc.dcc.release.core.document.BaseDocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.model.DocumentType;
 import org.icgc.dcc.release.job.document.transform.ProjectTextDocumentTransform;
 
 public class ProjectTextIndexTask extends AbstractIndexTask {
@@ -30,7 +30,7 @@ public class ProjectTextIndexTask extends AbstractIndexTask {
   private final DocumentJobContext indexJobContext;
 
   public ProjectTextIndexTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.PROJECT_TEXT_TYPE, indexJobContext);
+    super(BaseDocumentType.PROJECT_TEXT_TYPE, indexJobContext);
     this.indexJobContext = indexJobContext;
   }
 
