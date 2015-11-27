@@ -143,26 +143,26 @@ public enum FileType implements Identifiable {
   EXPORT_INPUT(true), EXPORT_OUTPUT(true),
 
   // Index types
-  DONOR_CENTRIC_INDEX(true),
-  DONOR_INDEX(true),
-  DONOR_TEXT_INDEX(true),
-  DIAGRAM_INDEX(false),
+  DONOR_CENTRIC_DOCUMENT(true),
+  DONOR_DOCUMENT(true),
+  DONOR_TEXT_DOCUMENT(true),
+  DIAGRAM_DOCUMENT(false),
 
-  GENE_CENTRIC_INDEX(false),
-  GENE_TEXT_INDEX(false),
-  GENE_INDEX(false),
-  GENE_SET_TEXT_INDEX(false),
-  GENE_SET_INDEX(false),
+  GENE_CENTRIC_DOCUMENT(false),
+  GENE_TEXT_DOCUMENT(false),
+  GENE_DOCUMENT(false),
+  GENE_SET_TEXT_DOCUMENT(false),
+  GENE_SET_DOCUMENT(false),
 
-  MUTATION_CENTRIC_INDEX(false),
-  MUTATION_TEXT_INDEX(false),
+  MUTATION_CENTRIC_DOCUMENT(false),
+  MUTATION_TEXT_DOCUMENT(false),
 
-  OBSERVATION_CENTRIC_INDEX(true),
+  OBSERVATION_CENTRIC_DOCUMENT(true),
 
-  PROJECT_TEXT_INDEX(false),
-  PROJECT_INDEX(false),
+  PROJECT_TEXT_DOCUMENT(false),
+  PROJECT_DOCUMENT(false),
 
-  RELEASE_INDEX(false);
+  RELEASE_DOCUMENT(false);
 
   @Getter
   private final boolean partitioned;

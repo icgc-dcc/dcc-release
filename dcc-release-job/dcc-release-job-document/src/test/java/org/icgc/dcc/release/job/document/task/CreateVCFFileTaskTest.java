@@ -25,7 +25,7 @@ public class CreateVCFFileTaskTest extends AbstractJobTest {
   @Override
   public void setUp() {
     super.setUp();
-    given(new File(TEST_FIXTURES_DIR));
+    given(new File(INPUT_TEST_FIXTURES_DIR));
   }
 
   @Test

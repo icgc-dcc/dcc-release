@@ -49,7 +49,7 @@ public class HDFSMutationsReader {
   private static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
 
   public Iterator<ObjectNode> createMutationsIterator() {
-    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_INDEX.getDirName());
+    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
     val inputStream = new FileGlobInputStream(fileSystem, inputPath);
 
     return readInput(inputStream);
