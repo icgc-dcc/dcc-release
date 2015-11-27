@@ -1,0 +1,57 @@
+package org.icgc.dcc.release.job.document.task;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.release.job.index.utils.TestUtils.createSnpEffProperties;
+
+import java.io.File;
+
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+import org.icgc.dcc.common.core.io.Files2;
+import org.icgc.dcc.release.core.job.JobType;
+import org.icgc.dcc.release.core.task.Task;
+import org.icgc.dcc.release.test.job.AbstractJobTest;
+import org.junit.Before;
+import org.junit.Test;
+
+@Slf4j
+public class CreateVCFFileTaskTest extends AbstractJobTest {
+
+  Task task = new CreateVCFFileTask(createSnpEffProperties());
+
+  @Before
+  @Override
+  public void setUp() {
+    super.setUp();
+    given(new File(TEST_FIXTURES_DIR));
+  }
+
+  @Test
+  public void testExecute() throws Exception {
+    task.execute(createTaskContext(JobType.SUMMARIZE));
+    verifyOutput();
+  }
+
+  private void verifyOutput() {
+    val vcfFile = resolveVcfFile();
+    printFile(vcfFile);
+    assertThat(vcfFile.exists()).isTrue();
+    assertThat(vcfFile.length()).isGreaterThan(1L);
+  }
+
+  @SneakyThrows
+  private static void printFile(File vcfFile) {
+    val reader = Files2.getCompressionAgnosticBufferedReader(vcfFile.getAbsolutePath());
+    String line = null;
+    while ((line = reader.readLine()) != null) {
+      log.info(line);
+    }
+  }
+
+  private File resolveVcfFile() {
+    return new File(workingDir, CreateVCFFileTask.VCF_FILE_NAME);
+  }
+
+}

@@ -19,6 +19,7 @@
     <module>dcc-release-job-all</module>
 
     <module>dcc-release-job-annotate</module>
+    <module>dcc-release-job-document</module>
     <module>dcc-release-job-export</module>
     <module>dcc-release-job-fathmm</module>
     <module>dcc-release-job-fi</module>

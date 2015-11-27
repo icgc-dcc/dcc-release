@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 public enum JobType {
 
   ANNOTATE,
+  DOCUMENT,
   EXPORT,
   FATHMM,
   FI,
@@ -52,6 +53,7 @@ public enum JobType {
         JobType.FATHMM,
         JobType.FI,
         JobType.SUMMARIZE,
+        JobType.DOCUMENT,
         JobType.INDEX,
         JobType.EXPORT
         );

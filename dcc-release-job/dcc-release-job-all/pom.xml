@@ -30,6 +30,11 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-document</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>dcc-release-job-export</artifactId>
       <version>${project.version}</version>
     </dependency>
