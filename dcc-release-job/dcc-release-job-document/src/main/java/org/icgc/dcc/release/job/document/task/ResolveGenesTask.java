@@ -28,17 +28,16 @@ import lombok.val;
 
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
-import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ResolveGenesTask extends AbstractIndexTask {
 
-  public ResolveGenesTask(BaseDocumentType type) {
-    super(type, DocumentJobContext.builder().build());
+  public ResolveGenesTask(DocumentType type) {
+    super(type);
   }
 
   @Getter(lazy = true)

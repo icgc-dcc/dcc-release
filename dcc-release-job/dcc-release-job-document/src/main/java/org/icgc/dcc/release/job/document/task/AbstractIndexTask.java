@@ -19,18 +19,15 @@ package org.icgc.dcc.release.job.document.task;
 
 import static org.icgc.dcc.release.job.document.util.DocumentTypes.getFields;
 import static org.icgc.dcc.release.job.document.util.GeneUtils.pivotGenes;
-import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.function.FilterFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.function.WriteDocument;
 import org.icgc.dcc.release.job.document.model.CollectionFields;
 import org.icgc.dcc.release.job.document.util.CollectionFieldsFilterAdapter;
 import org.icgc.dcc.release.job.document.util.DocumentRdds;
@@ -41,13 +38,11 @@ public abstract class AbstractIndexTask extends GenericTask {
 
   private static final FileType GENE_SET_INPUT_TYPE = FileType.GENE_SET_SUMMARY;
 
-  protected final BaseDocumentType type;
-  private final DocumentJobContext indexJobContext;
+  protected final DocumentType type;
 
-  public AbstractIndexTask(BaseDocumentType type, @NonNull DocumentJobContext indexJobContext) {
+  public AbstractIndexTask(DocumentType type) {
     super(type.getName());
     this.type = type;
-    this.indexJobContext = indexJobContext;
   }
 
   protected JavaRDD<ObjectNode> readDiagrams(TaskContext taskContext) {
@@ -99,11 +94,6 @@ public abstract class AbstractIndexTask extends GenericTask {
   }
 
   protected void writeDocOutput(TaskContext taskContext, JavaRDD<Document> processed) {
-    if (!indexJobContext.isSkipIndexing()) {
-      processed = processed.mapPartitions(
-          new WriteDocument(type, indexJobContext.getEsUri(), indexJobContext.getIndexName()));
-    }
-
     val outputPath = taskContext.getPath(type.getOutputFileType());
     DocumentRdds.saveAsTextObjectNodeFile(processed, outputPath);
   }

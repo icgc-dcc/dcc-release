@@ -19,7 +19,7 @@ package org.icgc.dcc.release.job.document.task;
 
 import lombok.val;
 
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.transform.DonorTextDocumentTransform;
@@ -29,7 +29,7 @@ public class DonorTextIndexTask extends AbstractIndexTask {
   private final DocumentJobContext indexJobContext;
 
   public DonorTextIndexTask(DocumentJobContext indexJobContext) {
-    super(BaseDocumentType.DONOR_TEXT_TYPE, indexJobContext);
+    super(DocumentType.DONOR_TEXT_TYPE);
     this.indexJobContext = indexJobContext;
   }
 

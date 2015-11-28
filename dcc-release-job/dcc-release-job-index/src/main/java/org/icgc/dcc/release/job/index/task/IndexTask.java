@@ -17,15 +17,22 @@
  */
 package org.icgc.dcc.release.job.index.task;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
+
+import java.util.UUID;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.GenericTask;
+import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
+import org.icgc.dcc.release.core.util.ObjectNodes;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -37,11 +44,16 @@ public class IndexTask extends GenericTask {
   @NonNull
   private final String indexName;
   @NonNull
-  private final BaseDocumentType documentType;
+  private final DocumentType documentType;
 
   @Override
   public TaskType getType() {
     return documentType.getOutputFileType().isPartitioned() ? TaskType.FILE_TYPE_PROJECT : TaskType.FILE_TYPE;
+  }
+
+  @Override
+  public String getName() {
+    return Task.getName(super.getName(), documentType.getName());
   }
 
   @Override
@@ -54,7 +66,12 @@ public class IndexTask extends GenericTask {
 
   private Function<ObjectNode, Document> createDocument() {
     return o -> {
-      String id = documentType.getCollection().getId();
+      String idFieldName = documentType.getPrimaryKey();
+
+      String id = documentType == DocumentType.OBSERVATION_CENTRIC_TYPE ?
+          UUID.randomUUID().toString()
+          : ObjectNodes.textValue(o, idFieldName);
+      checkState(!isNullOrEmpty(id), "Document ID can't be null or empty. {}", o);
 
       return new Document(documentType, id, o);
     };

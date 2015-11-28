@@ -27,7 +27,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 
@@ -37,7 +37,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class DefaultDocumentContext implements DocumentContext {
 
   @NonNull
-  private final BaseDocumentType type;
+  private final DocumentType type;
   @NonNull
   private final DocumentJobContext indexJobContext;
 
@@ -49,7 +49,7 @@ public class DefaultDocumentContext implements DocumentContext {
   private final Map<String, ObjectNode> donors = filterDonors();
 
   @Override
-  public BaseDocumentType getType() {
+  public DocumentType getType() {
     return type;
   }
 

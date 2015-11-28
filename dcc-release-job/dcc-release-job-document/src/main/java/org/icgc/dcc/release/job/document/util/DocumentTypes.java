@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
 
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.job.document.model.BroadcastType;
 import org.icgc.dcc.release.job.document.model.CollectionFields;
 import org.icgc.dcc.release.job.document.model.DocumentFields;
@@ -55,28 +55,28 @@ import com.google.common.collect.ImmutableMap;
 @NoArgsConstructor(access = PRIVATE)
 public final class DocumentTypes {
 
-  private static final Map<BaseDocumentType, DocumentTypeAttributes> DOCUMENT_TYPES = defineDocumentTypes();
+  private static final Map<DocumentType, DocumentTypeAttributes> DOCUMENT_TYPES = defineDocumentTypes();
 
-  public static String getIndexClassName(@NonNull BaseDocumentType documentType) {
+  public static String getIndexClassName(@NonNull DocumentType documentType) {
     return DOCUMENT_TYPES.get(documentType).indexClassName();
   }
 
-  public static Collection<BroadcastType> getBroadcastDependencies(@NonNull BaseDocumentType documentType) {
+  public static Collection<BroadcastType> getBroadcastDependencies(@NonNull DocumentType documentType) {
     return DOCUMENT_TYPES.get(documentType).broadcastDependencies();
   }
 
-  public static DocumentFields getFields(@NonNull BaseDocumentType documentType) {
+  public static DocumentFields getFields(@NonNull DocumentType documentType) {
     return DOCUMENT_TYPES.get(documentType).fields();
   }
 
-  private static Map<BaseDocumentType, DocumentTypeAttributes> defineDocumentTypes() {
+  private static Map<DocumentType, DocumentTypeAttributes> defineDocumentTypes() {
     val documentTypes =
         ImmutableMap
-            .<BaseDocumentType, DocumentTypeAttributes> builder()
-            .put(BaseDocumentType.DIAGRAM_TYPE, attributes().indexClassName(DiagramIndexTask.class.getName()))
-            .put(BaseDocumentType.RELEASE_TYPE, attributes().indexClassName(ReleaseIndexTask.class.getName()))
+            .<DocumentType, DocumentTypeAttributes> builder()
+            .put(DocumentType.DIAGRAM_TYPE, attributes().indexClassName(DiagramIndexTask.class.getName()))
+            .put(DocumentType.RELEASE_TYPE, attributes().indexClassName(ReleaseIndexTask.class.getName()))
 
-            .put(BaseDocumentType.GENE_SET_TYPE,
+            .put(DocumentType.GENE_SET_TYPE,
                 attributes()
                     .indexClassName(GeneSetIndexTask.class.getName())
                     .fields(fields()
@@ -105,7 +105,7 @@ public final class DocumentTypes {
                         )
                     )
             )
-            .put(BaseDocumentType.GENE_SET_TEXT_TYPE,
+            .put(DocumentType.GENE_SET_TEXT_TYPE,
                 attributes()
                     .indexClassName(GeneSetTextIndexTask.class.getName())
                     .fields(fields()
@@ -121,8 +121,8 @@ public final class DocumentTypes {
                     )
             )
 
-            .put(BaseDocumentType.PROJECT_TYPE, attributes().indexClassName(ProjectIndexTask.class.getName()))
-            .put(BaseDocumentType.PROJECT_TEXT_TYPE,
+            .put(DocumentType.PROJECT_TYPE, attributes().indexClassName(ProjectIndexTask.class.getName()))
+            .put(DocumentType.PROJECT_TEXT_TYPE,
                 attributes()
                     .indexClassName(ProjectTextIndexTask.class.getName())
                     .fields(fields()
@@ -139,7 +139,7 @@ public final class DocumentTypes {
                     )
             )
 
-            .put(BaseDocumentType.DONOR_TYPE,
+            .put(DocumentType.DONOR_TYPE,
                 attributes()
                     .indexClassName(DonorIndexTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.PROJECT))
@@ -152,7 +152,7 @@ public final class DocumentTypes {
                         )
                     )
             )
-            .put(BaseDocumentType.DONOR_TEXT_TYPE,
+            .put(DocumentType.DONOR_TEXT_TYPE,
                 attributes()
                     .indexClassName(DonorTextIndexTask.class.getName())
                     .fields(fields()
@@ -170,7 +170,7 @@ public final class DocumentTypes {
                         )
                     )
             )
-            .put(BaseDocumentType.DONOR_CENTRIC_TYPE,
+            .put(DocumentType.DONOR_CENTRIC_TYPE,
                 attributes()
                     .indexClassName(DonorCentricIndexTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.GENE, BroadcastType.PROJECT))
@@ -257,7 +257,7 @@ public final class DocumentTypes {
                     )
             )
 
-            .put(BaseDocumentType.GENE_TYPE,
+            .put(DocumentType.GENE_TYPE,
                 attributes()
                     .indexClassName(GeneIndexTask.class.getName())
                     .fields(fields()
@@ -274,7 +274,7 @@ public final class DocumentTypes {
                         )
                     )
             )
-            .put(BaseDocumentType.GENE_TEXT_TYPE,
+            .put(DocumentType.GENE_TEXT_TYPE,
                 attributes()
                     .indexClassName(GeneTextIndexTask.class.getName())
                     .fields(fields()
@@ -289,7 +289,7 @@ public final class DocumentTypes {
                         )
                     )
             )
-            .put(BaseDocumentType.GENE_CENTRIC_TYPE,
+            .put(DocumentType.GENE_CENTRIC_TYPE,
                 attributes()
                     .indexClassName(GeneCentricIndexTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.DONOR, BroadcastType.PROJECT))
@@ -312,7 +312,7 @@ public final class DocumentTypes {
             )
 
             .put(
-                BaseDocumentType.OBSERVATION_CENTRIC_TYPE,
+                DocumentType.OBSERVATION_CENTRIC_TYPE,
                 attributes()
                     .indexClassName(ObservationCentricIndexTask.class.getName())
                     .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
@@ -350,7 +350,7 @@ public final class DocumentTypes {
                     )
             )
 
-            .put(BaseDocumentType.MUTATION_TEXT_TYPE,
+            .put(DocumentType.MUTATION_TEXT_TYPE,
                 attributes()
                     .indexClassName(MutationTextIndexTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.GENE))
@@ -381,7 +381,7 @@ public final class DocumentTypes {
                     )
             )
             .put(
-                BaseDocumentType.MUTATION_CENTRIC_TYPE,
+                DocumentType.MUTATION_CENTRIC_TYPE,
                 attributes()
                     .indexClassName(MutationCentricIndexTask.class.getName())
                     .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
@@ -407,7 +407,7 @@ public final class DocumentTypes {
             )
             .build();
 
-    checkState(documentTypes.size() == BaseDocumentType.values().length);
+    checkState(documentTypes.size() == DocumentType.values().length);
 
     return documentTypes;
   }

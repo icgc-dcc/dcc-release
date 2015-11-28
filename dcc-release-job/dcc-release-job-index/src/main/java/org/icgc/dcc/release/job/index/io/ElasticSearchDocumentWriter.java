@@ -44,7 +44,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.ByteSizeValue;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentWriter;
 
@@ -69,7 +69,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
    * Meta data.
    */
   private final String indexName;
-  private final BaseDocumentType type;
+  private final DocumentType type;
 
   /**
    * Configuration.
@@ -88,7 +88,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
    */
   private int documentCount;
 
-  public ElasticSearchDocumentWriter(Client client, String indexName, BaseDocumentType type, int concurrentRequests) {
+  public ElasticSearchDocumentWriter(Client client, String indexName, DocumentType type, int concurrentRequests) {
     this.indexName = indexName;
     this.type = type;
     this.concurrentRequests = concurrentRequests;

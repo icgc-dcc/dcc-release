@@ -24,7 +24,7 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
@@ -41,7 +41,7 @@ public class DonorDocumentTransform implements DocumentTransform, Function<Objec
   private DocumentContext documentContext;
 
   public DonorDocumentTransform(DocumentJobContext indexJobContext) {
-    documentContext = new DefaultDocumentContext(BaseDocumentType.DONOR_TYPE, indexJobContext);
+    documentContext = new DefaultDocumentContext(DocumentType.DONOR_TYPE, indexJobContext);
   }
 
   @Override

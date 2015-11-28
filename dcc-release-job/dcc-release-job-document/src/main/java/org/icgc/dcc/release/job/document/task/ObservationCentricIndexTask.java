@@ -20,7 +20,7 @@ package org.icgc.dcc.release.job.document.task;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -33,7 +33,7 @@ public class ObservationCentricIndexTask extends AbstractIndexTask {
   private final DocumentJobContext indexJobContext;
 
   public ObservationCentricIndexTask(DocumentJobContext indexJobContext) {
-    super(BaseDocumentType.OBSERVATION_CENTRIC_TYPE, indexJobContext);
+    super(DocumentType.OBSERVATION_CENTRIC_TYPE);
     this.indexJobContext = indexJobContext;
   }
 

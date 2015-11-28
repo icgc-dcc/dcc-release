@@ -11,7 +11,7 @@ import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
@@ -92,7 +92,7 @@ public class IndexJob extends GenericJob {
   private Collection<? extends Task> createStreamingTasks(JobContext jobContext, String indexName) {
     val esUri = properties.getEsUri();
     val tasks = ImmutableList.<Task> builder();
-    for (val documentType : BaseDocumentType.values()) {
+    for (val documentType : DocumentType.values()) {
       tasks.add(new IndexTask(esUri, indexName, documentType));
     }
 

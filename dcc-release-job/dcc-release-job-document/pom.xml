@@ -16,12 +16,6 @@
 
   <dependencies>
 
-    <!-- Search -->
-    <dependency>
-      <groupId>org.elasticsearch</groupId>
-      <artifactId>elasticsearch</artifactId>
-    </dependency>
-
     <!-- JSON -->
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>

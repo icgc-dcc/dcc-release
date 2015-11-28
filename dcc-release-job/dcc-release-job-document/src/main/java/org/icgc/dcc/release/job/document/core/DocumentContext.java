@@ -20,7 +20,7 @@ package org.icgc.dcc.release.job.document.core;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -34,7 +34,7 @@ public interface DocumentContext extends Serializable {
    * 
    * @return the type
    */
-  BaseDocumentType getType();
+  DocumentType getType();
 
   /**
    * Gets a complete mapping from {@code _project_id} to project objects.

@@ -21,9 +21,9 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentClassifier;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -41,7 +41,7 @@ public class BasicDocumentTransform implements DocumentTransform, Function<Objec
 
   private final DocumentContext documentContext;
 
-  public BasicDocumentTransform(BaseDocumentType type) {
+  public BasicDocumentTransform(DocumentType type) {
     this.documentContext = new DefaultDocumentContext(type, DocumentJobContext.builder().build());
   }
 
@@ -65,8 +65,8 @@ public class BasicDocumentTransform implements DocumentTransform, Function<Objec
    * @param type the document type to be created
    * @return
    */
-  private static String getId(@NonNull ObjectNode root, @NonNull BaseDocumentType type) {
-    val fieldName = type.getCollection().getSurrogateKey();
+  private static String getId(@NonNull ObjectNode root, @NonNull DocumentType type) {
+    val fieldName = type.getPrimaryKey();
     val id = root.get(fieldName).asText();
 
     return id;

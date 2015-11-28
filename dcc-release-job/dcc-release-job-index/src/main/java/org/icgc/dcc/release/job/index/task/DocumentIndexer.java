@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentWriter;
 import org.icgc.dcc.release.job.index.factory.TransportClientFactory;
@@ -40,16 +40,16 @@ public final class DocumentIndexer implements FlatMapFunction<Iterator<Document>
   @NonNull
   private final String indexName;
   @NonNull
-  private final BaseDocumentType documentType;
+  private final DocumentType documentType;
 
   private transient DocumentWriter documentWriter;
 
   @Override
-  public Iterable<Void> call(Iterator<Document> t) throws Exception {
+  public Iterable<Void> call(Iterator<Document> document) throws Exception {
     checkDocumentWriter();
 
-    while (t.hasNext()) {
-      documentWriter.write(t.next());
+    while (document.hasNext()) {
+      documentWriter.write(document.next());
     }
 
     documentWriter.close();

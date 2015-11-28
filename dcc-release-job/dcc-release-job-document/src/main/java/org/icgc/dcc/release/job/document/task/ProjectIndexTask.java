@@ -19,7 +19,7 @@ package org.icgc.dcc.release.job.document.task;
 
 import lombok.val;
 
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -28,7 +28,7 @@ import org.icgc.dcc.release.job.document.transform.BasicDocumentTransform;
 public class ProjectIndexTask extends AbstractIndexTask {
 
   public ProjectIndexTask(DocumentJobContext indexJobContext) {
-    super(BaseDocumentType.PROJECT_TYPE, indexJobContext);
+    super(DocumentType.PROJECT_TYPE);
   }
 
   @Override

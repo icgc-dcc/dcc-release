@@ -67,6 +67,7 @@ public class FieldNames {
   public static class IndexFieldNames {
 
     public static final String GO_TERM_ONTOLOGY = "ontology";
+    public static final String TEXT_TYPE_ID = "id";
 
   }
 

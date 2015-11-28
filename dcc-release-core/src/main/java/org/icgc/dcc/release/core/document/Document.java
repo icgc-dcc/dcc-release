@@ -33,7 +33,7 @@ public class Document {
   /**
    * The document type.
    */
-  BaseDocumentType type;
+  DocumentType type;
 
   /**
    * The document identifier.
@@ -47,7 +47,7 @@ public class Document {
 
   @JsonCreator
   public Document(
-      @NonNull @JsonProperty("type") BaseDocumentType type,
+      @NonNull @JsonProperty("type") DocumentType type,
       @NonNull @JsonProperty("id") String id,
       @NonNull @JsonProperty("source") ObjectNode source)
   {

@@ -18,7 +18,6 @@
 package org.icgc.dcc.release.job.document.core;
 
 import static java.lang.String.format;
-import static org.icgc.dcc.release.job.document.factory.TransportClientFactory.newTransportClient;
 import static org.icgc.dcc.release.job.document.util.DocumentTypes.getBroadcastDependencies;
 import static org.icgc.dcc.release.job.document.util.DocumentTypes.getIndexClassName;
 
@@ -26,15 +25,13 @@ import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.Map;
 
-import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.release.core.config.SnpEffProperties;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -43,7 +40,6 @@ import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.job.document.config.DocumentProperties;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext.DocumentJobContextBuilder;
 import org.icgc.dcc.release.job.document.model.BroadcastType;
-import org.icgc.dcc.release.job.document.service.IndexService;
 import org.icgc.dcc.release.job.document.task.CreateVCFFileTask;
 import org.icgc.dcc.release.job.document.task.ResolveDonorsTask;
 import org.icgc.dcc.release.job.document.task.ResolveGenesTask;
@@ -55,7 +51,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class DocumentJob extends GenericJob {
@@ -75,48 +70,8 @@ public class DocumentJob extends GenericJob {
 
   @Override
   public void execute(@NonNull JobContext jobContext) {
-    // Cleanup output directories
     clean(jobContext);
-
-    // TODO: Fix this to be tied to a run id:
-    val indexName = resolveIndexName(jobContext.getReleaseName());
-    if (properties.isSkipIndexing()) {
-      write(jobContext, indexName);
-
-      return;
-    }
-
-    //
-    // TODO: Need to use spark.dynamicAllocation.enabled to dynamically increase memory for this job
-    //
-    // - http://spark.apache.org/docs/1.2.0/job-scheduling.html#dynamic-resource-allocation
-    // - https://issues.apache.org/jira/browse/SPARK-4751
-    //
-
-    @Cleanup
-    val client = newTransportClient(properties.getEsUri());
-    @Cleanup
-    val indexService = new IndexService(client);
-
-    // Prepare
-    log.info("Initializing index...");
-    indexService.initializeIndex(indexName);
-
-    // Populate
-    log.info("Populating index...");
-    write(jobContext, indexName);
-
-    // Report
-    log.info("Reporting index...");
-    indexService.reportIndex(indexName);
-
-    // Compact
-    log.info("Optimizing index...");
-    indexService.optimizeIndex(indexName);
-
-    // Freeze
-    log.info("Freezing index...");
-    indexService.freezeIndex(indexName);
+    write(jobContext);
   }
 
   private void clean(JobContext jobContext) {
@@ -125,7 +80,7 @@ public class DocumentJob extends GenericJob {
 
   private static FileType[] resolveOutputFileTypes() {
     val outputFileTypes = Lists.<FileType> newArrayList();
-    for (val documentType : BaseDocumentType.values()) {
+    for (val documentType : DocumentType.values()) {
       outputFileTypes.add(documentType.getOutputFileType());
     }
 
@@ -136,7 +91,7 @@ public class DocumentJob extends GenericJob {
     return "test-release-" + releaseName.toLowerCase();
   }
 
-  private void write(JobContext jobContext, String indexName) {
+  private void write(JobContext jobContext) {
     for (val task : createStreamingTasks(jobContext)) {
       jobContext.execute(task);
     }
@@ -150,7 +105,7 @@ public class DocumentJob extends GenericJob {
   @SneakyThrows
   private Collection<? extends Task> createStreamingTasks(JobContext jobContext) {
     val tasks = ImmutableList.<Task> builder();
-    for (val documentType : BaseDocumentType.values()) {
+    for (val documentType : DocumentType.values()) {
       val constructor = getConstructor(documentType);
       val indexJobContext = createIndexJobContext(jobContext, documentType);
       tasks.add((Task) constructor.newInstance(indexJobContext));
@@ -159,7 +114,7 @@ public class DocumentJob extends GenericJob {
     return tasks.build();
   }
 
-  private static Constructor<?> getConstructor(BaseDocumentType documentType) throws ClassNotFoundException,
+  private static Constructor<?> getConstructor(DocumentType documentType) throws ClassNotFoundException,
       NoSuchMethodException {
     val indexClassName = getIndexClassName(documentType);
     val clazz = Class.forName(indexClassName);
@@ -168,12 +123,8 @@ public class DocumentJob extends GenericJob {
     return constructor;
   }
 
-  private DocumentJobContext createIndexJobContext(JobContext jobContext, BaseDocumentType documentType) {
-    val indexJobBuilder = DocumentJobContext.builder()
-        .esUri(properties.getEsUri())
-        .indexName(resolveIndexName(jobContext.getReleaseName()))
-        .skipIndexing(properties.isSkipIndexing());
-
+  private DocumentJobContext createIndexJobContext(JobContext jobContext, DocumentType documentType) {
+    val indexJobBuilder = DocumentJobContext.builder();
     val indexJobDependencies = resolveDependencies(jobContext, documentType);
     setDependencies(indexJobBuilder, indexJobDependencies);
 
@@ -203,7 +154,7 @@ public class DocumentJob extends GenericJob {
   }
 
   private static Map<BroadcastType, ? extends Task> resolveDependencies(JobContext jobContext,
-      BaseDocumentType documentType) {
+      DocumentType documentType) {
     val tasksBuilder = ImmutableMap.<BroadcastType, Task> builder();
     for (val dependencyTask : getBroadcastDependencies(documentType)) {
       tasksBuilder.put(dependencyTask, createDependentyTask(dependencyTask, documentType));
@@ -216,9 +167,9 @@ public class DocumentJob extends GenericJob {
   }
 
   @SneakyThrows
-  private static Task createDependentyTask(BroadcastType dependencyTask, BaseDocumentType documentType) {
+  private static Task createDependentyTask(BroadcastType dependencyTask, DocumentType documentType) {
     val clazz = dependencyTask.getDependencyClass();
-    val constructor = clazz.getConstructor(BaseDocumentType.class);
+    val constructor = clazz.getConstructor(DocumentType.class);
 
     return constructor.newInstance(documentType);
   }

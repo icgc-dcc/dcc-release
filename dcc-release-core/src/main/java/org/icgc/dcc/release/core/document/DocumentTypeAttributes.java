@@ -22,7 +22,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import org.icgc.dcc.common.core.model.Entity;
-import org.icgc.dcc.common.core.model.ReleaseCollection;
 import org.icgc.dcc.release.core.job.FileType;
 
 @Setter
@@ -36,10 +35,10 @@ public class DocumentTypeAttributes {
   @NonNull
   Entity entity;
   @NonNull
-  ReleaseCollection collection;
-  @NonNull
   DocumentClassifier classifier = DEFAULT_CLASSIFIER;
   @NonNull
   FileType outputFileType;
+  @NonNull
+  String primaryKey;
 
 }

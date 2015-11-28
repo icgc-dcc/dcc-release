@@ -31,12 +31,6 @@ import lombok.experimental.Accessors;
 public class DocumentProperties implements Serializable {
 
   /**
-   * The output ES URI.
-   */
-  @NonNull
-  String esUri;
-
-  /**
    * The output {@link FileSystem} URI.
    */
   @NonNull
@@ -58,10 +52,5 @@ public class DocumentProperties implements Serializable {
    * Whether to export mutation VCF file.
    */
   boolean exportVCF;
-
-  /**
-   * Whether to index data into Elasticsearch.
-   */
-  boolean skipIndexing;
 
 }

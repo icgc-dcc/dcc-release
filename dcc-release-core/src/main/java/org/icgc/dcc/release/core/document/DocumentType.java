@@ -25,28 +25,27 @@ import static org.icgc.dcc.common.core.model.Entity.OBSERVATION;
 import static org.icgc.dcc.common.core.model.Entity.PATHWAY;
 import static org.icgc.dcc.common.core.model.Entity.PROJECT;
 import static org.icgc.dcc.common.core.model.Entity.RELEASE;
-import static org.icgc.dcc.common.core.model.ReleaseCollection.DIAGRAM_COLLECTION;
-import static org.icgc.dcc.common.core.model.ReleaseCollection.DONOR_COLLECTION;
-import static org.icgc.dcc.common.core.model.ReleaseCollection.GENE_COLLECTION;
-import static org.icgc.dcc.common.core.model.ReleaseCollection.GENE_SET_COLLECTION;
-import static org.icgc.dcc.common.core.model.ReleaseCollection.MUTATION_COLLECTION;
-import static org.icgc.dcc.common.core.model.ReleaseCollection.OBSERVATION_COLLECTION;
-import static org.icgc.dcc.common.core.model.ReleaseCollection.PROJECT_COLLECTION;
-import static org.icgc.dcc.common.core.model.ReleaseCollection.RELEASE_COLLECTION;
+import static org.icgc.dcc.common.core.model.FieldNames.DIAGRAM_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.RELEASE_ID;
 import static org.icgc.dcc.release.core.document.DocumentClassifier.CENTRIC;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
 
 import org.icgc.dcc.common.core.model.Entity;
+import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.common.core.model.IndexType;
-import org.icgc.dcc.common.core.model.ReleaseCollection;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.util.FieldNames.IndexFieldNames;
 
 import com.google.common.collect.ImmutableList;
 
 @Getter
-public enum BaseDocumentType {
+public enum DocumentType {
 
   /**
    * Diagram type(s).
@@ -55,8 +54,8 @@ public enum BaseDocumentType {
       attributes()
           .name("diagram")
           .entity(PATHWAY)
-          .collection(DIAGRAM_COLLECTION)
           .outputFileType(FileType.DIAGRAM_DOCUMENT)
+          .primaryKey(DIAGRAM_ID)
   ),
 
   /**
@@ -66,8 +65,8 @@ public enum BaseDocumentType {
       attributes()
           .name("release")
           .entity(RELEASE)
-          .collection(RELEASE_COLLECTION)
           .outputFileType(FileType.RELEASE_DOCUMENT)
+          .primaryKey(RELEASE_ID)
   ),
 
   /**
@@ -76,15 +75,15 @@ public enum BaseDocumentType {
   GENE_SET_TYPE(attributes()
       .name("gene-set")
       .entity(GENE_SET)
-      .collection(GENE_SET_COLLECTION)
       .outputFileType(FileType.GENE_SET_DOCUMENT)
+      .primaryKey(GENE_SET_ID)
   ),
 
   GENE_SET_TEXT_TYPE(attributes()
       .name("gene-set-text")
       .entity(GENE_SET)
-      .collection(GENE_SET_COLLECTION)
       .outputFileType(FileType.GENE_SET_TEXT_DOCUMENT)
+      .primaryKey(IndexFieldNames.TEXT_TYPE_ID)
   ),
 
   /**
@@ -94,16 +93,16 @@ public enum BaseDocumentType {
       attributes()
           .name("project")
           .entity(PROJECT)
-          .collection(PROJECT_COLLECTION)
           .outputFileType(FileType.PROJECT_DOCUMENT)
+          .primaryKey(PROJECT_ID)
   ),
 
   PROJECT_TEXT_TYPE(
       attributes()
           .name("project-text")
           .entity(PROJECT)
-          .collection(PROJECT_COLLECTION)
           .outputFileType(FileType.PROJECT_TEXT_DOCUMENT)
+          .primaryKey(IndexFieldNames.TEXT_TYPE_ID)
   ),
 
   /**
@@ -113,25 +112,25 @@ public enum BaseDocumentType {
       attributes()
           .name("donor")
           .entity(DONOR)
-          .collection(DONOR_COLLECTION)
           .outputFileType(FileType.DONOR_DOCUMENT)
+          .primaryKey(DONOR_ID)
   ),
 
   DONOR_TEXT_TYPE(
       attributes()
           .name("donor-text")
           .entity(DONOR)
-          .collection(DONOR_COLLECTION)
           .outputFileType(FileType.DONOR_TEXT_DOCUMENT)
+          .primaryKey(IndexFieldNames.TEXT_TYPE_ID)
   ),
 
   DONOR_CENTRIC_TYPE(
       attributes()
           .name("donor-centric")
           .entity(DONOR)
-          .collection(DONOR_COLLECTION)
           .classifier(CENTRIC)
           .outputFileType(FileType.DONOR_CENTRIC_DOCUMENT)
+          .primaryKey(DONOR_ID)
   ),
 
   /**
@@ -141,25 +140,25 @@ public enum BaseDocumentType {
       attributes()
           .name("gene")
           .entity(GENE)
-          .collection(GENE_COLLECTION)
           .outputFileType(FileType.GENE_DOCUMENT)
+          .primaryKey(GENE_ID)
   ),
 
   GENE_TEXT_TYPE(
       attributes()
           .name("gene-text")
           .entity(GENE)
-          .collection(GENE_COLLECTION)
           .outputFileType(FileType.GENE_TEXT_DOCUMENT)
+          .primaryKey(IndexFieldNames.TEXT_TYPE_ID)
   ),
 
   GENE_CENTRIC_TYPE(
       attributes()
           .name("gene-centric")
           .entity(GENE)
-          .collection(GENE_COLLECTION)
           .classifier(CENTRIC)
           .outputFileType(FileType.GENE_CENTRIC_DOCUMENT)
+          .primaryKey(GENE_ID)
   ),
 
   /**
@@ -169,9 +168,10 @@ public enum BaseDocumentType {
       attributes()
           .name("observation-centric")
           .entity(OBSERVATION)
-          .collection(OBSERVATION_COLLECTION)
           .classifier(CENTRIC)
           .outputFileType(FileType.OBSERVATION_CENTRIC_DOCUMENT)
+          .primaryKey("")
+
   ),
 
   /**
@@ -181,17 +181,17 @@ public enum BaseDocumentType {
       attributes()
           .name("mutation-text")
           .entity(MUTATION)
-          .collection(MUTATION_COLLECTION)
           .outputFileType(FileType.MUTATION_TEXT_DOCUMENT)
+          .primaryKey(IndexFieldNames.TEXT_TYPE_ID)
   ),
 
   MUTATION_CENTRIC_TYPE(
       attributes()
           .name("mutation-centric")
           .entity(MUTATION)
-          .collection(MUTATION_COLLECTION)
           .classifier(CENTRIC)
           .outputFileType(FileType.MUTATION_CENTRIC_DOCUMENT)
+          .primaryKey(FieldNames.MUTATION_ID)
   );
 
   /**
@@ -215,35 +215,36 @@ public enum BaseDocumentType {
   private final FileType outputFileType;
 
   /**
-   * The source collection.
+   * Name of the primary key of the document.
    */
-  private final ReleaseCollection collection;
+  private final String primaryKey;
 
-  private BaseDocumentType(@NonNull DocumentTypeAttributes attributes) {
+  private DocumentType(@NonNull DocumentTypeAttributes attributes) {
     this.entity = attributes.entity;
     this.name = attributes.name;
     this.classifier = attributes.classifier;
     this.outputFileType = attributes.outputFileType;
-    this.collection = attributes.collection;
+    this.primaryKey = attributes.primaryKey;
   }
 
-  public static Iterable<BaseDocumentType> convert(Iterable<IndexType> indexTypes) {
-    val types = ImmutableList.<BaseDocumentType> builder();
+  public static Iterable<DocumentType> convert(Iterable<IndexType> indexTypes) {
+    val types = ImmutableList.<DocumentType> builder();
     for (val indexType : indexTypes) {
-      types.add(BaseDocumentType.byName(indexType.getName()));
+      types.add(DocumentType.byName(indexType.getName()));
     }
 
     return types.build();
   }
 
-  public static BaseDocumentType byName(@NonNull String name) {
+  public static DocumentType byName(@NonNull String name) {
     for (val value : values()) {
       if (name.equals(value.name)) {
         return value;
       }
     }
 
-    throw new IllegalArgumentException("No '" + BaseDocumentType.class.getName() + "' value with name '" + name + "' found");
+    throw new IllegalArgumentException("No '" + DocumentType.class.getName() + "' value with name '" + name
+        + "' found");
   }
 
   @Override

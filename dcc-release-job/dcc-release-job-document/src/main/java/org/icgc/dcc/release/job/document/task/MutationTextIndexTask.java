@@ -23,7 +23,7 @@ import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.g
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
@@ -37,7 +37,7 @@ public class MutationTextIndexTask extends AbstractIndexTask {
   private final DocumentJobContext indexJobContext;
 
   public MutationTextIndexTask(DocumentJobContext indexJobContext) {
-    super(BaseDocumentType.MUTATION_TEXT_TYPE, indexJobContext);
+    super(DocumentType.MUTATION_TEXT_TYPE);
     this.indexJobContext = indexJobContext;
   }
 

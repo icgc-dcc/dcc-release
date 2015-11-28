@@ -40,7 +40,7 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
@@ -58,7 +58,7 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
   private final DocumentContext documentContext;
 
   public ObservationCentricDocumentTransform(DocumentJobContext indexJobContext) {
-    this.documentContext = new DefaultDocumentContext(BaseDocumentType.OBSERVATION_CENTRIC_TYPE, indexJobContext);
+    this.documentContext = new DefaultDocumentContext(DocumentType.OBSERVATION_CENTRIC_TYPE, indexJobContext);
   }
 
   @Override

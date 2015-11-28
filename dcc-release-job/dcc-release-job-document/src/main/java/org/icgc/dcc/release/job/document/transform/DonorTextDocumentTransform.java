@@ -29,8 +29,7 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.elasticsearch.common.collect.Lists;
-import org.icgc.dcc.release.core.document.BaseDocumentType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
@@ -39,6 +38,7 @@ import org.icgc.dcc.release.job.document.core.DocumentTransform;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -49,7 +49,7 @@ public class DonorTextDocumentTransform implements DocumentTransform, Function<O
   private final DocumentContext documentContext;
 
   public DonorTextDocumentTransform(DocumentJobContext indexJobContext) {
-    this.documentContext = new DefaultDocumentContext(BaseDocumentType.DONOR_TEXT_TYPE, indexJobContext);
+    this.documentContext = new DefaultDocumentContext(DocumentType.DONOR_TEXT_TYPE, indexJobContext);
   }
 
   @Override
