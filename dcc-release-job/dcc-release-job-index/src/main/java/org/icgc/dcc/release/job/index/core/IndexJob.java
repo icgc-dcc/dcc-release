@@ -85,11 +85,11 @@ public class IndexJob extends GenericJob {
   }
 
   private void index(JobContext jobContext, String indexName) {
-    jobContext.execute(createStreamingTasks(jobContext, indexName));
+    jobContext.execute(createStreamingTasks(indexName));
   }
 
   @SneakyThrows
-  private Collection<? extends Task> createStreamingTasks(JobContext jobContext, String indexName) {
+  private Collection<? extends Task> createStreamingTasks(String indexName) {
     val esUri = properties.getEsUri();
     val tasks = ImmutableList.<Task> builder();
     for (val documentType : DocumentType.values()) {

@@ -59,13 +59,14 @@ mail:
       mail.smtp.host: ***REMOVED***
       mail.smtp.from: no-reply@oicr.on.ca
 
-index:
-  esUri: "es://***REMOVED***:9300"
+document:
   fsUri: "***REMOVED***"
   outputDir: /tmp
   fastaFile: "/u/dcc_dev/dcc-etl/data/genome/GRCh37.75/GRCh37.75.fasta"
   exportVCF: false
-  skipIndexing: false
+  
+index:
+  esUri: "es://***REMOVED***:9300"
 
 ---
 

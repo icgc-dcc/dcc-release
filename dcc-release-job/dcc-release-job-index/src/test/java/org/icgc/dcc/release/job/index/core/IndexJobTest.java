@@ -38,8 +38,7 @@ public class IndexJobTest extends AbstractJobTest {
 	@Before
 	public void setUp() {
 		super.setUp();
-		val properties = new IndexProperties().setEsUri(ES_URI).setOutputDir(
-				new File(workingDir, "output").getAbsolutePath());
+		val properties = new IndexProperties().setEsUri(ES_URI);
 
 		this.job = new IndexJob(properties);
 		this.index = IndexJob.resolveIndexName(RELEASE_VERSION);

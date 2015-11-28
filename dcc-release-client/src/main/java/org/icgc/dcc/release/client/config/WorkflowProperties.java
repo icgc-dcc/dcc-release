@@ -28,6 +28,7 @@ import org.icgc.dcc.release.job.document.config.DocumentProperties;
 import org.icgc.dcc.release.job.export.config.HBaseProperties;
 import org.icgc.dcc.release.job.id.config.IdProperties;
 import org.icgc.dcc.release.job.imports.config.MongoProperties;
+import org.icgc.dcc.release.job.index.config.IndexProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,9 +55,15 @@ public class WorkflowProperties {
   }
 
   @Bean
-  @ConfigurationProperties(prefix = "index")
-  public DocumentProperties indexProperties() {
+  @ConfigurationProperties(prefix = "document")
+  public DocumentProperties documentProperties() {
     return new DocumentProperties();
+  }
+
+  @Bean
+  @ConfigurationProperties(prefix = "index")
+  public IndexProperties indexProperties() {
+    return new IndexProperties();
   }
 
   @Bean

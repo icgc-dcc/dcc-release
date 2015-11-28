@@ -16,10 +16,4 @@ public class IndexProperties {
 	  @NonNull
 	  String esUri;
 
-	  /**
-	   * The output archive dir.
-	   */
-	  @NonNull
-	  String outputDir;
-
 }
