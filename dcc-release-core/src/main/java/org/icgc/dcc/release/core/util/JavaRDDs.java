@@ -23,7 +23,16 @@ import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 import java.util.Collections;
 import java.util.List;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.compress.SnappyCodec;
@@ -39,15 +48,9 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.rdd.HadoopPartition;
 import org.icgc.dcc.common.hadoop.fs.FileSystems;
 import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
+import org.icgc.dcc.release.core.hadoop.CombineSequenceInputFormat;
 import org.icgc.dcc.release.core.hadoop.CombineTextInputFormat;
 import org.slf4j.Logger;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -98,6 +101,20 @@ public final class JavaRDDs {
         sparkContext.defaultMinPartitions());
 
     return (JavaHadoopRDD<LongWritable, Text>) hadoopRDD;
+  }
+
+  public static JavaHadoopRDD<NullWritable, BytesWritable> combineSequenceFile(@NonNull JavaSparkContext sparkContext,
+      @NonNull String paths) {
+    return combineSequenceFile(sparkContext, paths, createJobConf(sparkContext));
+  }
+
+  public static JavaHadoopRDD<NullWritable, BytesWritable> combineSequenceFile(@NonNull JavaSparkContext sparkContext,
+      @NonNull String paths, @NonNull JobConf conf) {
+    CombineSequenceInputFormat.setInputPaths(conf, paths);
+    val hadoopRDD = sparkContext.hadoopRDD(conf, CombineSequenceInputFormat.class, NullWritable.class,
+        BytesWritable.class, sparkContext.defaultMinPartitions());
+
+    return (JavaHadoopRDD<NullWritable, BytesWritable>) hadoopRDD;
   }
 
   @NonNull

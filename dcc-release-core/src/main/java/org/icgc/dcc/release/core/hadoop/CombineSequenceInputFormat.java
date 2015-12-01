@@ -15,43 +15,38 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.annotate.task;
+package org.icgc.dcc.release.core.hadoop;
 
-import static org.icgc.dcc.release.job.annotate.core.AnnotateJob.SSM_INPUT_TYPE;
+import java.io.IOException;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.config.SnpEffProperties;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.task.GenericProcessTask;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.annotate.function.SnpEffAnnotate;
-import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapred.lib.CombineFileInputFormat;
+import org.apache.hadoop.mapred.lib.CombineFileRecordReader;
+import org.apache.hadoop.mapred.lib.CombineFileSplit;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class AnnotationTask extends GenericProcessTask {
-
-  private final SnpEffProperties properties;
-
-  public AnnotationTask(SnpEffProperties properties, FileType inputFileType, FileType outputFileType) {
-    super(inputFileType, outputFileType);
-    this.properties = properties;
-  }
+public class CombineSequenceInputFormat extends CombineFileInputFormat<NullWritable, BytesWritable> {
 
   @Override
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
-    return readInput(taskContext, createJobConf(taskContext), inputFileType, properties.getMaxFileSizeMb());
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  public RecordReader<NullWritable, BytesWritable> getRecordReader(InputSplit split, JobConf conf, Reporter reporter)
+      throws IOException {
+    return new CombineFileRecordReader(conf, (CombineFileSplit) split, reporter, BiteRecordReaderWrapper.class);
   }
 
-  @Override
-  protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input
-        .mapPartitions(new SnpEffAnnotate(properties, getAnnotatedFileType()))
-        .filter(row -> !row.equals(SnpEffAnnotate.SENTINEL_VALUE));
-  }
+  public static class BiteRecordReaderWrapper extends CombineFileRecordReaderWrapper<NullWritable, BytesWritable> {
 
-  private AnnotatedFileType getAnnotatedFileType() {
-    return inputFileType == SSM_INPUT_TYPE ? AnnotatedFileType.SSM : AnnotatedFileType.SGV;
+    public BiteRecordReaderWrapper(CombineFileSplit split, Configuration conf, Reporter reporter, Integer index)
+        throws IOException {
+      super(new SequenceFileInputFormat<NullWritable, BytesWritable>(), split, conf, reporter, index);
+    }
+
   }
 
 }

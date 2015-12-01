@@ -19,13 +19,9 @@ package org.icgc.dcc.release.core.hadoop;
 
 import java.io.IOException;
 
-import lombok.val;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
@@ -42,53 +38,6 @@ public class CombineTextInputFormat extends CombineFileInputFormat<LongWritable,
   public RecordReader<LongWritable, Text> getRecordReader(InputSplit split, JobConf conf, Reporter reporter)
       throws IOException {
     return new CombineFileRecordReader(conf, (CombineFileSplit) split, reporter, TextRecordReaderWrapper.class);
-  }
-
-  private static abstract class CombineFileRecordReaderWrapper<K, V> implements RecordReader<K, V> {
-
-    private final RecordReader<K, V> delegate;
-
-    protected CombineFileRecordReaderWrapper(FileInputFormat<K, V> inputFormat, CombineFileSplit split,
-        Configuration conf, Reporter reporter, Integer index) throws IOException {
-      val fileSplit = new FileSplit(
-          split.getPath(index),
-          split.getOffset(index),
-          split.getLength(index),
-          split.getLocations());
-
-      delegate = inputFormat.getRecordReader(fileSplit, (JobConf) conf, reporter);
-    }
-
-    @Override
-    public boolean next(K key, V value) throws IOException {
-      return delegate.next(key, value);
-    }
-
-    @Override
-    public K createKey() {
-      return delegate.createKey();
-    }
-
-    @Override
-    public V createValue() {
-      return delegate.createValue();
-    }
-
-    @Override
-    public long getPos() throws IOException {
-      return delegate.getPos();
-    }
-
-    @Override
-    public void close() throws IOException {
-      delegate.close();
-    }
-
-    @Override
-    public float getProgress() throws IOException {
-      return delegate.getProgress();
-    }
-
   }
 
   public static class TextRecordReaderWrapper extends CombineFileRecordReaderWrapper<LongWritable, Text> {

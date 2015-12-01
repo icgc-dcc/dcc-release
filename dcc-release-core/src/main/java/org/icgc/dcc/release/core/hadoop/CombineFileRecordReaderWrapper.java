@@ -15,43 +15,63 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.annotate.task;
+package org.icgc.dcc.release.core.hadoop;
 
-import static org.icgc.dcc.release.job.annotate.core.AnnotateJob.SSM_INPUT_TYPE;
+import java.io.IOException;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.config.SnpEffProperties;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.task.GenericProcessTask;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.annotate.function.SnpEffAnnotate;
-import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
+import lombok.val;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.lib.CombineFileSplit;
 
-public class AnnotationTask extends GenericProcessTask {
+abstract class CombineFileRecordReaderWrapper<K, V> implements RecordReader<K, V> {
 
-  private final SnpEffProperties properties;
+  private final RecordReader<K, V> delegate;
 
-  public AnnotationTask(SnpEffProperties properties, FileType inputFileType, FileType outputFileType) {
-    super(inputFileType, outputFileType);
-    this.properties = properties;
+  protected CombineFileRecordReaderWrapper(FileInputFormat<K, V> inputFormat, CombineFileSplit split,
+      Configuration conf, Reporter reporter, Integer index) throws IOException {
+    val fileSplit = new FileSplit(
+        split.getPath(index),
+        split.getOffset(index),
+        split.getLength(index),
+        split.getLocations());
+
+    delegate = inputFormat.getRecordReader(fileSplit, (JobConf) conf, reporter);
   }
 
   @Override
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
-    return readInput(taskContext, createJobConf(taskContext), inputFileType, properties.getMaxFileSizeMb());
+  public boolean next(K key, V value) throws IOException {
+    return delegate.next(key, value);
   }
 
   @Override
-  protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input
-        .mapPartitions(new SnpEffAnnotate(properties, getAnnotatedFileType()))
-        .filter(row -> !row.equals(SnpEffAnnotate.SENTINEL_VALUE));
+  public K createKey() {
+    return delegate.createKey();
   }
 
-  private AnnotatedFileType getAnnotatedFileType() {
-    return inputFileType == SSM_INPUT_TYPE ? AnnotatedFileType.SSM : AnnotatedFileType.SGV;
+  @Override
+  public V createValue() {
+    return delegate.createValue();
+  }
+
+  @Override
+  public long getPos() throws IOException {
+    return delegate.getPos();
+  }
+
+  @Override
+  public void close() throws IOException {
+    delegate.close();
+  }
+
+  @Override
+  public float getProgress() throws IOException {
+    return delegate.getProgress();
   }
 
 }

@@ -74,6 +74,17 @@ public final class ObjectNodeRDDs {
         .map(new ParseObjectNode());
   }
 
+  public static JavaRDD<ObjectNode> combineObjectNodeSequenceFile(@NonNull JavaSparkContext sparkContext,
+      @NonNull String paths) {
+    return combineObjectNodeSequenceFile(sparkContext, paths, createJobConf(sparkContext));
+  }
+
+  public static JavaRDD<ObjectNode> combineObjectNodeSequenceFile(@NonNull JavaSparkContext sparkContext,
+      @NonNull String paths, @NonNull JobConf conf) {
+    return JavaRDDs.combineSequenceFile(sparkContext, paths, conf)
+        .map(tuple -> READER.readValue(tuple._2.getBytes()));
+  }
+
   @NonNull
   public static void saveAsTextObjectNodeFile(JavaRDD<ObjectNode> rdd, String path) {
     val output = rdd.map(new FormatObjectNode());

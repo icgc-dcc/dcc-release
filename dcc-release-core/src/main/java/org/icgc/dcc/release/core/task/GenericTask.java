@@ -32,7 +32,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
-import org.icgc.dcc.release.core.function.ParseObjectNode;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.util.JavaRDDs;
 import org.icgc.dcc.release.core.util.ObjectNodeRDDs;
@@ -73,7 +72,6 @@ public abstract class GenericTask implements Task {
   /**
    * @param size split/combine size in MBytes
    */
-  // TODO: split sequence files
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf hadoopConf, FileType inputFileType, long size) {
     val maxFileSize = size * 1024L * 1024L;
 
@@ -84,9 +82,10 @@ public abstract class GenericTask implements Task {
 
     val sparkContext = taskContext.getSparkContext();
     val path = taskContext.getPath(inputFileType);
-    val input = JavaRDDs.combineTextFile(sparkContext, path, hadoopConf)
-        .map(tuple -> tuple._2.toString())
-        .map(new ParseObjectNode());
+
+    val input = taskContext.isCompressOutput() ?
+        ObjectNodeRDDs.combineObjectNodeSequenceFile(sparkContext, path, hadoopConf) :
+        ObjectNodeRDDs.combineObjectNodeFile(sparkContext, path, hadoopConf);
 
     JavaRDDs.logPartitions(log, input.partitions());
 
