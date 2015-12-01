@@ -29,17 +29,20 @@ import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.submission.SubmissionFileSchema;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
 
 public final class CleanSensitiveFields implements Function<ObjectNode, ObjectNode> {
 
   /**
-   * Don't clean SSM_P as its controlled fields required to run annotation.
+   * Don't clean SSM_P and SGV_P as their controlled fields required to run annotation.
    */
+  private static final List<String> SKIP_FILE_TYPES = ImmutableList.of(FileType.SSM_P.getId(), FileType.SGV_P.getId());
+
   private final boolean skipCleanup;
   private final List<String> controlledFields;
 
   public CleanSensitiveFields(@NonNull SubmissionFileSchema schema) {
-    skipCleanup = schema.getName().equals(FileType.SSM_P.getId());
+    skipCleanup = SKIP_FILE_TYPES.contains(schema.getName());
 
     if (skipCleanup) {
       controlledFields = Collections.emptyList();
