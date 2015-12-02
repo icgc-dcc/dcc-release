@@ -17,118 +17,12 @@
  */
 package org.icgc.dcc.release.job.export.model.type;
 
-import static org.icgc.dcc.release.job.export.model.type.Constants.CONSEQUENCE_FIELD_NAME;
-import static org.icgc.dcc.release.job.export.model.type.Constants.OBSERVATION_FIELD_NAME;
-
-import java.util.Set;
-
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.function.AddMissingField;
-import org.icgc.dcc.release.core.function.FlattenField;
-import org.icgc.dcc.release.core.function.ParseObjectNode;
-import org.icgc.dcc.release.core.function.ProjectFields;
-import org.icgc.dcc.release.core.function.PullUpField;
-import org.icgc.dcc.release.core.function.RenameFields;
-import org.icgc.dcc.release.core.function.RetainFields;
-import org.icgc.dcc.release.job.export.function.AddDonorIdField;
 import org.icgc.dcc.release.job.export.function.IsOpenMasked;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
+public class SSMOpen extends BaseSSM {
 
-public class SSMOpen implements Type {
-
-  private final String DATA_TYPE_FOLDER = "ssm";
-
-  private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
-      .put("_mutation_id", "icgc_mutation_id")
-      .put("_donor_id", "icgc_donor_id")
-      .put("_project_id", "project_code")
-      .put("chromosome", "chromosome")
-      .put("chromosome_start", "chromosome_start")
-      .put("chromosome_end", "chromosome_end")
-      .put("chromosome_strand", "chromosome_strand")
-      .put("assembly_version", "assembly_version")
-      .put("mutation_type", "mutation_type")
-      .put("reference_genome_allele", "reference_genome_allele")
-      .put("mutated_from_allele", "mutated_from_allele")
-      .put("mutated_to_allele", "mutated_to_allele")
-      .put("consequence", "consequence")
-      .put("observation", "observation")
-      .build();
-
-  private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
-      .put("donor_id", "donor_id")
-      .put("_specimen_id", "icgc_specimen_id")
-      .put("_sample_id", "icgc_sample_id")
-      .put("_matched_sample_id", "matched_icgc_sample_id")
-      .put("analyzed_sample_id", "submitted_sample_id")
-      .put("matched_sample_id", "submitted_matched_sample_id")
-      .put("control_genotype", "control_genotype")
-      .put("tumour_genotype", "tumour_genotype")
-      .put("expressed_allele", "expressed_allele")
-      .put("quality_score", "quality_score")
-      .put("probability", "probability")
-      .put("total_read_count", "total_read_count")
-      .put("mutant_allele_read_count", "mutant_allele_read_count")
-      .put("verification_status", "verification_status")
-      .put("verification_platform", "verification_platform")
-      .put("biological_validation_status", "biological_validation_status")
-      .put("biological_validation_platform", "biological_validation_platform")
-      .put("platform", "platform")
-      .put("experimental_protocol", "experimental_protocol")
-      .put("sequencing_strategy", "sequencing_strategy")
-      .put("base_calling_algorithm", "base_calling_algorithm")
-      .put("alignment_algorithm", "alignment_algorithm")
-      .put("variation_calling_algorithm", "variation_calling_algorithm")
-      .put("other_analysis_algorithm", "other_analysis_algorithm")
-      .put("seq_coverage", "seq_coverage")
-      .put("raw_data_repository", "raw_data_repository")
-      .put("raw_data_accession", "raw_data_accession")
-      .put("initial_data_release_date", "initial_data_release_date")
-      .build();
-
-  private static final ImmutableMap<String, String> THIRD_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
-      .put("consequence_type", "consequence_type")
-      .put("aa_mutation", "aa_mutation")
-      .put("cds_mutation", "cds_mutation")
-      .put("gene_affected", "gene_affected")
-      .put("transcript_affected", "transcript_affected")
-      .put("gene_build_version", "gene_build_version")
-      .build();
-
-  @Override
-  public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
-    return input
-        .map(new ParseObjectNode())
-        .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
-        .map(new AddDonorIdField())
-        .map(new AddMissingField(OBSERVATION_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet()))
-        .flatMap(new FlattenField(OBSERVATION_FIELD_NAME))
-        .map(new PullUpField(OBSERVATION_FIELD_NAME))
-        .filter(new IsOpenMasked())
-        .map(new RetainFields(getFirstLevelFields()))
-        .map(new RenameFields(SECOND_LEVEL_PROJECTION))
-        .map(new AddMissingField(CONSEQUENCE_FIELD_NAME, THIRD_LEVEL_PROJECTION.keySet()))
-        .flatMap(new FlattenField(CONSEQUENCE_FIELD_NAME))
-        .map(new PullUpField(CONSEQUENCE_FIELD_NAME))
-        .map(new RetainFields(getFields()))
-        .map(new RenameFields(THIRD_LEVEL_PROJECTION));
+  public SSMOpen() {
+    super(new IsOpenMasked());
   }
 
-  private Set<String> getFirstLevelFields() {
-    return Sets.newHashSet(Iterables.concat(FIRST_LEVEL_PROJECTION.values(), SECOND_LEVEL_PROJECTION.keySet()));
-  }
-
-  @Override
-  public Set<String> getFields() {
-    return Sets.newHashSet(Iterables.concat(getFirstLevelFields(), THIRD_LEVEL_PROJECTION.keySet()));
-  }
-
-  @Override
-  public String getTypeDirectoryName() {
-    return DATA_TYPE_FOLDER;
-  }
 }
