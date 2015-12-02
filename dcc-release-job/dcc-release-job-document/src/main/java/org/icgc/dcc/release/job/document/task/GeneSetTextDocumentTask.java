@@ -23,14 +23,14 @@ import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.transform.GeneTextDocumentTransform;
+import org.icgc.dcc.release.job.document.transform.GeneSetTextDocumentTransform;
 
-public class GeneTextIndexTask extends AbstractIndexTask {
+public class GeneSetTextDocumentTask extends AbstractDocumentTask {
 
   private final DocumentJobContext indexJobContext;
 
-  public GeneTextIndexTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.GENE_TEXT_TYPE);
+  public GeneSetTextDocumentTask(DocumentJobContext indexJobContext) {
+    super(DocumentType.GENE_SET_TEXT_TYPE);
     this.indexJobContext = indexJobContext;
   }
 
@@ -41,8 +41,8 @@ public class GeneTextIndexTask extends AbstractIndexTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    val genes = readGenesPivoted(taskContext);
-    val output = genes.map(new GeneTextDocumentTransform(indexJobContext));
+    val geneSets = readGeneSets(taskContext);
+    val output = geneSets.map(new GeneSetTextDocumentTransform(indexJobContext));
 
     writeDocOutput(taskContext, output);
   }

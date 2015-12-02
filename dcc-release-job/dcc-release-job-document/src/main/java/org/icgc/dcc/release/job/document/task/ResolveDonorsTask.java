@@ -35,7 +35,7 @@ import org.icgc.dcc.release.core.task.TaskContext;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
-public class ResolveDonorsTask extends AbstractIndexTask {
+public class ResolveDonorsTask extends AbstractDocumentTask {
 
   public ResolveDonorsTask(DocumentType type) {
     super(type);

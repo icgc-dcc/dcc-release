@@ -23,15 +23,12 @@ import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.transform.ProjectTextDocumentTransform;
+import org.icgc.dcc.release.job.document.transform.BasicDocumentTransform;
 
-public class ProjectTextIndexTask extends AbstractIndexTask {
+public class DiagramDocumentTask extends AbstractDocumentTask {
 
-  private final DocumentJobContext indexJobContext;
-
-  public ProjectTextIndexTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.PROJECT_TEXT_TYPE);
-    this.indexJobContext = indexJobContext;
+  public DiagramDocumentTask(DocumentJobContext indexJobContext) {
+    super(DocumentType.DIAGRAM_TYPE);
   }
 
   @Override
@@ -41,8 +38,8 @@ public class ProjectTextIndexTask extends AbstractIndexTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    val projects = readProjects(taskContext);
-    val output = projects.map(new ProjectTextDocumentTransform(indexJobContext));
+    val diagrams = readDiagrams(taskContext);
+    val output = diagrams.map(new BasicDocumentTransform(type));
 
     writeDocOutput(taskContext, output);
   }

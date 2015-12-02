@@ -28,16 +28,16 @@ import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.transform.MutationTextDocumentTransform;
+import org.icgc.dcc.release.job.document.transform.MutationCentricDocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class MutationTextIndexTask extends AbstractIndexTask {
+public class MutationCentricDocumentTask extends AbstractDocumentTask {
 
   private final DocumentJobContext indexJobContext;
 
-  public MutationTextIndexTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.MUTATION_TEXT_TYPE);
+  public MutationCentricDocumentTask(DocumentJobContext indexJobContext) {
+    super(DocumentType.MUTATION_CENTRIC_TYPE);
     this.indexJobContext = indexJobContext;
   }
 
@@ -60,7 +60,7 @@ public class MutationTextIndexTask extends AbstractIndexTask {
     val observationPairs = observations.groupBy(observation -> getObservationMutationId(observation));
 
     val mutationObservationsPairs = mutationPairs.leftOuterJoin(observationPairs);
-    val transformed = mutationObservationsPairs.map(new MutationTextDocumentTransform(indexJobContext));
+    val transformed = mutationObservationsPairs.map(new MutationCentricDocumentTransform(indexJobContext));
 
     return transformed;
   }

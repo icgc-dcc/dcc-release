@@ -34,13 +34,13 @@ import org.icgc.dcc.release.job.document.util.DocumentRdds;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public abstract class AbstractIndexTask extends GenericTask {
+public abstract class AbstractDocumentTask extends GenericTask {
 
   private static final FileType GENE_SET_INPUT_TYPE = FileType.GENE_SET_SUMMARY;
 
   protected final DocumentType type;
 
-  public AbstractIndexTask(DocumentType type) {
+  public AbstractDocumentTask(DocumentType type) {
     super(type.getName());
     this.type = type;
   }

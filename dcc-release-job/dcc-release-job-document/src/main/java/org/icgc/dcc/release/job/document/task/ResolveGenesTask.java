@@ -34,7 +34,7 @@ import org.icgc.dcc.release.core.task.TaskType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ResolveGenesTask extends AbstractIndexTask {
+public class ResolveGenesTask extends AbstractDocumentTask {
 
   public ResolveGenesTask(DocumentType type) {
     super(type);
