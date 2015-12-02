@@ -17,52 +17,14 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
-import static org.icgc.dcc.release.core.util.Tuples.tuple;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationMutationId;
-import lombok.val;
-
-import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.document.Document;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.transform.MutationTextDocumentTransform;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class MutationTextDocumentTask extends AbstractDocumentTask {
-
-  private final DocumentJobContext indexJobContext;
+public class MutationTextDocumentTask extends AbstractMutationDocumentTask {
 
   public MutationTextDocumentTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.MUTATION_TEXT_TYPE);
-    this.indexJobContext = indexJobContext;
-  }
-
-  @Override
-  public TaskType getType() {
-    return TaskType.FILE_TYPE;
-  }
-
-  @Override
-  public void execute(TaskContext taskContext) {
-    val mutations = readMutations(taskContext);
-    val observations = readObservations(taskContext);
-
-    val output = transform(mutations, observations);
-    writeDocOutput(taskContext, output);
-  }
-
-  private JavaRDD<Document> transform(JavaRDD<ObjectNode> mutations, JavaRDD<ObjectNode> observations) {
-    val mutationPairs = mutations.mapToPair(mutation -> tuple(getMutationId(mutation), mutation));
-    val observationPairs = observations.groupBy(observation -> getObservationMutationId(observation));
-
-    val mutationObservationsPairs = mutationPairs.leftOuterJoin(observationPairs);
-    val transformed = mutationObservationsPairs.map(new MutationTextDocumentTransform(indexJobContext));
-
-    return transformed;
+    super(DocumentType.MUTATION_TEXT_TYPE, new MutationTextDocumentTransform(indexJobContext));
   }
 
 }
