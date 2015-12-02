@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Service for interacting with the DCC submission metada system.
  */
@@ -45,8 +47,10 @@ public class SubmissionMetadataService {
   private final CodeListsResolver codeListsResolver;
 
   @Getter(value = PRIVATE, lazy = true)
+  @SuppressFBWarnings("JLM_JSR166_UTILCONCURRENT_MONITORENTER")
   private final ObjectNode dictionary = resolveDictionary();
   @Getter(value = PRIVATE, lazy = true)
+  @SuppressFBWarnings("JLM_JSR166_UTILCONCURRENT_MONITORENTER")
   private final List<ObjectNode> codeLists = resolveCodeLists();
 
   @Cacheable("metadata")

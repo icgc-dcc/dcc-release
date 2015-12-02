@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
+import lombok.Cleanup;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +79,8 @@ public class HadoopFileSystemUtils {
   @SneakyThrows
   public static List<String> readFile(FileSystem fileSystem, Path inputPath) {
     val results = Lists.<String> newArrayList();
-    BufferedReader br = new BufferedReader(new InputStreamReader(fileSystem.open(inputPath), UTF_8));
+    @Cleanup
+    val br = new BufferedReader(new InputStreamReader(fileSystem.open(inputPath), UTF_8));
     String line;
     line = br.readLine();
     while (line != null) {

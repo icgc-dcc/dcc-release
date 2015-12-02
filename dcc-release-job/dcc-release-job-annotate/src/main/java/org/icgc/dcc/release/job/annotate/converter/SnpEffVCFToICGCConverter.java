@@ -306,7 +306,7 @@ public class SnpEffVCFToICGCConverter {
 
           @Override
           public boolean apply(SnpEffect effect) {
-            if (mutationSet.equals(effect.getCancerID())) {
+            if (effect != null && mutationSet.equals(effect.getCancerID())) {
               return true;
             }
 
