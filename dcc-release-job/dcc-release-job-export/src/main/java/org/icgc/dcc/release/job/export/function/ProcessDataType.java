@@ -54,7 +54,7 @@ public class ProcessDataType implements
     val index = tuple._2();
     val row = tuple._1();
     val donorId = getKey(row);
-    val rowKey = HTableManager.encodedRowKey(Integer.valueOf(donorId), index);
+    val rowKey = HTableManager.encodedRowKey(Integer.parseInt(donorId), index);
     byte i = -1;
     long totalBytes = 0;
     val kvs = Lists.<KeyValue> newArrayList();

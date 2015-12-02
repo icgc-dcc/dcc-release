@@ -32,10 +32,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @Wither
 public class TestFile {
 
-  String projectName;
+  String projectName; // NOPMD
   FileType fileType;
-  String fileName;
-  String path;
+  String fileName; // NOPMD
+  String path; // NOPMD
 
   List<ObjectNode> rows;
 

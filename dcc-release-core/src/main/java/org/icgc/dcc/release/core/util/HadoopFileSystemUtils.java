@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.release.core.util;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -76,7 +78,7 @@ public class HadoopFileSystemUtils {
   @SneakyThrows
   public static List<String> readFile(FileSystem fileSystem, Path inputPath) {
     val results = Lists.<String> newArrayList();
-    BufferedReader br = new BufferedReader(new InputStreamReader(fileSystem.open(inputPath)));
+    BufferedReader br = new BufferedReader(new InputStreamReader(fileSystem.open(inputPath), UTF_8));
     String line;
     line = br.readLine();
     while (line != null) {

@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.release.job.document.io;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -44,7 +46,7 @@ public class FilteredOutputStream extends OutputStream {
 
   @Override
   public void write(byte[] b) throws IOException {
-    val line = new String(b);
+    val line = new String(b, UTF_8);
     if (isHeader(line)) {
       headerStream.write(b);
     } else {

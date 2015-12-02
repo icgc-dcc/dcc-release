@@ -74,22 +74,22 @@ public class DefaultDocumentContext implements DocumentContext {
 
   @Override
   public Iterable<ObjectNode> getGenesByGeneSetId(String geneSetId) {
-    throw new UnsupportedOperationException(format("This method should not be called for ", this.getClass().getName()));
+    throw throwUnsupportedOperationException();
   }
 
   @Override
   public Iterable<ObjectNode> getObservationsByDonorId(String donorId) {
-    throw new UnsupportedOperationException(format("This method should not be called for ", this.getClass().getName()));
+    throw throwUnsupportedOperationException();
   }
 
   @Override
   public Iterable<ObjectNode> getObservationsByGeneId(String geneId) {
-    throw new UnsupportedOperationException(format("This method should not be called for ", this.getClass().getName()));
+    throw throwUnsupportedOperationException();
   }
 
   @Override
   public Iterable<ObjectNode> getObservationsByMutationId(String mutationId) {
-    throw new UnsupportedOperationException(format("This method should not be called for ", this.getClass().getName()));
+    throw throwUnsupportedOperationException();
   }
 
   private Map<String, ObjectNode> filterGenes() {
@@ -102,6 +102,11 @@ public class DefaultDocumentContext implements DocumentContext {
 
   private Map<String, ObjectNode> filterDonors() {
     return indexJobContext.getDonorsBroadcast().getValue();
+  }
+
+  private UnsupportedOperationException throwUnsupportedOperationException() {
+    return new UnsupportedOperationException(format("This method should not be called for %s", this.getClass()
+        .getName()));
   }
 
 }

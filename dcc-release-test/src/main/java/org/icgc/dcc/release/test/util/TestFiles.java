@@ -21,6 +21,7 @@ import static com.fasterxml.jackson.core.JsonParser.Feature.AUTO_CLOSE_SOURCE;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import lombok.Cleanup;
@@ -44,7 +45,7 @@ public class TestFiles {
     val iterator = reader.readValues(source);
 
     @Cleanup
-    val output = new PrintWriter(target);
+    val output = new PrintWriter(target, StandardCharsets.UTF_8.name());
     while (iterator.hasNext()) {
       val row = iterator.next();
       output.print(row.toString());
@@ -55,7 +56,7 @@ public class TestFiles {
   @SneakyThrows
   public static void writeInputFile(List<ObjectNode> rows, File target) {
     @Cleanup
-    val output = new PrintWriter(target);
+    val output = new PrintWriter(target, StandardCharsets.UTF_8.name());
     for (val row : rows) {
       output.print(row.toString());
       output.println();

@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.annotate.snpeff;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.regex.Pattern.compile;
 
 import java.io.BufferedReader;
@@ -76,7 +77,7 @@ public class SnpEffResultHandler implements Runnable {
   @Override
   @SneakyThrows
   public void run() {
-    val reader = new BufferedReader(new InputStreamReader(input));
+    val reader = new BufferedReader(new InputStreamReader(input, UTF_8));
     String line = null;
     while ((line = reader.readLine()) != null) {
       if (isSkipLine(line)) {
