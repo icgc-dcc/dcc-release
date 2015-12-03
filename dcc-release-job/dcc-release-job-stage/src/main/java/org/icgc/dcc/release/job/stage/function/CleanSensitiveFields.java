@@ -36,7 +36,8 @@ public final class CleanSensitiveFields implements Function<ObjectNode, ObjectNo
   /**
    * Don't clean SSM_P and SGV_P as their controlled fields required to run annotation.
    */
-  private static final List<String> SKIP_FILE_TYPES = ImmutableList.of(FileType.SSM_P.getId(), FileType.SGV_P.getId());
+  private static final List<String> SKIP_FILE_TYPES = ImmutableList.of(FileType.SSM_P.getId(), FileType.SGV_P.getId(),
+      FileType.SGV_M.getId());
 
   private final boolean skipCleanup;
   private final List<String> controlledFields;
