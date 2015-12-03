@@ -96,7 +96,7 @@ public class DonorSummarizeTask extends GenericTask {
     _donorsCount.put(projectName, output.count());
     _liveDonorsCount.put(projectName, output.filter(filterLiveDonors()).count());
     writeOutput(taskContext, output, outputFileType);
-    output.unpersist();
+    output.unpersist(false);
   }
 
   private Function<ObjectNode, Boolean> filterLiveDonors() {

@@ -164,7 +164,7 @@ public final class JavaRDDs {
     for (int i = 0; i < partitions.size(); i++) {
       val partition = partitions.get(i);
       if (!(partition instanceof HadoopPartition)) {
-        log.info("[{}/{}] Input split: {}",
+        log.debug("[{}/{}] Input split: {}",
             i + 1,
             partitions.size(),
             partition);
@@ -172,7 +172,7 @@ public final class JavaRDDs {
       }
 
       val hadoopPartition = (HadoopPartition) partition;
-      log.info("[{}/{}] Input split ({}): {}",
+      log.debug("[{}/{}] Input split ({}): {}",
           i + 1,
           partitions.size(),
           formatBytes(hadoopPartition.inputSplit().value().getLength()),

@@ -83,7 +83,7 @@ public class ResolveProjectSummaryTask extends GenericTask {
     summarizeTestedTypeCounts(donorSummaries, projectSummary);
     summarizeRepositories(donorSummaries, projectSummary);
     summarizeLibraryStrategyCounts(donorSummaries, projectSummary);
-    donorSummaries.unpersist();
+    donorSummaries.unpersist(false);
 
     summarizeSpecimenSampleCounts(taskContext, projectSummary);
 
@@ -143,7 +143,7 @@ public class ResolveProjectSummaryTask extends GenericTask {
     projectSummary.putPOJO(AVAILABLE_EXPERIMENTAL_ANALYSIS_PERFORMED, to(uniqueLibStrategies));
     projectSummary.put(EXPERIMENTAL_ANALYSIS_PERFORMED_SAMPLE_COUNT, to(sampleLibraryStrategyCounts));
 
-    donorLibStrategies.unpersist();
+    donorLibStrategies.unpersist(false);
   }
 
   private PairFlatMapFunction<ObjectNode, String, Integer> flattenLibStrategyToPair() {
@@ -177,7 +177,7 @@ public class ResolveProjectSummaryTask extends GenericTask {
         .flatMap(Unwind.unwind(FieldNames.DONOR_SAMPLE))
         .map(new RetainFields(FieldNames.DONOR_SAMPLE_ID));
     val samplesCount = samples.count();
-    specimens.unpersist();
+    specimens.unpersist(false);
 
     projectSummary.put(FieldNames.TOTAL_SPECIMEN_COUNT, specimenCount);
     projectSummary.put(FieldNames.TOTAL_SAMPLE_COUNT, samplesCount);
