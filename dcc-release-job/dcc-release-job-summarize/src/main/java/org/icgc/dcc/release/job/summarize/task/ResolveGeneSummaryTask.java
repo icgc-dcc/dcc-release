@@ -60,7 +60,7 @@ public class ResolveGeneSummaryTask extends GenericTask {
   @Getter(lazy = true)
   private final Broadcast<JavaPairRDD<String, ObjectNode>> geneDonorTypeCounts = createBroadcastVariable();
   private final List<JavaPairRDD<String, ObjectNode>> geneStats = newCopyOnWriteArrayList();
-  private JavaSparkContext sparkContext;
+  private transient JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {

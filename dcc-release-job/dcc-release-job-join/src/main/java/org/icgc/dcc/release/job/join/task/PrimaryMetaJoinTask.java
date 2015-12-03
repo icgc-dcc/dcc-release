@@ -52,7 +52,7 @@ public class PrimaryMetaJoinTask extends GenericTask {
   protected final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesbyProject;
   @NonNull
   protected final FileType primaryFileType;
-  protected JavaSparkContext sparkContext;
+  protected transient JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {

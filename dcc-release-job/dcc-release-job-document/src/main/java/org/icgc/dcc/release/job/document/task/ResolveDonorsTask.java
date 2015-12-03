@@ -43,8 +43,8 @@ public class ResolveDonorsTask extends AbstractDocumentTask {
 
   @Getter(lazy = true)
   private final Broadcast<Map<String, ObjectNode>> donorsBroadcast = createBroadcast();
-  private Map<String, Map<String, ObjectNode>> donorsByProject = Maps.newHashMap();
-  private JavaSparkContext sparkContext;
+  private transient Map<String, Map<String, ObjectNode>> donorsByProject = Maps.newHashMap();
+  private transient JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {

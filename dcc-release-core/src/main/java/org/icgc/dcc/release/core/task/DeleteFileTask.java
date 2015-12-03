@@ -28,7 +28,7 @@ import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
 @Slf4j
 public class DeleteFileTask implements Task {
 
-  private final Path[] files;
+  private transient final Path[] files;
 
   public DeleteFileTask(@NonNull Path... files) {
     this.files = files;

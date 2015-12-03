@@ -47,7 +47,7 @@ import com.mongodb.hadoop.MongoConfig;
 public class MongoImportTask extends GenericTask {
 
   @NonNull
-  private final MongoProperties properties;
+  private transient final MongoProperties properties;
   @NonNull
   private final String database;
   @NonNull

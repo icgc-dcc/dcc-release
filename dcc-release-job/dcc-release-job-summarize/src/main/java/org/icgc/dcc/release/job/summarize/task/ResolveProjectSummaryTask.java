@@ -67,8 +67,8 @@ public class ResolveProjectSummaryTask extends GenericTask {
 
   @Getter(lazy = true)
   private final Broadcast<Map<String, ObjectNode>> projectSummaryBroadcast = createBroadcastVariable();
-  private final Map<String, ObjectNode> projectSummaries = Maps.newHashMap();
-  private JavaSparkContext sparkContext;
+  private transient final Map<String, ObjectNode> projectSummaries = Maps.newHashMap();
+  private transient JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {
@@ -106,7 +106,6 @@ public class ResolveProjectSummaryTask extends GenericTask {
 
   private Function<ObjectNode, Boolean> filterFeatureType(FeatureType featureType) {
     val summaryFieldName = featureType.getSummaryFieldName();
-    featureType.isCountSummary();
 
     return o -> {
       JsonNode summaryField = o.get(summaryFieldName);

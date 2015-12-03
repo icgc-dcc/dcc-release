@@ -25,6 +25,9 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATION_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_VARIANT_TYPE;
+
+import java.util.Arrays;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -137,6 +140,10 @@ public enum AnnotatedFileType implements Identifiable {
 
   public int getFieldsNumber() {
     return secondaryFileFields.length;
+  }
+
+  public String[] getSecondaryFileFields() {
+    return Arrays.copyOf(secondaryFileFields, secondaryFileFields.length);
   }
 
 }

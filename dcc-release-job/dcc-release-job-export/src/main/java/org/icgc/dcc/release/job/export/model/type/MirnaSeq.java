@@ -35,7 +35,7 @@ import com.google.common.collect.Sets;
 
 public class MirnaSeq implements Type {
 
-  private final String DATA_TYPE_FOLDER = "mirna_seq";
+  private static final String DATA_TYPE_FOLDER = "mirna_seq";
 
   private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("_donor_id", "icgc_donor_id")

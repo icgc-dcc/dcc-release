@@ -69,8 +69,8 @@ import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.job.document.context.MutationCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentCallback;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
-import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
+import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import org.icgc.dcc.release.job.document.util.Fakes;
 
 import scala.Tuple2;
@@ -127,7 +127,7 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
 
   @NonNull
   private final DocumentJobContext indexJobContext;
-  private static DocumentCallback SUMMARY_CALLBACK = new MutationCentricSummaryCallback();
+  private static final DocumentCallback SUMMARY_CALLBACK = new MutationCentricSummaryCallback();
 
   @Override
   public Document call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
@@ -233,11 +233,11 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
      */
 
     // Add all affected transcripts
-    val transcriptIds = mutationTranscriptMap.keySet();
-    for (val transcriptId : transcriptIds) {
+    for (val transcriptEntry : mutationTranscriptMap.entrySet()) {
+      val transcriptId = transcriptEntry.getKey();
       // Resolve or create fake transcript
       val transcript = Fakes.isFakeTranscriptId(transcriptId) ?
-          Fakes.createFakeTranscript() : mutationTranscriptMap.get(transcriptId);
+          Fakes.createFakeTranscript() : transcriptEntry.getValue();
 
       // Resolve children
       val gene = mutationTranscriptGeneMap.get(transcriptId);

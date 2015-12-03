@@ -1,5 +1,6 @@
 package org.icgc.dcc.release.test.job;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -95,6 +96,7 @@ public abstract class AbstractJobTest {
 
   protected void given(File inputDirectory) {
     File[] fileTypes = inputDirectory.listFiles();
+    checkState(fileTypes != null, "Failed to resolve files in directory '%s'", inputDirectory);
     processFileTypes(fileTypes);
   }
 
@@ -179,14 +181,14 @@ public abstract class AbstractJobTest {
   protected void createInputFile(TestFile inputFile) {
     val fileTypeDirectory = getFileTypeDirectory(inputFile.getFileType());
     if (!fileTypeDirectory.exists()) {
-      fileTypeDirectory.mkdirs();
+      checkState(fileTypeDirectory.mkdirs() == true, "Failed to create directory %s", fileTypeDirectory);
     }
 
     val target = inputFile.isProjectPartitioned() ?
         getProjectFileTypeDirectory(inputFile.getProjectName(), inputFile.getFileType()) :
         getFileTypeFile(inputFile.getFileType());
     if (!isPartFile(target) && !target.exists()) {
-      target.mkdirs();
+      checkState(target.mkdirs() == true, "Failed to create directory %s", target);
     }
 
     if (inputFile.isFile()) {

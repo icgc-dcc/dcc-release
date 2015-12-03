@@ -18,18 +18,22 @@
 package org.icgc.dcc.release.job.export.util;
 
 import static org.icgc.dcc.release.core.util.HadoopFileSystemUtils.getFilePaths;
-import static org.icgc.dcc.release.job.export.model.ExportTables.*;
+import static org.icgc.dcc.release.job.export.model.ExportTables.BLOCKSIZE;
+import static org.icgc.dcc.release.job.export.model.ExportTables.DATA_CONTENT_FAMILY;
+import static org.icgc.dcc.release.job.export.model.ExportTables.TMP_HFILE_ROOT;
+import static org.icgc.dcc.release.job.export.model.ExportTables.rwx;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -62,7 +66,8 @@ public class HFileManager {
   @NonNull
   private final FileSystem fileSystem;
 
-  public void writeHFiles(@NonNull JavaPairRDD<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> processedInput,
+  public void writeHFiles(
+      @NonNull JavaPairRDD<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> processedInput,
       @NonNull HTable hTable)
       throws IOException {
     val hFilesPath = getHFilesPath(fileSystem, hTable);
@@ -139,11 +144,12 @@ public class HFileManager {
    * </pre>
    */
   @RequiredArgsConstructor
-  private static class HFileWriter implements VoidFunction<Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>>> {
+  private static class HFileWriter implements
+      VoidFunction<Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>>> {
 
     @NonNull
     private final String hfilesPath;
-    
+
     @NonNull
     private final String fsUri;
 
@@ -152,7 +158,7 @@ public class HFileManager {
     public void call(Tuple2<String, Tuple3<Map<ByteBuffer, KeyValue[]>, Long, Integer>> tuple) {
       val donorId = tuple._1();
       val data = tuple._2()._1();
-      writeOutput(donorId, data); 
+      writeOutput(donorId, data);
     }
 
     @SneakyThrows
@@ -162,12 +168,12 @@ public class HFileManager {
       FileSystem fileSystem = FileSystem.get(new URI(fsUri), new Configuration());
 
       return HFile
-              .getWriterFactory(conf, new CacheConfig(conf))
-              .withPath(fileSystem, new Path(destPath, donorId))
-              .withComparator(KeyValue.COMPARATOR)
-              .withFileContext(
-                      new HFileContextBuilder().withBlockSize(BLOCKSIZE)
-                              .build()).create();
+          .getWriterFactory(conf, new CacheConfig(conf))
+          .withPath(fileSystem, new Path(destPath, donorId))
+          .withComparator(KeyValue.COMPARATOR)
+          .withFileContext(
+              new HFileContextBuilder().withBlockSize(BLOCKSIZE)
+                  .build()).create();
     }
 
     private void closeWriter(Writer writer) {
@@ -183,8 +189,8 @@ public class HFileManager {
     @SneakyThrows
     private void writeOutput(String donorId, Map<ByteBuffer, KeyValue[]> processed) {
       Writer writer = createWriter(donorId);
-      for (val row : processed.keySet()) {
-        val cells = processed.get(row);
+      for (Entry<ByteBuffer, KeyValue[]> processedEntry : processed.entrySet()) {
+        KeyValue[] cells = processedEntry.getValue();
         for (val cell : cells) {
           writer.append(cell);
         }
@@ -192,4 +198,5 @@ public class HFileManager {
       closeWriter(writer);
     }
   }
+
 }

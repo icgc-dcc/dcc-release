@@ -42,8 +42,8 @@ public class ResolveGenesTask extends AbstractDocumentTask {
 
   @Getter(lazy = true)
   private final Broadcast<Map<String, ObjectNode>> genesBroadcast = createBroadcast();
-  private Map<String, ObjectNode> genesById;
-  private JavaSparkContext sparkContext;
+  private transient Map<String, ObjectNode> genesById;
+  private transient JavaSparkContext sparkContext;
 
   @Override
   public TaskType getType() {

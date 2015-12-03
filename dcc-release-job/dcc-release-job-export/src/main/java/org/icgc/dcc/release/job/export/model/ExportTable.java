@@ -17,13 +17,10 @@
  */
 package org.icgc.dcc.release.job.export.model;
 
-import static lombok.AccessLevel.PRIVATE;
-
 import java.util.Arrays;
 import java.util.stream.Stream;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import org.icgc.dcc.release.job.export.model.type.CNSM;
 import org.icgc.dcc.release.job.export.model.type.Clinical;
@@ -47,7 +44,6 @@ import org.icgc.dcc.release.job.export.model.type.Specimen;
 import org.icgc.dcc.release.job.export.model.type.Type;
 
 @Getter
-@RequiredArgsConstructor(access = PRIVATE)
 public enum ExportTable {
 
   CLINICAL("CLINICAL", "clinical", false, new Clinical()),
@@ -76,10 +72,13 @@ public enum ExportTable {
 
   public final boolean isControlled;
 
-  public Type type;
+  public final Type type;
 
-  private ExportTable(String name, String indexName,
-      boolean isControlled, Type type) {
+  private ExportTable(String name, String indexName, boolean isControlled) {
+    this(name, indexName, isControlled, null);
+  }
+
+  private ExportTable(String name, String indexName, boolean isControlled, Type type) {
     this.name = name;
     this.indexName = indexName;
     this.isControlled = isControlled;

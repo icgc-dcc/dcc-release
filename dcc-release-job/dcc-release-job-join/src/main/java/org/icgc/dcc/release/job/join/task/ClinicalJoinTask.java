@@ -59,7 +59,7 @@ public class ClinicalJoinTask extends GenericTask {
 
   @NonNull
   private final Broadcast<Map<String, JavaRDD<ObjectNode>>> rawSequenceDataBroadcast;
-  private JavaSparkContext sparkContext;
+  private transient JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {

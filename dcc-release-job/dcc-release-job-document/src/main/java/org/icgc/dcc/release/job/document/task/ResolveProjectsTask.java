@@ -42,8 +42,8 @@ public class ResolveProjectsTask extends AbstractDocumentTask {
 
   @Getter(lazy = true)
   private final Broadcast<Map<String, ObjectNode>> projectsBroadcast = createBroadcast();
-  private Map<String, ObjectNode> projectsById;
-  private JavaSparkContext sparkContext;
+  private transient Map<String, ObjectNode> projectsById;
+  private transient JavaSparkContext sparkContext;
 
   @Override
   public TaskType getType() {

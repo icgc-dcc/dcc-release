@@ -50,7 +50,7 @@ public class ResolveDonorSamplesTask extends GenericTask {
   @Getter(lazy = true)
   private final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesBroadcast = createBroadcastVariable();
   private final Map<String, Map<String, DonorSample>> donorSamplesByProject = Maps.newHashMap();
-  private JavaSparkContext sparkContext;
+  private transient JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {

@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.test.util;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.AUTO_CLOSE_SOURCE;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -85,6 +86,7 @@ public class TestFiles {
 
   public static List<ObjectNode> readInputDirectory(File sourceDir) {
     File[] files = sourceDir.listFiles(TestFiles::filterPartFiles);
+    checkState(files != null, "Failed to resolve files in directory '%s'", sourceDir);
     val rows = Lists.<ObjectNode> newArrayList();
     for (val file : files) {
       rows.addAll(readInputFile(file));

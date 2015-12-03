@@ -62,7 +62,7 @@ public class FeatureTypeSummarizeTask extends GenericTask {
   @Getter(lazy = true)
   private final Broadcast<Map<String, Map<String, ObjectNode>>> projectDonorSummary = createBroadcastaVariable();
   private final Table<String, FeatureType, Map<String, ObjectNode>> projectFeatureTypeDonors = create();
-  private JavaSparkContext sparkContext;
+  private transient JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {

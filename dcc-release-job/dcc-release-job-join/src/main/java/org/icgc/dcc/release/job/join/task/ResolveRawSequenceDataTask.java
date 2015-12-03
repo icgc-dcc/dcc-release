@@ -42,7 +42,7 @@ public class ResolveRawSequenceDataTask extends GenericTask {
   @Getter(lazy = true)
   private final Broadcast<Map<String, JavaRDD<ObjectNode>>> rawSequenceDataBroadcast = createBroadcastVariable();
   private final Map<String, JavaRDD<ObjectNode>> rawSequenceDataByProject = Maps.newHashMap();
-  private JavaSparkContext sparkContext;
+  private transient JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {

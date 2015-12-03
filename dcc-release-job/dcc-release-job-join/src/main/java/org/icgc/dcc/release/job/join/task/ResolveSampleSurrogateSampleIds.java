@@ -47,7 +47,7 @@ public class ResolveSampleSurrogateSampleIds extends GenericTask {
   private final Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIdsBroadcast =
       createBroadcastVariable();
   private Map<String, Map<String, String>> sampleSurrogateSampleIdsByProject = Maps.newHashMap();
-  private JavaSparkContext sparkContext;
+  private transient JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {
