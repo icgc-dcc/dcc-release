@@ -25,7 +25,6 @@ import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_TYPE;
 import static org.icgc.dcc.release.core.function.PairFunctions.sum;
 import static org.icgc.dcc.release.core.util.FeatureTypes.getFeatureTypes;
-import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 import static org.icgc.dcc.release.core.util.ObjectNodes.mergeObjects;
 import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;
 
@@ -131,7 +130,7 @@ public class FeatureTypeSummarizeTask extends GenericTask {
           input
           .mapToPair(new KeyFields(DONOR_ID, OBSERVATION_TYPE)))
         .mapToPair(new CreateFeatureTypeSummary())
-        .aggregateByKey(MAPPER.createObjectNode(), aggregateFeatureType(), aggregateFeatureType())
+        .aggregateByKey(null, aggregateFeatureType(), aggregateFeatureType())
         .collectAsMap();
     // @formatter:on
   }
@@ -157,7 +156,7 @@ public class FeatureTypeSummarizeTask extends GenericTask {
     };
   }
 
-  private Function2<ObjectNode, ObjectNode, ObjectNode> aggregateFeatureType() {
+  private static Function2<ObjectNode, ObjectNode, ObjectNode> aggregateFeatureType() {
     return (agg, next) -> mergeObjects(agg, next);
   }
 

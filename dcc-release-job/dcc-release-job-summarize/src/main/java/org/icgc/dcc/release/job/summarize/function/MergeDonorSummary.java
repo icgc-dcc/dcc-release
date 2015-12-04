@@ -81,7 +81,7 @@ public final class MergeDonorSummary implements
       val featureTypeSummaryNode = summary.path(featureTypeSummaryFieldName);
       if (featureTypeSummaryNode.isMissingNode()) {
         val featureTypeSummaryFieldValue = createFeatureTypeSummaryValue(featureType, 0);
-        summary.put(featureTypeSummaryFieldName, featureTypeSummaryFieldValue);
+        summary.set(featureTypeSummaryFieldName, featureTypeSummaryFieldValue);
       }
     }
 

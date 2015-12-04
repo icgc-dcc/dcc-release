@@ -99,7 +99,7 @@ public class ProjectSummarizeTask extends GenericTask {
       String projectName = textValue(project, PROJECT_ID);
       ObjectNode projectSummary = projectSummaries.get(projectName);
       ObjectNode summary = projectSummary == null ? createDefaultProjectSummary() : projectSummary;
-      project.put(FieldNames.PROJECT_SUMMARY, summary);
+      project.set(FieldNames.PROJECT_SUMMARY, summary);
 
       return project;
     };

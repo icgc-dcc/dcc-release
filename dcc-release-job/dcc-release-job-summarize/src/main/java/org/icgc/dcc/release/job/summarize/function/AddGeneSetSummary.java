@@ -40,9 +40,9 @@ public final class AddGeneSetSummary implements
     val count = tuple._2._2;
     if (count.isPresent()) {
       val summary = createSummary(count.get());
-      geneSet.put(SUMMARY, summary);
+      geneSet.set(SUMMARY, summary);
     } else {
-      geneSet.put(SUMMARY, DEFAULT_SUMMARY);
+      geneSet.set(SUMMARY, DEFAULT_SUMMARY);
     }
 
     return geneSet;

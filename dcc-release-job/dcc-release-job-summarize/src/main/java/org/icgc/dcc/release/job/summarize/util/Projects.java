@@ -69,7 +69,7 @@ public final class Projects {
   }
 
   private static void setAvailableTypes(ObjectNode node, JsonNode types) {
-    node.put(AVAILABLE_DATA_TYPES, types);
+    node.set(AVAILABLE_DATA_TYPES, types);
   }
 
   private static void setTotalDonorCount(ObjectNode node, int donorCount) {

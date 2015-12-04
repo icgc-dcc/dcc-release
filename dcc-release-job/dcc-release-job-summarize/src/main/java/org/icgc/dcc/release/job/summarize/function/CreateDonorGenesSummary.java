@@ -69,7 +69,7 @@ public class CreateDonorGenesSummary implements
       ObjectNode result = DEFAULT.createObjectNode();
       result.put(DONOR_GENE_GENE_ID, e.getKey());
       ObjectNode summary = DEFAULT.createObjectNode();
-      result.put(DONOR_GENE_SUMMARY, summary);
+      result.set(DONOR_GENE_SUMMARY, summary);
 
       summary.put(SSM_TYPE.getSummaryFieldName(), e.getValue());
       genes.add(result);

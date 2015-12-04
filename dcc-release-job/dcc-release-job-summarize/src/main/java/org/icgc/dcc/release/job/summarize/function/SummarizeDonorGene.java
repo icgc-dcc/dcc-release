@@ -41,7 +41,7 @@ public class SummarizeDonorGene implements
 
     val geneSummary = fields.objectNode();
     geneSummary.put("_gene_id", geneId);
-    geneSummary.put("_summary", summary);
+    geneSummary.set("_summary", summary);
 
     return new Tuple2<String, ObjectNode>(donorId, geneSummary);
   }

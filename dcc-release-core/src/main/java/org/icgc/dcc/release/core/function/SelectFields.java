@@ -36,7 +36,7 @@ public class SelectFields implements Function<ObjectNode, ObjectNode> {
     val fields = row.objectNode();
     for (val fieldName : fieldNames) {
       val field = row.get(fieldName);
-      fields.put(fieldName, field);
+      fields.set(fieldName, field);
     }
 
     return fields;

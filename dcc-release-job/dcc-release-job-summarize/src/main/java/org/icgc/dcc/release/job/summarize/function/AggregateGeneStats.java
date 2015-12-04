@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.job.summarize.function;
 
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_DONORS;
+import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function2;
@@ -28,6 +29,10 @@ public class AggregateGeneStats implements Function2<ObjectNode, ObjectNode, Obj
 
   @Override
   public ObjectNode call(ObjectNode aggr, ObjectNode next) throws Exception {
+    if (aggr == null) {
+      aggr = MAPPER.createObjectNode();
+    }
+
     val donorsArray = aggr.withArray(GENE_DONORS);
     donorsArray.add(next);
 

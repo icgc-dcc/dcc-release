@@ -29,8 +29,8 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -89,8 +89,8 @@ public class DonorTextDocumentTransform implements DocumentTransform, Function<O
     }
 
     donor.put("id", donorId);
-    donor.put("projectId", donor.get(DONOR_PROJECT_ID));
-    donor.put("submittedId", donor.get("donor_id"));
+    donor.set("projectId", donor.get(DONOR_PROJECT_ID));
+    donor.set("submittedId", donor.get("donor_id"));
 
     donor.putPOJO("specimenIds", specimenIds);
     donor.putPOJO("submittedSpecimenIds", submittedSpecimenIds);
