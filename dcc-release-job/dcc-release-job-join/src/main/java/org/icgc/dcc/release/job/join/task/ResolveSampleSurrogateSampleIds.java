@@ -29,8 +29,6 @@ import lombok.Getter;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
@@ -43,18 +41,14 @@ import com.google.common.collect.Maps;
  */
 public class ResolveSampleSurrogateSampleIds extends GenericTask {
 
-  @Getter(lazy = true)
-  private final Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIdsBroadcast =
-      createBroadcastVariable();
-  private Map<String, Map<String, String>> sampleSurrogateSampleIdsByProject = Maps.newHashMap();
-  private JavaSparkContext sparkContext;
+  @Getter
+  private Map<String, Map<String, String>> sampleSurrogateSampleId = Maps.newConcurrentMap();
 
   @Override
   public void execute(TaskContext taskContext) {
-    sparkContext = taskContext.getSparkContext();
     val sampleIds = resolveSampleIds(taskContext);
     val projectName = resolveProjectName(taskContext);
-    sampleSurrogateSampleIdsByProject.put(projectName, sampleIds);
+    sampleSurrogateSampleId.put(projectName, sampleIds);
   }
 
   private JavaRDD<ObjectNode> parseSample(TaskContext taskContext) {
@@ -66,10 +60,6 @@ public class ResolveSampleSurrogateSampleIds extends GenericTask {
     return samples
         .mapToPair(s -> tuple(textValue(s, SUBMISSION_ANALYZED_SAMPLE_ID), textValue(s, SURROGATE_SAMPLE_ID)))
         .collectAsMap();
-  }
-
-  private Broadcast<Map<String, Map<String, String>>> createBroadcastVariable() {
-    return sparkContext.broadcast(sampleSurrogateSampleIdsByProject);
   }
 
 }

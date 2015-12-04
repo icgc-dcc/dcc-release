@@ -40,11 +40,9 @@ import lombok.Getter;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
-import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
 import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.function.PullUpField;
@@ -65,14 +63,11 @@ import com.google.common.collect.Maps;
 
 public class ResolveProjectSummaryTask extends GenericTask {
 
-  @Getter(lazy = true)
-  private final Broadcast<Map<String, ObjectNode>> projectSummaryBroadcast = createBroadcastVariable();
-  private final Map<String, ObjectNode> projectSummaries = Maps.newHashMap();
-  private JavaSparkContext sparkContext;
+  @Getter
+  private final Map<String, ObjectNode> projectSummaries = Maps.newConcurrentMap();
 
   @Override
   public void execute(TaskContext taskContext) {
-    sparkContext = taskContext.getSparkContext();
     val projectSummary = createDefaultProjectSummary();
     val donorSummaries = readDonorSummary(taskContext);
 
@@ -89,10 +84,6 @@ public class ResolveProjectSummaryTask extends GenericTask {
 
     val projectName = resolveProjectName(taskContext);
     this.projectSummaries.put(projectName, projectSummary);
-  }
-
-  private Broadcast<Map<String, ObjectNode>> createBroadcastVariable() {
-    return sparkContext.broadcast(projectSummaries);
   }
 
   private void summarizeTestedTypeCounts(JavaRDD<ObjectNode> donorSummaries, ObjectNode projectSummary) {

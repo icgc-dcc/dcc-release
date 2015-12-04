@@ -30,7 +30,7 @@ public class DocumentJobTest extends AbstractJobTest {
   public void setUp() {
     super.setUp();
     val properties = new DocumentProperties().setOutputDir(new File(workingDir, "output").getAbsolutePath());
-    this.job = new DocumentJob(properties, createSnpEffProperties());
+    this.job = new DocumentJob(properties, createSnpEffProperties(), sparkContext);
     this.index = resolveIndexName(RELEASE_VERSION);
   }
 

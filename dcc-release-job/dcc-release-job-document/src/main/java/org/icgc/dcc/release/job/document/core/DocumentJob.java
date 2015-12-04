@@ -30,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.job.FileType;
@@ -62,6 +64,8 @@ public class DocumentJob extends GenericJob {
   private final DocumentProperties properties;
   @NonNull
   private final SnpEffProperties snpEffProperties;
+  @NonNull
+  private final JavaSparkContext sparkContext;
 
   @Override
   public JobType getType() {
@@ -131,21 +135,21 @@ public class DocumentJob extends GenericJob {
     return indexJobBuilder.build();
   }
 
-  private static void setDependencies(DocumentJobContextBuilder indexJobBuilder,
+  private void setDependencies(DocumentJobContextBuilder indexJobBuilder,
       Map<BroadcastType, ? extends Task> indexJobDependencies) {
     for (val entry : indexJobDependencies.entrySet()) {
       switch (entry.getKey()) {
       case PROJECT:
         val resolveProjectsTask = (ResolveProjectsTask) entry.getValue();
-        indexJobBuilder.projectsBroadcast(resolveProjectsTask.getProjectsBroadcast());
+        indexJobBuilder.projectsBroadcast(createBroadcast(resolveProjectsTask.getProjectIdProjects()));
         break;
       case DONOR:
         val resolveDonorsTask = (ResolveDonorsTask) entry.getValue();
-        indexJobBuilder.donorsBroadcast(resolveDonorsTask.getDonorsBroadcast());
+        indexJobBuilder.donorsBroadcast(createBroadcast(resolveDonorsTask.getProjectDonors()));
         break;
       case GENE:
         val resolveGenesTask = (ResolveGenesTask) entry.getValue();
-        indexJobBuilder.genesBroadcast(resolveGenesTask.getGenesBroadcast());
+        indexJobBuilder.genesBroadcast(createBroadcast(resolveGenesTask.getGeneIdGenes()));
         break;
       default:
         throw new IllegalArgumentException(format("Unrecoginzed broadcast type %s", entry.getKey()));
@@ -172,6 +176,10 @@ public class DocumentJob extends GenericJob {
     val constructor = clazz.getConstructor(DocumentType.class);
 
     return constructor.newInstance(documentType);
+  }
+
+  private <T> Broadcast<T> createBroadcast(T value) {
+    return sparkContext.broadcast(value);
   }
 
 }

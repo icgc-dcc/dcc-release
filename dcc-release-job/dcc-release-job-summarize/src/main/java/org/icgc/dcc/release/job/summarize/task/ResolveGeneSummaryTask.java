@@ -31,14 +31,11 @@ import static org.icgc.dcc.release.core.util.Tuples.tuple;
 
 import java.util.List;
 
-import lombok.Getter;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.function.KeyFieldsFunction;
 import org.icgc.dcc.release.core.function.RetainFields;
 import org.icgc.dcc.release.core.job.FileType;
@@ -56,14 +53,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class ResolveGeneSummaryTask extends GenericTask {
 
   private static final String MATCH_MUTATION_ID_REGEX = "[\\d\\w]*#";
-  @Getter(lazy = true)
-  private final Broadcast<JavaPairRDD<String, ObjectNode>> geneDonorTypeCounts = createBroadcastVariable();
-  private final List<JavaPairRDD<String, ObjectNode>> geneStats = newCopyOnWriteArrayList();
-  private JavaSparkContext sparkContext;
+
+  private final List<JavaPairRDD<String, ObjectNode>> geneDonorTypeCounts = newCopyOnWriteArrayList();
 
   @Override
   public void execute(TaskContext taskContext) {
-    this.sparkContext = taskContext.getSparkContext();
     // Order is important, as MUTATION_ID is removed later
     val keyGeneFieldsFunction = new KeyFieldsFunction<Integer>(o -> 1, MUTATION_ID, OBSERVATION_DONOR_ID,
         OBSERVATION_TYPE, GENE_ID);
@@ -77,18 +71,18 @@ public class ResolveGeneSummaryTask extends GenericTask {
         .mapToPair(new ConvertToTempGeneSummaryObject(projectName))
         .aggregateByKey(null, new AggregateGeneStats(), new CombineGeneStats());
 
-    this.geneStats.add(geneStats);
+    this.geneDonorTypeCounts.add(geneStats);
   }
 
-  private Broadcast<JavaPairRDD<String, ObjectNode>> createBroadcastVariable() {
-    return sparkContext.broadcast(joinGeneStats());
+  public JavaPairRDD<String, ObjectNode> getGeneDonorTypeCounts() {
+    return joinGeneStats();
   }
 
   private JavaPairRDD<String, ObjectNode> joinGeneStats() {
     // ETL runs on at least one project
-    JavaPairRDD<String, ObjectNode> resultRdd = geneStats.get(0);
-    for (int i = 1; i < geneStats.size(); i++) {
-      val currentRdd = geneStats.get(i);
+    JavaPairRDD<String, ObjectNode> resultRdd = geneDonorTypeCounts.get(0);
+    for (int i = 1; i < geneDonorTypeCounts.size(); i++) {
+      val currentRdd = geneDonorTypeCounts.get(i);
       resultRdd = resultRdd
           .fullOuterJoin(currentRdd)
           .mapToPair(new MergeGeneSummaries());
