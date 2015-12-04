@@ -46,7 +46,7 @@ public class PullUpField implements Function<ObjectNode, ObjectNode> {
 
   private void pullUp(ObjectNode row) {
     val field = (ObjectNode) row.remove(fieldName);
-    row.putAll(field);
+    row.setAll(field);
   }
 
 }

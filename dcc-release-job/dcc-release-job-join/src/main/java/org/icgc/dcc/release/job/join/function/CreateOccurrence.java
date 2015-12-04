@@ -134,7 +134,7 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
 
     val consequenceArray = occurrence.withArray(CONSEQUENCE_ARRAY_NAME);
     consequenceArray.addAll(consequences);
-    occurrence.put(OBSERVATION_ARRAY_NAME, observations);
+    occurrence.set(OBSERVATION_ARRAY_NAME, observations);
 
     return occurrence;
   }
@@ -152,7 +152,7 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
 
   private JsonNode createObservation(ObjectNode primary, ObjectNode meta) {
     val sampleId = textValue(primary, SUBMISSION_ANALYZED_SAMPLE_ID);
-    primary.putAll(meta);
+    primary.setAll(meta);
     primary.put(SURROGATE_SPECIMEN_ID, donorSamples.get(sampleId).getSpecimenId());
     primary.put(SURROGATE_SAMPLE_ID, donorSamples.get(sampleId).getSampleId());
 
@@ -191,8 +191,8 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
 
   private static void enrichConsequenceFields(ObjectNode consequence) {
     consequence.remove(NORMALIZER_OBSERVATION_ID);
-    consequence.put(GENE_ID, consequence.get(SUBMISSION_GENE_AFFECTED));
-    consequence.put(TRANSCRIPT_ID, consequence.get(SUBMISSION_TRANSCRIPT_AFFECTED));
+    consequence.set(GENE_ID, consequence.get(SUBMISSION_GENE_AFFECTED));
+    consequence.set(TRANSCRIPT_ID, consequence.get(SUBMISSION_TRANSCRIPT_AFFECTED));
   }
 
   private static ArrayNode createObservations() {

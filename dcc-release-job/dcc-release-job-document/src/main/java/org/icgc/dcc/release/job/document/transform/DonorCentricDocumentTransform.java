@@ -39,8 +39,8 @@ import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.job.document.context.DonorCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
-import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
+import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import org.icgc.dcc.release.job.document.util.Fakes;
 
 import scala.Tuple2;
@@ -101,7 +101,7 @@ public class DonorCentricDocumentTransform extends AbstractCentricDocumentTransf
 
       // Merge
       val donorGene = donorGeneSummaries.get(donorGeneId);
-      donorGene.putAll(donorGeneTree);
+      donorGene.setAll(donorGeneTree);
     }
 
     if (isEmpty(donorGenes)) {

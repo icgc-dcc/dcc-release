@@ -108,7 +108,7 @@ public class CalculateImpact implements Function<ObjectNode, ObjectNode> {
   }
 
   private static void setSummary(ObjectNode observation, ArrayNode summary) {
-    observation.put(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY, summary);
+    observation.set(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY, summary);
   }
 
 }

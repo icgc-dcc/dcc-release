@@ -192,7 +192,7 @@ public class MutationCentricSummaryCallback implements DocumentCallback {
     mutationSummary.put(MUTATION_SUMMARY_TESTED_DONOR_COUNT, testedDonorCount);
     addAll(mutationSummary.withArray(MUTATION_SUMMARY_AFFECTED_PROJECT_IDS), projectIds);
 
-    mutation.put(MUTATION_SUMMARY, mutationSummary);
+    mutation.set(MUTATION_SUMMARY, mutationSummary);
   }
 
   private static Set<CompositeImpactCategory> getPrioritizedImpactCategories(ArrayNode transcripts) {

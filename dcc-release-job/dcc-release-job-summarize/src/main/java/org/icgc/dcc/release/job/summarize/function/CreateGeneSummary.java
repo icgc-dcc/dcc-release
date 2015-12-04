@@ -152,7 +152,7 @@ public final class CreateGeneSummary implements Function<ObjectNode, ObjectNode>
     val donor = createObject();
     val donorId = extractDonorId(geneStats);
     donor.put(DONOR_ID, donorId);
-    donor.put(GENE_DONOR_SUMMARY, createGeneDonorSummary(geneStats));
+    donor.set(GENE_DONOR_SUMMARY, createGeneDonorSummary(geneStats));
 
     return donor;
   }
@@ -163,7 +163,7 @@ public final class CreateGeneSummary implements Function<ObjectNode, ObjectNode>
     for (val featureType : FeatureType.values()) {
       val featureTypeCount = getFeatureTypeCount(featureType, mergedGeneStats);
       val featureTypeSummaryValue = createFeatureTypeSummaryValue(featureType, featureTypeCount);
-      summary.put(featureType.getSummaryFieldName(), featureTypeSummaryValue);
+      summary.set(featureType.getSummaryFieldName(), featureTypeSummaryValue);
     }
 
     return summary;

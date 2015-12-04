@@ -25,7 +25,6 @@ import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_TYPE;
 import static org.icgc.dcc.release.core.function.Unwind.unwindToParent;
 import static org.icgc.dcc.release.core.util.FieldNames.SummarizeFieldNames.FAKE_GENE_ID;
-import static org.icgc.dcc.release.core.util.ObjectNodes.createObject;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
@@ -76,7 +75,7 @@ public class ResolveGeneSummaryTask extends GenericTask {
         .mapToPair(ResolveGeneSummaryTask::removeMutation)
         .reduceByKey((a, b) -> a + b)
         .mapToPair(new ConvertToTempGeneSummaryObject(projectName))
-        .aggregateByKey(createObject(), new AggregateGeneStats(), new CombineGeneStats());
+        .aggregateByKey(null, new AggregateGeneStats(), new CombineGeneStats());
 
     this.geneStats.add(geneStats);
   }

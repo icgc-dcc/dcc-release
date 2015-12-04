@@ -46,7 +46,7 @@ public final class CreateRawSequenceDataObject implements Function<ObjectNode, O
   public ObjectNode call(ObjectNode node) throws Exception {
     val rawSequenceDataObject = Jackson.DEFAULT.createObjectNode();
     for (val entry : RAW_SEQUENCE_DATA_FIELDS_MAPPING.entrySet()) {
-      rawSequenceDataObject.put(entry.getValue(), node.get(entry.getKey()));
+      rawSequenceDataObject.set(entry.getValue(), node.get(entry.getKey()));
     }
 
     return rawSequenceDataObject;
