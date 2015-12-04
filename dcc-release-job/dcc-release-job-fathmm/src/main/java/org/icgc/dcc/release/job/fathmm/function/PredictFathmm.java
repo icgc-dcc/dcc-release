@@ -88,10 +88,10 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeabl
         val fathmmNode = calculateFATHMM(translationIdStr, aaMutationStr);
         if (fathmmNode != null) {
           if (consequence.get(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION) == null) {
-            ((ObjectNode) consequence).put(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION,
+            ((ObjectNode) consequence).set(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION,
                 JsonNodeFactory.instance.objectNode());
           }
-          ((ObjectNode) consequence.get(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION)).put(
+          ((ObjectNode) consequence.get(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION)).set(
               "fathmm", fathmmNode);
         }
       }

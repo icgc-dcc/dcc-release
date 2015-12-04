@@ -46,7 +46,7 @@ public class CreateOccurrenceFromSecondary implements
   public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
     val primary = tuple._2._1;
     val secondaries = tuple._2._2;
-    primary.put(CONSEQUENCE_ARRAY_NAME, createConsequences(secondaries));
+    primary.set(CONSEQUENCE_ARRAY_NAME, createConsequences(secondaries));
 
     return primary;
   }

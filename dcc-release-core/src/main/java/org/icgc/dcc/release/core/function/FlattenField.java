@@ -44,7 +44,7 @@ public class FlattenField implements FlatMapFunction<ObjectNode, ObjectNode> {
     val results = Lists.<ObjectNode> newArrayListWithCapacity(array.size());
     for (val element : array) {
       val flattened = row.deepCopy();
-      flattened.put(fieldName, element);
+      flattened.set(fieldName, element);
       results.add(flattened);
     }
 

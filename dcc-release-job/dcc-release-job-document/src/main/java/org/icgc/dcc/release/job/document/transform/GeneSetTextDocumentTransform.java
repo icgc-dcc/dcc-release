@@ -21,8 +21,8 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -48,13 +48,13 @@ public class GeneSetTextDocumentTransform implements DocumentTransform, Function
     val type = context.getType();
     val id = geneSet.get("id").textValue();
 
-    geneSet.put("id", geneSet.remove("id"));
-    geneSet.put("name", geneSet.remove("name"));
-    geneSet.put("source", geneSet.remove("source"));
-    geneSet.put("type", geneSet.remove("type"));
+    geneSet.set("id", geneSet.remove("id"));
+    geneSet.set("name", geneSet.remove("name"));
+    geneSet.set("source", geneSet.remove("source"));
+    geneSet.set("type", geneSet.remove("type"));
 
     if (!geneSet.path("go_term").isMissingNode()) {
-      geneSet.put("altIds", geneSet.get("go_term").get("alt_ids"));
+      geneSet.set("altIds", geneSet.get("go_term").get("alt_ids"));
       geneSet.remove("go_term");
     }
 

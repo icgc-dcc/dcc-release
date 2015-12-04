@@ -64,8 +64,8 @@ import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.job.document.context.GeneCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
-import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
+import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import org.icgc.dcc.release.job.document.util.Fakes;
 
 import scala.Tuple2;
@@ -135,17 +135,17 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
       }
 
       // Merge
-      geneDonorSummary.putAll(donorSummary);
-      geneDonor.putAll(donor);
-      geneDonor.put(GENE_DONOR_SUMMARY, geneDonorSummary);
+      geneDonorSummary.setAll(donorSummary);
+      geneDonor.setAll(donor);
+      geneDonor.set(GENE_DONOR_SUMMARY, geneDonorSummary);
 
       // Add donor-project info
-      geneDonor.put(GENE_DONOR_PROJECT, donorProject);
+      geneDonor.set(GENE_DONOR_PROJECT, donorProject);
 
       // Merge
       val geneDonorObservations = geneDonorsObservations.get(geneDonorId);
       val geneDonorTree = createGeneDonorTree(gene, donor, geneDonorObservations);
-      geneDonor.putAll(geneDonorTree);
+      geneDonor.setAll(geneDonorTree);
     }
 
     if (isEmpty(geneDonors)) {
@@ -172,7 +172,7 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
       int totalSsmTestedDonorCount = projectSummary.path(totalSsmTestedDonorCountFieldName).intValue();
 
       // Merge
-      geneProject.putAll(project);
+      geneProject.setAll(project);
       geneProject.with(PROJECT_SUMMARY)
           .put(TOTAL_DONOR_COUNT, totalDonorCount)
           .put(totalSsmTestedDonorCountFieldName, totalSsmTestedDonorCount);
@@ -293,7 +293,7 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
     ObjectNode donorProject = project.objectNode();
 
     for (String fieldName : DONOR_PROJECT_FIELD_NAMES) {
-      donorProject.put(fieldName, project.get(fieldName));
+      donorProject.set(fieldName, project.get(fieldName));
     }
 
     return donorProject;

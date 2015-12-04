@@ -56,7 +56,7 @@ public class ProjectFields implements Function<ObjectNode, ObjectNode> {
       val fieldName = entry.getKey();
       val value = entry.getValue();
       if (projections.containsKey(fieldName)) {
-        newRow.put(projections.get(fieldName), value);
+        newRow.set(projections.get(fieldName), value);
       }
     }
 

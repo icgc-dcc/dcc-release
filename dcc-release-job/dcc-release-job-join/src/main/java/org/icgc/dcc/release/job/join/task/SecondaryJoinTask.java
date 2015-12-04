@@ -21,7 +21,6 @@ import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.PROJECT
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.SURROGATE_MATCHED_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MATCHED_SAMPLE_ID;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.MUTATION_ID;
-import static org.icgc.dcc.release.core.util.JavaRDDs.createRddForJoin;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 
@@ -104,7 +103,7 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
 
     return primaryMeta
         .mapToPair(keyPrimaryMetaFunction)
-        .leftOuterJoin(createRddForJoin(secondary.groupBy(secondaryGroupByFunction), sparkContext))
+        .leftOuterJoin(secondary.groupBy(secondaryGroupByFunction))
         .map(new CreateOccurrenceFromSecondary());
   }
 

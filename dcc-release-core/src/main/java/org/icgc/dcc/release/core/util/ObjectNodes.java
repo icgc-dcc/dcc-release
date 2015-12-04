@@ -98,8 +98,8 @@ public class ObjectNodes {
         .anyMatch(e -> e.equals(element));
   }
 
-  public static ObjectNode mergeObjects(@NonNull ObjectNode targetNode, @NonNull ObjectNode sourceNode) {
-    val result = targetNode.deepCopy();
+  public static ObjectNode mergeObjects(ObjectNode targetNode, @NonNull ObjectNode sourceNode) {
+    val result = targetNode == null ? MAPPER.createObjectNode() : targetNode.deepCopy();
     val fieldNames = sourceNode.fieldNames();
 
     while (fieldNames.hasNext()) {
@@ -111,13 +111,13 @@ public class ObjectNodes {
         val targetValue = targetObject.isMissingNode() ?
             sourceValue :
             mergeObjects(asObjectNode(targetObject), asObjectNode(sourceValue));
-        result.put(fieldName, targetValue);
+        result.set(fieldName, targetValue);
         continue;
       }
 
       checkArgument(result.path(fieldName).isMissingNode(), "Found duplicate field name '%s' in parent object %s",
           fieldName, result);
-      result.put(fieldName, sourceNode.get(fieldName));
+      result.set(fieldName, sourceNode.get(fieldName));
     }
 
     return result;

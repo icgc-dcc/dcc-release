@@ -18,7 +18,6 @@
 package org.icgc.dcc.release.core.task;
 
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
-import static org.icgc.dcc.release.core.util.JavaRDDs.emptyRDD;
 import static org.icgc.dcc.release.core.util.JavaRDDs.exists;
 import static org.icgc.dcc.release.core.util.JavaRDDs.logPartitions;
 
@@ -103,7 +102,7 @@ public abstract class GenericTask implements Task {
     if (!exists(sparkContext, filePath)) {
       log.debug("{} does not exist. Skipping...", filePath);
 
-      return emptyRDD(sparkContext);
+      return sparkContext.emptyRDD();
     }
 
     val input = readInput(taskContext, taskContext.getPath(inputFileType), conf);
@@ -116,7 +115,7 @@ public abstract class GenericTask implements Task {
     val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
     val inputPaths = resolveInputPaths(taskContext, fileTypePath);
     val sparkContext = taskContext.getSparkContext();
-    JavaRDD<ObjectNode> result = emptyRDD(sparkContext);
+    JavaRDD<ObjectNode> result = sparkContext.emptyRDD();
 
     for (val inputPath : inputPaths) {
       val input = readInput(taskContext, inputPath.toString(), conf);

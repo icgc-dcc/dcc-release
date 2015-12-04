@@ -88,11 +88,11 @@ public class TestJsonNodes {
     for (val fieldName : fields) {
       val value = json.get(fieldName);
       if (value.isObject()) {
-        result.put(fieldName, sortFields(value));
+        result.set(fieldName, sortFields(value));
       } else if (value.isArray()) {
-        result.put(fieldName, sortArrayNode(value));
+        result.set(fieldName, sortArrayNode(value));
       } else {
-        result.put(fieldName, value);
+        result.set(fieldName, value);
       }
     }
 

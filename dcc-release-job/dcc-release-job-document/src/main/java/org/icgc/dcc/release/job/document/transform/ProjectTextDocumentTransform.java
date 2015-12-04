@@ -26,8 +26,8 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -56,11 +56,11 @@ public class ProjectTextDocumentTransform implements DocumentTransform, Function
     // Identifiers
     val projectId = project.get(PROJECT_ID).asText();
 
-    project.put("id", project.remove(PROJECT_ID));
-    project.put("primarySite", project.remove(PROJECT_PRIMARY_SITE));
-    project.put("name", project.remove(PROJECT_DISPLAY_NAME));
-    project.put("tumourType", project.remove(PROJECT_TUMOUR_TYPE));
-    project.put("tumourSubtype", project.remove(PROJECT_TUMOUR_SUBTYPE));
+    project.set("id", project.remove(PROJECT_ID));
+    project.set("primarySite", project.remove(PROJECT_PRIMARY_SITE));
+    project.set("name", project.remove(PROJECT_DISPLAY_NAME));
+    project.set("tumourType", project.remove(PROJECT_TUMOUR_TYPE));
+    project.set("tumourSubtype", project.remove(PROJECT_TUMOUR_SUBTYPE));
     project.put("type", "project");
 
     return new Document(context.getType(), projectId, project);

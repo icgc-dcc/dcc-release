@@ -141,7 +141,7 @@ public class ResolveProjectSummaryTask extends GenericTask {
 
     projectSummary.putPOJO(EXPERIMENTAL_ANALYSIS_PERFORMED_DONOR_COUNT, to(donorLibraryStrategyCounts.build()));
     projectSummary.putPOJO(AVAILABLE_EXPERIMENTAL_ANALYSIS_PERFORMED, to(uniqueLibStrategies));
-    projectSummary.put(EXPERIMENTAL_ANALYSIS_PERFORMED_SAMPLE_COUNT, to(sampleLibraryStrategyCounts));
+    projectSummary.set(EXPERIMENTAL_ANALYSIS_PERFORMED_SAMPLE_COUNT, to(sampleLibraryStrategyCounts));
 
     donorLibStrategies.unpersist(false);
   }

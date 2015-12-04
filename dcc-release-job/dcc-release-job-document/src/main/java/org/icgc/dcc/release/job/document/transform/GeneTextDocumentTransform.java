@@ -22,8 +22,8 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -61,12 +61,12 @@ public class GeneTextDocumentTransform implements DocumentTransform, Function<Ob
     val ensemblTranslationId = externalDbIds.get("Ensembl_translation_id");
 
     gene.put("id", geneId);
-    gene.put("uniprotkbSwissprot", uniprotkbSwissprot);
-    gene.put("omimGene", omimGene);
-    gene.put("entrezGene", entrezGene);
-    gene.put("hgnc", hgnc);
-    gene.put("ensemblTranscriptId", ensemblTranscriptId);
-    gene.put("ensemblTranslationId", ensemblTranslationId);
+    gene.set("uniprotkbSwissprot", uniprotkbSwissprot);
+    gene.set("omimGene", omimGene);
+    gene.set("entrezGene", entrezGene);
+    gene.set("hgnc", hgnc);
+    gene.set("ensemblTranscriptId", ensemblTranscriptId);
+    gene.set("ensemblTranslationId", ensemblTranslationId);
 
     gene.put("type", "gene");
 
