@@ -42,7 +42,7 @@ public final class CreateFeatureTypeSummary implements PairFunction<Tuple2<Strin
     val summary = donorSummary.with(DONOR_SUMMARY);
     val featureTypeCount = tuple._2;
     val summaryValue = createFeatureTypeSummaryValue(featureType, featureTypeCount);
-    summary.put(featureType.getSummaryFieldName(), summaryValue);
+    summary.set(featureType.getSummaryFieldName(), summaryValue);
 
     return tuple(resolveDonorId(donorFeatureType), donorSummary);
   }

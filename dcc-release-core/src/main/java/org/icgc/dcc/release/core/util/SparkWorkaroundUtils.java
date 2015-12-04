@@ -17,37 +17,24 @@
  */
 package org.icgc.dcc.release.core.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.release.core.util.Tuples.tuple;
+import java.util.Map;
 
-import java.util.Collections;
+import lombok.experimental.UtilityClass;
 
-import lombok.val;
+import com.google.common.collect.Maps;
 
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.junit.Test;
+@UtilityClass
+public class SparkWorkaroundUtils {
 
-public class SparkTest {
-
-  @Test
-  public void joinEmptyRDDTest() {
-    val sparkConf = new SparkConf().setAppName("test").setMaster("local");
-
-    try (val sparkContext = new JavaSparkContext(sparkConf)) {
-      val oneRdd = sparkContext.parallelize(Collections.singletonList("one"));
-      val twoRdd = sparkContext.parallelize(Collections.singletonList("two"));
-      val threeRdd = sparkContext.emptyRDD();
-
-      val onePair = oneRdd.mapToPair(t -> tuple(1, t));
-      val twoPair = twoRdd.groupBy(t -> 1);
-      val threePair = threeRdd.groupBy(t -> 1);
-
-      assertThat(onePair.leftOuterJoin(twoPair).collect()).isNotEmpty();
-
-      // FIXME: https://issues.apache.org/jira/browse/SPARK-9236
-      assertThat(onePair.leftOuterJoin(threePair).collect()).isEmpty();
-    }
+  /**
+   * Broadcast variabled don't work with all Map implementations.
+   * @see <a
+   * href="http://mail-archives.us.apache.org/mod_mbox/spark-user/201504.mbox/%3CCA+3qhFS0vXgJrfZ+e+yckpNPrm1wep8k=LSwEGNd53A7mPydzQ@mail.gmail.com%3E">Spark
+   * discussion</a>
+   */
+  // TODO: Verify if this is fixed in the next Spark version. Current 1.5.2
+  public static <K, V> Map<K, V> toHashMap(Map<? extends K, ? extends V> map) {
+    return Maps.newHashMap(map);
   }
 
 }

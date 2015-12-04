@@ -18,7 +18,6 @@
 package org.icgc.dcc.release.core.task;
 
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
-import static org.icgc.dcc.release.core.util.JavaRDDs.emptyRDD;
 import static org.icgc.dcc.release.core.util.JavaRDDs.exists;
 import static org.icgc.dcc.release.core.util.JavaRDDs.logPartitions;
 
@@ -75,7 +74,7 @@ public abstract class GenericTask implements Task {
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf hadoopConf, FileType inputFileType, long size) {
     val maxFileSize = size * 1024L * 1024L;
 
-    log.info("Setting input split size of {}", formatBytes(maxFileSize));
+    log.debug("Setting input split size of {}", formatBytes(maxFileSize));
     val splitSize = Long.toString(maxFileSize);
     hadoopConf.set("mapred.min.split.size", splitSize);
     hadoopConf.set("mapred.max.split.size", splitSize);
@@ -101,9 +100,9 @@ public abstract class GenericTask implements Task {
     val filePath = taskContext.getPath(inputFileType);
 
     if (!exists(sparkContext, filePath)) {
-      log.warn("{} does not exist. Skipping...", filePath);
+      log.debug("{} does not exist. Skipping...", filePath);
 
-      return emptyRDD(sparkContext);
+      return sparkContext.emptyRDD();
     }
 
     val input = readInput(taskContext, taskContext.getPath(inputFileType), conf);
@@ -116,7 +115,7 @@ public abstract class GenericTask implements Task {
     val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
     val inputPaths = resolveInputPaths(taskContext, fileTypePath);
     val sparkContext = taskContext.getSparkContext();
-    JavaRDD<ObjectNode> result = emptyRDD(sparkContext);
+    JavaRDD<ObjectNode> result = sparkContext.emptyRDD();
 
     for (val inputPath : inputPaths) {
       val input = readInput(taskContext, inputPath.toString(), conf);

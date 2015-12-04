@@ -109,7 +109,7 @@ public class MongoImportTask extends GenericTask {
   protected void writeOutput(TaskContext taskContext, JavaRDD<ObjectNode> output) {
     val outputPath = new Path(taskContext.getJobContext().getWorkingDir(), outputFileType.getDirName()).toString();
 
-    output.saveAsTextFile(outputPath);
+    writeOutput(output, outputPath, taskContext.isCompressOutput());
   }
 
 }

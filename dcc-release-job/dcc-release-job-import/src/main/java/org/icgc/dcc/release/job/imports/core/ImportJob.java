@@ -42,6 +42,11 @@ import org.springframework.stereotype.Component;
 public class ImportJob extends GenericJob {
 
   /**
+   * Constants.
+   */
+  private static final String MONGO_REFERENCE_DB = "dcc-genome";
+
+  /**
    * Dependencies.
    */
   @NonNull
@@ -64,9 +69,9 @@ public class ImportJob extends GenericJob {
 
   private void imports(JobContext jobContext) {
     jobContext.execute(
-        new MongoImportTask(properties, "dcc-genome", PROJECT_COLLECTION.getId(), PROJECT),
-        new MongoImportTask(properties, "dcc-genome", GENE_COLLECTION.getId(), GENE),
-        new MongoImportTask(properties, "dcc-genome", GENE_SET_COLLECTION.getId(), GENE_SET),
-        new MongoImportTask(properties, "dcc-genome", DIAGRAM_COLLECTION.getId(), DIAGRAM));
+        new MongoImportTask(properties, MONGO_REFERENCE_DB, PROJECT_COLLECTION.getId(), PROJECT),
+        new MongoImportTask(properties, MONGO_REFERENCE_DB, GENE_COLLECTION.getId(), GENE),
+        new MongoImportTask(properties, MONGO_REFERENCE_DB, GENE_SET_COLLECTION.getId(), GENE_SET),
+        new MongoImportTask(properties, MONGO_REFERENCE_DB, DIAGRAM_COLLECTION.getId(), DIAGRAM));
   }
 }

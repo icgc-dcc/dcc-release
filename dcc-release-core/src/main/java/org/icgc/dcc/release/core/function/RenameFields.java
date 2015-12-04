@@ -53,7 +53,7 @@ public class RenameFields implements Function<ObjectNode, ObjectNode> {
       val newFieldName = entry.getValue();
       val value = row.get(oldFieldName);
       row.remove(oldFieldName);
-      row.put(newFieldName, value);
+      row.set(newFieldName, value);
     }
 
     return row;

@@ -32,8 +32,6 @@ import lombok.Getter;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
@@ -47,17 +45,14 @@ import com.google.common.collect.Maps;
  */
 public class ResolveDonorSamplesTask extends GenericTask {
 
-  @Getter(lazy = true)
-  private final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesBroadcast = createBroadcastVariable();
-  private final Map<String, Map<String, DonorSample>> donorSamplesByProject = Maps.newHashMap();
-  private transient JavaSparkContext sparkContext;
+  @Getter
+  private final Map<String, Map<String, DonorSample>> projectDonorSamples = Maps.newConcurrentMap();
 
   @Override
   public void execute(TaskContext taskContext) {
-    sparkContext = taskContext.getSparkContext();
     val donorSamples = resolveDonorSamples(taskContext);
     val projectName = resolveProjectName(taskContext);
-    donorSamplesByProject.put(projectName, donorSamples);
+    projectDonorSamples.put(projectName, donorSamples);
   }
 
   private Map<String, DonorSample> resolveDonorSamples(TaskContext taskContext) {
@@ -80,10 +75,6 @@ public class ResolveDonorSamplesTask extends GenericTask {
     }
 
     return donorSamples;
-  }
-
-  private Broadcast<Map<String, Map<String, DonorSample>>> createBroadcastVariable() {
-    return sparkContext.broadcast(donorSamplesByProject);
   }
 
   private JavaRDD<ObjectNode> parseClinical(TaskContext taskContext) {

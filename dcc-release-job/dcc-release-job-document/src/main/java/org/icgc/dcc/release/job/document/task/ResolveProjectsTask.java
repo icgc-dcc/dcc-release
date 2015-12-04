@@ -19,18 +19,15 @@ package org.icgc.dcc.release.job.document.task;
 
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getProjectId;
-import static org.icgc.dcc.release.job.document.util.MutableMaps.toHashMap;
 
 import java.util.Map;
 
 import lombok.Getter;
-import lombok.val;
 
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
+import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -40,10 +37,8 @@ public class ResolveProjectsTask extends AbstractDocumentTask {
     super(type);
   }
 
-  @Getter(lazy = true)
-  private final Broadcast<Map<String, ObjectNode>> projectsBroadcast = createBroadcast();
-  private transient Map<String, ObjectNode> projectsById;
-  private transient JavaSparkContext sparkContext;
+  @Getter
+  private Map<String, ObjectNode> projectIdProjects;
 
   @Override
   public TaskType getType() {
@@ -52,15 +47,11 @@ public class ResolveProjectsTask extends AbstractDocumentTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    sparkContext = taskContext.getSparkContext();
-    val projects = readProjects(taskContext)
+    projectIdProjects = readProjects(taskContext)
         .mapToPair(project -> tuple(getProjectId(project), project))
         .collectAsMap();
-    projectsById = toHashMap(projects);
-  }
 
-  private Broadcast<Map<String, ObjectNode>> createBroadcast() {
-    return sparkContext.broadcast(projectsById);
+    projectIdProjects = SparkWorkaroundUtils.toHashMap(projectIdProjects);
   }
 
 }

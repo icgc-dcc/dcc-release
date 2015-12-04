@@ -38,7 +38,7 @@ public class AggregateConsequences implements Function<ObjectNode, ObjectNode> {
     val consequences = row.withArray(OBSERVATION_CONSEQUENCES);
     if (!consequences.isMissingNode()) {
       val consequenceTypes = getConsequenceTypes(consequences);
-      row.put(OBSERVATION_CONSEQUENCE_TYPES, consequenceTypes);
+      row.set(OBSERVATION_CONSEQUENCE_TYPES, consequenceTypes);
     }
 
     return row;

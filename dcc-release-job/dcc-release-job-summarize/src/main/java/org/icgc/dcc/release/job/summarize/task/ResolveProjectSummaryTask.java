@@ -40,11 +40,9 @@ import lombok.Getter;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
-import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
 import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.function.PullUpField;
@@ -65,14 +63,11 @@ import com.google.common.collect.Maps;
 
 public class ResolveProjectSummaryTask extends GenericTask {
 
-  @Getter(lazy = true)
-  private final Broadcast<Map<String, ObjectNode>> projectSummaryBroadcast = createBroadcastVariable();
-  private transient final Map<String, ObjectNode> projectSummaries = Maps.newHashMap();
-  private transient JavaSparkContext sparkContext;
+  @Getter
+  private final Map<String, ObjectNode> projectSummaries = Maps.newConcurrentMap();
 
   @Override
   public void execute(TaskContext taskContext) {
-    sparkContext = taskContext.getSparkContext();
     val projectSummary = createDefaultProjectSummary();
     val donorSummaries = readDonorSummary(taskContext);
 
@@ -83,16 +78,12 @@ public class ResolveProjectSummaryTask extends GenericTask {
     summarizeTestedTypeCounts(donorSummaries, projectSummary);
     summarizeRepositories(donorSummaries, projectSummary);
     summarizeLibraryStrategyCounts(donorSummaries, projectSummary);
-    donorSummaries.unpersist();
+    donorSummaries.unpersist(false);
 
     summarizeSpecimenSampleCounts(taskContext, projectSummary);
 
     val projectName = resolveProjectName(taskContext);
     this.projectSummaries.put(projectName, projectSummary);
-  }
-
-  private Broadcast<Map<String, ObjectNode>> createBroadcastVariable() {
-    return sparkContext.broadcast(projectSummaries);
   }
 
   private void summarizeTestedTypeCounts(JavaRDD<ObjectNode> donorSummaries, ObjectNode projectSummary) {
@@ -106,6 +97,7 @@ public class ResolveProjectSummaryTask extends GenericTask {
 
   private Function<ObjectNode, Boolean> filterFeatureType(FeatureType featureType) {
     val summaryFieldName = featureType.getSummaryFieldName();
+    featureType.isCountSummary();
 
     return o -> {
       JsonNode summaryField = o.get(summaryFieldName);
@@ -140,9 +132,9 @@ public class ResolveProjectSummaryTask extends GenericTask {
 
     projectSummary.putPOJO(EXPERIMENTAL_ANALYSIS_PERFORMED_DONOR_COUNT, to(donorLibraryStrategyCounts.build()));
     projectSummary.putPOJO(AVAILABLE_EXPERIMENTAL_ANALYSIS_PERFORMED, to(uniqueLibStrategies));
-    projectSummary.put(EXPERIMENTAL_ANALYSIS_PERFORMED_SAMPLE_COUNT, to(sampleLibraryStrategyCounts));
+    projectSummary.set(EXPERIMENTAL_ANALYSIS_PERFORMED_SAMPLE_COUNT, to(sampleLibraryStrategyCounts));
 
-    donorLibStrategies.unpersist();
+    donorLibStrategies.unpersist(false);
   }
 
   private PairFlatMapFunction<ObjectNode, String, Integer> flattenLibStrategyToPair() {
@@ -176,7 +168,7 @@ public class ResolveProjectSummaryTask extends GenericTask {
         .flatMap(Unwind.unwind(FieldNames.DONOR_SAMPLE))
         .map(new RetainFields(FieldNames.DONOR_SAMPLE_ID));
     val samplesCount = samples.count();
-    specimens.unpersist();
+    specimens.unpersist(false);
 
     projectSummary.put(FieldNames.TOTAL_SPECIMEN_COUNT, specimenCount);
     projectSummary.put(FieldNames.TOTAL_SAMPLE_COUNT, samplesCount);

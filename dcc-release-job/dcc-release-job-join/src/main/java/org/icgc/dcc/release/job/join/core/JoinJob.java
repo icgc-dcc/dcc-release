@@ -35,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.common.core.util.Joiners;
@@ -75,6 +76,8 @@ public class JoinJob extends GenericJob {
    */
   @NonNull
   private final SubmissionFileSchemas schemas;
+  @NonNull
+  private final JavaSparkContext sparkContext;
 
   private static final Set<FileType> ANALYSIS_FILE_TYPES = ImmutableSet.of(
       FileType.MIRNA_SEQ,
@@ -140,11 +143,11 @@ public class JoinJob extends GenericJob {
   private void join(JobContext jobContext) {
     val resolveRawSequenceDataTask = new ResolveRawSequenceDataTask();
     jobContext.execute(resolveRawSequenceDataTask);
-    val rawSequenceDataBroadcast = resolveRawSequenceDataTask.getRawSequenceDataBroadcast();
+    val rawSequenceDataBroadcast = createBroadcast(resolveRawSequenceDataTask.getProjectRawSequenceData());
     jobContext.execute(new ClinicalJoinTask(rawSequenceDataBroadcast));
 
     // Discard the broadcast
-    rawSequenceDataBroadcast.destroy();
+    rawSequenceDataBroadcast.destroy(false);
     val executeFileTypes = resolveExecuteFileTypes();
 
     if (executeFileTypes.isEmpty()) {
@@ -154,7 +157,7 @@ public class JoinJob extends GenericJob {
     val resolveDonorSamplesTask = new ResolveDonorSamplesTask();
     val resolveSampleIds = new ResolveSampleSurrogateSampleIds();
     jobContext.execute(resolveDonorSamplesTask);
-    val donorSamples = resolveDonorSamplesTask.getDonorSamplesBroadcast();
+    val donorSamples = createBroadcast(resolveDonorSamplesTask.getProjectDonorSamples());
 
     val tasks = createTasks(jobContext, executeFileTypes, resolveSampleIds, donorSamples);
     jobContext.execute(tasks);
@@ -175,7 +178,7 @@ public class JoinJob extends GenericJob {
           jobContext.execute(resolveSampleIds);
         }
 
-        val sampleSurrogateSampleIds = resolveSampleIds.getSampleSurrogateSampleIdsBroadcast();
+        val sampleSurrogateSampleIds = createBroadcast(resolveSampleIds.getSampleSurrogateSampleId());
         tasks.add(createSecondaryTask(executeFileType, donorSamples, sampleSurrogateSampleIds));
       }
     }
@@ -264,6 +267,10 @@ public class JoinJob extends GenericJob {
     result.add(OBSERVATION);
 
     return result.toArray(new FileType[result.size()]);
+  }
+
+  private <T> Broadcast<T> createBroadcast(T value) {
+    return sparkContext.broadcast(value);
   }
 
 }

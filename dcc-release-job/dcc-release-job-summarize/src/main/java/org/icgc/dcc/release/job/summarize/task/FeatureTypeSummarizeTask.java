@@ -25,21 +25,17 @@ import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_TYPE;
 import static org.icgc.dcc.release.core.function.PairFunctions.sum;
 import static org.icgc.dcc.release.core.util.FeatureTypes.getFeatureTypes;
-import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 import static org.icgc.dcc.release.core.util.ObjectNodes.mergeObjects;
 import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;
 
 import java.util.Map;
 import java.util.Map.Entry;
 
-import lombok.Getter;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
-import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
 import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.common.core.model.Marking;
@@ -59,14 +55,10 @@ import com.google.common.collect.Table;
 
 public class FeatureTypeSummarizeTask extends GenericTask {
 
-  @Getter(lazy = true)
-  private final Broadcast<Map<String, Map<String, ObjectNode>>> projectDonorSummary = createBroadcastaVariable();
   private final Table<String, FeatureType, Map<String, ObjectNode>> projectFeatureTypeDonors = create();
-  private transient JavaSparkContext sparkContext;
 
   @Override
   public void execute(TaskContext taskContext) {
-    this.sparkContext = taskContext.getSparkContext();
     for (val featureType : getFeatureTypes()) {
       val projectName = resolveProjectName(taskContext);
       val featureTypeMapping = createMapping(taskContext, featureType);
@@ -74,17 +66,14 @@ public class FeatureTypeSummarizeTask extends GenericTask {
     }
   }
 
-  private Broadcast<Map<String, Map<String, ObjectNode>>> createBroadcastaVariable() {
-    // @formatter:off
-    // Broadcast variabled don't work with all Map implementations.
-    // See http://mail-archives.us.apache.org/mod_mbox/spark-user/201504.mbox/%3CCA+3qhFS0vXgJrfZ+e+yckpNPrm1wep8k=LSwEGNd53A7mPydzQ@mail.gmail.com%3E
-    // @formatter:on
+  public Map<String, Map<String, ObjectNode>> getProjectFeatureTypeDonors() {
+    // See: SparkWorkaroundUtils.toHashMap()
     val projectDonorSummary = Maps.<String, Map<String, ObjectNode>> newHashMap();
     for (val entry : projectFeatureTypeDonors.rowMap().entrySet()) {
       projectDonorSummary.putAll(mergeDonorSummaries(entry));
     }
 
-    return sparkContext.broadcast(projectDonorSummary);
+    return projectDonorSummary;
   }
 
   private static Map<String, Map<String, ObjectNode>> mergeDonorSummaries(
@@ -131,7 +120,7 @@ public class FeatureTypeSummarizeTask extends GenericTask {
           input
           .mapToPair(new KeyFields(DONOR_ID, OBSERVATION_TYPE)))
         .mapToPair(new CreateFeatureTypeSummary())
-        .aggregateByKey(MAPPER.createObjectNode(), aggregateFeatureType(), aggregateFeatureType())
+        .aggregateByKey(null, aggregateFeatureType(), aggregateFeatureType())
         .collectAsMap();
     // @formatter:on
   }
@@ -157,7 +146,7 @@ public class FeatureTypeSummarizeTask extends GenericTask {
     };
   }
 
-  private Function2<ObjectNode, ObjectNode, ObjectNode> aggregateFeatureType() {
+  private static Function2<ObjectNode, ObjectNode, ObjectNode> aggregateFeatureType() {
     return (agg, next) -> mergeObjects(agg, next);
   }
 

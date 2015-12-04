@@ -31,7 +31,7 @@ public class SummarizeJobTest extends AbstractJobTest {
   @Before
   public void setUp() {
     super.setUp();
-    this.job = new SummarizeJob();
+    this.job = new SummarizeJob(sparkContext);
   }
 
   @Test

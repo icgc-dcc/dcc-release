@@ -291,8 +291,8 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
         .remove(keyFields);
 
     // Add entities
-    ssmOccurrence.put(MUTATION_OBSERVATION_DONOR, donor);
-    ssmOccurrence.put(MUTATION_OBSERVATION_PROJECT, project);
+    ssmOccurrence.set(MUTATION_OBSERVATION_DONOR, donor);
+    ssmOccurrence.set(MUTATION_OBSERVATION_PROJECT, project);
 
     return ssmOccurrence;
   }
@@ -316,10 +316,10 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     val impactPrediction = consequence.remove(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION);
 
     // Embed
-    transcript.put(MUTATION_TRANSCRIPTS_CONSEQUENCE, consequence);
-    transcript.put(MUTATION_TRANSCRIPTS_GENE, gene);
-    transcript.put(MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY, impactPredictionSummary);
-    transcript.put(MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION, impactPrediction);
+    transcript.set(MUTATION_TRANSCRIPTS_CONSEQUENCE, consequence);
+    transcript.set(MUTATION_TRANSCRIPTS_GENE, gene);
+    transcript.set(MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY, impactPredictionSummary);
+    transcript.set(MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION, impactPrediction);
 
     return transcript;
   }

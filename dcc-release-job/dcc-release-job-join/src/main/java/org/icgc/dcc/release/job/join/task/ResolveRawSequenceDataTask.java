@@ -28,8 +28,6 @@ import lombok.Getter;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
@@ -39,17 +37,14 @@ import com.google.common.collect.Maps;
 
 public class ResolveRawSequenceDataTask extends GenericTask {
 
-  @Getter(lazy = true)
-  private final Broadcast<Map<String, JavaRDD<ObjectNode>>> rawSequenceDataBroadcast = createBroadcastVariable();
-  private final Map<String, JavaRDD<ObjectNode>> rawSequenceDataByProject = Maps.newHashMap();
-  private transient JavaSparkContext sparkContext;
+  @Getter
+  private final Map<String, JavaRDD<ObjectNode>> projectRawSequenceData = Maps.newConcurrentMap();
 
   @Override
   public void execute(TaskContext taskContext) {
-    sparkContext = taskContext.getSparkContext();
     val rawSequenceData = resolveRawSequenceData(taskContext);
     val projectName = resolveProjectName(taskContext);
-    rawSequenceDataByProject.put(projectName, rawSequenceData);
+    projectRawSequenceData.put(projectName, rawSequenceData);
   }
 
   private JavaRDD<ObjectNode> resolveRawSequenceData(TaskContext taskContext) {
@@ -71,15 +66,10 @@ public class ResolveRawSequenceDataTask extends GenericTask {
     return resultRdd.distinct();
   }
 
-  private Broadcast<Map<String, JavaRDD<ObjectNode>>> createBroadcastVariable() {
-    return sparkContext.broadcast(rawSequenceDataByProject);
-  }
-
   private static List<FileType> filterMetaTypes() {
     return newArrayList(FileType.values()).stream()
         .filter(ft -> ft.isMetaFileType())
         .collect(toList());
-
   }
 
 }

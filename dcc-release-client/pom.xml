@@ -82,6 +82,10 @@
       <groupId>javax.mail</groupId>
       <artifactId>mail</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
 
     <!-- Testing - DCC -->
     <dependency>

@@ -19,18 +19,15 @@ package org.icgc.dcc.release.job.document.task;
 
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneId;
-import static org.icgc.dcc.release.job.document.util.MutableMaps.toHashMap;
 
 import java.util.Map;
 
 import lombok.Getter;
-import lombok.val;
 
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
+import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -40,10 +37,8 @@ public class ResolveGenesTask extends AbstractDocumentTask {
     super(type);
   }
 
-  @Getter(lazy = true)
-  private final Broadcast<Map<String, ObjectNode>> genesBroadcast = createBroadcast();
-  private transient Map<String, ObjectNode> genesById;
-  private transient JavaSparkContext sparkContext;
+  @Getter
+  private Map<String, ObjectNode> geneIdGenes;
 
   @Override
   public TaskType getType() {
@@ -52,15 +47,11 @@ public class ResolveGenesTask extends AbstractDocumentTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    sparkContext = taskContext.getSparkContext();
-    val genes = readGenesPivoted(taskContext)
+    geneIdGenes = readGenesPivoted(taskContext)
         .mapToPair(gene -> tuple(getGeneId(gene), gene))
         .collectAsMap();
-    genesById = toHashMap(genes);
-  }
 
-  private Broadcast<Map<String, ObjectNode>> createBroadcast() {
-    return sparkContext.broadcast(genesById);
+    geneIdGenes = SparkWorkaroundUtils.toHashMap(geneIdGenes);
   }
 
 }

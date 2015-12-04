@@ -40,8 +40,8 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -80,7 +80,7 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
     // Partition observations by type
     val observationPartition = observation.objectNode();
     observationPartition.with(observationType);
-    observationPartition.put(observationType, observation);
+    observationPartition.set(observationType, observation);
     observation = observation.objectNode();
     observation.setAll(observationPartition);
 

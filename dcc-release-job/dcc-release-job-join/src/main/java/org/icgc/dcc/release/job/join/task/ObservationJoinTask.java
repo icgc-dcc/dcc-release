@@ -82,9 +82,9 @@ public class ObservationJoinTask extends GenericTask {
     val observations = joinSsm(ssmM, ssmPOpen, ssmS, donorSamples, sampleToSurrogageSampleId);
     writeObservation(taskContext, observations);
 
-    ssmM.unpersist();
-    ssmP.unpersist();
-    ssmS.unpersist();
+    ssmM.unpersist(false);
+    ssmP.unpersist(false);
+    ssmS.unpersist(false);
   }
 
   private JavaRDD<ObjectNode> filterControlledData(JavaRDD<ObjectNode> ssmP, List<String> controlledFields) {
