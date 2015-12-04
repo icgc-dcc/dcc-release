@@ -67,11 +67,7 @@ public class FeatureTypeSummarizeTask extends GenericTask {
   }
 
   public Map<String, Map<String, ObjectNode>> getProjectFeatureTypeDonors() {
-    // @formatter:off
-    // Broadcast variabled don't work with all Map implementations.
-    // See http://mail-archives.us.apache.org/mod_mbox/spark-user/201504.mbox/%3CCA+3qhFS0vXgJrfZ+e+yckpNPrm1wep8k=LSwEGNd53A7mPydzQ@mail.gmail.com%3E
-    // @formatter:on
-    // TODO: Verify if this is still the case
+    // See: SparkWorkaroundUtils.toHashMap()
     val projectDonorSummary = Maps.<String, Map<String, ObjectNode>> newHashMap();
     for (val entry : projectFeatureTypeDonors.rowMap().entrySet()) {
       projectDonorSummary.putAll(mergeDonorSummaries(entry));

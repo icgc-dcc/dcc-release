@@ -33,12 +33,12 @@ import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
 import org.icgc.dcc.release.job.join.function.EnrichPrimaryMeta;
 import org.icgc.dcc.release.job.join.function.KeyAnalysisIdAnalyzedSampleIdField;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Maps;
 
 @RequiredArgsConstructor
 public class PrimaryMetaJoinTask extends GenericTask {
@@ -81,7 +81,7 @@ public class PrimaryMetaJoinTask extends GenericTask {
     val metaPairs = meta.mapToPair(keyFunction).collectAsMap();
     final Broadcast<Map<String, ObjectNode>> metaPairsBroadcast = taskContext
         .getSparkContext()
-        .broadcast(Maps.newHashMap(metaPairs));
+        .broadcast(SparkWorkaroundUtils.toHashMap(metaPairs));
 
     return joinPrimaryMeta(primary, metaPairsBroadcast)
         .map(new EnrichPrimaryMeta(type, donorSamples));

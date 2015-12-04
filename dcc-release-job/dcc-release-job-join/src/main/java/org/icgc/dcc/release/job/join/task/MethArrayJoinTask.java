@@ -29,6 +29,7 @@ import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -56,7 +57,7 @@ public class MethArrayJoinTask extends PrimaryMetaJoinTask {
         .collectAsMap();
     val sparkContext = taskContext.getSparkContext();
 
-    return sparkContext.broadcast(probes);
+    return sparkContext.broadcast(SparkWorkaroundUtils.toHashMap(probes));
   }
 
   private static JavaRDD<ObjectNode> joinProbes(JavaRDD<ObjectNode> primaryMeta,

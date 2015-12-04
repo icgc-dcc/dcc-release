@@ -27,6 +27,7 @@ import lombok.Getter;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
+import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -49,6 +50,8 @@ public class ResolveProjectsTask extends AbstractIndexTask {
     projectIdProjects = readProjects(taskContext)
         .mapToPair(project -> tuple(getProjectId(project), project))
         .collectAsMap();
+
+    projectIdProjects = SparkWorkaroundUtils.toHashMap(projectIdProjects);
   }
 
 }

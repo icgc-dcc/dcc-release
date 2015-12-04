@@ -15,43 +15,26 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.task;
-
-import static org.icgc.dcc.release.core.util.Tuples.tuple;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneId;
+package org.icgc.dcc.release.core.util;
 
 import java.util.Map;
 
-import lombok.Getter;
+import lombok.experimental.UtilityClass;
 
-import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.core.task.TaskType;
-import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
+import com.google.common.collect.Maps;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+@UtilityClass
+public class SparkWorkaroundUtils {
 
-public class ResolveGenesTask extends AbstractIndexTask {
-
-  public ResolveGenesTask(DocumentType type) {
-    super(type);
-  }
-
-  @Getter
-  private Map<String, ObjectNode> geneIdGenes;
-
-  @Override
-  public TaskType getType() {
-    return TaskType.FILE_TYPE;
-  }
-
-  @Override
-  public void execute(TaskContext taskContext) {
-    geneIdGenes = readGenesPivoted(taskContext)
-        .mapToPair(gene -> tuple(getGeneId(gene), gene))
-        .collectAsMap();
-
-    geneIdGenes = SparkWorkaroundUtils.toHashMap(geneIdGenes);
+  /**
+   * Broadcast variabled don't work with all Map implementations.
+   * @see <a
+   * href="http://mail-archives.us.apache.org/mod_mbox/spark-user/201504.mbox/%3CCA+3qhFS0vXgJrfZ+e+yckpNPrm1wep8k=LSwEGNd53A7mPydzQ@mail.gmail.com%3E">Spark
+   * discussion</a>
+   */
+  // TODO: Verify if this is fixed in the next Spark version. Current 1.5.2
+  public static <K, V> Map<K, V> toHashMap(Map<? extends K, ? extends V> map) {
+    return Maps.newHashMap(map);
   }
 
 }
