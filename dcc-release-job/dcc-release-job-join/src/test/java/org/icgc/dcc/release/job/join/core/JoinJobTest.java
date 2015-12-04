@@ -62,7 +62,7 @@ public class JoinJobTest extends AbstractJobTest {
   @Override
   public void setUp() {
     super.setUp();
-    this.job = new JoinJob(SubmissionFiles.getSchemas());
+    this.job = new JoinJob(SubmissionFiles.getSchemas(), sparkContext);
   }
 
   @Test
