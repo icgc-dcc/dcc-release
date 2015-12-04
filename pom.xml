@@ -359,9 +359,9 @@
     
     <!-- Required for Spark 1.5.2 -->
     <jackson.version>2.4.4</jackson.version>
-    <jackson-smile.version>2.4.4</jackson-smile.version>
-    <jackson-yaml.version>2.4.4</jackson-yaml.version>
-    <jackson-csv.version>2.4.4</jackson-csv.version>
+    <jackson-smile.version>${jackson.version}</jackson-smile.version>
+    <jackson-yaml.version>${jackson.version}</jackson-yaml.version>
+    <jackson-csv.version>${jackson.version}</jackson-csv.version>
   </properties>
 
 </project>
