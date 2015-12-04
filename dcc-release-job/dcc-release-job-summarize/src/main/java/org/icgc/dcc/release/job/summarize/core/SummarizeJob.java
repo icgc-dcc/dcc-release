@@ -19,10 +19,13 @@ package org.icgc.dcc.release.job.summarize.core;
 
 import static org.icgc.dcc.release.core.util.Stopwatches.createStarted;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -36,11 +39,16 @@ import org.icgc.dcc.release.job.summarize.task.ProjectSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.ReleaseSummarizeTask;
 import org.icgc.dcc.release.job.summarize.task.ResolveGeneSummaryTask;
 import org.icgc.dcc.release.job.summarize.task.ResolveProjectSummaryTask;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class SummarizeJob extends GenericJob {
+
+  @NonNull
+  private final JavaSparkContext sparkContext;
 
   private static final FileType[] OUTPUT_FILE_TYPES = {
       FileType.DONOR_SUMMARY,
@@ -66,27 +74,31 @@ public class SummarizeJob extends GenericJob {
     delete(jobContext, OUTPUT_FILE_TYPES);
   }
 
-  private static void summarize(JobContext jobContext) {
+  private void summarize(JobContext jobContext) {
     val watch = createStarted();
     log.info("Executing summary job...");
     jobContext.execute(new GeneSetSummarizeTask());
 
     val featureTypeSummary = new FeatureTypeSummarizeTask();
     jobContext.execute(featureTypeSummary);
-    val donorSummarizeTask = new DonorSummarizeTask(featureTypeSummary.getProjectDonorSummary());
+    val donorSummarizeTask = new DonorSummarizeTask(createBroadcast(featureTypeSummary.getProjectFeatureTypeDonors()));
     jobContext.execute(donorSummarizeTask);
 
     val resolveProjectSummaryTask = new ResolveProjectSummaryTask();
     jobContext.execute(resolveProjectSummaryTask);
-    jobContext.execute(new ProjectSummarizeTask(resolveProjectSummaryTask.getProjectSummaryBroadcast()));
+    jobContext.execute(new ProjectSummarizeTask(createBroadcast(resolveProjectSummaryTask.getProjectSummaries())));
 
     val resolveGeneStatsTask = new ResolveGeneSummaryTask();
     jobContext.execute(resolveGeneStatsTask);
-    jobContext.execute(new GeneSummarizeTask(resolveGeneStatsTask.getGeneDonorTypeCounts()),
+    jobContext.execute(new GeneSummarizeTask(createBroadcast(resolveGeneStatsTask.getGeneDonorTypeCounts())),
         new MutationSummarizeTask());
     jobContext.execute(new ReleaseSummarizeTask(donorSummarizeTask.getDonorsCount(), donorSummarizeTask
         .getLiveDonorsCount()));
     log.info("Finished executing summary job in {}", watch);
+  }
+
+  private <T> Broadcast<T> createBroadcast(T value) {
+    return sparkContext.broadcast(value);
   }
 
 }

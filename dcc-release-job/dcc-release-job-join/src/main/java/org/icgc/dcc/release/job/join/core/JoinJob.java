@@ -147,7 +147,7 @@ public class JoinJob extends GenericJob {
     jobContext.execute(new ClinicalJoinTask(rawSequenceDataBroadcast));
 
     // Discard the broadcast
-    rawSequenceDataBroadcast.destroy();
+    rawSequenceDataBroadcast.destroy(false);
     val executeFileTypes = resolveExecuteFileTypes();
 
     if (executeFileTypes.isEmpty()) {
@@ -157,7 +157,7 @@ public class JoinJob extends GenericJob {
     val resolveDonorSamplesTask = new ResolveDonorSamplesTask();
     val resolveSampleIds = new ResolveSampleSurrogateSampleIds();
     jobContext.execute(resolveDonorSamplesTask);
-    val donorSamples = resolveDonorSamplesTask.getDonorSamplesBroadcast();
+    val donorSamples = createBroadcast(resolveDonorSamplesTask.getProjectDonorSamples());
 
     val tasks = createTasks(jobContext, executeFileTypes, resolveSampleIds, donorSamples);
     jobContext.execute(tasks);
@@ -178,7 +178,7 @@ public class JoinJob extends GenericJob {
           jobContext.execute(resolveSampleIds);
         }
 
-        val sampleSurrogateSampleIds = resolveSampleIds.getSampleSurrogateSampleIdsBroadcast();
+        val sampleSurrogateSampleIds = createBroadcast(resolveSampleIds.getSampleSurrogateSampleId());
         tasks.add(createSecondaryTask(executeFileType, donorSamples, sampleSurrogateSampleIds));
       }
     }

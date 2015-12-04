@@ -24,11 +24,8 @@ import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.g
 
 import java.util.Map;
 
-import lombok.Getter;
 import lombok.val;
 
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 
@@ -41,14 +38,10 @@ public class ResolveDonorsTask extends AbstractIndexTask {
     super(type);
   }
 
-  @Getter(lazy = true)
-  private final Broadcast<Map<String, ObjectNode>> donorsBroadcast = createBroadcast();
-  private Map<String, Map<String, ObjectNode>> donorsByProject = Maps.newHashMap();
-  private JavaSparkContext sparkContext;
+  private Map<String, Map<String, ObjectNode>> donorsByProject = Maps.newConcurrentMap();
 
   @Override
   public void execute(TaskContext taskContext) {
-    sparkContext = taskContext.getSparkContext();
     val donorsById = resolveDonors(taskContext);
     val projectName = resolveProjectName(taskContext);
     donorsByProject.put(projectName, donorsById);
@@ -60,12 +53,10 @@ public class ResolveDonorsTask extends AbstractIndexTask {
         .collectAsMap();
   }
 
-  private Broadcast<Map<String, ObjectNode>> createBroadcast() {
-    val donorsById = donorsByProject.entrySet().stream()
+  public Map<String, ObjectNode> getProjectDonors() {
+    return donorsByProject.entrySet().stream()
         .flatMap(e -> e.getValue().entrySet().stream())
         .collect(toMap(e -> e.getKey(), e -> e.getValue()));
-
-    return sparkContext.broadcast(donorsById);
   }
 
 }
