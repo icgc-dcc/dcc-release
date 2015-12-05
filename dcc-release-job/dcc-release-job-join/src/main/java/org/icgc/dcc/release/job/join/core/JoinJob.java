@@ -47,6 +47,8 @@ import org.icgc.dcc.release.core.job.JobType;
 import org.icgc.dcc.release.core.submission.SubmissionFileField;
 import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
 import org.icgc.dcc.release.core.task.Task;
+import org.icgc.dcc.release.core.util.Loggers;
+import org.icgc.dcc.release.core.util.Stopwatches;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 import org.icgc.dcc.release.job.join.task.ClinicalJoinTask;
 import org.icgc.dcc.release.job.join.task.MethArrayJoinTask;
@@ -160,8 +162,20 @@ public class JoinJob extends GenericJob {
     val donorSamples = createBroadcast(resolveDonorSamplesTask.getProjectDonorSamples());
 
     val tasks = createTasks(jobContext, executeFileTypes, resolveSampleIds, donorSamples);
-    tasks.stream()
-        .forEach(t -> jobContext.execute(t));
+    executeTasks(jobContext, tasks);
+  }
+
+  private static void executeTasks(JobContext jobContext, List<Task> tasks) {
+    val totalTasks = tasks.size();
+    int currentTaskId = 1;
+    val watches = Stopwatches.createStarted();
+    for (val task : tasks) {
+      Loggers.logWithHeader("[{}/{}] Joining '{}'", currentTaskId, totalTasks, task.getName());
+      watches.reset().start();
+      jobContext.execute(task);
+      Loggers.logWithHeader("[{}/{}] Finished executing '{}' in {}", currentTaskId++, totalTasks, task.getName(),
+          watches);
+    }
   }
 
   private List<Task> createTasks(JobContext jobContext, List<FileType> executeFileTypes,
