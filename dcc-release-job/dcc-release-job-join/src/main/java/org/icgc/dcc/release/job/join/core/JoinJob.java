@@ -160,7 +160,8 @@ public class JoinJob extends GenericJob {
     val donorSamples = createBroadcast(resolveDonorSamplesTask.getProjectDonorSamples());
 
     val tasks = createTasks(jobContext, executeFileTypes, resolveSampleIds, donorSamples);
-    jobContext.execute(tasks);
+    tasks.stream()
+        .forEach(t -> jobContext.execute(t));
   }
 
   private List<Task> createTasks(JobContext jobContext, List<FileType> executeFileTypes,
