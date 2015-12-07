@@ -48,7 +48,7 @@ public class PrimaryMetaJoinTask extends GenericTask {
   private static final String PRIMARY_FILE_TYPE_REGEX = "_P(_(\\w)*)*$";
 
   @NonNull
-  protected final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesbyProject;
+  private final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesbyProject;
   @NonNull
   protected final FileType primaryFileType;
 

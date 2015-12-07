@@ -24,7 +24,6 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
-import static org.icgc.dcc.common.json.Jackson.DEFAULT;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
@@ -32,15 +31,18 @@ import org.icgc.dcc.release.core.util.ObjectNodes;
 
 import scala.Tuple2;
 
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Optional;
 
 public class CreateOccurrenceFromSecondary implements
     Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, ObjectNode> {
 
-  private static final ObjectMapper MAPPER = DEFAULT;
+  private static final JsonFactory SMILE_FACTORY = new SmileFactory();
+  private static final ObjectMapper MAPPER = new ObjectMapper(SMILE_FACTORY);;
 
   @Override
   public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
