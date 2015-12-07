@@ -24,37 +24,35 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
+
+import java.util.Collection;
+
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.util.ObjectNodes;
 
 import scala.Tuple2;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
 
 public class CreateOccurrenceFromSecondary implements
     Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, ObjectNode> {
-
-  private static final JsonFactory SMILE_FACTORY = new SmileFactory();
-  private static final ObjectMapper MAPPER = new ObjectMapper(SMILE_FACTORY);;
 
   @Override
   public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
     val primary = tuple._2._1;
     val secondaries = tuple._2._2;
-    primary.set(CONSEQUENCE_ARRAY_NAME, createConsequences(secondaries));
+
+    primary.putPOJO(CONSEQUENCE_ARRAY_NAME, createConsequences(secondaries));
 
     return primary;
   }
 
-  private static ArrayNode createConsequences(Optional<Iterable<ObjectNode>> secondaries) {
-    val consequences = MAPPER.createArrayNode();
+  private static Collection<? extends JsonNode> createConsequences(Optional<Iterable<ObjectNode>> secondaries) {
+    val consequences = Sets.<JsonNode> newHashSet();
 
     if (secondaries.isPresent()) {
       for (val secondary : secondaries.get()) {
@@ -68,8 +66,8 @@ public class CreateOccurrenceFromSecondary implements
   }
 
   private static void enrichConsequence(ObjectNode secondary) {
-    secondary.put(GENE_ID, ObjectNodes.textValue(secondary, SUBMISSION_GENE_AFFECTED));
-    secondary.put(TRANSCRIPT_ID, ObjectNodes.textValue(secondary, SUBMISSION_TRANSCRIPT_AFFECTED));
+    secondary.set(GENE_ID, secondary.remove(SUBMISSION_GENE_AFFECTED));
+    secondary.set(TRANSCRIPT_ID, secondary.remove(SUBMISSION_TRANSCRIPT_AFFECTED));
   }
 
   private static void trimConsequence(ObjectNode secondary) {

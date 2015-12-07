@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,41 +15,38 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.factory;
+package org.icgc.dcc.release.core.util;
 
 import static lombok.AccessLevel.PRIVATE;
 import lombok.NoArgsConstructor;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+import com.fasterxml.jackson.dataformat.smile.SmileGenerator;
+import com.fasterxml.jackson.dataformat.smile.SmileParser;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class JacksonFactory {
 
-  /**
-   * Mappers.
-   */
-  private static final ObjectMapper DEFAULT_MAPPER = new ObjectMapper();
+  public static final JsonFactory FACTORY = new SmileFactory()
+      .disable(SmileGenerator.Feature.WRITE_HEADER)
+      .disable(SmileParser.Feature.REQUIRE_HEADER)
 
-  private static final JsonFactory SMILE_FACTORY = new SmileFactory();
-  private static final ObjectMapper SMILE_MAPPER = new ObjectMapper(SMILE_FACTORY);
-  private static final ObjectReader SMILE_READER = SMILE_MAPPER.reader(ObjectNode.class);
-  private static final ObjectWriter SMILE_WRITER = SMILE_MAPPER.writerWithType(ObjectNode.class);
+      .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
+      .disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
 
-  public static ObjectMapper newDefaultMapper() {
-    return DEFAULT_MAPPER;
-  }
+  public static final ObjectMapper MAPPER = new ObjectMapper(FACTORY)
+      .disable(SerializationFeature.CLOSE_CLOSEABLE);
 
-  public static ObjectReader newSmileReader() {
-    return SMILE_READER;
-  }
+  public static final ObjectWriter WRITER = MAPPER.writerWithType(ObjectNode.class);
 
-  public static ObjectWriter newSmileWriter() {
-    return SMILE_WRITER;
-  }
+  public static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
 
 }

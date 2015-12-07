@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.release.core.util;
 
-import static org.icgc.dcc.release.core.hadoop.ObjectNodeSerialization.READER;
-import static org.icgc.dcc.release.core.hadoop.ObjectNodeSerialization.WRITER;
+import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
+import static org.icgc.dcc.release.core.util.JacksonFactory.WRITER;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;

@@ -71,7 +71,16 @@ public abstract class GenericTask implements Task {
   /**
    * @param size split/combine size in MBytes
    */
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf hadoopConf, FileType inputFileType, long size) {
+  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, FileType inputFileType, int size) {
+    val conf = createJobConf(taskContext);
+
+    return readInput(taskContext, conf, inputFileType, size);
+  }
+
+  /**
+   * @param size split/combine size in MBytes
+   */
+  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf hadoopConf, FileType inputFileType, int size) {
     val maxFileSize = size * 1024L * 1024L;
 
     log.debug("Setting input split size of {}", formatBytes(maxFileSize));

@@ -108,7 +108,7 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
   }
 
   private JavaRDD<ObjectNode> parseSecondary(FileType secondaryFileType, TaskContext taskContext) {
-    return readInput(taskContext, secondaryFileType);
+    return readInput(taskContext, secondaryFileType, DEFAULT_SPLIT_SIZE_MB);
   }
 
 }

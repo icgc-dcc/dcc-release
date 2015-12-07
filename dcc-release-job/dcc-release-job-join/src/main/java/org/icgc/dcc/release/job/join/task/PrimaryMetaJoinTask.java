@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.join.task;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static org.icgc.dcc.release.core.util.Keys.getKey;
 import static org.icgc.dcc.release.job.join.utils.Tasks.resolveDonorSamples;
@@ -46,6 +47,7 @@ public class PrimaryMetaJoinTask extends GenericTask {
   private static final String META_FILE_TYPE_SUFFIX = "_M";
   private static final String OUTPUT_FILE_TYPE_SUFFIX = "";
   private static final String PRIMARY_FILE_TYPE_REGEX = "_P(_(\\w)*)*$";
+  protected static final int DEFAULT_SPLIT_SIZE_MB = 64;
 
   @NonNull
   private final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesbyProject;
@@ -96,6 +98,7 @@ public class PrimaryMetaJoinTask extends GenericTask {
               FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID,
               FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID);
           ObjectNode metaValue = metaPairsBroadcast.value().get(key);
+          checkState(metaValue != null, "A primary record must have a corresponding record in the meta file");
           p.setAll(metaValue);
 
           return p;
@@ -103,11 +106,11 @@ public class PrimaryMetaJoinTask extends GenericTask {
   }
 
   private JavaRDD<ObjectNode> parsePrimary(FileType primaryFileType, TaskContext taskContext) {
-    return readInput(taskContext, primaryFileType);
+    return readInput(taskContext, primaryFileType, DEFAULT_SPLIT_SIZE_MB);
   }
 
   private JavaRDD<ObjectNode> parseMeta(FileType metaFileType, TaskContext taskContext) {
-    return readInput(taskContext, metaFileType);
+    return readInput(taskContext, metaFileType, DEFAULT_SPLIT_SIZE_MB);
   }
 
   protected static FileType resolveOutputFileType(FileType primaryFileType) {
