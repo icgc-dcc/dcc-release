@@ -47,6 +47,8 @@ import org.icgc.dcc.release.core.job.JobType;
 import org.icgc.dcc.release.core.submission.SubmissionFileField;
 import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
 import org.icgc.dcc.release.core.task.Task;
+import org.icgc.dcc.release.core.util.Loggers;
+import org.icgc.dcc.release.core.util.Stopwatches;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 import org.icgc.dcc.release.job.join.task.ClinicalJoinTask;
 import org.icgc.dcc.release.job.join.task.MethArrayJoinTask;
@@ -56,7 +58,6 @@ import org.icgc.dcc.release.job.join.task.ResolveDonorSamplesTask;
 import org.icgc.dcc.release.job.join.task.ResolveRawSequenceDataTask;
 import org.icgc.dcc.release.job.join.task.ResolveSampleSurrogateSampleIds;
 import org.icgc.dcc.release.job.join.task.SecondaryJoinTask;
-import org.icgc.dcc.release.job.join.task.SgvJoinTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -160,7 +161,20 @@ public class JoinJob extends GenericJob {
     val donorSamples = createBroadcast(resolveDonorSamplesTask.getProjectDonorSamples());
 
     val tasks = createTasks(jobContext, executeFileTypes, resolveSampleIds, donorSamples);
-    jobContext.execute(tasks);
+    executeTasks(jobContext, tasks);
+  }
+
+  private static void executeTasks(JobContext jobContext, List<Task> tasks) {
+    val totalTasks = tasks.size();
+    int currentTaskId = 1;
+    val watches = Stopwatches.createStarted();
+    for (val task : tasks) {
+      Loggers.logWithHeader("[{}/{}] Joining '{}'", currentTaskId, totalTasks, task.getName());
+      watches.reset().start();
+      jobContext.execute(task);
+      Loggers.logWithHeader("[{}/{}] Finished executing '{}' in {}", currentTaskId++, totalTasks, task.getName(),
+          watches);
+    }
   }
 
   private List<Task> createTasks(JobContext jobContext, List<FileType> executeFileTypes,
@@ -193,7 +207,7 @@ public class JoinJob extends GenericJob {
     case SSM_P:
       return new ObservationJoinTask(donorSamples, sampleSurrogateSampleIds, resolveControlledFields());
     case SGV_P:
-      return new SgvJoinTask(donorSamples, sampleSurrogateSampleIds);
+      return new SecondaryJoinTask(donorSamples, sampleSurrogateSampleIds, FileType.SGV_P_MASKED);
     default:
       return new SecondaryJoinTask(donorSamples, sampleSurrogateSampleIds, executeFileType);
     }

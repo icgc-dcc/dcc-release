@@ -46,7 +46,10 @@ public class FieldNames {
     public static final String JUNCTION_TYPE = "junction_type";
     public static final String GENE_STABLE_ID = "gene_stable_id";
     public static final String PROBE_ID = "probe_id";
+    public static final String ARRAY_PLATFORM = "array_platform";
     public static final String MUTATION_ID = "mutation_id";
+    public static final String SV_ID = "sv_id";
+    public static final String PLACEMENT = "placement";
     public static final String ALIGNMENT_ALGORITHM = "alignment_algorithm";
     public static final String BASE_CALLING_ALGORITHM = "base_calling_algorithm";
     public static final String BIOLOGICAL_VALIDATION_STATUS = "biological_validation_status";

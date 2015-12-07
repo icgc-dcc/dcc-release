@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.join.task;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static org.icgc.dcc.release.core.util.Keys.getKey;
 import static org.icgc.dcc.release.job.join.utils.Tasks.resolveDonorSamples;
@@ -48,7 +49,7 @@ public class PrimaryMetaJoinTask extends GenericTask {
   private static final String PRIMARY_FILE_TYPE_REGEX = "_P(_(\\w)*)*$";
 
   @NonNull
-  protected final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesbyProject;
+  private final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesbyProject;
   @NonNull
   protected final FileType primaryFileType;
 
@@ -96,6 +97,7 @@ public class PrimaryMetaJoinTask extends GenericTask {
               FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID,
               FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID);
           ObjectNode metaValue = metaPairsBroadcast.value().get(key);
+          checkState(metaValue != null, "A primary record must have a corresponding record in the meta file");
           p.setAll(metaValue);
 
           return p;

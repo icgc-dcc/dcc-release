@@ -17,6 +17,9 @@
  */
 package org.icgc.dcc.release.core.hadoop;
 
+import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
+import static org.icgc.dcc.release.core.util.JacksonFactory.WRITER;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,17 +30,7 @@ import org.apache.hadoop.io.serializer.Deserializer;
 import org.apache.hadoop.io.serializer.Serialization;
 import org.apache.hadoop.io.serializer.Serializer;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
-import com.fasterxml.jackson.dataformat.smile.SmileGenerator;
-import com.fasterxml.jackson.dataformat.smile.SmileParser;
 
 /**
  * Base class for providing {@code ObjectNode} serialization to Smile format.
@@ -47,23 +40,6 @@ import com.fasterxml.jackson.dataformat.smile.SmileParser;
  */
 @Slf4j
 public class ObjectNodeSerialization implements Serialization<ObjectNode> {
-
-  /**
-   * Constants.
-   */
-  public static final JsonFactory FACTORY = new SmileFactory()
-      .disable(SmileGenerator.Feature.WRITE_HEADER)
-      .disable(SmileParser.Feature.REQUIRE_HEADER)
-
-      .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
-      .disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
-
-  public static final ObjectMapper MAPPER = new ObjectMapper(FACTORY)
-      .disable(SerializationFeature.CLOSE_CLOSEABLE);
-
-  public static final ObjectWriter WRITER = MAPPER.writerWithType(ObjectNode.class);
-
-  public static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
 
   @Override
   public boolean accept(Class<?> c) {
