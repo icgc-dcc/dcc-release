@@ -15,30 +15,38 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.join.task;
+package org.icgc.dcc.release.core.util;
 
-import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
+import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
 
-import java.util.Map;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+import com.fasterxml.jackson.dataformat.smile.SmileGenerator;
+import com.fasterxml.jackson.dataformat.smile.SmileParser;
 
-import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.release.core.function.CombineFields;
-import org.icgc.dcc.release.core.function.KeyFields;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.job.join.model.DonorSample;
+@NoArgsConstructor(access = PRIVATE)
+public final class JacksonFactory {
 
-public class SgvJoinTask extends SecondaryJoinTask {
+  public static final JsonFactory FACTORY = new SmileFactory()
+      .disable(SmileGenerator.Feature.WRITE_HEADER)
+      .disable(SmileParser.Feature.REQUIRE_HEADER)
 
-  private static final FileType PRIMARY_FILE_TYPE = FileType.SGV_P_MASKED;
+      .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
+      .disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
 
-  public SgvJoinTask(Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesByProject,
-      Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIdsByProject) {
-    super(
-        donorSamplesByProject,
-        sampleSurrogateSampleIdsByProject,
-        PRIMARY_FILE_TYPE,
-        new KeyFields(NORMALIZER_OBSERVATION_ID),
-        new CombineFields(NORMALIZER_OBSERVATION_ID));
-  }
+  public static final ObjectMapper MAPPER = new ObjectMapper(FACTORY)
+      .disable(SerializationFeature.CLOSE_CLOSEABLE);
+
+  public static final ObjectWriter WRITER = MAPPER.writerWithType(ObjectNode.class);
+
+  public static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
 
 }

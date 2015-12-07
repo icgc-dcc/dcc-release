@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,41 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.factory;
+package org.icgc.dcc.release.core.util;
 
+import static com.google.common.base.Strings.repeat;
 import static lombok.AccessLevel.PRIVATE;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+import org.slf4j.Logger;
 
+@Slf4j
 @NoArgsConstructor(access = PRIVATE)
-public final class JacksonFactory {
+public final class Loggers {
 
-  /**
-   * Mappers.
-   */
-  private static final ObjectMapper DEFAULT_MAPPER = new ObjectMapper();
-
-  private static final JsonFactory SMILE_FACTORY = new SmileFactory();
-  private static final ObjectMapper SMILE_MAPPER = new ObjectMapper(SMILE_FACTORY);
-  private static final ObjectReader SMILE_READER = SMILE_MAPPER.reader(ObjectNode.class);
-  private static final ObjectWriter SMILE_WRITER = SMILE_MAPPER.writerWithType(ObjectNode.class);
-
-  public static ObjectMapper newDefaultMapper() {
-    return DEFAULT_MAPPER;
+  public static void logWithHeader(@NonNull String message, Object... args) {
+    logWithHeader(log, message, args);
   }
 
-  public static ObjectReader newSmileReader() {
-    return SMILE_READER;
+  public static void logWithHeader(@NonNull Logger log, @NonNull String message, Object... args) {
+    printLine(log);
+    log.info(message, args);
+    printLine(log);
   }
 
-  public static ObjectWriter newSmileWriter() {
-    return SMILE_WRITER;
+  private static void printLine(Logger log) {
+    log.info("{}", repeat("-", 100));
   }
 
 }
