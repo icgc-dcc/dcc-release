@@ -47,7 +47,6 @@ public class PrimaryMetaJoinTask extends GenericTask {
   private static final String META_FILE_TYPE_SUFFIX = "_M";
   private static final String OUTPUT_FILE_TYPE_SUFFIX = "";
   private static final String PRIMARY_FILE_TYPE_REGEX = "_P(_(\\w)*)*$";
-  protected static final int DEFAULT_SPLIT_SIZE_MB = 64;
 
   @NonNull
   private final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesbyProject;
@@ -106,11 +105,11 @@ public class PrimaryMetaJoinTask extends GenericTask {
   }
 
   private JavaRDD<ObjectNode> parsePrimary(FileType primaryFileType, TaskContext taskContext) {
-    return readInput(taskContext, primaryFileType, DEFAULT_SPLIT_SIZE_MB);
+    return readInput(taskContext, primaryFileType);
   }
 
   private JavaRDD<ObjectNode> parseMeta(FileType metaFileType, TaskContext taskContext) {
-    return readInput(taskContext, metaFileType, DEFAULT_SPLIT_SIZE_MB);
+    return readInput(taskContext, metaFileType);
   }
 
   protected static FileType resolveOutputFileType(FileType primaryFileType) {

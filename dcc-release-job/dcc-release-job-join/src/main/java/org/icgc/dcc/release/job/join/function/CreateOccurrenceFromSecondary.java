@@ -19,13 +19,16 @@ package org.icgc.dcc.release.job.join.function;
 
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.TRANSCRIPT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
+import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.MUTATION_ID;
 
 import java.util.Collection;
+import java.util.Set;
 
 import lombok.val;
 
@@ -36,10 +39,14 @@ import scala.Tuple2;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class CreateOccurrenceFromSecondary implements
     Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, ObjectNode> {
+
+  private static final Set<String> REMOVE_CONSEQUENCE_FIELDS = ImmutableSet.of(PROJECT_ID, MUTATION_ID,
+      SUBMISSION_OBSERVATION_ANALYSIS_ID, SUBMISSION_ANALYZED_SAMPLE_ID);
 
   @Override
   public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
@@ -56,7 +63,7 @@ public class CreateOccurrenceFromSecondary implements
 
     if (secondaries.isPresent()) {
       for (val secondary : secondaries.get()) {
-        trimConsequence(secondary);
+        secondary.remove(REMOVE_CONSEQUENCE_FIELDS);
         enrichConsequence(secondary);
         consequences.add(secondary);
       }
@@ -68,11 +75,6 @@ public class CreateOccurrenceFromSecondary implements
   private static void enrichConsequence(ObjectNode secondary) {
     secondary.set(GENE_ID, secondary.remove(SUBMISSION_GENE_AFFECTED));
     secondary.set(TRANSCRIPT_ID, secondary.remove(SUBMISSION_TRANSCRIPT_AFFECTED));
-  }
-
-  private static void trimConsequence(ObjectNode secondary) {
-    secondary.remove(SUBMISSION_OBSERVATION_ANALYSIS_ID);
-    secondary.remove(SUBMISSION_ANALYZED_SAMPLE_ID);
   }
 
 }

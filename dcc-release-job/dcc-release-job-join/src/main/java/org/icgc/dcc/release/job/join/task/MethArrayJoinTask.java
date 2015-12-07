@@ -17,14 +17,16 @@
  */
 package org.icgc.dcc.release.job.join.task;
 
+import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.ARRAY_PLATFORM;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.PROBE_ID;
-import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.release.core.util.Keys.getKey;
 
 import java.util.Map;
 
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
@@ -37,6 +39,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class MethArrayJoinTask extends PrimaryMetaJoinTask {
 
   private static final FileType PRIMARY_FILE_TYPE = FileType.METH_ARRAY_P;
+  private static final String[] PROBE_JOIN_KEYS = { ARRAY_PLATFORM, PROBE_ID };
 
   public MethArrayJoinTask(Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesByProject) {
     super(donorSamplesByProject, PRIMARY_FILE_TYPE);
@@ -46,36 +49,39 @@ public class MethArrayJoinTask extends PrimaryMetaJoinTask {
   public void execute(TaskContext taskContext) {
     val primaryMeta = joinPrimaryMeta(taskContext);
     val probes = resolveProbes(taskContext);
-    val output = joinProbes(primaryMeta, probes);
+    val output = joinPrimaryMetaProbes(primaryMeta, probes);
 
     writeOutput(taskContext, output, FileType.METH_ARRAY);
   }
 
   private Broadcast<Map<String, ObjectNode>> resolveProbes(TaskContext taskContext) {
     val probes = readInput(taskContext, FileType.METH_ARRAY_PROBES)
-        .mapToPair(new KeyFields(PROBE_ID))
+        .mapToPair(new KeyFields(PROBE_JOIN_KEYS))
         .collectAsMap();
     val sparkContext = taskContext.getSparkContext();
 
     return sparkContext.broadcast(SparkWorkaroundUtils.toHashMap(probes));
   }
 
-  private static JavaRDD<ObjectNode> joinProbes(JavaRDD<ObjectNode> primaryMeta,
+  private static JavaRDD<ObjectNode> joinPrimaryMetaProbes(JavaRDD<ObjectNode> primaryMeta,
       Broadcast<Map<String, ObjectNode>> probes) {
-    return primaryMeta
-        .map(row -> {
-          String probeId = textValue(row, PROBE_ID);
-          if (probeId == null) {
-            return row;
-          }
+    return primaryMeta.map(joinProbes(probes));
+  }
 
-          ObjectNode probe = probes.value().get(probeId);
-          if (probe != null) {
-            row.setAll(probe);
-          }
+  private static Function<ObjectNode, ObjectNode> joinProbes(Broadcast<Map<String, ObjectNode>> probes) {
+    return row -> {
+      String key = getKey(row, PROBE_JOIN_KEYS);
+      if (key == null) {
+        return row;
+      }
 
-          return row;
-        });
+      ObjectNode probe = probes.value().get(key);
+      if (probe != null) {
+        row.setAll(probe);
+      }
+
+      return row;
+    };
   }
 
 }
