@@ -21,7 +21,7 @@ import static org.icgc.dcc.release.core.util.HadoopFileSystemUtils.getFilePaths;
 import static org.icgc.dcc.release.job.export.model.ExportTables.BLOCKSIZE;
 import static org.icgc.dcc.release.job.export.model.ExportTables.DATA_CONTENT_FAMILY;
 import static org.icgc.dcc.release.job.export.model.ExportTables.TMP_HFILE_ROOT;
-import static org.icgc.dcc.release.job.export.model.ExportTables.rwx;
+import static org.icgc.dcc.release.job.export.model.ExportTables.RWX;
 
 import java.io.IOException;
 import java.net.URI;
@@ -105,12 +105,12 @@ public class HFileManager {
 
     for (val hFile : hFiles) {
       // Set folders permissions read/write/exec for all
-      fileSystem.setPermission(hFile.getPath(), rwx);
+      fileSystem.setPermission(hFile.getPath(), RWX);
 
       if (hFile.isDirectory()) {
         val splitDir = getHFileSplitDir(hFile.getPath());
 
-        fileSystem.mkdirs(splitDir, rwx);
+        fileSystem.mkdirs(splitDir, RWX);
       }
     }
   }

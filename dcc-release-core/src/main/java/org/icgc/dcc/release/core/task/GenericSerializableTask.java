@@ -17,6 +17,6 @@
  */
 package org.icgc.dcc.release.core.task;
 
-public abstract class GenericSerializableTask extends GenericTask implements SerializableTask {
+public abstract class GenericSerializableTask extends GenericTask implements SerializableTask { // NOPMD
 
 }

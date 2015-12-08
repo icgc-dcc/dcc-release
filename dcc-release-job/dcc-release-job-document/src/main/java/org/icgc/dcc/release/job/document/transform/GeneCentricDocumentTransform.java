@@ -53,6 +53,7 @@ import static org.icgc.dcc.release.job.document.util.JsonNodes.isEmpty;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.normalizeTextValue;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import lombok.NonNull;
@@ -228,7 +229,7 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
       }
     }
 
-    throw new RuntimeException("No gene donor summary found for donor id '" + geneDonorId + "' and gene " + gene);
+    throw new NoSuchElementException("No gene donor summary found for donor id '" + geneDonorId + "' and gene " + gene);
   }
 
   private static int getAffectedDonorCount(ObjectNode gene) {

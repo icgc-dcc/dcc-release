@@ -103,14 +103,14 @@ public class MongoRecordReader implements RecordReader<BSONWritable, BSONWritabl
   @Override
   public boolean next(BSONWritable key, BSONWritable value) {
     if (nextKeyValue()) {
-      log.debug("Had another k/v");
+      LOG.debug("Had another k/v");
       key.put("_id", getCurrentKey().get("_id"));
       removeAll(value);
       value.putAll(getCurrentValue());
       return true;
     }
     else {
-      log.info("Cursor exhausted.");
+      LOG.info("Cursor exhausted.");
       return false;
     }
   }
@@ -124,5 +124,5 @@ public class MongoRecordReader implements RecordReader<BSONWritable, BSONWritabl
   private final DBCursor _cursor;
   private BSONObject _current;
 
-  private static final Log log = LogFactory.getLog(MongoRecordReader.class);
+  private static final Log LOG = LogFactory.getLog(MongoRecordReader.class);
 }

@@ -76,7 +76,7 @@ public final class ExportTables {
    * Misc.
    */
   public static final String ICGC_DONOR_ID_PREFIX = "DO";
-  public static final FsPermission rwx = new FsPermission("777");
+  public static final FsPermission RWX = new FsPermission("777");
   public static final int BLOCKSIZE = 5 * 1048576;
   public static final Algorithm COMPRESSION = Compression.Algorithm.SNAPPY;
 

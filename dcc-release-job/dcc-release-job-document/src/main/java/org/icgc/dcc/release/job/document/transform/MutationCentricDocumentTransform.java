@@ -299,25 +299,25 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
 
   private static ObjectNode createMutationTranscript(ObjectNode transcript, ObjectNode gene, ObjectNode consequence) {
     // Copy and default (empty if missing)
-    consequence = defaultObject(consequence).deepCopy();
-    gene = defaultObject(gene).deepCopy();
+    val consequenceCopy = defaultObject(consequence).deepCopy();
+    val geneCopy = defaultObject(gene).deepCopy();
 
     // Default missing values
-    defaultMissing(consequence, CONSEQUENCE_AA_MUTATION);
-    defaultMissing(gene, GENE_ID);
-    defaultMissing(gene, GENE_SYMBOL);
+    defaultMissing(consequenceCopy, CONSEQUENCE_AA_MUTATION);
+    defaultMissing(geneCopy, GENE_ID);
+    defaultMissing(geneCopy, GENE_SYMBOL);
 
     // Prune
-    gene.remove(GENE_TRANSCRIPTS);
+    geneCopy.remove(GENE_TRANSCRIPTS);
 
     // Remove
     val impactPredictionSummary =
-        consequence.remove(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY);
-    val impactPrediction = consequence.remove(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION);
+        consequenceCopy.remove(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY);
+    val impactPrediction = consequenceCopy.remove(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION);
 
     // Embed
-    transcript.set(MUTATION_TRANSCRIPTS_CONSEQUENCE, consequence);
-    transcript.set(MUTATION_TRANSCRIPTS_GENE, gene);
+    transcript.set(MUTATION_TRANSCRIPTS_CONSEQUENCE, consequenceCopy);
+    transcript.set(MUTATION_TRANSCRIPTS_GENE, geneCopy);
     transcript.set(MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY, impactPredictionSummary);
     transcript.set(MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION, impactPrediction);
 

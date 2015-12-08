@@ -34,7 +34,7 @@ public class HFilePartitioner extends Partitioner {
    * <p>
    * TODO: Not available in this version of HBase. Fix after upgrade.
    */
-  private static final String LoadIncrementalHFiles_MAX_FILES_PER_REGION_PER_FAMILY =
+  private static final String LOAD_INCREMENTAL_HFILES_MAX_FILES_PER_REGION_PER_FAMILY =
       "hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily";
 
   /**
@@ -117,7 +117,7 @@ public class HFilePartitioner extends Partitioner {
   }
 
   private static int getRegionFileCount(Configuration conf) {
-    return conf.getInt(LoadIncrementalHFiles_MAX_FILES_PER_REGION_PER_FAMILY, 32);
+    return conf.getInt(LOAD_INCREMENTAL_HFILES_MAX_FILES_PER_REGION_PER_FAMILY, 32);
   }
 
 }

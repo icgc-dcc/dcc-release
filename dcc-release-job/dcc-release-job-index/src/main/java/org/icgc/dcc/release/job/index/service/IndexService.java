@@ -194,12 +194,12 @@ public class IndexService implements Closeable {
     JsonNode typeMapping = mapper.readTree(mappingFileUrl);
 
     // Add meta data for index-to-indexer traceability
-    ObjectNode _meta = (ObjectNode) typeMapping.get(typeName).with("_meta");
-    _meta.put("creation_date", DateTime.now().toString());
+    ObjectNode metaTypeMapping = (ObjectNode) typeMapping.get(typeName).with("_meta");
+    metaTypeMapping.put("creation_date", DateTime.now().toString());
     for (Entry<String, String> entry : getScmInfo().entrySet()) {
       String key = entry.getKey();
       String value = nullToEmpty(entry.getValue()).replaceAll("\n", " ");
-      _meta.put(key, value);
+      metaTypeMapping.put(key, value);
     }
 
     return (ObjectNode) typeMapping;
