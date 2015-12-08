@@ -34,6 +34,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class TestFiles {
 
   private static final ObjectMapper MAPPER = new ObjectMapper().configure(AUTO_CLOSE_SOURCE, false);
@@ -84,6 +86,7 @@ public class TestFiles {
     return rows;
   }
 
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
   public static List<ObjectNode> readInputDirectory(File sourceDir) {
     File[] files = sourceDir.listFiles(TestFiles::filterPartFiles);
     checkState(files != null, "Failed to resolve files in directory '%s'", sourceDir);

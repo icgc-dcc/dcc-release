@@ -288,7 +288,7 @@ public class SnpEffVCFToICGCConverter {
         effects, new Function<SnpEffect, String>() {
 
           @Override
-          public String apply(SnpEffect item) {
+          public String apply(@NonNull SnpEffect item) {
             return !item.getTranscriptID().isEmpty() ? item.getTranscriptID() : item.getGeneName();
           }
 

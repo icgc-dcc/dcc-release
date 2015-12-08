@@ -15,63 +15,10 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.stage.function;
-
-import static java.lang.Double.parseDouble;
-import static java.lang.Long.parseLong;
+package org.icgc.dcc.release.core.task;
 
 import java.io.Serializable;
-import java.util.Map;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.core.model.ValueType;
-import org.icgc.dcc.release.core.submission.SubmissionFileSchema;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Maps;
-
-@RequiredArgsConstructor
-public class ConvertValueType implements Function<ObjectNode, ObjectNode>, Serializable {
-
-  @NonNull
-  private final Map<String, ValueType> fieldTypes = Maps.newHashMap();
-
-  public ConvertValueType(@NonNull SubmissionFileSchema schema) {
-    for (val field : schema.getFields()) {
-      fieldTypes.put(field.getName(), field.getType());
-    }
-  }
-
-  @Override
-  public ObjectNode call(ObjectNode row) throws Exception {
-    for (val entry : fieldTypes.entrySet()) {
-      val fieldName = entry.getKey();
-      val fieldType = entry.getValue();
-
-      val value = row.path(fieldName).textValue();
-      if (value == null) {
-        continue;
-      }
-
-      try {
-        if (fieldType == ValueType.DECIMAL) {
-          row.put(fieldName, parseDouble(value));
-        } else if (fieldType == ValueType.INTEGER) {
-          row.put(fieldName, parseLong(value));
-        } else {
-          row.put(fieldName, value);
-        }
-      } catch (Exception e) {
-        throw new IllegalArgumentException("Could not convert value " + "'" + value + "' in field " + fieldName
-            + "' with type " + fieldType, e);
-      }
-    }
-
-    return row;
-  }
+public interface SerializableTask extends Task, Serializable {
 
 }

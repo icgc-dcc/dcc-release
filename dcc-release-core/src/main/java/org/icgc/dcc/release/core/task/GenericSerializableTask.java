@@ -17,51 +17,6 @@
  */
 package org.icgc.dcc.release.core.task;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.util.Stopwatches;
-
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
-
-@Slf4j
-public abstract class RemoteActionTask implements SerializableTask {
-
-  @Override
-  public void execute(TaskContext taskContext) {
-    val fsUri = taskContext.getFileSystem().getUri();
-    val workingDir = taskContext.getJobContext().getWorkingDir();
-
-    // Note: Can't use val in lambda (e.g. watch, fileSystem), don't try!
-    executeRemote(taskContext.getSparkContext(), ignore -> {
-      Stopwatch watch = Stopwatches.createStarted();
-      log.info("Executing remote action...");
-
-      FileSystem fileSystem = FileSystem.get(fsUri, new Configuration());
-      executeRemoteAction(fileSystem, new Path(workingDir));
-      log.info("Finished executing action in {}", watch);
-
-      return ignore;
-    });
-  }
-
-  private void executeRemote(JavaSparkContext sparkContext, Function<Integer, Integer> function) {
-    val one = 1;
-    val task = ImmutableList.of(one);
-    val numSlices = one;
-
-    sparkContext.parallelize(task, numSlices).map(function).count();
-  }
-
-  /**
-   * Template method. Subclasses are required to implement an action to be taken cluster side.
-   */
-  protected abstract void executeRemoteAction(FileSystem fileSystem, Path workingDir);
+public abstract class GenericSerializableTask extends GenericTask implements SerializableTask {
 
 }
