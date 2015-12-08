@@ -65,9 +65,9 @@ public class ExportTableTask implements Task {
    * Configuration.
    */
   @NonNull
-  private transient final ExportTable table;
+  private final ExportTable table;
   @NonNull
-  private transient final Configuration conf;
+  private final Configuration conf;
 
   @Override
   public String getName() {

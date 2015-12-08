@@ -54,7 +54,7 @@ public class StageFileSchemaProjectTask extends GenericTask {
    */
   private final SubmissionFileSchema schema;
   private final String projectName;
-  private transient final List<Path> schemaProjectPaths;
+  private final List<Path> schemaProjectPaths;
 
   public StageFileSchemaProjectTask(SubmissionFileSchema schema, String projectName, List<Path> schemaProjectPaths) {
     super(schema.getName() + ":" + projectName);

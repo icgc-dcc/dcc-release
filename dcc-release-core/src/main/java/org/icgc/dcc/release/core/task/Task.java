@@ -19,14 +19,11 @@ package org.icgc.dcc.release.core.task;
 
 import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
-
-import java.io.Serializable;
-
 import lombok.val;
 
 import org.icgc.dcc.common.core.util.Joiners;
 
-public interface Task extends Serializable {
+public interface Task {
 
   default String getName() {
     return getName(this.getClass());

@@ -34,11 +34,11 @@ import com.google.common.collect.Maps;
 
 public class ResolveDonorsTask extends AbstractDocumentTask {
 
+  private  final Map<String, Map<String, ObjectNode>> donorsByProject = Maps.newConcurrentMap();
+
   public ResolveDonorsTask(DocumentType type) {
     super(type);
   }
-
-  private Map<String, Map<String, ObjectNode>> donorsByProject = Maps.newConcurrentMap();
 
   @Override
   public void execute(TaskContext taskContext) {
