@@ -34,7 +34,7 @@ public class PredictFathmmTask extends GenericProcessTask implements Closeable {
 
   private final String jdbcUrl;
   private final BiMap<String, String> transcripts;
-  private transient PredictFathmm fathmmPredictor;
+  private PredictFathmm fathmmPredictor;
 
   public PredictFathmmTask(@NonNull String jdbcUrl, @NonNull BiMap<String, String> transcripts) {
     super(FileType.OBSERVATION, FileType.OBSERVATION_FATHMM);

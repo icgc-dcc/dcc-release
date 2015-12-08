@@ -15,36 +15,8 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.task;
+package org.icgc.dcc.release.core.task;
 
-import lombok.val;
-
-import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.core.task.TaskType;
-import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.transform.GeneSetTextDocumentTransform;
-
-public class GeneSetTextIndexTask extends AbstractIndexTask {
-
-  private final DocumentJobContext indexJobContext;
-
-  public GeneSetTextIndexTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.GENE_SET_TEXT_TYPE);
-    this.indexJobContext = indexJobContext;
-  }
-
-  @Override
-  public TaskType getType() {
-    return TaskType.FILE_TYPE;
-  }
-
-  @Override
-  public void execute(TaskContext taskContext) {
-    val geneSets = readGeneSets(taskContext);
-    val output = geneSets.map(new GeneSetTextDocumentTransform(indexJobContext));
-
-    writeDocOutput(taskContext, output);
-  }
+public abstract class GenericSerializableTask extends GenericTask implements SerializableTask { // NOPMD
 
 }

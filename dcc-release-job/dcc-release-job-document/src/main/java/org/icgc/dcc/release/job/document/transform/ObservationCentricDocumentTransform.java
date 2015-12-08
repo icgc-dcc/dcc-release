@@ -67,7 +67,7 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
   }
 
   @Override
-  public Document transformDocument(@NonNull ObjectNode observation, @NonNull DocumentContext context) {
+  public Document transformDocument(@NonNull ObjectNode observation, @NonNull DocumentContext context) { // NOPMD
     // Indexes
     // - f(geneId) -> gene
     val observationGeneMap = newTreeMap();

@@ -33,21 +33,21 @@ import org.icgc.dcc.release.job.document.model.BroadcastType;
 import org.icgc.dcc.release.job.document.model.CollectionFields;
 import org.icgc.dcc.release.job.document.model.DocumentFields;
 import org.icgc.dcc.release.job.document.model.DocumentTypeAttributes;
-import org.icgc.dcc.release.job.document.task.DiagramIndexTask;
-import org.icgc.dcc.release.job.document.task.DonorCentricIndexTask;
-import org.icgc.dcc.release.job.document.task.DonorIndexTask;
-import org.icgc.dcc.release.job.document.task.DonorTextIndexTask;
-import org.icgc.dcc.release.job.document.task.GeneCentricIndexTask;
-import org.icgc.dcc.release.job.document.task.GeneIndexTask;
-import org.icgc.dcc.release.job.document.task.GeneSetIndexTask;
-import org.icgc.dcc.release.job.document.task.GeneSetTextIndexTask;
-import org.icgc.dcc.release.job.document.task.GeneTextIndexTask;
-import org.icgc.dcc.release.job.document.task.MutationCentricIndexTask;
-import org.icgc.dcc.release.job.document.task.MutationTextIndexTask;
-import org.icgc.dcc.release.job.document.task.ObservationCentricIndexTask;
-import org.icgc.dcc.release.job.document.task.ProjectIndexTask;
-import org.icgc.dcc.release.job.document.task.ProjectTextIndexTask;
-import org.icgc.dcc.release.job.document.task.ReleaseIndexTask;
+import org.icgc.dcc.release.job.document.task.DiagramDocumentTask;
+import org.icgc.dcc.release.job.document.task.DonorCentricDocumentTask;
+import org.icgc.dcc.release.job.document.task.DonorDocumentTask;
+import org.icgc.dcc.release.job.document.task.DonorTextDocumentTask;
+import org.icgc.dcc.release.job.document.task.GeneCentricDocumentTask;
+import org.icgc.dcc.release.job.document.task.GeneDocumentTask;
+import org.icgc.dcc.release.job.document.task.GeneSetDocumentTask;
+import org.icgc.dcc.release.job.document.task.GeneSetTextDocumentTask;
+import org.icgc.dcc.release.job.document.task.GeneTextDocumentTask;
+import org.icgc.dcc.release.job.document.task.MutationCentricDocumentTask;
+import org.icgc.dcc.release.job.document.task.MutationTextDocumentTask;
+import org.icgc.dcc.release.job.document.task.ObservationCentricDocumentTask;
+import org.icgc.dcc.release.job.document.task.ProjectDocumentTask;
+import org.icgc.dcc.release.job.document.task.ProjectTextDocumentTask;
+import org.icgc.dcc.release.job.document.task.ReleaseDocumentTask;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,12 +73,12 @@ public final class DocumentTypes {
     val documentTypes =
         ImmutableMap
             .<DocumentType, DocumentTypeAttributes> builder()
-            .put(DocumentType.DIAGRAM_TYPE, attributes().indexClassName(DiagramIndexTask.class.getName()))
-            .put(DocumentType.RELEASE_TYPE, attributes().indexClassName(ReleaseIndexTask.class.getName()))
+            .put(DocumentType.DIAGRAM_TYPE, attributes().indexClassName(DiagramDocumentTask.class.getName()))
+            .put(DocumentType.RELEASE_TYPE, attributes().indexClassName(ReleaseDocumentTask.class.getName()))
 
             .put(DocumentType.GENE_SET_TYPE,
                 attributes()
-                    .indexClassName(GeneSetIndexTask.class.getName())
+                    .indexClassName(GeneSetDocumentTask.class.getName())
                     .fields(fields()
                         .geneFields(
                             geneFields()
@@ -107,7 +107,7 @@ public final class DocumentTypes {
             )
             .put(DocumentType.GENE_SET_TEXT_TYPE,
                 attributes()
-                    .indexClassName(GeneSetTextIndexTask.class.getName())
+                    .indexClassName(GeneSetTextDocumentTask.class.getName())
                     .fields(fields()
                         .geneSetFields(
                             geneSetFields()
@@ -121,10 +121,10 @@ public final class DocumentTypes {
                     )
             )
 
-            .put(DocumentType.PROJECT_TYPE, attributes().indexClassName(ProjectIndexTask.class.getName()))
+            .put(DocumentType.PROJECT_TYPE, attributes().indexClassName(ProjectDocumentTask.class.getName()))
             .put(DocumentType.PROJECT_TEXT_TYPE,
                 attributes()
-                    .indexClassName(ProjectTextIndexTask.class.getName())
+                    .indexClassName(ProjectTextDocumentTask.class.getName())
                     .fields(fields()
                         .projectFields(
                             projectFields()
@@ -141,7 +141,7 @@ public final class DocumentTypes {
 
             .put(DocumentType.DONOR_TYPE,
                 attributes()
-                    .indexClassName(DonorIndexTask.class.getName())
+                    .indexClassName(DonorDocumentTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.PROJECT))
                     .fields(fields()
                         .donorFields(
@@ -154,7 +154,7 @@ public final class DocumentTypes {
             )
             .put(DocumentType.DONOR_TEXT_TYPE,
                 attributes()
-                    .indexClassName(DonorTextIndexTask.class.getName())
+                    .indexClassName(DonorTextDocumentTask.class.getName())
                     .fields(fields()
                         .donorFields(
                             donorFields()
@@ -172,7 +172,7 @@ public final class DocumentTypes {
             )
             .put(DocumentType.DONOR_CENTRIC_TYPE,
                 attributes()
-                    .indexClassName(DonorCentricIndexTask.class.getName())
+                    .indexClassName(DonorCentricDocumentTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.GENE, BroadcastType.PROJECT))
                     .fields(fields()
                         .projectFields(
@@ -259,7 +259,7 @@ public final class DocumentTypes {
 
             .put(DocumentType.GENE_TYPE,
                 attributes()
-                    .indexClassName(GeneIndexTask.class.getName())
+                    .indexClassName(GeneDocumentTask.class.getName())
                     .fields(fields()
                         .geneFields(geneFields()
                             .excludedFields("donor")
@@ -276,7 +276,7 @@ public final class DocumentTypes {
             )
             .put(DocumentType.GENE_TEXT_TYPE,
                 attributes()
-                    .indexClassName(GeneTextIndexTask.class.getName())
+                    .indexClassName(GeneTextDocumentTask.class.getName())
                     .fields(fields()
                         .geneFields(
                             geneFields()
@@ -291,7 +291,7 @@ public final class DocumentTypes {
             )
             .put(DocumentType.GENE_CENTRIC_TYPE,
                 attributes()
-                    .indexClassName(GeneCentricIndexTask.class.getName())
+                    .indexClassName(GeneCentricDocumentTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.DONOR, BroadcastType.PROJECT))
                     .fields(fields()
                         .donorFields(
@@ -314,7 +314,7 @@ public final class DocumentTypes {
             .put(
                 DocumentType.OBSERVATION_CENTRIC_TYPE,
                 attributes()
-                    .indexClassName(ObservationCentricIndexTask.class.getName())
+                    .indexClassName(ObservationCentricDocumentTask.class.getName())
                     .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
                     .fields(fields()
                         .projectFields(
@@ -352,7 +352,7 @@ public final class DocumentTypes {
 
             .put(DocumentType.MUTATION_TEXT_TYPE,
                 attributes()
-                    .indexClassName(MutationTextIndexTask.class.getName())
+                    .indexClassName(MutationTextDocumentTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.GENE))
                     .fields(fields()
                         .mutationFields(
@@ -383,7 +383,7 @@ public final class DocumentTypes {
             .put(
                 DocumentType.MUTATION_CENTRIC_TYPE,
                 attributes()
-                    .indexClassName(MutationCentricIndexTask.class.getName())
+                    .indexClassName(MutationCentricDocumentTask.class.getName())
                     .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
                     .fields(fields()
                         .donorFields(

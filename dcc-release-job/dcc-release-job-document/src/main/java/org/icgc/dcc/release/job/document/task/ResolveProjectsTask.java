@@ -31,14 +31,14 @@ import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ResolveProjectsTask extends AbstractIndexTask {
+public class ResolveProjectsTask extends AbstractDocumentTask {
+
+  @Getter
+  private Map<String, ObjectNode> projectIdProjects;
 
   public ResolveProjectsTask(DocumentType type) {
     super(type);
   }
-
-  @Getter
-  private Map<String, ObjectNode> projectIdProjects;
 
   @Override
   public TaskType getType() {

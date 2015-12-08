@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.export.util;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -48,7 +49,7 @@ public class HFileLoadJobFactory {
   }
 
   private String getJobName(HTable table) {
-    return getClass().getName() + ":" + new String(table.getTableName());
+    return getClass().getName() + ":" + new String(table.getTableName(), UTF_8);
   }
 
 }

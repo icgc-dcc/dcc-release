@@ -1,5 +1,6 @@
 package org.icgc.dcc.release.test.job;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -38,6 +39,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 import com.google.common.util.concurrent.MoreExecutors;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public abstract class AbstractJobTest {
 
@@ -93,11 +96,14 @@ public abstract class AbstractJobTest {
     }
   }
 
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
   protected void given(File inputDirectory) {
     File[] fileTypes = inputDirectory.listFiles();
+    checkState(fileTypes != null, "Failed to resolve files in directory '%s'", inputDirectory);
     processFileTypes(fileTypes);
   }
 
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
   private void processFileTypes(File[] fileTypes) {
     for (File fileTypeDir : fileTypes) {
       if (fileTypeDir.isFile()) {
@@ -105,6 +111,7 @@ public abstract class AbstractJobTest {
       }
       String fileTypeDirName = fileTypeDir.getName();
       File[] projects = fileTypeDir.listFiles();
+      checkState(projects != null, "Empty input directory %s", fileTypeDir);
       if (areProjects(projects)) {
         processProjects(fileTypeDirName, projects);
       } else {
@@ -134,6 +141,7 @@ public abstract class AbstractJobTest {
     throw new IllegalArgumentException();
   }
 
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
   private void processProjects(String fileTypeDirName, File[] projects) {
     for (File projectDir : projects) {
       if (projectDir.isFile()) {
@@ -141,6 +149,7 @@ public abstract class AbstractJobTest {
       }
       String projectName = projectDir.getName().split("=")[1];
       File[] files = projectDir.listFiles();
+      checkState(files != null, "Can't create input from an empty directory %s", projectDir);
       createInputFiles(files, projectName, fileTypeDirName);
     }
   }
@@ -179,14 +188,14 @@ public abstract class AbstractJobTest {
   protected void createInputFile(TestFile inputFile) {
     val fileTypeDirectory = getFileTypeDirectory(inputFile.getFileType());
     if (!fileTypeDirectory.exists()) {
-      fileTypeDirectory.mkdirs();
+      checkState(fileTypeDirectory.mkdirs() == true, "Failed to create directory %s", fileTypeDirectory);
     }
 
     val target = inputFile.isProjectPartitioned() ?
         getProjectFileTypeDirectory(inputFile.getProjectName(), inputFile.getFileType()) :
         getFileTypeFile(inputFile.getFileType());
     if (!isPartFile(target) && !target.exists()) {
-      target.mkdirs();
+      checkState(target.mkdirs() == true, "Failed to create directory %s", target);
     }
 
     if (inputFile.isFile()) {

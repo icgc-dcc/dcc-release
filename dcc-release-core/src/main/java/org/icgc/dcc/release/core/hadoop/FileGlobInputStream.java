@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.io.UncheckedIOException;
 import java.util.Collection;
 
 import lombok.NonNull;
@@ -47,7 +48,7 @@ public class FileGlobInputStream extends ForwardingInputStream {
   /**
    * Copied from {@code FileInputFormat}
    */
-  private static PathFilter HIDDEN_PATH_FILTER = new PathFilter() {
+  private static final PathFilter HIDDEN_PATH_FILTER = new PathFilter() {
 
     @Override
     public boolean accept(Path path) {
@@ -76,7 +77,7 @@ public class FileGlobInputStream extends ForwardingInputStream {
         inputStreams.add(inputStream);
       }
     } catch (IOException e) {
-      throw new RuntimeException("Error reading: '" + pathPattern.toString() + "'", e);
+      throw new UncheckedIOException("Error reading: '" + pathPattern.toString() + "'", e);
     }
 
     return combineInputStreams(inputStreams);

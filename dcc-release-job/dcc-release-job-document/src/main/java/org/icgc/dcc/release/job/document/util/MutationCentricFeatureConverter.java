@@ -60,9 +60,10 @@ public class MutationCentricFeatureConverter {
     }
 
     val occurrences = ImmutableList.<Occurrence> builder();
-    for (String projectId : projectSsmTestedDonorCounts.keySet()) {
+    for (val projectCountsEntry : projectSsmTestedDonorCounts.entrySet()) {
+      val projectId = projectCountsEntry.getKey();
       val ssmAffectedDonors = projectSsmAffectedDonorIds.get(projectId).size();
-      val ssmTestedDonors = projectSsmTestedDonorCounts.get(projectId);
+      val ssmTestedDonors = projectCountsEntry.getValue();
       val frequency = frequency(ssmAffectedDonors, ssmTestedDonors);
 
       occurrences.add(new Occurrence()

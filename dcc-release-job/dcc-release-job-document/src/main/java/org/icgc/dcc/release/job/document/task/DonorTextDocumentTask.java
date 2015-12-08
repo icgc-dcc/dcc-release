@@ -17,68 +17,28 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
-import static org.icgc.dcc.release.core.util.Tuples.tuple;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorId;
 import lombok.val;
 
-import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.document.Document;
-import org.icgc.dcc.release.core.function.KeyFieldsFunction;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.transform.DonorCentricDocumentTransform;
+import org.icgc.dcc.release.job.document.transform.DonorTextDocumentTransform;
 
-import scala.Tuple2;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
-
-public class DonorCentricIndexTask extends AbstractIndexTask {
+public class DonorTextDocumentTask extends AbstractDocumentTask {
 
   private final DocumentJobContext indexJobContext;
 
-  public DonorCentricIndexTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.DONOR_CENTRIC_TYPE);
+  public DonorTextDocumentTask(DocumentJobContext indexJobContext) {
+    super(DocumentType.DONOR_TEXT_TYPE);
     this.indexJobContext = indexJobContext;
   }
 
   @Override
   public void execute(TaskContext taskContext) {
     val donors = readDonors(taskContext);
-    val observations = readObservations(taskContext);
-    val donorObservationsPairs = join(donors, observations);
-
-    val output = transform(donorObservationsPairs);
+    val output = donors.map(new DonorTextDocumentTransform(indexJobContext));
 
     writeDocOutput(taskContext, output);
-  }
-
-  private JavaRDD<Document> transform(JavaPairRDD<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>
-      donorObservationsPairs) {
-    return donorObservationsPairs.map(new DonorCentricDocumentTransform(indexJobContext));
-  }
-
-  private static JavaPairRDD<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> join(
-      JavaRDD<ObjectNode> donors,
-      JavaRDD<ObjectNode> observations) {
-    val donorPairs = donors.mapToPair(donor -> tuple(getDonorId(donor), donor));
-    val observationPairs = observations
-        .mapToPair(pairByDonorId())
-        .groupByKey();
-    val donorObservationsPairs = donorPairs.leftOuterJoin(observationPairs);
-
-    return donorObservationsPairs;
-  }
-
-  private static KeyFieldsFunction<ObjectNode> pairByDonorId() {
-    return new KeyFieldsFunction<ObjectNode>(row -> {
-      row.remove(DONOR_ID);
-      return row;
-    },
-        DONOR_ID);
   }
 
 }

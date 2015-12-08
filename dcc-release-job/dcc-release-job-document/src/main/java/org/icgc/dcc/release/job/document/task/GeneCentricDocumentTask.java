@@ -32,11 +32,11 @@ import org.icgc.dcc.release.job.document.transform.GeneCentricDocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class GeneCentricIndexTask extends AbstractIndexTask {
+public class GeneCentricDocumentTask extends AbstractDocumentTask {
 
   private final DocumentJobContext indexJobContext;
 
-  public GeneCentricIndexTask(DocumentJobContext indexJobContext) {
+  public GeneCentricDocumentTask(DocumentJobContext indexJobContext) {
     super(DocumentType.GENE_CENTRIC_TYPE);
     this.indexJobContext = indexJobContext;
   }

@@ -15,66 +15,36 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.index.task;
+package org.icgc.dcc.release.job.document.task;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.isNullOrEmpty;
+import lombok.val;
 
-import java.util.UUID;
-
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.task.GenericSerializableTask;
-import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
-import org.icgc.dcc.release.core.util.ObjectNodes;
+import org.icgc.dcc.release.job.document.core.DocumentJobContext;
+import org.icgc.dcc.release.job.document.transform.GeneTextDocumentTransform;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+public class GeneTextDocumentTask extends AbstractDocumentTask {
 
-@RequiredArgsConstructor
-public class IndexTask extends GenericSerializableTask  {
+  private final DocumentJobContext indexJobContext;
 
-  @NonNull
-  private final String esUri;
-  @NonNull
-  private final String indexName;
-  @NonNull
-  private final DocumentType documentType;
-
-  @Override
-  public TaskType getType() {
-    return documentType.getOutputFileType().isPartitioned() ? TaskType.FILE_TYPE_PROJECT : TaskType.FILE_TYPE;
+  public GeneTextDocumentTask(DocumentJobContext indexJobContext) {
+    super(DocumentType.GENE_TEXT_TYPE);
+    this.indexJobContext = indexJobContext;
   }
 
   @Override
-  public String getName() {
-    return Task.getName(super.getName(), documentType.getName());
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
   }
 
   @Override
   public void execute(TaskContext taskContext) {
-    readInput(taskContext, documentType.getOutputFileType())
-        .map(createDocument())
-        .mapPartitions(new DocumentIndexer(esUri, indexName, documentType))
-        .count();
-  }
+    val genes = readGenesPivoted(taskContext);
+    val output = genes.map(new GeneTextDocumentTransform(indexJobContext));
 
-  private Function<ObjectNode, Document> createDocument() {
-    return o -> {
-      String idFieldName = documentType.getPrimaryKey();
-
-      String id = documentType == DocumentType.OBSERVATION_CENTRIC_TYPE ?
-          UUID.randomUUID().toString()
-          : ObjectNodes.textValue(o, idFieldName);
-      checkState(!isNullOrEmpty(id), "Document ID can't be null or empty. {}", o);
-
-      return new Document(documentType, id, o);
-    };
+    writeDocOutput(taskContext, output);
   }
 
 }

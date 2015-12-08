@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.annotate.snpeff;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 import java.io.File;
@@ -88,7 +89,7 @@ public class SnpEffPredictor {
   @SneakyThrows
   public void start() {
     this.process = new SnpEffProcess(resolveJar(), resolveJava(), resolveDataDir(), properties.getDatabaseVersion());
-    this.stream = new PrintStream(process.getOutputStream());
+    this.stream = new PrintStream(process.getOutputStream(), false, UTF_8.name());
     this.encoder = new VCFEncoder(createVCFHeader(), true);
     this.converter = new ICGCToVCFConverter(new IndexedFastaSequenceFile(resolveReferenceGenome()));
 

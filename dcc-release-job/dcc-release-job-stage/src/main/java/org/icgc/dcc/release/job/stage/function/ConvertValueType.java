@@ -17,6 +17,9 @@
  */
 package org.icgc.dcc.release.job.stage.function;
 
+import static java.lang.Double.parseDouble;
+import static java.lang.Long.parseLong;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -56,20 +59,11 @@ public class ConvertValueType implements Function<ObjectNode, ObjectNode>, Seria
 
       try {
         if (fieldType == ValueType.DECIMAL) {
-          val converted = Double.parseDouble(value);
-          row.put(fieldName, converted);
+          row.put(fieldName, parseDouble(value));
         } else if (fieldType == ValueType.INTEGER) {
-          val converted = Long.parseLong(value);
-          row.put(fieldName, converted);
-        } else if (fieldType == ValueType.DATETIME) {
-          val converted = value;
-          row.put(fieldName, converted);
-        } else if (fieldType == ValueType.TEXT) {
-          val converted = value;
-          row.put(fieldName, converted);
+          row.put(fieldName, parseLong(value));
         } else {
-          val converted = value;
-          row.put(fieldName, converted);
+          row.put(fieldName, value);
         }
       } catch (Exception e) {
         throw new IllegalArgumentException("Could not convert value " + "'" + value + "' in field " + fieldName

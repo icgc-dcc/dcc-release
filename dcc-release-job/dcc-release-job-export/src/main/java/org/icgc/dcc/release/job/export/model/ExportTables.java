@@ -18,7 +18,6 @@
 package org.icgc.dcc.release.job.export.model;
 
 import static lombok.AccessLevel.PRIVATE;
-
 import lombok.NoArgsConstructor;
 
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -77,9 +76,9 @@ public final class ExportTables {
    * Misc.
    */
   public static final String ICGC_DONOR_ID_PREFIX = "DO";
-  public static final FsPermission rwx = new FsPermission("777");
-  public static int BLOCKSIZE = 5 * 1048576;
-  public static Algorithm COMPRESSION = Compression.Algorithm.SNAPPY;
+  public static final FsPermission RWX = new FsPermission("777");
+  public static final int BLOCKSIZE = 5 * 1048576;
+  public static final Algorithm COMPRESSION = Compression.Algorithm.SNAPPY;
 
   public static String getStaticFileOutput(String tableName) {
     return TMP_STATIC_ROOT + tableName;

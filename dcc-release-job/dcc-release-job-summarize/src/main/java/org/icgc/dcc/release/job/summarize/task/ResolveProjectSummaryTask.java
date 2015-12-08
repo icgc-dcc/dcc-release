@@ -97,7 +97,6 @@ public class ResolveProjectSummaryTask extends GenericTask {
 
   private Function<ObjectNode, Boolean> filterFeatureType(FeatureType featureType) {
     val summaryFieldName = featureType.getSummaryFieldName();
-    featureType.isCountSummary();
 
     return o -> {
       JsonNode summaryField = o.get(summaryFieldName);

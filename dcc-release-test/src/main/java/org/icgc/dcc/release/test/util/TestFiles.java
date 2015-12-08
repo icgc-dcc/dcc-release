@@ -18,9 +18,11 @@
 package org.icgc.dcc.release.test.util;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.AUTO_CLOSE_SOURCE;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import lombok.Cleanup;
@@ -31,6 +33,8 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class TestFiles {
 
@@ -44,7 +48,7 @@ public class TestFiles {
     val iterator = reader.readValues(source);
 
     @Cleanup
-    val output = new PrintWriter(target);
+    val output = new PrintWriter(target, StandardCharsets.UTF_8.name());
     while (iterator.hasNext()) {
       val row = iterator.next();
       output.print(row.toString());
@@ -55,7 +59,7 @@ public class TestFiles {
   @SneakyThrows
   public static void writeInputFile(List<ObjectNode> rows, File target) {
     @Cleanup
-    val output = new PrintWriter(target);
+    val output = new PrintWriter(target, StandardCharsets.UTF_8.name());
     for (val row : rows) {
       output.print(row.toString());
       output.println();
@@ -82,8 +86,10 @@ public class TestFiles {
     return rows;
   }
 
+  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
   public static List<ObjectNode> readInputDirectory(File sourceDir) {
     File[] files = sourceDir.listFiles(TestFiles::filterPartFiles);
+    checkState(files != null, "Failed to resolve files in directory '%s'", sourceDir);
     val rows = Lists.<ObjectNode> newArrayList();
     for (val file : files) {
       rows.addAll(readInputFile(file));

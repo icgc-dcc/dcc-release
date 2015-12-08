@@ -21,22 +21,28 @@ import lombok.val;
 
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.transform.DonorTextDocumentTransform;
+import org.icgc.dcc.release.job.document.transform.ProjectTextDocumentTransform;
 
-public class DonorTextIndexTask extends AbstractIndexTask {
+public class ProjectTextDocumentTask extends AbstractDocumentTask {
 
   private final DocumentJobContext indexJobContext;
 
-  public DonorTextIndexTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.DONOR_TEXT_TYPE);
+  public ProjectTextDocumentTask(DocumentJobContext indexJobContext) {
+    super(DocumentType.PROJECT_TEXT_TYPE);
     this.indexJobContext = indexJobContext;
   }
 
   @Override
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
+  }
+
+  @Override
   public void execute(TaskContext taskContext) {
-    val donors = readDonors(taskContext);
-    val output = donors.map(new DonorTextDocumentTransform(indexJobContext));
+    val projects = readProjects(taskContext);
+    val output = projects.map(new ProjectTextDocumentTransform(indexJobContext));
 
     writeDocOutput(taskContext, output);
   }

@@ -50,13 +50,10 @@ public class TranslateCodeListTerm implements Function<ObjectNode, ObjectNode> {
       val terms = entry.getValue();
 
       val originalValue = row.get(fieldName).textValue();
-      if (originalValue != null) {
-        // Translate term code to value
-        if (terms.containsKey(originalValue)) {
-          val translated = terms.get(originalValue);
-
-          row.put(fieldName, translated);
-        }
+      // Translate term code to value
+      if (originalValue != null && terms.containsKey(originalValue)) {
+        val translated = terms.get(originalValue);
+        row.put(fieldName, translated);
       }
     }
 

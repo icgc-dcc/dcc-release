@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.release.job.annotate.snpeff;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -37,7 +39,7 @@ public class SnpEffLogHandler implements Runnable {
   @Override
   @SneakyThrows
   public void run() {
-    val reader = new BufferedReader(new InputStreamReader(input));
+    val reader = new BufferedReader(new InputStreamReader(input, UTF_8));
     String line = null;
     while ((line = reader.readLine()) != null) {
       log.info("*** SnpEff log: {}", line);

@@ -31,14 +31,14 @@ import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ResolveGenesTask extends AbstractIndexTask {
+public class ResolveGenesTask extends AbstractDocumentTask {
+
+  @Getter
+  private  Map<String, ObjectNode> geneIdGenes;
 
   public ResolveGenesTask(DocumentType type) {
     super(type);
   }
-
-  @Getter
-  private Map<String, ObjectNode> geneIdGenes;
 
   @Override
   public TaskType getType() {

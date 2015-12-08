@@ -15,66 +15,58 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.index.task;
+package org.icgc.dcc.release.job.document.task;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.isNullOrEmpty;
-
-import java.util.UUID;
-
+import static org.icgc.dcc.release.core.util.Tuples.tuple;
+import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationId;
+import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationMutationId;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.val;
 
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.task.GenericSerializableTask;
-import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
-import org.icgc.dcc.release.core.util.ObjectNodes;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 
-@RequiredArgsConstructor
-public class IndexTask extends GenericSerializableTask  {
+abstract class AbstractMutationDocumentTask extends AbstractDocumentTask {
 
-  @NonNull
-  private final String esUri;
-  @NonNull
-  private final String indexName;
-  @NonNull
-  private final DocumentType documentType;
+  private final Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> transformFunction;
 
-  @Override
-  public TaskType getType() {
-    return documentType.getOutputFileType().isPartitioned() ? TaskType.FILE_TYPE_PROJECT : TaskType.FILE_TYPE;
+  public AbstractMutationDocumentTask(@NonNull DocumentType documentType,
+      Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> transformFunction) {
+    super(documentType);
+    this.transformFunction = transformFunction;
   }
 
   @Override
-  public String getName() {
-    return Task.getName(super.getName(), documentType.getName());
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
   }
 
   @Override
   public void execute(TaskContext taskContext) {
-    readInput(taskContext, documentType.getOutputFileType())
-        .map(createDocument())
-        .mapPartitions(new DocumentIndexer(esUri, indexName, documentType))
-        .count();
+    val mutations = readMutations(taskContext);
+    val observations = readObservations(taskContext);
+
+    val output = transform(mutations, observations);
+    writeDocOutput(taskContext, output);
   }
 
-  private Function<ObjectNode, Document> createDocument() {
-    return o -> {
-      String idFieldName = documentType.getPrimaryKey();
+  private JavaRDD<Document> transform(JavaRDD<ObjectNode> mutations, JavaRDD<ObjectNode> observations) {
+    val mutationPairs = mutations.mapToPair(mutation -> tuple(getMutationId(mutation), mutation));
+    val observationPairs = observations.groupBy(observation -> getObservationMutationId(observation));
 
-      String id = documentType == DocumentType.OBSERVATION_CENTRIC_TYPE ?
-          UUID.randomUUID().toString()
-          : ObjectNodes.textValue(o, idFieldName);
-      checkState(!isNullOrEmpty(id), "Document ID can't be null or empty. {}", o);
+    val mutationObservationsPairs = mutationPairs.leftOuterJoin(observationPairs);
+    val transformed = mutationObservationsPairs.map(transformFunction);
 
-      return new Document(documentType, id, o);
-    };
+    return transformed;
   }
 
 }

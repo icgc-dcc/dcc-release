@@ -19,6 +19,7 @@ package org.icgc.dcc.release.job.annotate.converter;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.util.List;
 
@@ -172,7 +173,7 @@ public class ICGCToVCFConverter {
 
   private String getReference(String chromosome, long start, long end) {
     val sequence = sequenceFile.getSubsequenceAt(chromosome, start, end);
-    val text = new String(sequence.getBases());
+    val text = new String(sequence.getBases(), UTF_8);
 
     return text;
   }

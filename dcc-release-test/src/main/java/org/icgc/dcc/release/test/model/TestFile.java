@@ -27,9 +27,12 @@ import org.icgc.dcc.release.core.job.FileType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 @Value
 @Builder
 @Wither
+@SuppressFBWarnings("ES_COMPARING_PARAMETER_STRING_WITH_EQ")
 public class TestFile {
 
   String projectName;

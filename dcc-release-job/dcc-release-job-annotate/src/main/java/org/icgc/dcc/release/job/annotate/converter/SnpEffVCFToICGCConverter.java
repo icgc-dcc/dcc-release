@@ -288,7 +288,7 @@ public class SnpEffVCFToICGCConverter {
         effects, new Function<SnpEffect, String>() {
 
           @Override
-          public String apply(SnpEffect item) {
+          public String apply(@NonNull SnpEffect item) {
             return !item.getTranscriptID().isEmpty() ? item.getTranscriptID() : item.getGeneName();
           }
 
@@ -306,7 +306,7 @@ public class SnpEffVCFToICGCConverter {
 
           @Override
           public boolean apply(SnpEffect effect) {
-            if (mutationSet.equals(effect.getCancerID())) {
+            if (effect != null && mutationSet.equals(effect.getCancerID())) {
               return true;
             }
 

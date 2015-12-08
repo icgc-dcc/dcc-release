@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class AggregateGeneStats implements Function2<ObjectNode, ObjectNode, ObjectNode> {
 
   @Override
-  public ObjectNode call(ObjectNode aggr, ObjectNode next) throws Exception {
+  public ObjectNode call(ObjectNode aggr, ObjectNode next) throws Exception { // NOPMD
     if (aggr == null) {
       aggr = MAPPER.createObjectNode();
     }

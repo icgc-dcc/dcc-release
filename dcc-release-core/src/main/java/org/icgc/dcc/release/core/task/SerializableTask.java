@@ -15,40 +15,10 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.task;
+package org.icgc.dcc.release.core.task;
 
-import lombok.val;
+import java.io.Serializable;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.document.Document;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.transform.ObservationCentricDocumentTransform;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class ObservationCentricIndexTask extends AbstractIndexTask {
-
-  private final DocumentJobContext indexJobContext;
-
-  public ObservationCentricIndexTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.OBSERVATION_CENTRIC_TYPE);
-    this.indexJobContext = indexJobContext;
-  }
-
-  @Override
-  public void execute(TaskContext taskContext) {
-    val observations = readObservations(taskContext);
-
-    val output = transform(observations);
-    writeDocOutput(taskContext, output);
-  }
-
-  private JavaRDD<Document> transform(JavaRDD<ObjectNode> observations) {
-    val transformed = observations.map(new ObservationCentricDocumentTransform(indexJobContext));
-
-    return transformed;
-  }
+public interface SerializableTask extends Task, Serializable {
 
 }

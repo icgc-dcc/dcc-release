@@ -19,32 +19,34 @@ package org.icgc.dcc.release.job.document.task;
 
 import lombok.val;
 
+import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.document.DocumentType;
+import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.transform.ProjectTextDocumentTransform;
+import org.icgc.dcc.release.job.document.transform.DonorDocumentTransform;
 
-public class ProjectTextIndexTask extends AbstractIndexTask {
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+public class DonorDocumentTask extends AbstractDocumentTask {
 
   private final DocumentJobContext indexJobContext;
 
-  public ProjectTextIndexTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.PROJECT_TEXT_TYPE);
+  public DonorDocumentTask(DocumentJobContext indexJobContext) {
+    super(DocumentType.DONOR_TYPE);
     this.indexJobContext = indexJobContext;
   }
 
   @Override
-  public TaskType getType() {
-    return TaskType.FILE_TYPE;
-  }
-
-  @Override
   public void execute(TaskContext taskContext) {
-    val projects = readProjects(taskContext);
-    val output = projects.map(new ProjectTextDocumentTransform(indexJobContext));
+    val donors = readDonors(taskContext);
+    val output = transform(donors);
 
     writeDocOutput(taskContext, output);
+  }
+
+  private JavaRDD<Document> transform(JavaRDD<ObjectNode> donors) {
+    return donors.map(new DonorDocumentTransform(indexJobContext));
   }
 
 }

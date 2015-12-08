@@ -61,15 +61,15 @@ public class ResolveDonorSamplesTask extends GenericTask {
 
     val donorSamples = Maps.<String, DonorSample> newHashMap();
     for (val donor : donors) {
-      val donorId = donor.get(SURROGATE_DONOR_ID).textValue();
+      val surrogateDonorId = donor.get(SURROGATE_DONOR_ID).textValue();
 
       for (val specimen : donor.withArray(DONOR_SPECIMEN)) {
         for (val sample : specimen.withArray(DONOR_SAMPLE)) {
           val sampleId = textValue(sample, SUBMISSION_ANALYZED_SAMPLE_ID);
-          val _specimenId = textValue(specimen, SURROGATE_SPECIMEN_ID);
-          val _sampleId = textValue(sample, SURROGATE_SAMPLE_ID);
+          val surrogateSpecimenId = textValue(specimen, SURROGATE_SPECIMEN_ID);
+          val surrogateSampleId = textValue(sample, SURROGATE_SAMPLE_ID);
 
-          donorSamples.put(sampleId, new DonorSample(donorId, _specimenId, _sampleId));
+          donorSamples.put(sampleId, new DonorSample(surrogateDonorId, surrogateSpecimenId, surrogateSampleId));
         }
       }
     }

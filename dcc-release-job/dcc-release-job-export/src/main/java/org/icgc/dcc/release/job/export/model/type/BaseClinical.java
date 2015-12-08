@@ -17,9 +17,9 @@
  */
 package org.icgc.dcc.release.job.export.model.type;
 
-import static org.icgc.dcc.release.job.export.model.type.Constants.SAMPLE_FIELD_NAME;
 import static org.icgc.dcc.release.job.export.model.type.Constants.SPECIMEN_FIELD_NAME;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.spark.api.java.JavaRDD;
@@ -37,63 +37,69 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-public class Sample implements Type {
+public abstract class BaseClinical implements Type {
 
-  private static final String DATA_TYPE_FOLDER = "sample";
-
-  private static final ImmutableMap<String, String> FIRST_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
-      .put("_donor_id", "icgc_donor_id")
-      .put("_project_id", "project_code")
-      .put("donor_id", "submitted_donor_id")
-      .put(SPECIMEN_FIELD_NAME, SPECIMEN_FIELD_NAME)
-      .build();
-
-  private static final ImmutableMap<String, String> SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
+  protected static final Map<String, String> COMMON_SECOND_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
       .put("donor_id", "donor_id")
       .put("_specimen_id", "icgc_specimen_id")
       .put("specimen_id", "submitted_specimen_id")
-      .put(SAMPLE_FIELD_NAME, SAMPLE_FIELD_NAME)
-      .build();
-
-  private static final ImmutableMap<String, String> THIRD_LEVEL_PROJECTION = ImmutableMap.<String, String> builder()
-      .put("_sample_id", "icgc_sample_id")
-      .put("analyzed_sample_id", "submitted_sample_id")
-      .put("analyzed_sample_interval", "analyzed_sample_interval")
+      .put("specimen_type", "specimen_type")
+      .put("specimen_type_other", "specimen_type_other")
+      .put("specimen_interval", "specimen_interval")
+      .put("specimen_donor_treatment_type", "specimen_donor_treatment_type")
+      .put("specimen_donor_treatment_type_other", "specimen_donor_treatment_type_other")
+      .put("specimen_processing", "specimen_processing")
+      .put("specimen_processing_other", "specimen_processing_other")
+      .put("specimen_storage", "specimen_storage")
+      .put("specimen_storage_other", "specimen_storage_other")
+      .put("tumour_confirmed", "tumour_confirmed")
+      .put("specimen_biobank", "specimen_biobank")
+      .put("specimen_biobank_id", "specimen_biobank_id")
+      .put("specimen_available", "specimen_available")
+      .put("tumour_histological_type", "tumour_histological_type")
+      .put("tumour_grading_system", "tumour_grading_system")
+      .put("tumour_grade", "tumour_grade")
+      .put("tumour_grade_supplemental", "tumour_grade_supplemental")
+      .put("tumour_stage_system", "tumour_stage_system")
+      .put("tumour_stage", "tumour_stage")
+      .put("tumour_stage_supplemental", "tumour_stage_supplemental")
+      .put("digital_image_of_stained_section", "digital_image_of_stained_section")
       .put("percentage_cellularity", "percentage_cellularity")
       .put("level_of_cellularity", "level_of_cellularity")
-      .put("study", "study")
       .build();
+
+  private final String dataTypeFolder;
+  private final Map<String, String> firstLevelProjection;
+  private final Map<String, String> secondLevelProjection;
+
+  public BaseClinical(String dataTypeFolder, Map<String, String> firstLevelProjection,
+      Map<String, String> secondLevelProjection) {
+    this.dataTypeFolder = dataTypeFolder;
+    this.firstLevelProjection = firstLevelProjection;
+    this.secondLevelProjection = secondLevelProjection;
+  }
 
   @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
         .map(new ParseObjectNode())
-        .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
+        .map(new ProjectFields(firstLevelProjection))
         .map(new AddDonorIdField())
-        .map(new AddMissingField(SPECIMEN_FIELD_NAME, SECOND_LEVEL_PROJECTION.keySet()))
+        .map(new AddMissingField(SPECIMEN_FIELD_NAME, secondLevelProjection.keySet()))
         .flatMap(new FlattenField(SPECIMEN_FIELD_NAME))
         .map(new PullUpField(SPECIMEN_FIELD_NAME))
-        .map(new RetainFields(getFirstLevelFields()))
-        .map(new RenameFields(SECOND_LEVEL_PROJECTION))
-        .map(new AddMissingField(SAMPLE_FIELD_NAME, THIRD_LEVEL_PROJECTION.keySet()))
-        .flatMap(new FlattenField(SAMPLE_FIELD_NAME))
-        .map(new PullUpField(SAMPLE_FIELD_NAME))
         .map(new RetainFields(getFields()))
-        .map(new RenameFields(THIRD_LEVEL_PROJECTION));
-  }
-
-  private Set<String> getFirstLevelFields() {
-    return Sets.newHashSet(Iterables.concat(FIRST_LEVEL_PROJECTION.values(), SECOND_LEVEL_PROJECTION.keySet()));
+        .map(new RenameFields(secondLevelProjection));
   }
 
   @Override
   public Set<String> getFields() {
-    return Sets.newHashSet(Iterables.concat(getFirstLevelFields(), THIRD_LEVEL_PROJECTION.keySet()));
+    return Sets.newHashSet(Iterables.concat(firstLevelProjection.values(), secondLevelProjection.keySet()));
   }
 
   @Override
   public String getTypeDirectoryName() {
-    return DATA_TYPE_FOLDER;
+    return dataTypeFolder;
   }
 
 }

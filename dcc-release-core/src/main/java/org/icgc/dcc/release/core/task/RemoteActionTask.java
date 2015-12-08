@@ -31,7 +31,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 
 @Slf4j
-public abstract class RemoteActionTask implements Task {
+public abstract class RemoteActionTask implements SerializableTask {
 
   @Override
   public void execute(TaskContext taskContext) {

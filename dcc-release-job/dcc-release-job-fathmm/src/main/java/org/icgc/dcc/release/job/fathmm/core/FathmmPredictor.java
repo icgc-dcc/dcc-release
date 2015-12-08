@@ -205,13 +205,13 @@ public class FathmmPredictor {
   private static Map<String, String> result(Map<String, Object> facade, Map<String, Object> probability,
       String aaChange, String weights) {
 
-    float W = Float.parseFloat(facade.get(StringUtils.left(aaChange, 1)).toString());
-    float M = Float.parseFloat(facade.get(StringUtils.right(aaChange, 1)).toString());
-    float D = Float.parseFloat(probability.get("disease").toString()) + 1.0f;
-    float O = Float.parseFloat(probability.get("other").toString()) + 1.0f;
+    val w = Float.parseFloat(facade.get(StringUtils.left(aaChange, 1)).toString());
+    val m = Float.parseFloat(facade.get(StringUtils.right(aaChange, 1)).toString());
+    val d = Float.parseFloat(probability.get("disease").toString()) + 1.0f;
+    val o = Float.parseFloat(probability.get("other").toString()) + 1.0f;
 
     // The original calculation is in log2(...), this is just to change basis
-    double score = Math.log(((1.0 - W) * O) / ((1.0 - M) * D)) / Math.log(2);
+    double score = Math.log(((1.0 - w) * o) / ((1.0 - m) * d)) / Math.log(2);
 
     // This is intended as well, the original script rounds before comparing against the threshold
     score = Math.floor(score * 100) / 100;
@@ -220,10 +220,10 @@ public class FathmmPredictor {
     result.put("HMM", (String) facade.get("id"));
     result.put("Description", (String) facade.get("description"));
     result.put("Position", facade.get("position").toString());
-    result.put("W", String.valueOf(W));
-    result.put("M", String.valueOf(M));
-    result.put("D", String.valueOf(D));
-    result.put("O", String.valueOf(O));
+    result.put("W", String.valueOf(w));
+    result.put("M", String.valueOf(m));
+    result.put("D", String.valueOf(d));
+    result.put("O", String.valueOf(o));
     result.put(SCORE, String.valueOf(score));
 
     if (weights.equals(INHERITED)) {
