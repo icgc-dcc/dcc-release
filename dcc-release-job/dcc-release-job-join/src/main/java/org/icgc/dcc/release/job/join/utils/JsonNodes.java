@@ -31,13 +31,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @NoArgsConstructor(access = PRIVATE)
 public final class JsonNodes {
 
-  @NonNull
-  public static void populateArrayNode(ArrayNode node, Iterable<ObjectNode> values) {
-    for (val value : values) {
-      node.add(value);
-    }
-  }
-
   /**
    * Populates array {@code array} with {@code values} and applies {@code function} to each of the {@code value}.
    */

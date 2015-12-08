@@ -23,13 +23,13 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_REPOSITORY;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_SEQUENCING_STRATEGY;
+import static org.icgc.dcc.release.core.util.JacksonFactory.MAPPER;
 
 import java.util.Map;
 
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.json.Jackson;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
@@ -44,7 +44,7 @@ public final class CreateRawSequenceDataObject implements Function<ObjectNode, O
 
   @Override
   public ObjectNode call(ObjectNode node) throws Exception {
-    val rawSequenceDataObject = Jackson.DEFAULT.createObjectNode();
+    val rawSequenceDataObject = MAPPER.createObjectNode();
     for (val entry : RAW_SEQUENCE_DATA_FIELDS_MAPPING.entrySet()) {
       rawSequenceDataObject.set(entry.getValue(), node.get(entry.getKey()));
     }

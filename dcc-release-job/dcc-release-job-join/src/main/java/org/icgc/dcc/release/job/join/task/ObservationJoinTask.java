@@ -33,6 +33,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.storage.StorageLevel;
 import org.icgc.dcc.common.core.model.Marking;
 import org.icgc.dcc.release.core.function.CombineFields;
 import org.icgc.dcc.release.core.function.KeyFields;
@@ -67,11 +68,11 @@ public class ObservationJoinTask extends GenericTask {
     val sampleToSurrogageSampleId = getSampleSurrogateSampleIds(taskContext, sampleSurrogateSampleIdsBroadcast);
 
     val ssmM = parseSsmM(taskContext);
-    ssmM.cache();
+    ssmM.persist(StorageLevel.MEMORY_ONLY_SER());
     val ssmP = parseSsmP(taskContext);
-    ssmP.cache();
+    ssmP.persist(StorageLevel.MEMORY_ONLY_SER());
     val ssmS = parseSsmS(taskContext);
-    ssmS.cache();
+    ssmS.persist(StorageLevel.MEMORY_ONLY_SER());
 
     // Create SSM
     val ssm = joinSsm(ssmM, ssmP, ssmS, donorSamples, sampleToSurrogageSampleId);
@@ -132,8 +133,13 @@ public class ObservationJoinTask extends GenericTask {
     return readInput(taskContext, FileType.SSM_S);
   }
 
-  private static JavaRDD<ObjectNode> joinSsm(JavaRDD<ObjectNode> ssmM, JavaRDD<ObjectNode> ssmP,
-      JavaRDD<ObjectNode> ssmS, Map<String, DonorSample> donorSamples, Map<String, String> sampleSurrogageSampleIds) {
+  private static JavaRDD<ObjectNode> joinSsm(
+      JavaRDD<ObjectNode> ssmM,
+      JavaRDD<ObjectNode> ssmP,
+      JavaRDD<ObjectNode> ssmS,
+      Map<String, DonorSample> donorSamples,
+      Map<String, String> sampleSurrogageSampleIds)
+  {
     val ssmPrimarySecondary = joinSsmPrimarySecondary(ssmP, ssmS);
     val observations = ssmPrimarySecondary
         .mapToPair(new PairAnalysisIdSampleId())

@@ -42,11 +42,12 @@ public final class JacksonFactory {
       .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
       .disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
 
-  public static final ObjectMapper MAPPER = new ObjectMapper(FACTORY)
+  public static final ObjectMapper MAPPER = new ObjectMapper();
+  public static final ObjectMapper SMILE_MAPPER = new ObjectMapper(FACTORY)
       .disable(SerializationFeature.CLOSE_CLOSEABLE);
 
-  public static final ObjectWriter WRITER = MAPPER.writerWithType(ObjectNode.class);
+  public static final ObjectWriter WRITER = SMILE_MAPPER.writerWithType(ObjectNode.class);
 
-  public static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
+  public static final ObjectReader READER = SMILE_MAPPER.reader(ObjectNode.class);
 
 }

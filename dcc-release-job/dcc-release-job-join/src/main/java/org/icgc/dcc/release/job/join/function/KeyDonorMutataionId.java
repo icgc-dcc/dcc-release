@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.join.function;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_MUTATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
 import static org.icgc.dcc.release.core.util.Keys.getKey;
@@ -42,14 +43,16 @@ public class KeyDonorMutataionId implements
   private final Map<String, DonorSample> donorSamples;
 
   @Override
+  // Tuple<anlysis_id#analyzed_sample_id, Tuple< Tuple<Primary, Optional<Iterable<Secondaries>> > , Meta > >
   public String call(Tuple2<String, Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>, ObjectNode>> tuple)
       throws Exception {
     val primary = tuple._2._1._1;
     val mutationId = textValue(primary, SURROGATE_MUTATION_ID);
     val sampleId = textValue(primary, SUBMISSION_ANALYZED_SAMPLE_ID);
 
-    val donorId = donorSamples.get(sampleId);
-    val key = getKey(donorId.getDonorId(), mutationId);
+    val donorInfo = donorSamples.get(sampleId);
+    checkState(donorInfo != null, "Failed to resolve donor info for sample id '%s' from ssm_p: '%s'", sampleId, primary);
+    val key = getKey(donorInfo.getDonorId(), mutationId);
 
     return key;
   }
