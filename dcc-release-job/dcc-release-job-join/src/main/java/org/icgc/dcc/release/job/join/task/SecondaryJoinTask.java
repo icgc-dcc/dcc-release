@@ -113,10 +113,13 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
     val consequences = parseSecondary(secondaryFileType, taskContext)
         .mapToPair(keyFunction)
         .aggregateByKey(startValue, new AggregateConsequences(), combineConsequences());
+    val partitionsNum = consequences.partitions().size();
 
     return primaryMeta
         .mapToPair(keyFunction)
-        .leftOuterJoin(consequences)
+        // Usually consequences RDD is bigger than the primaries one, thus it's better to repartition primaries to
+        // consequences partition count
+        .leftOuterJoin(consequences, partitionsNum)
         .map(SecondaryJoinTask::joinConsequences);
   }
 
