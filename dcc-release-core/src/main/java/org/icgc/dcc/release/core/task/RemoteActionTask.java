@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.release.core.task;
 
+import java.io.Serializable;
+
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +33,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 
 @Slf4j
-public abstract class RemoteActionTask implements SerializableTask {
+public abstract class RemoteActionTask implements Task, Serializable {
 
   @Override
   public void execute(TaskContext taskContext) {

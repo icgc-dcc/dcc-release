@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.release.job.join.function;
 
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.TRANSCRIPT_ID;
@@ -30,44 +29,22 @@ import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.MUTATION_
 import java.util.Collection;
 import java.util.Set;
 
-import lombok.val;
+import org.apache.spark.api.java.function.Function2;
 
-import org.apache.spark.api.java.function.Function;
-
-import scala.Tuple2;
-
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
-public class CreateOccurrenceFromSecondary implements
-    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, ObjectNode> {
+public final class AggregateConsequences implements
+    Function2<Collection<ObjectNode>, ObjectNode, Collection<ObjectNode>> {
 
   private static final Set<String> REMOVE_CONSEQUENCE_FIELDS = ImmutableSet.of(PROJECT_ID, MUTATION_ID,
       SUBMISSION_OBSERVATION_ANALYSIS_ID, SUBMISSION_ANALYZED_SAMPLE_ID);
 
   @Override
-  public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
-    val primary = tuple._2._1;
-    val secondaries = tuple._2._2;
-
-    primary.putPOJO(CONSEQUENCE_ARRAY_NAME, createConsequences(secondaries));
-
-    return primary;
-  }
-
-  private static Collection<? extends JsonNode> createConsequences(Optional<Iterable<ObjectNode>> secondaries) {
-    val consequences = Sets.<JsonNode> newHashSet();
-
-    if (secondaries.isPresent()) {
-      for (val secondary : secondaries.get()) {
-        secondary.remove(REMOVE_CONSEQUENCE_FIELDS);
-        enrichConsequence(secondary);
-        consequences.add(secondary);
-      }
-    }
+  public Collection<ObjectNode> call(Collection<ObjectNode> consequences, ObjectNode consequence) throws Exception {
+    consequence.remove(REMOVE_CONSEQUENCE_FIELDS);
+    enrichConsequence(consequence);
+    consequences.add(consequence);
 
     return consequences;
   }

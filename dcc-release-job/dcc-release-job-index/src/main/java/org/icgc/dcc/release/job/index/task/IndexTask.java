@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.task.GenericSerializableTask;
+import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
@@ -37,7 +37,7 @@ import org.icgc.dcc.release.core.util.ObjectNodes;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @RequiredArgsConstructor
-public class IndexTask extends GenericSerializableTask  {
+public class IndexTask extends GenericTask  {
 
   @NonNull
   private final String esUri;
@@ -59,12 +59,12 @@ public class IndexTask extends GenericSerializableTask  {
   @Override
   public void execute(TaskContext taskContext) {
     readInput(taskContext, documentType.getOutputFileType())
-        .map(createDocument())
+        .map(createDocument(documentType))
         .mapPartitions(new DocumentIndexer(esUri, indexName, documentType))
         .count();
   }
 
-  private Function<ObjectNode, Document> createDocument() {
+  private static Function<ObjectNode, Document> createDocument(DocumentType documentType) {
     return o -> {
       String idFieldName = documentType.getPrimaryKey();
 

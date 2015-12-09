@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.job.join.task;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.SURROGATE_MATCHED_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
@@ -29,22 +30,27 @@ import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.SV_ID;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 
+import java.util.Collection;
 import java.util.Map;
 
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.release.core.function.CombineFields;
 import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.join.function.CreateOccurrenceFromSecondary;
+import org.icgc.dcc.release.job.join.function.AggregateConsequences;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 
+import scala.Tuple2;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 
 public class SecondaryJoinTask extends PrimaryMetaJoinTask {
 
@@ -101,14 +107,36 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
 
   private JavaRDD<ObjectNode> joinSecondary(JavaRDD<ObjectNode> primaryMeta, FileType secondaryFileType,
       TaskContext taskContext) {
-    String[] secondaryJoinKey = getSecondaryJoinKeys(primaryFileType);
-    val secondary = parseSecondary(secondaryFileType, taskContext)
-        .groupBy(new CombineFields(secondaryJoinKey));
+    val keyFunction = new KeyFields(getSecondaryJoinKeys(primaryFileType));
+    Collection<ObjectNode> startValue = Sets.newHashSet();
+
+    val consequences = parseSecondary(secondaryFileType, taskContext)
+        .mapToPair(keyFunction)
+        .aggregateByKey(startValue, new AggregateConsequences(), combineConsequences());
 
     return primaryMeta
-        .mapToPair(new KeyFields(secondaryJoinKey))
-        .leftOuterJoin(secondary)
-        .map(new CreateOccurrenceFromSecondary());
+        .mapToPair(keyFunction)
+        .leftOuterJoin(consequences)
+        .map(SecondaryJoinTask::joinConsequences);
+  }
+
+  private static ObjectNode joinConsequences(Tuple2<String, Tuple2<ObjectNode, Optional<Collection<ObjectNode>>>> tuple) {
+    val primary = tuple._2._1;
+    val consequences = tuple._2._2;
+    val consequenceArray = primary.withArray(CONSEQUENCE_ARRAY_NAME);
+    if (consequences.isPresent()) {
+      consequenceArray.addAll(consequences.get());
+    }
+
+    return primary;
+  }
+
+  private static Function2<Collection<ObjectNode>, Collection<ObjectNode>, Collection<ObjectNode>> combineConsequences() {
+    return (a, b) -> {
+      a.addAll(a);
+
+      return a;
+    };
   }
 
   private JavaRDD<ObjectNode> parseSecondary(FileType secondaryFileType, TaskContext taskContext) {
