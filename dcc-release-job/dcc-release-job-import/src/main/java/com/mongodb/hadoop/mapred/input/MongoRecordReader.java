@@ -39,13 +39,16 @@ import com.mongodb.hadoop.io.BSONWritable;
 @SuppressWarnings("deprecation")
 public class MongoRecordReader implements RecordReader<BSONWritable, BSONWritable> {
 
+  private final DBCursor cursor;
+  private BSONObject current;
+
   public MongoRecordReader(MongoInputSplit split) {
-    _cursor = split.getCursor();
+    cursor = split.getCursor();
   }
 
   @Override
   public void close() {
-    if (_cursor != null) _cursor.close();
+    if (cursor != null) cursor.close();
   }
 
   @Override
@@ -59,17 +62,17 @@ public class MongoRecordReader implements RecordReader<BSONWritable, BSONWritabl
   }
 
   public BSONObject getCurrentKey() {
-    return new BasicDBObject("_id", _current.get("_id"));
+    return new BasicDBObject("_id", current.get("_id"));
   }
 
   public BSONObject getCurrentValue() {
-    return _current;
+    return current;
   }
 
   @Override
   public float getProgress() {
     try {
-      if (_cursor.hasNext()) {
+      if (cursor.hasNext()) {
         return 0.0f;
       }
       else {
@@ -90,9 +93,9 @@ public class MongoRecordReader implements RecordReader<BSONWritable, BSONWritabl
 
   public boolean nextKeyValue() {
     try {
-      if (!_cursor.hasNext()) return false;
+      if (!cursor.hasNext()) return false;
 
-      _current = _cursor.next();
+      current = cursor.next();
 
       return true;
     } catch (MongoException e) {
@@ -120,9 +123,6 @@ public class MongoRecordReader implements RecordReader<BSONWritable, BSONWritabl
     fieldNames.stream()
         .forEach(fieldName -> value.removeField(fieldName));
   }
-
-  private final DBCursor _cursor;
-  private BSONObject _current;
 
   private static final Log LOG = LogFactory.getLog(MongoRecordReader.class);
 }
