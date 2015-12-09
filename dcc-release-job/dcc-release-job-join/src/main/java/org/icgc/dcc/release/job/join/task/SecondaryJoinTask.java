@@ -27,6 +27,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.MUTATION_ID;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.PLACEMENT;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.SV_ID;
+import static org.icgc.dcc.release.core.util.JavaRDDs.getPartitionsCount;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 
@@ -110,16 +111,15 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
     val keyFunction = new KeyFields(getSecondaryJoinKeys(primaryFileType));
     Collection<ObjectNode> startValue = Sets.newHashSet();
 
+    val occurrencePairs = primaryMeta.mapToPair(keyFunction);
+    val occurrencePatitions = getPartitionsCount(occurrencePairs);
+
     val consequences = parseSecondary(secondaryFileType, taskContext)
         .mapToPair(keyFunction)
-        .aggregateByKey(startValue, new AggregateConsequences(), combineConsequences());
-    val partitionsNum = consequences.partitions().size();
+        .aggregateByKey(startValue, occurrencePatitions, new AggregateConsequences(), combineConsequences());
 
-    return primaryMeta
-        .mapToPair(keyFunction)
-        // Usually consequences RDD is bigger than the primaries one, thus it's better to repartition primaries to
-        // consequences partition count
-        .leftOuterJoin(consequences, partitionsNum)
+    return occurrencePairs
+        .leftOuterJoin(consequences)
         .map(SecondaryJoinTask::joinConsequences);
   }
 

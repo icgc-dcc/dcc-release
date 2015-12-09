@@ -19,6 +19,7 @@ package org.icgc.dcc.release.job.join.task;
 
 import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
+import static org.icgc.dcc.release.core.util.JavaRDDs.getPartitionsCount;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 import static org.icgc.dcc.release.job.join.utils.Tasks.resolveDonorSamples;
 
@@ -141,11 +142,12 @@ public class ObservationJoinTask extends GenericTask {
       Map<String, String> sampleSurrogageSampleIds)
   {
     val ssmPrimarySecondary = joinSsmPrimarySecondary(ssmP, ssmS);
+    val metaPairs = ssmM.mapToPair(new KeyAnalysisIdAnalyzedSampleIdField());
     val observations = ssmPrimarySecondary
         .mapToPair(new PairAnalysisIdSampleId())
-        .join(ssmM
-            .mapToPair(new KeyAnalysisIdAnalyzedSampleIdField()));
+        .join(metaPairs, getPartitionsCount(ssmPrimarySecondary));
 
+    // TODO: Change to aggregateByKey
     val donorMutationObservations = observations.groupBy(new KeyDonorMutataionId(donorSamples));
 
     return donorMutationObservations.map(new CreateOccurrence(donorSamples, sampleSurrogageSampleIds));
@@ -153,10 +155,13 @@ public class ObservationJoinTask extends GenericTask {
 
   private static JavaPairRDD<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> joinSsmPrimarySecondary(
       JavaRDD<ObjectNode> ssmP, JavaRDD<ObjectNode> ssmS) {
-    return ssmP
-        .mapToPair(new KeyFields(NORMALIZER_OBSERVATION_ID))
+    val primary = ssmP.mapToPair(new KeyFields(NORMALIZER_OBSERVATION_ID));
+    val primaryPartitions = getPartitionsCount(primary);
+
+    return primary
         .leftOuterJoin(
-            ssmS.groupBy(new CombineFields(NORMALIZER_OBSERVATION_ID)));
+        ssmS.groupBy(new CombineFields(NORMALIZER_OBSERVATION_ID), primaryPartitions)
+        );
   }
 
 }
