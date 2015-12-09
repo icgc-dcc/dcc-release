@@ -104,7 +104,7 @@ public class SubmissionMetadataService {
     } catch (Exception e) {
       val mesage = "Error getting submission file field from JSON: " + field;
       log.error(mesage, e);
-      throw new RuntimeException(mesage, e);
+      throw new RuntimeException(mesage, e); // NOPMD
     }
   }
 
