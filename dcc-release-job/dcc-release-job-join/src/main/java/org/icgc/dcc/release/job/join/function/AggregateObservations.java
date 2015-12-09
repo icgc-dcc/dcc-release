@@ -17,22 +17,18 @@
  */
 package org.icgc.dcc.release.job.join.function;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
-import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_MUTATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_SPECIMEN_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_ARRAY_NAME;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.SURROGATE_MATCHED_SAMPLE_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.TRANSCRIPT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_MUTATION;
-import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MATCHED_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MUTATION;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ASSEMBLY_VERSION;
@@ -44,35 +40,33 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATION_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_REFERENCE_GENOME_ALLELE;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
-import static org.icgc.dcc.release.core.util.Keys.KEY_SEPARATOR;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.release.job.join.utils.CombineFunctions.mergeConsequences;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.val;
 
-import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
+import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.job.join.model.DonorSample;
-
-import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 @RequiredArgsConstructor
-public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2<String, Tuple2<Tuple2<ObjectNode,
-    Optional<Iterable<ObjectNode>>>, ObjectNode>>>>, ObjectNode> {
+public final class AggregateObservations implements Function2<ObjectNode, ObjectNode, ObjectNode> {
 
-  private static final int DONOR_ID_INDEX = 0;
+  /**
+   * Constants.
+   */
+  private static final KeyFields PRIMARY_META_KEY_FUNCTION = new KeyAnalysisIdAnalyzedSampleIdField();
   private static final List<String> OCCURRENCE_RETAIN_FIELDS = ImmutableList.of(
       SURROGATE_MUTATION_ID,
       PROJECT_ID,
@@ -100,49 +94,50 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
       SUBMISSION_OBSERVATION_MUTATED_TO_ALLELE,
       PROJECT_ID,
       NORMALIZER_MUTATION,
-      SURROGATE_MUTATION_ID);
+      SURROGATE_MUTATION_ID,
+      CONSEQUENCE_ARRAY_NAME);
 
+  /**
+   * Dependencies.
+   */
+  @NonNull
+  private final Broadcast<Map<String, ObjectNode>> metaPairsBroadcast;
   @NonNull
   private final Map<String, DonorSample> donorSamples;
   @NonNull
   private final Map<String, String> sampleSurrogageSampleIds;
 
   @Override
-  public ObjectNode call(Tuple2<String, Iterable<Tuple2<String, Tuple2<Tuple2<ObjectNode,
-      Optional<Iterable<ObjectNode>>>, ObjectNode>>>> tuple) throws Exception {
-    ObjectNode occurrence = null;
-    val consequences = Sets.<JsonNode> newHashSet();
-    val observations = Lists.<JsonNode> newArrayList();
+  public ObjectNode call(ObjectNode aggregator, ObjectNode primary) throws Exception {
+    val meta = getMeta(getPrimaryMetaKey(primary));
+    checkState(meta != null, "A primary record must have a corresponding meta record. Primary: {}", primary);
 
-    val ssms = tuple._2;
-    for (val ssm : ssms) {
-      val primary = ssm._2._1._1;
-      val meta = ssm._2._2;
+    val assemblyVersion = textValue(meta, SUBMISSION_OBSERVATION_ASSEMBLY_VERSION);
+    val occurrence = aggregator == null ? createOccurrence(primary.deepCopy(), assemblyVersion) : aggregator;
 
-      if (occurrence == null) {
-        val donorIdMutationId = tuple._1;
-        val assemblyVersion = textValue(meta, SUBMISSION_OBSERVATION_ASSEMBLY_VERSION);
-        occurrence = createOccurrence(primary.deepCopy(), donorIdMutationId, assemblyVersion);
-      }
-
-      val observation = createObservation(primary, meta);
-      observations.add(observation);
-
-      val secondaries = ssm._2._1._2;
-      consequences.addAll(createConsequences(secondaries));
+    if (aggregator != null) {
+      mergeConsequences(occurrence, primary);
     }
 
-    occurrence.putPOJO(CONSEQUENCE_ARRAY_NAME, consequences);
-    occurrence.putPOJO(OBSERVATION_ARRAY_NAME, observations);
+    val observations = occurrence.withArray(OBSERVATION_ARRAY_NAME);
+    observations.add(createObservation(primary, meta));
 
     return occurrence;
   }
 
-  private static ObjectNode createOccurrence(ObjectNode primary, String donorIdMutationId, String assemblyVersion) {
+  @SneakyThrows
+  private static String getPrimaryMetaKey(ObjectNode row) {
+    return PRIMARY_META_KEY_FUNCTION.call(row)._1;
+  }
+
+  private ObjectNode getMeta(String key) {
+    return metaPairsBroadcast.value().get(key);
+  }
+
+  private static ObjectNode createOccurrence(ObjectNode primary, String assemblyVersion) {
     val occurrence = trimOccurrence(primary);
 
     // Enrich with additional fields
-    occurrence.put(SURROGATE_DONOR_ID, resolveDonorId(donorIdMutationId));
     occurrence.put(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION, assemblyVersion);
     occurrence.put(OBSERVATION_TYPE, SSM_TYPE.getId());
 
@@ -161,10 +156,6 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
     return trimObservation(primary);
   }
 
-  private static String resolveDonorId(String donorIdMutationId) {
-    return donorIdMutationId.split(KEY_SEPARATOR)[DONOR_ID_INDEX];
-  }
-
   /**
    * Removes fields in the parent object.
    */
@@ -174,24 +165,6 @@ public class CreateOccurrence implements Function<Tuple2<String, Iterable<Tuple2
 
   private static ObjectNode trimObservation(ObjectNode observation) {
     return observation.remove(OBSERVATION_REMOVE_FIELDS);
-  }
-
-  private static Set<JsonNode> createConsequences(Optional<Iterable<ObjectNode>> secondaries) {
-    val consequences = Sets.<JsonNode> newHashSet();
-    if (secondaries.isPresent()) {
-      for (val secondary : secondaries.get()) {
-        enrichConsequenceFields(secondary);
-        consequences.add(secondary);
-      }
-    }
-
-    return consequences;
-  }
-
-  private static void enrichConsequenceFields(ObjectNode consequence) {
-    consequence.remove(NORMALIZER_OBSERVATION_ID);
-    consequence.set(GENE_ID, consequence.get(SUBMISSION_GENE_AFFECTED));
-    consequence.set(TRANSCRIPT_ID, consequence.get(SUBMISSION_TRANSCRIPT_AFFECTED));
   }
 
 }

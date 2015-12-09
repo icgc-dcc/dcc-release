@@ -15,27 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.util;
+package org.icgc.dcc.release.job.join.function;
 
-import java.util.Map;
+import static com.google.common.base.Preconditions.checkState;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
 
-import lombok.experimental.UtilityClass;
+import java.util.Collection;
 
-import com.google.common.collect.Maps;
+import lombok.val;
 
-@UtilityClass
-public class SparkWorkaroundUtils {
+import org.apache.spark.api.java.function.Function2;
 
-  /**
-   * Broadcast variabled don't work with all Map implementations.
-   * @see <a
-   * href="http://mail-archives.us.apache.org/mod_mbox/spark-user/201504.mbox/%3CCA+3qhFS0vXgJrfZ+e+yckpNPrm1wep8k=LSwEGNd53A7mPydzQ@mail.gmail.com%3E">Spark
-   * discussion</a>
-   */
-  // TODO: Verify if this is fixed in the next Spark version. Current 1.5.2
-  // FIXME: Raise a ticket
-  public static <K, V> Map<K, V> toHashMap(Map<? extends K, ? extends V> map) {
-    return Maps.newHashMap(map);
+import scala.Tuple2;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
+
+/**
+ * Joins consequences to the primary
+ */
+public final class AggregatePrimarySecondary implements
+    Function2<ObjectNode, Tuple2<ObjectNode, Optional<Collection<ObjectNode>>>, ObjectNode> {
+
+  @Override
+  public ObjectNode call(ObjectNode aggregator, Tuple2<ObjectNode, Optional<Collection<ObjectNode>>> tuple)
+      throws Exception {
+    val primary = tuple._1;
+    checkState(aggregator == null, "There should be only one instance of primary record: '%s'", primary);
+
+    val consequences = tuple._2;
+    val consequenceArray = primary.withArray(CONSEQUENCE_ARRAY_NAME);
+    if (consequences.isPresent()) {
+      consequenceArray.addAll(consequences.get());
+    }
+
+    return primary;
   }
 
 }

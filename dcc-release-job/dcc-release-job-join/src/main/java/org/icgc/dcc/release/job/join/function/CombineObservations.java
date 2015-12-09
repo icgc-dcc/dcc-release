@@ -17,13 +17,28 @@
  */
 package org.icgc.dcc.release.job.join.function;
 
-import org.icgc.dcc.common.core.model.FieldNames;
-import org.icgc.dcc.release.core.function.PairRows;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_ARRAY_NAME;
+import static org.icgc.dcc.release.job.join.utils.CombineFunctions.mergeConsequences;
+import lombok.val;
 
-public class PairDonorIdSpecimenSample extends PairRows {
+import org.apache.spark.api.java.function.Function2;
 
-  public PairDonorIdSpecimenSample() {
-    super(FieldNames.SubmissionFieldNames.SUBMISSION_DONOR_ID);
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+public final class CombineObservations implements Function2<ObjectNode, ObjectNode, ObjectNode> {
+
+  @Override
+  public ObjectNode call(ObjectNode leftOccurrence, ObjectNode rightOccurrence) throws Exception {
+    mergeObservations(leftOccurrence, rightOccurrence);
+    mergeConsequences(leftOccurrence, rightOccurrence);
+
+    return leftOccurrence;
+  }
+
+  private static void mergeObservations(ObjectNode leftOccurrence, ObjectNode rightOccurrence) {
+    val leftObservations = leftOccurrence.withArray(OBSERVATION_ARRAY_NAME);
+    val rightObservations = rightOccurrence.withArray(OBSERVATION_ARRAY_NAME);
+    leftObservations.addAll(rightObservations);
   }
 
 }

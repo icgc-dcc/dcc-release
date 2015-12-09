@@ -29,6 +29,7 @@ import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.PLACEMENT
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.SV_ID;
 import static org.icgc.dcc.release.core.util.JavaRDDs.getPartitionsCount;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.release.job.join.utils.CombineFunctions.combineConsequences;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 
 import java.util.Collection;
@@ -38,7 +39,6 @@ import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
@@ -109,14 +109,14 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
   private JavaRDD<ObjectNode> joinSecondary(JavaRDD<ObjectNode> primaryMeta, FileType secondaryFileType,
       TaskContext taskContext) {
     val keyFunction = new KeyFields(getSecondaryJoinKeys(primaryFileType));
-    Collection<ObjectNode> startValue = Sets.newHashSet();
+    val startValue = Sets.<ObjectNode> newHashSet();
 
     val occurrencePairs = primaryMeta.mapToPair(keyFunction);
-    val occurrencePatitions = getPartitionsCount(occurrencePairs);
+    val occurrencePartitions = getPartitionsCount(occurrencePairs);
 
     val consequences = parseSecondary(secondaryFileType, taskContext)
         .mapToPair(keyFunction)
-        .aggregateByKey(startValue, occurrencePatitions, new AggregateConsequences(), combineConsequences());
+        .aggregateByKey(startValue, occurrencePartitions, new AggregateConsequences(), combineConsequences());
 
     return occurrencePairs
         .leftOuterJoin(consequences)
@@ -132,14 +132,6 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
     }
 
     return primary;
-  }
-
-  private static Function2<Collection<ObjectNode>, Collection<ObjectNode>, Collection<ObjectNode>> combineConsequences() {
-    return (a, b) -> {
-      a.addAll(a);
-
-      return a;
-    };
   }
 
   private JavaRDD<ObjectNode> parseSecondary(FileType secondaryFileType, TaskContext taskContext) {

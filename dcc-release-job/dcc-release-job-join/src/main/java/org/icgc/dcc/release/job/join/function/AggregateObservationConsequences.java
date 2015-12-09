@@ -15,27 +15,35 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.util;
+package org.icgc.dcc.release.job.join.function;
 
-import java.util.Map;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.TRANSCRIPT_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
 
-import lombok.experimental.UtilityClass;
+import java.util.Collection;
 
-import com.google.common.collect.Maps;
+import org.apache.spark.api.java.function.Function2;
 
-@UtilityClass
-public class SparkWorkaroundUtils {
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-  /**
-   * Broadcast variabled don't work with all Map implementations.
-   * @see <a
-   * href="http://mail-archives.us.apache.org/mod_mbox/spark-user/201504.mbox/%3CCA+3qhFS0vXgJrfZ+e+yckpNPrm1wep8k=LSwEGNd53A7mPydzQ@mail.gmail.com%3E">Spark
-   * discussion</a>
-   */
-  // TODO: Verify if this is fixed in the next Spark version. Current 1.5.2
-  // FIXME: Raise a ticket
-  public static <K, V> Map<K, V> toHashMap(Map<? extends K, ? extends V> map) {
-    return Maps.newHashMap(map);
+public final class AggregateObservationConsequences implements
+    Function2<Collection<ObjectNode>, ObjectNode, Collection<ObjectNode>> {
+
+  @Override
+  public Collection<ObjectNode> call(Collection<ObjectNode> aggregator, ObjectNode consequence) throws Exception {
+    enrichConsequence(consequence);
+    aggregator.add(consequence);
+
+    return aggregator;
+  }
+
+  private static void enrichConsequence(ObjectNode consequence) {
+    consequence.remove(NORMALIZER_OBSERVATION_ID);
+    consequence.set(GENE_ID, consequence.get(SUBMISSION_GENE_AFFECTED));
+    consequence.set(TRANSCRIPT_ID, consequence.get(SUBMISSION_TRANSCRIPT_AFFECTED));
   }
 
 }

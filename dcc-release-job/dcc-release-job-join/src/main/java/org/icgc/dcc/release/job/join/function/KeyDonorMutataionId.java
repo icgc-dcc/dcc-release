@@ -22,31 +22,33 @@ import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SUR
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
 import static org.icgc.dcc.release.core.util.Keys.getKey;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.release.core.util.Tuples.tuple;
 
 import java.util.Map;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFunction;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
 
 @RequiredArgsConstructor
-public class KeyDonorMutataionId implements
-    Function<Tuple2<String, Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>, ObjectNode>>, String> {
+public final class KeyDonorMutataionId implements PairFunction<Tuple2<String, ObjectNode>, String, ObjectNode> {
 
+  /**
+   * Used to resolve {@code _donor_id}.
+   */
+  @NonNull
   private final Map<String, DonorSample> donorSamples;
 
   @Override
-  // Tuple<anlysis_id#analyzed_sample_id, Tuple< Tuple<Primary, Optional<Iterable<Secondaries>> > , Meta > >
-  public String call(Tuple2<String, Tuple2<Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>, ObjectNode>> tuple)
-      throws Exception {
-    val primary = tuple._2._1._1;
+  public Tuple2<String, ObjectNode> call(Tuple2<String, ObjectNode> tuple) throws Exception {
+    val primary = tuple._2;
     val mutationId = textValue(primary, SURROGATE_MUTATION_ID);
     val sampleId = textValue(primary, SUBMISSION_ANALYZED_SAMPLE_ID);
 
@@ -54,7 +56,7 @@ public class KeyDonorMutataionId implements
     checkState(donorInfo != null, "Failed to resolve donor info for sample id '%s' from ssm_p: '%s'", sampleId, primary);
     val key = getKey(donorInfo.getDonorId(), mutationId);
 
-    return key;
+    return tuple(key, primary);
   }
 
 }

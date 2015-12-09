@@ -128,12 +128,12 @@ public class TestJsonNodes {
       return json.get("_donor_id").textValue();
     }
 
-    if (!json.path("_specimen_id").isMissingNode()) {
-      return json.get("_specimen_id").textValue();
-    }
-
     if (!json.path("_sample_id").isMissingNode()) {
       return json.get("_sample_id").textValue();
+    }
+
+    if (!json.path("_specimen_id").isMissingNode()) {
+      return json.get("_specimen_id").textValue();
     }
 
     if (!json.path("_gene_id").isMissingNode()) {
