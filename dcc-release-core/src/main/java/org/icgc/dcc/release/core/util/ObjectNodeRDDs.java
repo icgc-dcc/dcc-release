@@ -106,7 +106,8 @@ public final class ObjectNodeRDDs {
     JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, BytesWritable.class, path, conf);
   }
 
-  private static JobConf createJobConf(JavaRDD<?> rdd) {
+  // TODO: move to a proper class
+  public static JobConf createJobConf(JavaRDD<?> rdd) {
     return new JobConf(rdd.context().hadoopConfiguration());
   }
 
