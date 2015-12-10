@@ -26,8 +26,8 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.util.Configurations;
 import org.icgc.dcc.release.core.util.JavaRDDs;
-import org.icgc.dcc.release.core.util.ObjectNodeRDDs;
 
 import scala.Tuple2;
 
@@ -39,7 +39,7 @@ public class DocumentRdds {
   }
 
   public static void saveAsSequenceObjectNodeFile(@NonNull JavaRDD<Document> rdd, @NonNull String path) {
-    val conf = ObjectNodeRDDs.createJobConf(rdd);
+    val conf = Configurations.createJobConf(rdd);
     val pairRdd = rdd
         .mapToPair(row -> new Tuple2<NullWritable, BytesWritable>(
             NullWritable.get(),

@@ -94,7 +94,7 @@ public final class ObjectNodeRDDs {
 
   @NonNull
   public static void saveAsSequenceObjectNodeFile(JavaRDD<ObjectNode> rdd, String path) {
-    val conf = createJobConf(rdd);
+    val conf = Configurations.createJobConf(rdd);
     saveAsSequenceObjectNodeFile(rdd, path, conf);
   }
 
@@ -104,11 +104,6 @@ public final class ObjectNodeRDDs {
         new Tuple2<NullWritable, BytesWritable>(NullWritable.get(), new BytesWritable(WRITER.writeValueAsBytes(row))));
 
     JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, BytesWritable.class, path, conf);
-  }
-
-  // TODO: move to a proper class
-  public static JobConf createJobConf(JavaRDD<?> rdd) {
-    return new JobConf(rdd.context().hadoopConfiguration());
   }
 
   private static JobConf createJobConf(JavaSparkContext sparkContext) {

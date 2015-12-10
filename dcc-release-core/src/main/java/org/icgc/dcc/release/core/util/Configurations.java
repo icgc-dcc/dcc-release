@@ -28,12 +28,12 @@ import lombok.experimental.UtilityClass;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.spark.api.java.JavaRDD;
 
 @UtilityClass
 public class Configurations {
 
-  @NonNull
-  public static void addCompressionCodec(JobConf conf, Class<? extends CompressionCodec> codecClass) {
+  public static void addCompressionCodec(@NonNull JobConf conf, Class<? extends CompressionCodec> codecClass) {
     val codecsProperty = "io.compression.codecs";
     val currentCodecs = conf.get(codecsProperty);
     val codecs = codecClass.getName() + (isNullOrEmpty(currentCodecs) ? "" : "," + currentCodecs);
@@ -41,11 +41,14 @@ public class Configurations {
     conf.set(codecsProperty, codecs);
   }
 
-  @NonNull
-  public static void setAll(Configuration conf, Map<String, String> properties) {
+  public static void setAll(@NonNull Configuration conf, @NonNull Map<String, String> properties) {
     for (val entry : properties.entrySet()) {
       conf.set(entry.getKey(), entry.getValue());
     }
+  }
+
+  public static JobConf createJobConf(@NonNull JavaRDD<?> rdd) {
+    return new JobConf(rdd.context().hadoopConfiguration());
   }
 
 }
