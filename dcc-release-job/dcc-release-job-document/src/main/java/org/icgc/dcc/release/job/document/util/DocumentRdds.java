@@ -17,20 +17,36 @@
  */
 package org.icgc.dcc.release.job.document.util;
 
+import static org.icgc.dcc.release.core.util.JacksonFactory.WRITER;
 import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 import lombok.NonNull;
 import lombok.val;
 
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.util.Configurations;
 import org.icgc.dcc.release.core.util.JavaRDDs;
+
+import scala.Tuple2;
 
 public class DocumentRdds {
 
-  @NonNull
-  public static void saveAsTextObjectNodeFile(JavaRDD<Document> rdd, String path) {
+  public static void saveAsTextObjectNodeFile(@NonNull JavaRDD<Document> rdd, @NonNull String path) {
     val output = rdd.map(row -> MAPPER.writeValueAsString(row.getSource()));
     JavaRDDs.saveAsTextFile(output, path);
+  }
+
+  public static void saveAsSequenceObjectNodeFile(@NonNull JavaRDD<Document> rdd, @NonNull String path) {
+    val conf = Configurations.createJobConf(rdd);
+    val pairRdd = rdd
+        .mapToPair(row -> new Tuple2<NullWritable, BytesWritable>(
+            NullWritable.get(),
+            new BytesWritable(WRITER.writeValueAsBytes(row.getSource())))
+        );
+
+    JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, BytesWritable.class, path, conf);
   }
 
 }
