@@ -69,7 +69,7 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
   /**
    * Dependencies.
    */
-  private final Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIdsByProject;
+  protected final Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIdsByProject;
 
   public SecondaryJoinTask(
       Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesbyProject,
@@ -102,7 +102,7 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
     };
   }
 
-  private static FileType resolveSecondaryFileType(FileType primaryFileType) {
+  protected static FileType resolveSecondaryFileType(FileType primaryFileType) {
     return resolveFileType(primaryFileType, SECONDARY_FILE_TYPE_SUFFIX);
   }
 
@@ -138,7 +138,7 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
     return readInput(taskContext, secondaryFileType);
   }
 
-  private static String[] getSecondaryJoinKeys(FileType fileType) {
+  protected static String[] getSecondaryJoinKeys(FileType fileType) {
     String[] joinKeys = SECONDARY_JOIN_FIELDS.get(fileType);
     checkState(joinKeys != null, "Failed to resolve secondary join keys for type %s", fileType.getId());
 

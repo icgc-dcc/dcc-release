@@ -120,6 +120,25 @@ public abstract class GenericTask implements Task {
     return input;
   }
 
+  protected <T> JavaRDD<T> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType, Class<T> clazz) {
+    // if (isReadAll(taskContext, inputFileType)) {
+    // return readAllInput(taskContext, conf, inputFileType);
+    // }
+
+    val sparkContext = taskContext.getSparkContext();
+    val filePath = taskContext.getPath(inputFileType);
+
+    if (!exists(sparkContext, filePath)) {
+      log.debug("{} does not exist. Skipping...", filePath);
+
+      return sparkContext.emptyRDD();
+    }
+
+    val input = readInput(taskContext, taskContext.getPath(inputFileType), conf, clazz);
+
+    return input;
+  }
+
   private static JavaRDD<ObjectNode> readAllInput(TaskContext taskContext, JobConf conf, FileType inputFileType) {
     val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
     val inputPaths = resolveInputPaths(taskContext, fileTypePath);
@@ -150,6 +169,15 @@ public abstract class GenericTask implements Task {
       ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);
     } else {
       ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath);
+    }
+  }
+
+  private static <T> JavaRDD<T> readInput(TaskContext taskContext, String path, JobConf conf, Class<T> clazz) {
+    val sparkContext = taskContext.getSparkContext();
+    if (taskContext.isCompressOutput()) {
+      return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, path, conf, clazz);
+    } else {
+      return ObjectNodeRDDs.textObjectNodeFile(sparkContext, path, conf, clazz);
     }
   }
 

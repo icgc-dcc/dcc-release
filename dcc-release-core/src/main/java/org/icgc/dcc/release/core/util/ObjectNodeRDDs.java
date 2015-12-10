@@ -48,7 +48,14 @@ public final class ObjectNodeRDDs {
   public static JavaRDD<ObjectNode> textObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf) {
     return JavaRDDs.textFile(sparkContext, path, conf)
         .map(tuple -> tuple._2.toString())
-        .map(new ParseObjectNode());
+        .map(new ParseObjectNode<ObjectNode>());
+  }
+
+  public static <T> JavaRDD<T> textObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf,
+      Class<T> clazz) {
+    return JavaRDDs.textFile(sparkContext, path, conf)
+        .map(tuple -> tuple._2.toString())
+        .map(new ParseObjectNode<T>(clazz));
   }
 
   @NonNull
@@ -62,6 +69,14 @@ public final class ObjectNodeRDDs {
         .map(tuple -> READER.readValue(tuple._2.getBytes()));
   }
 
+  public static <T> JavaRDD<T> sequenceObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf,
+      Class<T> clazz) {
+    val reader = JacksonFactory.SMILE_MAPPER.reader(clazz);
+
+    return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, BytesWritable.class)
+        .map(tuple -> reader.readValue(tuple._2.getBytes()));
+  }
+
   @NonNull
   public static JavaRDD<ObjectNode> combineObjectNodeFile(JavaSparkContext sparkContext, String paths) {
     return combineObjectNodeFile(sparkContext, paths, createJobConf(sparkContext));
@@ -71,7 +86,7 @@ public final class ObjectNodeRDDs {
   public static JavaRDD<ObjectNode> combineObjectNodeFile(JavaSparkContext sparkContext, String paths, JobConf conf) {
     return JavaRDDs.combineTextFile(sparkContext, paths, conf)
         .map(tuple -> tuple._2.toString())
-        .map(new ParseObjectNode());
+        .map(new ParseObjectNode<ObjectNode>());
   }
 
   public static JavaRDD<ObjectNode> combineObjectNodeSequenceFile(@NonNull JavaSparkContext sparkContext,

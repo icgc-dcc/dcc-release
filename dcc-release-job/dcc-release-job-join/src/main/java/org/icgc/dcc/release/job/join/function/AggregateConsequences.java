@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableSet;
 public final class AggregateConsequences implements
     Function2<Collection<ObjectNode>, ObjectNode, Collection<ObjectNode>> {
 
-  private static final Set<String> REMOVE_CONSEQUENCE_FIELDS = ImmutableSet.of(PROJECT_ID, MUTATION_ID,
+  public static final Set<String> REMOVE_CONSEQUENCE_FIELDS = ImmutableSet.of(PROJECT_ID, MUTATION_ID,
       SUBMISSION_OBSERVATION_ANALYSIS_ID, SUBMISSION_ANALYZED_SAMPLE_ID);
 
   @Override
@@ -49,7 +49,7 @@ public final class AggregateConsequences implements
     return consequences;
   }
 
-  private static void enrichConsequence(ObjectNode secondary) {
+  public static void enrichConsequence(ObjectNode secondary) {
     secondary.set(GENE_ID, secondary.remove(SUBMISSION_GENE_AFFECTED));
     secondary.set(TRANSCRIPT_ID, secondary.remove(SUBMISSION_TRANSCRIPT_AFFECTED));
   }
