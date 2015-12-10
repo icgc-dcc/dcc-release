@@ -17,19 +17,25 @@
  */
 package org.icgc.dcc.release.job.join.task;
 
-import static org.icgc.dcc.release.core.util.Tuples.tuple;
+import static org.icgc.dcc.release.core.util.JavaRDDs.getPartitionsCount;
+import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 
+import java.util.Collection;
 import java.util.Map;
 
 import lombok.val;
 
-import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
+import org.icgc.dcc.release.core.util.Tuples;
+import org.icgc.dcc.release.job.join.function.CreateSgvs;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 import org.icgc.dcc.release.job.join.model.SgvConsequence;
+
+import com.google.common.collect.Sets;
 
 public class SgvJoinTask extends SecondaryJoinTask {
 
@@ -42,26 +48,39 @@ public class SgvJoinTask extends SecondaryJoinTask {
   @Override
   public void execute(TaskContext taskContext) {
     val primaryMeta = joinPrimaryMeta(taskContext);
-    val consequences = readConsequeces(taskContext);
 
-    final Broadcast<Map<String, Iterable<SgvConsequence>>> consequencesBroadcast = taskContext
-        .getSparkContext()
-        .broadcast(SparkWorkaroundUtils.toHashMap(consequences.collectAsMap()));
+    val keyFunction = new KeyFields(getSecondaryJoinKeys(primaryFileType));
+    val primaryPairs = primaryMeta.mapToPair(keyFunction);
+    val primaryPartition = getPartitionsCount(primaryPairs);
 
-    val output = primaryMeta
-        .map(new CreateSgvObservation(taskContext.getProjectName().get(), consequencesBroadcast,
-            sampleSurrogateSampleIdsByProject));
+    Collection<SgvConsequence> zeroValue = Sets.newHashSet();
+    val consequences = readConsequeces(taskContext)
+        .mapToPair(row -> Tuples.tuple(row.getObservationId(), row))
+        .aggregateByKey(zeroValue, primaryPartition,
+            (a, n) -> {
+              a.add(n);
+              return a;
+            },
+            (a, b) -> {
+              a.addAll(b);
+              return a;
+            });
+
+    val sampleSurrogageSampleIds = getSampleSurrogateSampleIds(taskContext, sampleSurrogateSampleIdsByProject);
+    val output = primaryPairs
+        .leftOuterJoin(consequences)
+        .map(new CreateSgvs())
+        .map(addSurrogateMatchingId(sampleSurrogageSampleIds))
+
+    ;
     writeOutput(taskContext, output, resolveOutputFileType(primaryFileType));
   }
 
-  private JavaPairRDD<String, Iterable<SgvConsequence>> readConsequeces(TaskContext taskContext) {
+  private JavaRDD<SgvConsequence> readConsequeces(TaskContext taskContext) {
     val secondaryFileType = resolveSecondaryFileType(primaryFileType);
     val jobConfig = createJobConf(taskContext);
 
-    return readInput(taskContext, jobConfig, secondaryFileType, SgvConsequence.class)
-        .distinct()
-        .mapToPair(row -> tuple(row.getObservationId(), row))
-        .groupByKey();
+    return readInput(taskContext, jobConfig, secondaryFileType, SgvConsequence.class);
   }
 
 }

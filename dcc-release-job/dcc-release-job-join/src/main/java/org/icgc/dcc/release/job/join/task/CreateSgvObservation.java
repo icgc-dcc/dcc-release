@@ -27,7 +27,6 @@ import static org.icgc.dcc.release.job.join.function.AggregateConsequences.enric
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +39,7 @@ import org.icgc.dcc.release.core.util.ObjectNodes;
 import org.icgc.dcc.release.job.join.model.SgvConsequence;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 @RequiredArgsConstructor
@@ -74,9 +74,10 @@ public final class CreateSgvObservation implements Function<ObjectNode, ObjectNo
     return sampleSurrogateSampleIdsByProject.value().get(projectName).get(matchedSampleId);
   }
 
-  private Optional<Collection<ObjectNode>> convertConsequences(Optional<Iterable<SgvConsequence>> consequences) {
+  public static Optional<Collection<ObjectNode>> convertConsequences(
+      Optional<? extends Iterable<SgvConsequence>> consequences) {
     if (!consequences.isPresent()) {
-      return Optional.empty();
+      return Optional.absent();
     }
 
     val builder = ImmutableList.<ObjectNode> builder();
@@ -102,6 +103,6 @@ public final class CreateSgvObservation implements Function<ObjectNode, ObjectNo
   private Optional<Iterable<SgvConsequence>> getConsequences(String observationId) {
     val consequences = consequencesBroadcast.value().get(observationId);
 
-    return Optional.ofNullable(consequences);
+    return Optional.fromNullable(consequences);
   }
 }

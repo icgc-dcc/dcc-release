@@ -34,6 +34,7 @@ import org.icgc.dcc.release.core.function.ParseObjectNode;
 
 import scala.Tuple2;
 
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -71,10 +72,13 @@ public final class ObjectNodeRDDs {
 
   public static <T> JavaRDD<T> sequenceObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf,
       Class<T> clazz) {
-    val reader = JacksonFactory.SMILE_MAPPER.reader(clazz);
 
     return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, BytesWritable.class)
-        .map(tuple -> reader.readValue(tuple._2.getBytes()));
+        .map(tuple -> {
+          ObjectReader reader = JacksonFactory.SMILE_MAPPER.reader(clazz);
+
+          return reader.readValue(tuple._2.getBytes());
+        });
   }
 
   @NonNull
