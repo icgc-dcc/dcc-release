@@ -15,42 +15,63 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.function;
+package org.icgc.dcc.release.job.document.model;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Map;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.Data;
 
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.util.JacksonFactory;
+@Data
+public class Donor implements Serializable {
 
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+  String _donor_id;
+  String _project_id;
+  DonorSummary _summary;
+  String disease_status_last_followup;
+  String donor_age_at_diagnosis;
+  String donor_age_at_enrollment;
+  String donor_age_at_last_followup;
+  String donor_diagnosis_icd10;
+  String donor_id;
+  String donor_interval_of_last_followup;
+  String donor_relapse_interval;
+  String donor_relapse_type;
+  String donor_sex;
+  String donor_survival_time;
+  String donor_tumour_stage_at_diagnosis;
+  String donor_tumour_stage_at_diagnosis_supplemental;
+  String donor_tumour_staging_system_at_diagnosis;
+  String donor_vital_status;
+  Collection<Map<String, Object>> gene;
 
-@RequiredArgsConstructor
-public class FormatObjectNode<T> implements Function<T, String>, Serializable {
+  // Added during transformations
+  Project project;
 
-  @NonNull
-  private final Class<T> clazz;
-  private transient ObjectWriter writer;
+  @Data
+  public static class DonorSummary implements Serializable {
 
-  @Override
-  @SneakyThrows
-  public String call(T row) {
-    if (row instanceof ObjectNode) {
-      return row.toString();
-    }
+    Integer _affected_gene_count;
+    String[] repository;
+    String[] _studies;
+    String[] experimental_analysis_performed;
+    Map<String, Integer> experimental_analysis_performed_sample_count;
+    String _age_at_diagnosis_group;
+    boolean _cnsm_exists;
+    String[] _available_data_type;
+    boolean _jcn_exists;
+    boolean _meth_array_exists;
+    Integer _ssm_count;
+    boolean _pexp_exists;
+    boolean _stsm_exists;
+    boolean _meth_seq_exists;
+    boolean _exp_array_exists;
+    boolean _sgv_exists;
+    boolean _mirna_seq_exists;
+    boolean _exp_seq_exists;
+    String _state;
 
-    checkWriter();
-    return writer.writeValueAsString(row);
-  }
-
-  private void checkWriter() {
-    if (writer == null) {
-      writer = JacksonFactory.createObjectWriter(clazz);
-    }
   }
 
 }

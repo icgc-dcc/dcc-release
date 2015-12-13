@@ -17,27 +17,38 @@
  */
 package org.icgc.dcc.release.core.function;
 
+import static org.icgc.dcc.release.core.util.JacksonFactory.createObjectReader;
+
 import java.io.IOException;
 
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 import org.apache.spark.api.java.function.Function;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ObjectReader;
 
-@RequiredArgsConstructor
-public class ParseObjectNode implements Function<String, ObjectNode> {
+@NoArgsConstructor
+public class ParseObjectNode<T> implements Function<String, T> {
 
-  /**
-   * Constants.
-   */
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private Class<T> clazz;
+  private transient ObjectReader reader;
+
+  public ParseObjectNode(@NonNull Class<T> clazz) {
+    this.clazz = clazz;
+  }
 
   @Override
-  public ObjectNode call(String row) throws JsonProcessingException, IOException {
-    return (ObjectNode) MAPPER.readTree(row);
+  public T call(String row) throws JsonProcessingException, IOException {
+    createReader();
+    return reader.readValue(row);
+  }
+
+  private void createReader() {
+    if (reader == null) {
+      reader = createObjectReader(clazz);
+    }
   }
 
 }

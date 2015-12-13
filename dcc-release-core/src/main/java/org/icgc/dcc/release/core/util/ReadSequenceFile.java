@@ -15,41 +15,38 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.function;
+package org.icgc.dcc.release.core.util;
 
-import java.io.Serializable;
-
+import static org.icgc.dcc.release.core.util.JacksonFactory.createSmileObjectReader;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.util.JacksonFactory;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import scala.Tuple2;
 
-@RequiredArgsConstructor
-public class FormatObjectNode<T> implements Function<T, String>, Serializable {
+import com.fasterxml.jackson.databind.ObjectReader;
 
-  @NonNull
+public final class ReadSequenceFile<T> implements Function<Tuple2<NullWritable, BytesWritable>, T> {
+
   private final Class<T> clazz;
-  private transient ObjectWriter writer;
+  private transient ObjectReader reader;
 
-  @Override
-  @SneakyThrows
-  public String call(T row) {
-    if (row instanceof ObjectNode) {
-      return row.toString();
-    }
-
-    checkWriter();
-    return writer.writeValueAsString(row);
+  public ReadSequenceFile(@NonNull Class<T> clazz) {
+    this.clazz = clazz;
   }
 
-  private void checkWriter() {
-    if (writer == null) {
-      writer = JacksonFactory.createObjectWriter(clazz);
+  @Override
+  public T call(Tuple2<NullWritable, BytesWritable> tuple) throws Exception {
+    checkReader();
+
+    return reader.readValue(tuple._2.getBytes());
+  }
+
+  private void checkReader() {
+    if (reader == null) {
+      reader = createSmileObjectReader(clazz);
     }
   }
 

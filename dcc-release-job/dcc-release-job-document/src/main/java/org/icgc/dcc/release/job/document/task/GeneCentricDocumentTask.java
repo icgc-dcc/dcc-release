@@ -19,18 +19,25 @@ package org.icgc.dcc.release.job.document.task;
 
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneId;
+
+import java.util.Collection;
+
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
+import org.icgc.dcc.release.core.util.Aggregators;
+import org.icgc.dcc.release.core.util.Combiners;
+import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.function.PairGeneIdObservation;
 import org.icgc.dcc.release.job.document.transform.GeneCentricDocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 
 public class GeneCentricDocumentTask extends AbstractDocumentTask {
 
@@ -50,29 +57,24 @@ public class GeneCentricDocumentTask extends AbstractDocumentTask {
   public void execute(TaskContext taskContext) {
     val genes = readGenesPivoted(taskContext);
     val observations = readObservations(taskContext);
-
-    // TODO: This should be configured to give optimum results
-    // val splitSize = Long.toString(48 * 1024 * 1024);
-    // conf.set("mapred.min.split.size", splitSize);
-    // conf.set("mapred.max.split.size", splitSize);
-    //
-    // return ObjectNodeRDDs.combineObjectNodeFile(sparkContext, taskContext.getPath(inputFileType) + path, conf);
-    //
     val output = transform(taskContext, genes, observations);
+    // TODO: report genes without observations and process
     writeDocOutput(taskContext, output);
   }
 
   private JavaRDD<Document> transform(TaskContext taskContext,
       JavaRDD<ObjectNode> genes, JavaRDD<ObjectNode> observations) {
-    val genePairs = genes.mapToPair(gene -> tuple(getGeneId(gene), gene));
+    val genePairs = genes.mapToPair(gene -> tuple(getGeneId(gene), gene))
+        .collectAsMap();
+    val genesBroadcast = taskContext.getSparkContext().broadcast(SparkWorkaroundUtils.toHashMap(genePairs));
+
+    Collection<ObjectNode> zeroValue = Lists.newArrayList();
     val observationPairs = observations
         .flatMapToPair(new PairGeneIdObservation())
-        .groupByKey();
+        .aggregateByKey(zeroValue, Aggregators::aggregateCollection, Combiners::combineCollections)
+        .map(new GeneCentricDocumentTransform(indexJobContext, genesBroadcast));
 
-    val geneObservationsPairs = genePairs.leftOuterJoin(observationPairs);
-    val transformed = geneObservationsPairs.map(new GeneCentricDocumentTransform(indexJobContext));
-
-    return transformed;
+    return observationPairs;
   }
 
 }

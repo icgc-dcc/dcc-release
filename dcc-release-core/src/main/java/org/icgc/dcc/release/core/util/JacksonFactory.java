@@ -19,6 +19,7 @@ package org.icgc.dcc.release.core.util;
 
 import static lombok.AccessLevel.PRIVATE;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -46,8 +47,26 @@ public final class JacksonFactory {
   public static final ObjectMapper SMILE_MAPPER = new ObjectMapper(FACTORY)
       .disable(SerializationFeature.CLOSE_CLOSEABLE);
 
-  public static final ObjectWriter WRITER = SMILE_MAPPER.writerWithType(ObjectNode.class);
+  public static final ObjectWriter WRITER = MAPPER.writerWithType(ObjectNode.class);
+  public static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
 
-  public static final ObjectReader READER = SMILE_MAPPER.reader(ObjectNode.class);
+  public static final ObjectWriter SMILE_WRITER = SMILE_MAPPER.writerWithType(ObjectNode.class);
+  public static final ObjectReader SMILE_READER = SMILE_MAPPER.reader(ObjectNode.class);
+
+  public static <T> ObjectReader createSmileObjectReader(@NonNull Class<T> clazz) {
+    return ObjectNode.class.equals(clazz) ? SMILE_READER : SMILE_MAPPER.reader(clazz);
+  }
+
+  public static <T> ObjectWriter createSmileObjectWriter(@NonNull Class<T> clazz) {
+    return ObjectNode.class.equals(clazz) ? SMILE_WRITER : SMILE_MAPPER.writerWithType(clazz);
+  }
+
+  public static <T> ObjectReader createObjectReader(@NonNull Class<T> clazz) {
+    return ObjectNode.class.equals(clazz) ? READER : MAPPER.reader(clazz);
+  }
+
+  public static <T> ObjectWriter createObjectWriter(@NonNull Class<T> clazz) {
+    return ObjectNode.class.equals(clazz) ? WRITER : MAPPER.writerWithType(clazz);
+  }
 
 }

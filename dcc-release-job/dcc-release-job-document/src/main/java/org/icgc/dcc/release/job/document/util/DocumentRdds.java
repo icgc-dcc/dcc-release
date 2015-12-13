@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.release.job.document.util;
 
-import static org.icgc.dcc.release.core.util.JacksonFactory.WRITER;
+import static org.icgc.dcc.release.core.util.JacksonFactory.SMILE_WRITER;
 import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 import lombok.NonNull;
 import lombok.val;
@@ -43,7 +43,7 @@ public class DocumentRdds {
     val pairRdd = rdd
         .mapToPair(row -> new Tuple2<NullWritable, BytesWritable>(
             NullWritable.get(),
-            new BytesWritable(WRITER.writeValueAsBytes(row.getSource())))
+            new BytesWritable(SMILE_WRITER.writeValueAsBytes(row.getSource())))
         );
 
     JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, BytesWritable.class, path, conf);

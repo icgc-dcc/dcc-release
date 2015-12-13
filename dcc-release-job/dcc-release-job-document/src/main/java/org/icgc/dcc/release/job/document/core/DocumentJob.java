@@ -96,8 +96,8 @@ public class DocumentJob extends GenericJob {
   }
 
   private void write(JobContext jobContext) {
-    for (val task : createStreamingTasks(jobContext)) {
-      jobContext.execute(task);
+    for (val documentType : DocumentType.values()) {
+      jobContext.execute(createStreamingTask(jobContext, documentType));
     }
 
     // Generate SSM VCF file
@@ -116,6 +116,14 @@ public class DocumentJob extends GenericJob {
     }
 
     return tasks.build();
+  }
+
+  @SneakyThrows
+  private Task createStreamingTask(JobContext jobContext, DocumentType documentType) {
+    val constructor = getConstructor(documentType);
+    val indexJobContext = createIndexJobContext(jobContext, documentType);
+
+    return (Task) constructor.newInstance(indexJobContext);
   }
 
   private static Constructor<?> getConstructor(DocumentType documentType) throws ClassNotFoundException,

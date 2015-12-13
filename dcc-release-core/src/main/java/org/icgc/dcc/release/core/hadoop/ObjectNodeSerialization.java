@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.release.core.hadoop;
 
-import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
-import static org.icgc.dcc.release.core.util.JacksonFactory.WRITER;
+import static org.icgc.dcc.release.core.util.JacksonFactory.SMILE_READER;
+import static org.icgc.dcc.release.core.util.JacksonFactory.SMILE_WRITER;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,7 +77,7 @@ public class ObjectNodeSerialization implements Serialization<ObjectNode> {
 
     @Override
     public void serialize(ObjectNode objectNode) throws IOException {
-      WRITER.writeValue(out, objectNode);
+      SMILE_WRITER.writeValue(out, objectNode);
     }
   }
 
@@ -100,7 +100,7 @@ public class ObjectNodeSerialization implements Serialization<ObjectNode> {
 
     @Override
     public ObjectNode deserialize(ObjectNode next) throws IOException {
-      return READER.readValue(in);
+      return SMILE_READER.readValue(in);
     }
 
   }

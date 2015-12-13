@@ -15,42 +15,18 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.function;
+package org.icgc.dcc.release.core.util;
 
-import java.io.Serializable;
+import java.util.Collection;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.util.JacksonFactory;
+public class Aggregators {
 
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+  public static <T> Collection<T> aggregateCollection(@NonNull Collection<T> aggregator, @NonNull T next) {
+    aggregator.add(next);
 
-@RequiredArgsConstructor
-public class FormatObjectNode<T> implements Function<T, String>, Serializable {
-
-  @NonNull
-  private final Class<T> clazz;
-  private transient ObjectWriter writer;
-
-  @Override
-  @SneakyThrows
-  public String call(T row) {
-    if (row instanceof ObjectNode) {
-      return row.toString();
-    }
-
-    checkWriter();
-    return writer.writeValueAsString(row);
-  }
-
-  private void checkWriter() {
-    if (writer == null) {
-      writer = JacksonFactory.createObjectWriter(clazz);
-    }
+    return aggregator;
   }
 
 }

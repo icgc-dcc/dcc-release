@@ -19,7 +19,6 @@ package org.icgc.dcc.release.core.task;
 
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 import static org.icgc.dcc.release.core.util.JavaRDDs.exists;
-import static org.icgc.dcc.release.core.util.JavaRDDs.logPartitions;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -32,6 +31,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.util.HadoopFiles;
 import org.icgc.dcc.release.core.util.JavaRDDs;
 import org.icgc.dcc.release.core.util.ObjectNodeRDDs;
 import org.icgc.dcc.release.core.util.Partitions;
@@ -101,8 +101,12 @@ public abstract class GenericTask implements Task {
   }
 
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType) {
+    return readInput(taskContext, conf, inputFileType, ObjectNode.class);
+  }
+
+  protected <T> JavaRDD<T> readInput(TaskContext taskContext, JobConf conf, FileType inputFileType, Class<T> clazz) {
     if (isReadAll(taskContext, inputFileType)) {
-      return readAllInput(taskContext, conf, inputFileType);
+      return readAllInput(taskContext, conf, inputFileType, clazz);
     }
 
     val sparkContext = taskContext.getSparkContext();
@@ -114,20 +118,22 @@ public abstract class GenericTask implements Task {
       return sparkContext.emptyRDD();
     }
 
-    val input = readInput(taskContext, taskContext.getPath(inputFileType), conf);
-    logPartitions(log, input.partitions());
+    val input = readInput(taskContext, taskContext.getPath(inputFileType), conf, clazz);
+    // FIXME: Implement custom type reader
+    // logPartitions(log, input.partitions());
 
     return input;
   }
 
-  private static JavaRDD<ObjectNode> readAllInput(TaskContext taskContext, JobConf conf, FileType inputFileType) {
+  private static <T> JavaRDD<T> readAllInput(TaskContext taskContext, JobConf conf, FileType inputFileType,
+      Class<T> clazz) {
     val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
     val inputPaths = resolveInputPaths(taskContext, fileTypePath);
     val sparkContext = taskContext.getSparkContext();
-    JavaRDD<ObjectNode> result = sparkContext.emptyRDD();
+    JavaRDD<T> result = sparkContext.emptyRDD();
 
     for (val inputPath : inputPaths) {
-      val input = readInput(taskContext, inputPath.toString(), conf);
+      val input = readInput(taskContext, inputPath.toString(), conf, clazz);
       result = result.union(input);
     }
 
@@ -145,6 +151,12 @@ public abstract class GenericTask implements Task {
     writeOutput(processed, outputPath, taskContext.isCompressOutput());
   }
 
+  protected <T> void writeOutput(TaskContext taskContext, JavaRDD<T> processed, FileType outputFileType, Class<T> clazz) {
+    val outputPath = taskContext.getPath(outputFileType);
+
+    writeOutput(processed, outputPath, taskContext.isCompressOutput(), clazz);
+  }
+
   protected void writeOutput(JavaRDD<ObjectNode> processed, String outputPath, boolean compressOutput) {
     if (compressOutput) {
       ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath);
@@ -153,12 +165,21 @@ public abstract class GenericTask implements Task {
     }
   }
 
-  private static JavaRDD<ObjectNode> readInput(TaskContext taskContext, String path, JobConf conf) {
+  protected <T> void writeOutput(JavaRDD<T> processed, String outputPath, boolean compressOutput,
+      Class<T> clazz) {
+    if (compressOutput) {
+      ObjectNodeRDDs.saveAsSequenceObjectNodeFile(processed, outputPath, clazz);
+    } else {
+      ObjectNodeRDDs.saveAsTextObjectNodeFile(processed, outputPath, clazz);
+    }
+  }
+
+  private static <T> JavaRDD<T> readInput(TaskContext taskContext, String path, JobConf conf, Class<T> clazz) {
     val sparkContext = taskContext.getSparkContext();
     if (taskContext.isCompressOutput()) {
-      return ObjectNodeRDDs.sequenceObjectNodeFile(sparkContext, path, conf);
+      return HadoopFiles.sequenceFile(sparkContext, path, conf, clazz);
     } else {
-      return ObjectNodeRDDs.textObjectNodeFile(sparkContext, path, conf);
+      return HadoopFiles.textFile(sparkContext, path, conf, clazz);
     }
   }
 

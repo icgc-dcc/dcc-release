@@ -15,42 +15,30 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.function;
+package org.icgc.dcc.release.core.util;
 
-import java.io.Serializable;
+import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.release.core.function.ParseObjectNode;
 
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.util.JacksonFactory;
+@NoArgsConstructor(access = PRIVATE)
+public final class HadoopFiles {
 
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-@RequiredArgsConstructor
-public class FormatObjectNode<T> implements Function<T, String>, Serializable {
-
-  @NonNull
-  private final Class<T> clazz;
-  private transient ObjectWriter writer;
-
-  @Override
-  @SneakyThrows
-  public String call(T row) {
-    if (row instanceof ObjectNode) {
-      return row.toString();
-    }
-
-    checkWriter();
-    return writer.writeValueAsString(row);
+  public static <T> JavaRDD<T> sequenceFile(JavaSparkContext sparkContext, String path, JobConf conf, Class<T> clazz) {
+    return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, BytesWritable.class)
+        .map(new ReadSequenceFile<T>(clazz));
   }
 
-  private void checkWriter() {
-    if (writer == null) {
-      writer = JacksonFactory.createObjectWriter(clazz);
-    }
+  public static <T> JavaRDD<T> textFile(JavaSparkContext sparkContext, String path, JobConf conf, Class<T> clazz) {
+    return JavaRDDs.textFile(sparkContext, path, conf)
+        .map(tuple -> tuple._2.toString())
+        .map(new ParseObjectNode<T>(clazz));
   }
 
 }

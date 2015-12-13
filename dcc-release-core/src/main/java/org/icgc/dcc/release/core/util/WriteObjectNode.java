@@ -15,41 +15,36 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.function;
-
-import java.io.Serializable;
+package org.icgc.dcc.release.core.util;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.util.JacksonFactory;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.spark.api.java.function.PairFunction;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @RequiredArgsConstructor
-public class FormatObjectNode<T> implements Function<T, String>, Serializable {
+public final class WriteObjectNode<T> implements PairFunction<T, NullWritable, BytesWritable> {
 
   @NonNull
   private final Class<T> clazz;
   private transient ObjectWriter writer;
 
   @Override
-  @SneakyThrows
-  public String call(T row) {
-    if (row instanceof ObjectNode) {
-      return row.toString();
-    }
-
+  public Tuple2<NullWritable, BytesWritable> call(T row) throws Exception {
     checkWriter();
-    return writer.writeValueAsString(row);
+
+    return Tuples.tuple(NullWritable.get(), new BytesWritable(writer.writeValueAsBytes(row)));
   }
 
   private void checkWriter() {
     if (writer == null) {
-      writer = JacksonFactory.createObjectWriter(clazz);
+      writer = JacksonFactory.createSmileObjectWriter(clazz);
     }
   }
 

@@ -52,7 +52,9 @@ import static org.icgc.dcc.release.job.document.util.JsonNodes.addAll;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.isEmpty;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.normalizeTextValue;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -61,6 +63,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.common.core.model.FeatureTypes.FeatureType;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.job.document.context.GeneCentricDocumentContext;
@@ -84,20 +87,25 @@ import com.google.common.collect.Sets;
  */
 @RequiredArgsConstructor
 public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransform implements
-    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> {
+    Function<Tuple2<String, Collection<ObjectNode>>, Document> {
 
   private final DocumentJobContext indexJobContext;
+  private final Broadcast<Map<String, ObjectNode>> genes;
   private static final List<String> DONOR_PROJECT_FIELD_NAMES =
       of(PROJECT_ID, PROJECT_DISPLAY_NAME, PROJECT_PRIMARY_SITE);
 
   @Override
-  public Document call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
-    val gene = tuple._2._1;
-    val observations = tuple._2._2;
-    val geneId = getGeneId(gene);
+  public Document call(Tuple2<String, Collection<ObjectNode>> tuple) throws Exception {
+    val geneId = tuple._1;
+    val gene = getGene(geneId);
+    val observations = Optional.<Iterable<ObjectNode>> of(tuple._2);
     val documentContext = new GeneCentricDocumentContext(geneId, indexJobContext, observations);
 
     return transformDocument(gene, documentContext);
+  }
+
+  private ObjectNode getGene(String geneId) {
+    return genes.value().get(geneId);
   }
 
   @Override
