@@ -97,7 +97,9 @@ public class DocumentJob extends GenericJob {
 
   private void write(JobContext jobContext) {
     for (val documentType : DocumentType.values()) {
-      jobContext.execute(createStreamingTask(jobContext, documentType));
+      val indexJobContext = createIndexJobContext(jobContext, documentType);
+      jobContext.execute(createStreamingTask(jobContext, documentType, indexJobContext));
+      destroyBroadcasts(indexJobContext);
     }
 
     // Generate SSM VCF file
@@ -119,9 +121,8 @@ public class DocumentJob extends GenericJob {
   }
 
   @SneakyThrows
-  private Task createStreamingTask(JobContext jobContext, DocumentType documentType) {
+  private Task createStreamingTask(JobContext jobContext, DocumentType documentType, DocumentJobContext indexJobContext) {
     val constructor = getConstructor(documentType);
-    val indexJobContext = createIndexJobContext(jobContext, documentType);
 
     return (Task) constructor.newInstance(indexJobContext);
   }
@@ -188,6 +189,23 @@ public class DocumentJob extends GenericJob {
 
   private <T> Broadcast<T> createBroadcast(T value) {
     return sparkContext.broadcast(value);
+  }
+
+  private static void destroyBroadcasts(DocumentJobContext indexJobContext) {
+    val projects = indexJobContext.getProjectsBroadcast();
+    if (projects != null) {
+      projects.destroy(false);
+    }
+
+    val donors = indexJobContext.getDonorsBroadcast();
+    if (donors != null) {
+      donors.destroy(false);
+    }
+
+    val genes = indexJobContext.getGenesBroadcast();
+    if (genes != null) {
+      genes.destroy(false);
+    }
   }
 
 }

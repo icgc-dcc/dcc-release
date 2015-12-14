@@ -18,11 +18,9 @@
 package org.icgc.dcc.release.job.document.model;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 import lombok.Data;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 @Data
 public class Occurrence implements Serializable {
@@ -30,15 +28,14 @@ public class Occurrence implements Serializable {
   private String _donor_id;
   private String _mutation_id;
   private String _type;
-  private Consequence[] consequence;
+  private Collection<Consequence> consequence;
   private String mutation_type;
   private String chromosome;
   private String chromosome_start;
   private String chromosome_end;
-  private Observation[] observation;
+  private Collection<Observation> observation;
 
   @Data
-  @JsonInclude(Include.NON_NULL)
   public static class Consequence implements Serializable {
 
     private String _gene_id;

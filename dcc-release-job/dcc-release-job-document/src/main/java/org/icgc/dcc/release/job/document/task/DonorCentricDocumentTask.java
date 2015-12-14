@@ -25,15 +25,15 @@ import java.util.Collection;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.PairFunction;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.util.Aggregators;
 import org.icgc.dcc.release.core.util.Combiners;
 import org.icgc.dcc.release.core.util.JacksonFactory;
-import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
-import org.icgc.dcc.release.core.util.Tuples;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
+import org.icgc.dcc.release.job.document.function.CreateDonorCentricDocument;
 import org.icgc.dcc.release.job.document.model.Donor;
 import org.icgc.dcc.release.job.document.model.Occurrence;
 
@@ -50,20 +50,28 @@ public class DonorCentricDocumentTask extends AbstractDocumentTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    val donors = readDonors(taskContext)
-        .mapToPair(donor -> tuple(getDonorId(donor), donor))
-        .collectAsMap();
-    val donorsBroadcast = taskContext.getSparkContext()
-        .broadcast(SparkWorkaroundUtils.toHashMap(donors));
-
     Collection<Occurrence> zeroValue = Lists.newLinkedList();
-    val output = readOccurrences(taskContext)
-        .mapToPair(o -> Tuples.tuple(o.get_donor_id(), o))
-        .aggregateByKey(zeroValue, Aggregators::aggregateCollection, Combiners::combineCollections)
-        .map(new CreateDonorCentricDocument(indexJobContext, donorsBroadcast));
+    val occurrences = readOccurrences(taskContext)
+        .mapToPair(keyOccurrence())
+        .aggregateByKey(zeroValue, Aggregators::aggregateCollection, Combiners::combineCollections);
+    val occurrencePartitions = occurrences.partitions().size();
 
-    // TODO: save unprocessed donors
+    val donors = readDonors(taskContext)
+        .mapToPair(donor -> tuple(getDonorId(donor), donor));
+
+    val output = donors.leftOuterJoin(occurrences, occurrencePartitions)
+        .map(new CreateDonorCentricDocument(indexJobContext));
+
     writeDonors(taskContext, output);
+  }
+
+  private PairFunction<Occurrence, String, Occurrence> keyOccurrence() {
+    return o -> {
+      String donor_id = o.get_donor_id();
+      o.set_donor_id(null);
+
+      return tuple(donor_id, o);
+    };
   }
 
   private void writeDonors(TaskContext taskContext, JavaRDD<Donor> output) {

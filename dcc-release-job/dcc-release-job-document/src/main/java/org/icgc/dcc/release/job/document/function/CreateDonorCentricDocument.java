@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.task;
+package org.icgc.dcc.release.job.document.function;
 
 import static com.google.common.base.Objects.firstNonNull;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
@@ -23,13 +23,13 @@ import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import lombok.SneakyThrows;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.util.JacksonFactory;
 import org.icgc.dcc.release.job.document.context.DonorCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
@@ -42,37 +42,43 @@ import org.icgc.dcc.release.job.document.transform.DonorDocumentTransform;
 
 import scala.Tuple2;
 
+import com.esotericsoftware.kryo.Kryo;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
-public final class CreateDonorCentricDocument implements Function<Tuple2<String, Collection<Occurrence>>, Donor> {
+public final class CreateDonorCentricDocument implements
+    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Collection<Occurrence>>>>, Donor> {
 
   private final DocumentJobContext indexJobContext;
-  private final Broadcast<Map<String, ObjectNode>> donors;
   private final DocumentTransform delegate;
+  private transient Kryo kryo;
 
-  public CreateDonorCentricDocument(DocumentJobContext indexJobContext, Broadcast<Map<String, ObjectNode>> donors) {
+  public CreateDonorCentricDocument(DocumentJobContext indexJobContext) {
     this.indexJobContext = indexJobContext;
-    this.donors = donors;
     this.delegate = new DonorDocumentTransform(indexJobContext);
+
   }
 
   @Override
-  // FIXME: report unprocessed donors (those that don't have occurrences)
-  public Donor call(Tuple2<String, Collection<Occurrence>> tuple) throws Exception {
+  public Donor call(Tuple2<String, Tuple2<ObjectNode, Optional<Collection<Occurrence>>>> tuple) throws Exception {
     val donorId = tuple._1;
-    val donorJson = getDonor(donorId);
+    val donorJson = tuple._2._1;
     val documentContext = createContext(donorId);
     delegate.transformDocument(donorJson, documentContext);
     val donor = convertDonor(donorJson);
 
-    val occurrences = tuple._2;
+    val occurrencesOpt = tuple._2._2;
+    if (!occurrencesOpt.isPresent()) {
+      return donor;
+    }
+
+    checkKryo();
+    val occurrences = occurrencesOpt.get();
     val donorGenesObservations = indexDonorGenesObservations(occurrences);
     val donorGeneSummaries = indexDonorGeneSummaries(donor.getGene());
 
@@ -82,7 +88,7 @@ public final class CreateDonorCentricDocument implements Function<Tuple2<String,
 
       // Construct
       val donorGeneObservations = donorGenesObservations.get(donorGeneId);
-      val donorGeneTree = createDonorGeneTree(gene, donorGeneObservations);
+      val donorGeneTree = createDonorGeneTree(gene, donorGeneObservations, kryo);
       //
       // // Merge
       val donorGene = donorGeneSummaries.get(donorGeneId);
@@ -92,21 +98,29 @@ public final class CreateDonorCentricDocument implements Function<Tuple2<String,
     return donor;
   }
 
-  private static Map<String, Object> createDonorGeneTree(Map<String, Object> donorGene,
-      Iterable<Occurrence> donorGeneObservations) {
-    val gene = Maps.<String, Object> newHashMap();
-    val geneId = firstNonNull(donorGene.get(GENE_ID), FAKE_GENE_ID);
-    gene.put(GENE_ID, geneId);
+  private void checkKryo() {
+    if (kryo == null) {
+      kryo = new Kryo();
+    }
+  }
 
+  @SneakyThrows
+  private static Map<String, Object> createDonorGeneTree(Map<String, Object> donorGene,
+      Iterable<Occurrence> donorGeneObservations, Kryo kryo) {
+    val gene = Maps.newHashMap(donorGene);
     // Process each observation associated with the current gene
-    for (val donorGeneObservation : donorGeneObservations) {
+    for (val donorGeneObservationOriginal : donorGeneObservations) {
+      val donorGeneObservation = kryo.copy(donorGeneObservationOriginal);
+
+      // val donorGeneObservation = new Occurrence(donorGeneObservationOriginal);
 
       // Add to feature type array (e.g. "ssm")
       val observationType = donorGeneObservation.get_type();
       val array = getTypeArray(gene, observationType);
 
       // Remove unrelated gene consequences
-      transformGeneObservationConsequences(donorGene, donorGeneObservation);
+      val consequences = filterGeneObservationConsequences((String) donorGene.get(GENE_ID), donorGeneObservation);
+      donorGeneObservation.setConsequence(consequences);
 
       // Remove obsolete fields. Jackson will not serialize Consequence fields if they're null
       for (val consequence : donorGeneObservation.getConsequence()) {
@@ -130,27 +144,26 @@ public final class CreateDonorCentricDocument implements Function<Tuple2<String,
     return typeArray;
   }
 
-  private static void transformGeneObservationConsequences(Map<String, Object> gene,
-      Occurrence geneObservation) {
+  /**
+   * Returns consequences related to the target gene
+   */
+  private static Collection<Consequence> filterGeneObservationConsequences(String geneId, Occurrence geneObservation) {
+    val consequences = geneObservation.getConsequence();
+    if (consequences == null) {
+      return Collections.emptyList();
+    }
+
     val filteredConsequenes = Lists.<Consequence> newArrayList();
+    for (val consequence : consequences) {
+      val consequenceGeneId = firstNonNull(consequence.get_gene_id(), FAKE_GENE_ID);
+      val related = geneId.equals(consequenceGeneId);
 
-    val geneId = gene.get(GENE_ID);
-    Consequence[] consequences = geneObservation.getConsequence();
-
-    if (consequences != null) {
-      // Remove consequences unrelated to the target gene
-      for (val consequence : consequences) {
-        val consequenceGeneId = Strings.isNullOrEmpty(consequence.get_gene_id()) ? null : consequence.get_gene_id();
-        val related = geneId == null && consequenceGeneId == null
-            || geneId != null && geneId.equals(consequenceGeneId);
-
-        if (related) {
-          filteredConsequenes.add(consequence);
-        }
+      if (related) {
+        filteredConsequenes.add(consequence);
       }
     }
 
-    consequences = filteredConsequenes.toArray(new Consequence[filteredConsequenes.size()]);
+    return filteredConsequenes;
   }
 
   /**
@@ -187,9 +200,9 @@ public final class CreateDonorCentricDocument implements Function<Tuple2<String,
     val index = ImmutableSetMultimap.<String, Occurrence> builder();
 
     for (val occurrence : occurrences) {
-      Consequence[] consequences = occurrence.getConsequence();
+      val consequences = occurrence.getConsequence();
 
-      if (isNullOrEmpty(consequences)) {
+      if (consequences == null || consequences.isEmpty()) {
         index.put(FAKE_GENE_ID, occurrence);
       } else {
         for (val consequence : consequences) {
@@ -207,12 +220,8 @@ public final class CreateDonorCentricDocument implements Function<Tuple2<String,
     return firstNonNull(geneId, FAKE_GENE_ID);
   }
 
-  private static <T> boolean isNullOrEmpty(T[] array) {
-    return array == null || array.length == 0;
-  }
-
-  @SuppressWarnings("unchecked")
   @SneakyThrows
+  @SuppressWarnings("unchecked")
   private Map<String, Object> getGene(String donorGeneId) {
     if (FAKE_GENE_ID.equals(donorGeneId)) {
       return createFakeGene();
@@ -227,6 +236,7 @@ public final class CreateDonorCentricDocument implements Function<Tuple2<String,
 
   private static Map<String, Object> createFakeGene() {
     val fakeGene = Maps.<String, Object> newHashMap();
+    fakeGene.put(GENE_ID, FAKE_GENE_ID);
     fakeGene.put("fake", Boolean.TRUE);
 
     return fakeGene;
@@ -244,10 +254,6 @@ public final class CreateDonorCentricDocument implements Function<Tuple2<String,
 
   private DocumentContext createContext(String donorId) {
     return new DonorCentricDocumentContext(donorId, indexJobContext, Optional.absent());
-  }
-
-  private ObjectNode getDonor(String donorId) {
-    return donors.value().get(donorId);
   }
 
 }

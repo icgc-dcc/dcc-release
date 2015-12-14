@@ -20,7 +20,9 @@ package org.icgc.dcc.release.core.util;
 import static lombok.AccessLevel.PRIVATE;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.val;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -36,15 +38,16 @@ import com.fasterxml.jackson.dataformat.smile.SmileParser;
 @NoArgsConstructor(access = PRIVATE)
 public final class JacksonFactory {
 
-  public static final JsonFactory FACTORY = new SmileFactory()
+  public static final JsonFactory SMILE_FACTORY = new SmileFactory()
       .disable(SmileGenerator.Feature.WRITE_HEADER)
       .disable(SmileParser.Feature.REQUIRE_HEADER)
 
       .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
       .disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
 
-  public static final ObjectMapper MAPPER = new ObjectMapper();
-  public static final ObjectMapper SMILE_MAPPER = new ObjectMapper(FACTORY)
+  public static final ObjectMapper MAPPER = createMapper(null);
+
+  public static final ObjectMapper SMILE_MAPPER = new ObjectMapper(SMILE_FACTORY)
       .disable(SerializationFeature.CLOSE_CLOSEABLE);
 
   public static final ObjectWriter WRITER = MAPPER.writerWithType(ObjectNode.class);
@@ -67,6 +70,13 @@ public final class JacksonFactory {
 
   public static <T> ObjectWriter createObjectWriter(@NonNull Class<T> clazz) {
     return ObjectNode.class.equals(clazz) ? WRITER : MAPPER.writerWithType(clazz);
+  }
+
+  private static ObjectMapper createMapper(JsonFactory factory) {
+    val mapper = factory == null ? new ObjectMapper() : new ObjectMapper(factory);
+    mapper.setSerializationInclusion(Include.NON_NULL);
+
+    return mapper;
   }
 
 }
