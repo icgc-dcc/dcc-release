@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @NoArgsConstructor(access = PRIVATE)
-public final class Combiners {
+public final class CombineFunctions {
 
   public static <T> Collection<T> combineCollections(@NonNull Collection<T> prev, @NonNull Collection<T> next) {
     prev.addAll(next);

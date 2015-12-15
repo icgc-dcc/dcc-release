@@ -33,7 +33,16 @@ public class Occurrence implements Serializable {
   private String chromosome;
   private String chromosome_start;
   private String chromosome_end;
+  private String chromosome_strand;
   private Collection<Observation> observation;
+
+  private String reference_genome_allele;
+  private String mutated_from_allele;
+  private String mutated_to_allele;
+  private String _project_id;
+  private String mutation;
+  private String[] consequence_type;
+  private String assembly_version;
 
   @Data
   public static class Consequence implements Serializable {
@@ -41,6 +50,17 @@ public class Occurrence implements Serializable {
     private String _gene_id;
     private String consequence_type;
     private String functional_impact_prediction_summary;
+
+    private String protein_domain_affected;
+    private String gene_build_version;
+    private String _transcript_id;
+    private String cds_change;
+    private String aa_change;
+    private String aa_mutation;
+    private String cds_mutation;
+    private String note;
+    private String gene_affected;
+    private String transcript_affected;
 
   }
 

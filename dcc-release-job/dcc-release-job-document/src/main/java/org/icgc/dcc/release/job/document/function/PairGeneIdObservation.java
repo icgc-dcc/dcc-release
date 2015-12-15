@@ -18,26 +18,26 @@
 package org.icgc.dcc.release.job.document.function;
 
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequenceGeneIds;
 
 import java.util.List;
 
+import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.PairFlatMapFunction;
+import org.icgc.dcc.release.job.document.model.Occurrence;
 
 import scala.Tuple2;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-public final class PairGeneIdObservation implements PairFlatMapFunction<ObjectNode, String, ObjectNode> {
+public final class PairGeneIdObservation implements PairFlatMapFunction<Occurrence, String, Occurrence> {
 
   @Override
-  public Iterable<Tuple2<String, ObjectNode>> call(ObjectNode observation) throws Exception {
+  public Iterable<Tuple2<String, Occurrence>> call(Occurrence observation) throws Exception {
     val uniqueGeneIds = Sets.newHashSet(getObservationConsequenceGeneIds(observation));
-    List<Tuple2<String, ObjectNode>> values = Lists.newArrayListWithCapacity(uniqueGeneIds.size());
+    List<Tuple2<String, Occurrence>> values = Lists.newArrayListWithCapacity(uniqueGeneIds.size());
     for (val observationGeneId : uniqueGeneIds) {
       if (observationGeneId != null) {
         values.add(tuple(observationGeneId, observation));
@@ -45,6 +45,15 @@ public final class PairGeneIdObservation implements PairFlatMapFunction<ObjectNo
     }
 
     return values;
+  }
+
+  private static Iterable<String> getObservationConsequenceGeneIds(@NonNull Occurrence observation) {
+    val geneIds = Lists.<String> newArrayList();
+    for (val consequence : observation.getConsequence()) {
+      geneIds.add(consequence.get_gene_id());
+    }
+
+    return geneIds;
   }
 
 }

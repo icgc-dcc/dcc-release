@@ -18,131 +18,158 @@
 package org.icgc.dcc.release.job.document.transform;
 
 import static com.google.common.base.Objects.firstNonNull;
-import static org.icgc.dcc.release.core.util.ObjectNodes.isEmptyNode;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorGeneId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorGenes;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequenceGeneId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequences;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationType;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.removeObservationConsequenceGeneId;
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
-import static org.icgc.dcc.release.job.document.util.JsonNodes.isEmpty;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.util.JacksonFactory;
 import org.icgc.dcc.release.job.document.context.DonorCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;
-import org.icgc.dcc.release.job.document.util.Fakes;
+import org.icgc.dcc.release.job.document.model.Donor;
+import org.icgc.dcc.release.job.document.model.Occurrence;
+import org.icgc.dcc.release.job.document.model.Occurrence.Consequence;
 
 import scala.Tuple2;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.esotericsoftware.kryo.Kryo;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
-/**
- * {@link DocumentTransform} implementation that creates a nested donor-centric document.
- */
-public class DonorCentricDocumentTransform extends AbstractCentricDocumentTransform implements
-    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> {
+public final class DonorCentricDocumentTransform implements
+    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Collection<Occurrence>>>>, Donor> {
 
-  @NonNull
   private final DocumentJobContext indexJobContext;
   private final DocumentTransform delegate;
+  private transient Kryo objectClonner;
 
-  public DonorCentricDocumentTransform(DocumentJobContext indexJobContext) {
+  public DonorCentricDocumentTransform(@NonNull DocumentJobContext indexJobContext) {
     this.indexJobContext = indexJobContext;
     this.delegate = new DonorDocumentTransform(indexJobContext);
+
   }
 
   @Override
-  public Document call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
-    val donor = tuple._2._1;
-    val donorId = getDonorId(donor);
-    val observations = tuple._2._2;
-    val documentContext = new DonorCentricDocumentContext(donorId, indexJobContext, observations);
+  public Donor call(Tuple2<String, Tuple2<ObjectNode, Optional<Collection<Occurrence>>>> tuple) throws Exception {
+    val donorId = tuple._1;
+    val donorJson = tuple._2._1;
+    val documentContext = createContext(donorId);
+    delegate.transformDocument(donorJson, documentContext);
+    val donor = convertDonor(donorJson);
 
-    return transformDocument(donor, documentContext);
-  }
+    val occurrencesOpt = tuple._2._2;
+    if (!occurrencesOpt.isPresent()) {
+      return donor;
+    }
 
-  @Override
-  public Document transformDocument(@NonNull ObjectNode donor, @NonNull DocumentContext context) {
-    // Delegate for reuse (embed project under donor)
-    delegate.transformDocument(donor, context);
-
-    // Index observations by gene id
-    val donorId = getDonorId(donor);
-    val donorObservations = context.getObservationsByDonorId(donorId);
-    val donorGenes = getDonorGenes(donor);
-    val donorGenesObservations = indexDonorGenesObservations(donorObservations);
-    val donorGeneIds = donorGenesObservations.keySet();
-    val donorGeneSummaries = indexDonorGeneSummaries(donorGenes);
+    checkObjectClonnerInitialized();
+    val occurrences = occurrencesOpt.get();
+    val donorGenesObservations = indexDonorGenesObservations(occurrences);
+    val donorGeneSummaries = indexDonorGeneSummaries(donor.getGene());
 
     // Nest
-    for (val donorGeneId : donorGeneIds) {
-      val gene = context.getGene(donorGeneId).deepCopy();
+    for (val donorGeneId : donorGenesObservations.keySet()) {
+      val gene = getGene(donorGeneId);
 
       // Construct
       val donorGeneObservations = donorGenesObservations.get(donorGeneId);
-      val donorGeneTree = createDonorGeneTree(gene.deepCopy(), donorGeneObservations);
-
-      // Merge
+      val donorGeneTree = createDonorGeneTree(gene, donorGeneObservations, objectClonner);
+      //
+      // // Merge
       val donorGene = donorGeneSummaries.get(donorGeneId);
-      donorGene.setAll(donorGeneTree);
+      donorGene.putAll(donorGeneTree);
     }
 
-    if (isEmpty(donorGenes)) {
-      // Ensure arrays are present with at least 1 element
-      donorGenes.add(Fakes.createPlaceholder());
-    }
-
-    return new Document(context.getType(), donorId, donor);
+    return donor;
   }
 
-  private static ObjectNode createDonorGeneTree(ObjectNode donorGene, Iterable<ObjectNode> donorGeneObservations) {
+  @SneakyThrows
+  private static Map<String, Object> createDonorGeneTree(Map<String, Object> donorGene,
+      Iterable<Occurrence> donorGeneObservations, Kryo objectClonner) {
+    val gene = Maps.newHashMap(donorGene);
     // Process each observation associated with the current gene
-    for (ObjectNode donorGeneObservation : donorGeneObservations) {
-      // Localize changes
-      donorGeneObservation = donorGeneObservation.deepCopy();
+    for (val donorGeneObservationOriginal : donorGeneObservations) {
+      val donorGeneObservation = objectClonner.copy(donorGeneObservationOriginal);
 
       // Add to feature type array (e.g. "ssm")
-      val observationType = getObservationType(donorGeneObservation);
-      val array = donorGene.withArray(observationType);
+      val observationType = donorGeneObservation.get_type();
+      val array = getTypeArray(gene, observationType);
 
       // Remove unrelated gene consequences
-      transformGeneObservationConsequences(donorGene, donorGeneObservation);
+      val consequences = filterGeneObservationConsequences((String) donorGene.get(GENE_ID), donorGeneObservation);
+      donorGeneObservation.setConsequence(consequences);
 
-      // Remove obsolete fields
-      for (val consequence : getObservationConsequences(donorGeneObservation)) {
-        removeObservationConsequenceGeneId(consequence);
-      }
+      unsetGeneId(donorGeneObservation);
 
       array.add(donorGeneObservation);
     }
 
-    return donorGene;
+    return gene;
   }
 
-  private static Map<String, ObjectNode> indexDonorGeneSummaries(ArrayNode donorGenes) {
-    val index = ImmutableMap.<String, ObjectNode> builder();
+  private static void unsetGeneId(final org.icgc.dcc.release.job.document.model.Occurrence donorGeneObservation) {
+    for (val consequence : donorGeneObservation.getConsequence()) {
+      consequence.set_gene_id(null);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Collection<Occurrence> getTypeArray(Map<String, Object> gene, String observationType) {
+    Collection<Occurrence> typeArray = (Collection<Occurrence>) gene.get(observationType);
+    if (typeArray == null) {
+      typeArray = Lists.newArrayList();
+      gene.put(observationType, typeArray);
+    }
+
+    return typeArray;
+  }
+
+  /**
+   * Returns consequences related to the target gene
+   */
+  private static Collection<Consequence> filterGeneObservationConsequences(String geneId, Occurrence geneObservation) {
+    val consequences = geneObservation.getConsequence();
+    if (consequences == null) {
+      return Collections.emptyList();
+    }
+
+    val filteredConsequenes = Lists.<Consequence> newArrayList();
+    for (val consequence : consequences) {
+      val consequenceGeneId = firstNonNull(consequence.get_gene_id(), FAKE_GENE_ID);
+      val related = geneId.equals(consequenceGeneId);
+
+      if (related) {
+        filteredConsequenes.add(consequence);
+      }
+    }
+
+    return filteredConsequenes;
+  }
+
+  /**
+   * Maps {@code _gene_id} to the donor's GeneSummary.
+   */
+  private static Map<String, Map<String, Object>> indexDonorGeneSummaries(Collection<Map<String, Object>> donorGenes) {
+    val index = ImmutableMap.<String, Map<String, Object>> builder();
 
     boolean hasFake = false;
-    for (val value : donorGenes) {
-      val donorGene = (ObjectNode) value;
-      val donorGeneId = firstNonNull(getDonorGeneId(donorGene), FAKE_GENE_ID);
+    for (val donorGene : donorGenes) {
+      val donorGeneId = firstNonNull((String) donorGene.get(GENE_ID), FAKE_GENE_ID);
       if (isFakeGeneId(donorGeneId)) {
         hasFake = true;
       }
@@ -152,7 +179,7 @@ public class DonorCentricDocumentTransform extends AbstractCentricDocumentTransf
 
     if (!hasFake) {
       // Special case since the summarize did not produce
-      val fake = Fakes.createFakeGene();
+      val fake = createFakeGene();
       donorGenes.add(fake);
 
       index.put(FAKE_GENE_ID, fake);
@@ -161,18 +188,20 @@ public class DonorCentricDocumentTransform extends AbstractCentricDocumentTransf
     return index.build();
   }
 
-  private static Multimap<String, ObjectNode> indexDonorGenesObservations(Iterable<ObjectNode> observations) {
-    // Set and multi-semantics are required
-    val index = ImmutableSetMultimap.<String, ObjectNode> builder();
+  /**
+   * Maps {@code _gene_id} to {@code occurrences}.
+   */
+  private static Multimap<String, Occurrence> indexDonorGenesObservations(Iterable<Occurrence> occurrences) {
+    val index = ImmutableSetMultimap.<String, Occurrence> builder();
 
-    for (val observation : observations) {
-      val consequences = getObservationConsequences(observation);
+    for (val occurrence : occurrences) {
+      val consequences = occurrence.getConsequence();
 
-      if (isEmptyNode(consequences)) {
-        index.put(FAKE_GENE_ID, observation);
+      if (consequences == null || consequences.isEmpty()) {
+        index.put(FAKE_GENE_ID, occurrence);
       } else {
         for (val consequence : consequences) {
-          index.put(resolveObservationConsequenceGeneId(consequence), observation);
+          index.put(resolveObservationConsequenceGeneId(consequence), occurrence);
         }
       }
     }
@@ -180,10 +209,52 @@ public class DonorCentricDocumentTransform extends AbstractCentricDocumentTransf
     return index.build();
   }
 
-  private static String resolveObservationConsequenceGeneId(JsonNode consequence) {
-    val geneId = getObservationConsequenceGeneId(consequence);
+  private static String resolveObservationConsequenceGeneId(Consequence consequence) {
+    val geneId = consequence.get_gene_id();
 
     return firstNonNull(geneId, FAKE_GENE_ID);
+  }
+
+  @SneakyThrows
+  @SuppressWarnings("unchecked")
+  private Map<String, Object> getGene(String donorGeneId) {
+    if (FAKE_GENE_ID.equals(donorGeneId)) {
+      return createFakeGene();
+    }
+
+    val gene = indexJobContext.getGenesBroadcast().value().get(donorGeneId);
+    Map<String, Object> map = Maps.newHashMap();
+    map = JacksonFactory.MAPPER.treeToValue(gene, map.getClass());
+
+    return map;
+  }
+
+  private static Map<String, Object> createFakeGene() {
+    val fakeGene = Maps.<String, Object> newHashMap();
+    fakeGene.put(GENE_ID, FAKE_GENE_ID);
+    fakeGene.put("fake", Boolean.TRUE);
+
+    return fakeGene;
+  }
+
+  @SneakyThrows
+  private static Donor convertDonor(ObjectNode row) {
+    val donor = JacksonFactory.MAPPER.treeToValue(row, Donor.class);
+    if (donor.getGene() == null) {
+      donor.setGene(Lists.newLinkedList());
+    }
+
+    return donor;
+  }
+
+  private DocumentContext createContext(String donorId) {
+    return new DonorCentricDocumentContext(donorId, indexJobContext, Optional.absent());
+  }
+
+  private void checkObjectClonnerInitialized() {
+    if (objectClonner == null) {
+      objectClonner = new Kryo();
+    }
   }
 
 }

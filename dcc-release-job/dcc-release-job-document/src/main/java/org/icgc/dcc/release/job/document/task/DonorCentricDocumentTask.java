@@ -22,6 +22,7 @@ import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.g
 
 import java.util.Collection;
 
+import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
@@ -29,13 +30,12 @@ import org.apache.spark.api.java.function.PairFunction;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.core.util.Aggregators;
-import org.icgc.dcc.release.core.util.Combiners;
-import org.icgc.dcc.release.core.util.JacksonFactory;
+import org.icgc.dcc.release.core.util.AggregateFunctions;
+import org.icgc.dcc.release.core.util.CombineFunctions;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.function.CreateDonorCentricDocument;
 import org.icgc.dcc.release.job.document.model.Donor;
 import org.icgc.dcc.release.job.document.model.Occurrence;
+import org.icgc.dcc.release.job.document.transform.DonorCentricDocumentTransform;
 
 import com.google.common.collect.Lists;
 
@@ -43,24 +43,24 @@ public class DonorCentricDocumentTask extends AbstractDocumentTask {
 
   private final DocumentJobContext indexJobContext;
 
-  public DonorCentricDocumentTask(DocumentJobContext indexJobContext) {
+  public DonorCentricDocumentTask(@NonNull DocumentJobContext indexJobContext) {
     super(DocumentType.DONOR_CENTRIC_TYPE);
     this.indexJobContext = indexJobContext;
   }
 
   @Override
   public void execute(TaskContext taskContext) {
-    Collection<Occurrence> zeroValue = Lists.newLinkedList();
+    Collection<Occurrence> zeroValue = Lists.newArrayList();
     val occurrences = readOccurrences(taskContext)
         .mapToPair(keyOccurrence())
-        .aggregateByKey(zeroValue, Aggregators::aggregateCollection, Combiners::combineCollections);
-    val occurrencePartitions = occurrences.partitions().size();
+        .aggregateByKey(zeroValue, AggregateFunctions::aggregateCollection, CombineFunctions::combineCollections);
+    val partitionNumbers = occurrences.partitions().size();
 
     val donors = readDonors(taskContext)
         .mapToPair(donor -> tuple(getDonorId(donor), donor));
 
-    val output = donors.leftOuterJoin(occurrences, occurrencePartitions)
-        .map(new CreateDonorCentricDocument(indexJobContext));
+    val output = donors.leftOuterJoin(occurrences, partitionNumbers)
+        .map(new DonorCentricDocumentTransform(indexJobContext));
 
     writeDonors(taskContext, output);
   }
@@ -76,11 +76,6 @@ public class DonorCentricDocumentTask extends AbstractDocumentTask {
 
   private void writeDonors(TaskContext taskContext, JavaRDD<Donor> output) {
     writeOutput(taskContext, output, FileType.DONOR_CENTRIC_DOCUMENT, Donor.class);
-  }
-
-  private JavaRDD<Occurrence> readOccurrences(TaskContext taskContext) {
-    return readObservations(taskContext)
-        .map(row -> JacksonFactory.MAPPER.treeToValue(row, Occurrence.class));
   }
 
 }

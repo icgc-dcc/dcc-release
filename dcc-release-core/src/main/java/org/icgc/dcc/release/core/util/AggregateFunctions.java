@@ -21,7 +21,7 @@ import java.util.Collection;
 
 import lombok.NonNull;
 
-public class Aggregators {
+public class AggregateFunctions {
 
   public static <T> Collection<T> aggregateCollection(@NonNull Collection<T> aggregator, @NonNull T next) {
     aggregator.add(next);

@@ -22,7 +22,6 @@ import static org.icgc.dcc.release.job.document.util.DocumentTypes.getBroadcastD
 import static org.icgc.dcc.release.job.document.util.DocumentTypes.getIndexClassName;
 
 import java.lang.reflect.Constructor;
-import java.util.Collection;
 import java.util.Map;
 
 import lombok.NonNull;
@@ -49,7 +48,6 @@ import org.icgc.dcc.release.job.document.task.ResolveProjectsTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -91,10 +89,6 @@ public class DocumentJob extends GenericJob {
     return outputFileTypes.toArray(new FileType[outputFileTypes.size()]);
   }
 
-  static String resolveIndexName(String releaseName) {
-    return "test-release-" + releaseName.toLowerCase();
-  }
-
   private void write(JobContext jobContext) {
     for (val documentType : DocumentType.values()) {
       val indexJobContext = createIndexJobContext(jobContext, documentType);
@@ -106,18 +100,6 @@ public class DocumentJob extends GenericJob {
     if (properties.isExportVCF()) {
       jobContext.execute(new CreateVCFFileTask(snpEffProperties));
     }
-  }
-
-  @SneakyThrows
-  private Collection<? extends Task> createStreamingTasks(JobContext jobContext) {
-    val tasks = ImmutableList.<Task> builder();
-    for (val documentType : DocumentType.values()) {
-      val constructor = getConstructor(documentType);
-      val indexJobContext = createIndexJobContext(jobContext, documentType);
-      tasks.add((Task) constructor.newInstance(indexJobContext));
-    }
-
-    return tasks.build();
   }
 
   @SneakyThrows
