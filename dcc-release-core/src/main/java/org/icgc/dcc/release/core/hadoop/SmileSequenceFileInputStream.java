@@ -34,21 +34,20 @@ import org.icgc.dcc.release.core.util.JacksonFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class SequenceFileInputStream extends InputStream {
+public class SmileSequenceFileInputStream extends InputStream {
 
   private final SequenceFile.Reader reader;
   private Buffer buffer;
 
-  public SequenceFileInputStream(@NonNull Configuration configuration, @NonNull Path path) throws IOException {
+  public SmileSequenceFileInputStream(@NonNull Configuration configuration, @NonNull Path path) throws IOException {
+    super();
     reader = new SequenceFile.Reader(configuration, Reader.file(path));
   }
 
   @Override
   public int read() throws IOException {
-    if (buffer == null || !buffer.hasNext()) {
-      if (!readBytes()) {
-        return -1;
-      }
+    if (isEmpty(buffer) && !readBytes()) {
+      return -1;
     }
 
     return buffer.next() & 0xFF;
@@ -78,6 +77,10 @@ public class SequenceFileInputStream extends InputStream {
     System.arraycopy(padded, 0, bytes, 0, bytes.length);
 
     return bytes;
+  }
+
+  private static boolean isEmpty(Buffer buffer) {
+    return buffer == null || !buffer.hasNext();
   }
 
   private static class Buffer {

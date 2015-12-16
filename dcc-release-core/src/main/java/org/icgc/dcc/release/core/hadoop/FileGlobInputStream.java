@@ -109,7 +109,7 @@ public class FileGlobInputStream extends ForwardingInputStream {
   }
 
   private static InputStream createCompressedInputStream(Configuration conf, Path path) throws IOException {
-    return new SequenceFileInputStream(conf, path);
+    return new SmileSequenceFileInputStream(conf, path);
   }
 
   private static InputStream createDecodedInputStream(FileSystem fileSystem, Path file, CompressionCodecFactory factory)

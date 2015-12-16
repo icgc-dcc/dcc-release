@@ -16,18 +16,18 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class SequenceFileInputStreamTest {
+public class SmileSequenceFileInputStreamTest {
 
   private static final String INPUT_PATH = "src/test/resources/fixtures/data.seq";
 
   FileSystem fileSystem;
-  SequenceFileInputStream inputStream;
+  SmileSequenceFileInputStream inputStream;
 
   @Before
   public void setUp() throws IOException {
     fileSystem = FileSystem.getLocal(new Configuration());
     val file = new Path(INPUT_PATH);
-    inputStream = new SequenceFileInputStream(fileSystem.getConf(), file);
+    inputStream = new SmileSequenceFileInputStream(fileSystem.getConf(), file);
   }
 
   @After
