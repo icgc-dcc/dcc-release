@@ -29,6 +29,8 @@ import lombok.Cleanup;
 import lombok.SneakyThrows;
 import lombok.val;
 
+import org.apache.commons.io.FileUtils;
+
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -42,6 +44,15 @@ public class TestFiles {
 
   @SneakyThrows
   public static void writeInputFile(File source, File target) {
+    if (isCompressedFile(source)) {
+      copyFiles(source, target);
+    } else {
+      writeTextInputFile(source, target);
+    }
+  }
+
+  @SneakyThrows
+  public static void writeTextInputFile(File source, File target) {
     val reader = MAPPER.reader(ObjectNode.class);
 
     @Cleanup
@@ -54,6 +65,11 @@ public class TestFiles {
       output.print(row.toString());
       output.println();
     }
+  }
+
+  @SneakyThrows
+  public static void copyFiles(File source, File target) {
+    FileUtils.copyFile(source, target);
   }
 
   @SneakyThrows
@@ -100,6 +116,14 @@ public class TestFiles {
 
   private static boolean filterPartFiles(File file) {
     return file.getName().startsWith("part-");
+  }
+
+  /**
+   * This method is not reliable. It relies on the convention that {@code compressed} files are located in a
+   * {@code compressed} directory.
+   */
+  private static boolean isCompressedFile(File source) {
+    return source.getAbsolutePath().contains("compressed");
   }
 
 }

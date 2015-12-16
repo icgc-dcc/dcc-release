@@ -53,11 +53,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class CreateVCFFileTask extends GenericTask {
 
-  @Override
-  public TaskType getType() {
-    return TaskType.FILE_TYPE;
-  }
-
   /**
    * See
    * https://wiki.oicr.on.ca/display/DCCSOFT/Aggregated+Data+Download+Specification?focusedCommentId=57774680#comment
@@ -69,6 +64,11 @@ public class CreateVCFFileTask extends GenericTask {
 
   @NonNull
   private final SnpEffProperties properties;
+
+  @Override
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
+  }
 
   @Override
   @SneakyThrows
@@ -119,7 +119,8 @@ public class CreateVCFFileTask extends GenericTask {
   }
 
   private static HDFSMutationsReader createMutationsReader(TaskContext taskContext) {
-    return new HDFSMutationsReader(taskContext.getJobContext().getWorkingDir(), taskContext.getFileSystem());
+    return new HDFSMutationsReader(taskContext.getJobContext().getWorkingDir(), taskContext.getFileSystem(),
+        taskContext.isCompressOutput());
   }
 
   @SneakyThrows

@@ -178,11 +178,20 @@ public abstract class AbstractJobTest {
   }
 
   protected TaskContext createTaskContext(JobType jobType) {
-    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.empty(), false);
+    return createTaskContext(jobType, null, false);
+  }
+
+  protected TaskContext createCompressedTaskContext(JobType jobType) {
+    return createTaskContext(jobType, null, true);
   }
 
   protected TaskContext createTaskContext(JobType jobType, String projectName) {
-    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem, Optional.of(projectName), false);
+    return createTaskContext(jobType, projectName, false);
+  }
+
+  protected TaskContext createTaskContext(JobType jobType, String projectName, boolean isCompressed) {
+    return new DefaultTaskContext(createJobContext(jobType), sparkContext, fileSystem,
+        Optional.ofNullable(projectName), isCompressed);
   }
 
   protected void createInputFile(TestFile inputFile) {

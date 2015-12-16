@@ -15,50 +15,93 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.io;
+package org.icgc.dcc.release.core.hadoop;
 
-import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
-
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
-import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
-import org.icgc.dcc.release.core.job.FileType;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.Reader;
+import org.icgc.dcc.release.core.util.JacksonFactory;
 
-import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@RequiredArgsConstructor
-public class HDFSMutationsReader {
+public class SmileSequenceFileInputStream extends InputStream {
 
-  @NonNull
-  private final String workingDir;
-  @NonNull
-  private final FileSystem fileSystem;
-  private final boolean compressed;
+  private final SequenceFile.Reader reader;
+  private Buffer buffer;
 
-  /**
-   * Constants.
-   */
-  private static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
+  public SmileSequenceFileInputStream(@NonNull Configuration configuration, @NonNull Path path) throws IOException {
+    super();
+    reader = new SequenceFile.Reader(configuration, Reader.file(path));
+  }
 
-  public Iterator<ObjectNode> createMutationsIterator() {
-    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
-    val inputStream = new FileGlobInputStream(fileSystem, inputPath, compressed);
+  @Override
+  public int read() throws IOException {
+    if (isEmpty(buffer) && !readBytes()) {
+      return -1;
+    }
 
-    return readInput(inputStream);
+    return buffer.next() & 0xFF;
+  }
+
+  @Override
+  public void close() throws IOException {
+    reader.close();
   }
 
   @SneakyThrows
-  private static Iterator<ObjectNode> readInput(InputStream inputStream) {
-    return READER.<ObjectNode> readValues(inputStream);
+  private boolean readBytes() {
+    val writable = new BytesWritable();
+    val read = reader.next(NullWritable.get(), writable);
+    if (!read) {
+      return false;
+    }
+
+    buffer = new Buffer(getBytes(writable));
+
+    return true;
+  }
+
+  private static byte[] getBytes(BytesWritable bw) {
+    byte[] padded = bw.getBytes();
+    byte[] bytes = new byte[bw.getLength()];
+    System.arraycopy(padded, 0, bytes, 0, bytes.length);
+
+    return bytes;
+  }
+
+  private static boolean isEmpty(Buffer buffer) {
+    return buffer == null || !buffer.hasNext();
+  }
+
+  private static class Buffer {
+
+    private final byte[] data;
+    private int position = 0;
+
+    @SneakyThrows
+    public Buffer(byte[] smileEncodedBytes) {
+      val json = JacksonFactory.READER.<ObjectNode> readValue(smileEncodedBytes);
+      data = JacksonFactory.MAPPER.writeValueAsBytes(json);
+    }
+
+    public boolean hasNext() {
+      return data.length > position;
+    }
+
+    public byte next() {
+      return data[position++];
+    }
+
   }
 
 }
