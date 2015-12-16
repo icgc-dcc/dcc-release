@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.release.job.document.io;
 
-import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
+import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
 
 import java.io.InputStream;
 import java.util.Iterator;
@@ -32,7 +32,6 @@ import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
 import org.icgc.dcc.release.core.job.FileType;
 
-import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @RequiredArgsConstructor
@@ -43,11 +42,6 @@ public class HDFSMutationsReader {
   @NonNull
   private final FileSystem fileSystem;
   private final boolean compressed;
-
-  /**
-   * Constants.
-   */
-  private static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
 
   public Iterator<ObjectNode> createMutationsIterator() {
     val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());

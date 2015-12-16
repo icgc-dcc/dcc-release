@@ -90,7 +90,7 @@ public class SmileSequenceFileInputStream extends InputStream {
 
     @SneakyThrows
     public Buffer(byte[] smileEncodedBytes) {
-      val json = JacksonFactory.READER.<ObjectNode> readValue(smileEncodedBytes);
+      val json = JacksonFactory.SMILE_READER.<ObjectNode> readValue(smileEncodedBytes);
       data = JacksonFactory.MAPPER.writeValueAsBytes(json);
     }
 
