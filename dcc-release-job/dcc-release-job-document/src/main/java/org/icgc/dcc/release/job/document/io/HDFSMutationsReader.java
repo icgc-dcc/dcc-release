@@ -31,7 +31,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
 import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.util.JacksonFactory;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -54,16 +53,12 @@ public class HDFSMutationsReader {
     val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
     val inputStream = new FileGlobInputStream(fileSystem, inputPath, compressed);
 
-    return readInput(inputStream, compressed);
+    return readInput(inputStream);
   }
 
   @SneakyThrows
-  private static Iterator<ObjectNode> readInput(InputStream inputStream, boolean compressed) {
-    if (compressed) {
-      return JacksonFactory.READER.<ObjectNode> readValues(inputStream);
-    } else {
-      return READER.<ObjectNode> readValues(inputStream);
-    }
+  private static Iterator<ObjectNode> readInput(InputStream inputStream) {
+    return READER.<ObjectNode> readValues(inputStream);
   }
 
 }

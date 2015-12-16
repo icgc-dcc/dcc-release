@@ -17,14 +17,10 @@
  */
 package org.icgc.dcc.release.core.hadoop;
 
-import static com.google.common.base.Preconditions.checkState;
-import static java.lang.String.format;
-
 import java.io.IOException;
 import java.io.InputStream;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -34,6 +30,9 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Reader;
+import org.icgc.dcc.release.core.util.JacksonFactory;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class SequenceFileInputStream extends InputStream {
 
@@ -47,29 +46,12 @@ public class SequenceFileInputStream extends InputStream {
   @Override
   public int read() throws IOException {
     if (buffer == null || !buffer.hasNext()) {
-      if (!readMore()) {
+      if (!readBytes()) {
         return -1;
       }
     }
 
-    int b = buffer.next() & 0x000000ff;
-    checkState(b >= 0 && b <= 255, format("%d", b));
-
-    return b;
-  }
-
-  @SneakyThrows
-  private boolean readMore() {
-    val writable = new BytesWritable();
-    val read = reader.next(NullWritable.get(), writable);
-    if (!read) {
-      return false;
-    }
-
-    byte[] bytes = getBytes(writable);
-    buffer = new Buffer(bytes);
-
-    return true;
+    return buffer.next() & 0xFF;
   }
 
   @Override
@@ -77,21 +59,37 @@ public class SequenceFileInputStream extends InputStream {
     reader.close();
   }
 
-  private static byte[] getBytes(BytesWritable bw) {
-    // byte[] padded = bw.getBytes();
-    // byte[] bytes = new byte[bw.getLength()];
-    // System.arraycopy(padded, 0, bytes, 0, bytes.length);
-    //
-    // return bytes;
-    return bw.copyBytes();
+  @SneakyThrows
+  private boolean readBytes() {
+    val writable = new BytesWritable();
+    val read = reader.next(NullWritable.get(), writable);
+    if (!read) {
+      return false;
+    }
+
+    buffer = new Buffer(getBytes(writable));
+
+    return true;
   }
 
-  @RequiredArgsConstructor
+  private static byte[] getBytes(BytesWritable bw) {
+    byte[] padded = bw.getBytes();
+    byte[] bytes = new byte[bw.getLength()];
+    System.arraycopy(padded, 0, bytes, 0, bytes.length);
+
+    return bytes;
+  }
+
   private static class Buffer {
 
-    @NonNull
     private final byte[] data;
     private int position = 0;
+
+    @SneakyThrows
+    public Buffer(byte[] smileEncodedBytes) {
+      val json = JacksonFactory.READER.<ObjectNode> readValue(smileEncodedBytes);
+      data = JacksonFactory.MAPPER.writeValueAsBytes(json);
+    }
 
     public boolean hasNext() {
       return data.length > position;
