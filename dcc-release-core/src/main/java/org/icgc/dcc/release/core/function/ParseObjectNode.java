@@ -17,12 +17,14 @@
  */
 package org.icgc.dcc.release.core.function;
 
+import static org.icgc.dcc.release.core.util.JacksonFactory.DEFAULT_CLASS;
 import static org.icgc.dcc.release.core.util.JacksonFactory.createObjectReader;
 
 import java.io.IOException;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 
@@ -47,6 +49,7 @@ public class ParseObjectNode<T> implements Function<String, T> {
 
   private void createReader() {
     if (reader == null) {
+      val clazz = this.clazz == null ? DEFAULT_CLASS : this.clazz;
       reader = createObjectReader(clazz);
     }
   }

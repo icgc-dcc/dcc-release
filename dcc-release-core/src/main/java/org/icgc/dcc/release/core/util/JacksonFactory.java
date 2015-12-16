@@ -38,6 +38,8 @@ import com.fasterxml.jackson.dataformat.smile.SmileParser;
 @NoArgsConstructor(access = PRIVATE)
 public final class JacksonFactory {
 
+  public static final Class<ObjectNode> DEFAULT_CLASS = ObjectNode.class;
+
   public static final JsonFactory SMILE_FACTORY = new SmileFactory()
       .disable(SmileGenerator.Feature.WRITE_HEADER)
       .disable(SmileParser.Feature.REQUIRE_HEADER)
