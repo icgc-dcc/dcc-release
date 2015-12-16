@@ -15,55 +15,92 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.io;
+package org.icgc.dcc.release.core.hadoop;
 
-import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
+import static com.google.common.base.Preconditions.checkState;
+import static java.lang.String.format;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
-import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.util.JacksonFactory;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.Reader;
 
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+public class SequenceFileInputStream extends InputStream {
 
-@RequiredArgsConstructor
-public class HDFSMutationsReader {
+  private final SequenceFile.Reader reader;
+  private Buffer buffer;
 
-  @NonNull
-  private final String workingDir;
-  @NonNull
-  private final FileSystem fileSystem;
-  private final boolean compressed;
+  public SequenceFileInputStream(@NonNull Configuration configuration, @NonNull Path path) throws IOException {
+    reader = new SequenceFile.Reader(configuration, Reader.file(path));
+  }
 
-  /**
-   * Constants.
-   */
-  private static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
+  @Override
+  public int read() throws IOException {
+    if (buffer == null || !buffer.hasNext()) {
+      if (!readMore()) {
+        return -1;
+      }
+    }
 
-  public Iterator<ObjectNode> createMutationsIterator() {
-    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
-    val inputStream = new FileGlobInputStream(fileSystem, inputPath, compressed);
+    int b = buffer.next() & 0x000000ff;
+    checkState(b >= 0 && b <= 255, format("%d", b));
 
-    return readInput(inputStream, compressed);
+    return b;
   }
 
   @SneakyThrows
-  private static Iterator<ObjectNode> readInput(InputStream inputStream, boolean compressed) {
-    if (compressed) {
-      return JacksonFactory.READER.<ObjectNode> readValues(inputStream);
-    } else {
-      return READER.<ObjectNode> readValues(inputStream);
+  private boolean readMore() {
+    val writable = new BytesWritable();
+    val read = reader.next(NullWritable.get(), writable);
+    if (!read) {
+      return false;
     }
+
+    byte[] bytes = getBytes(writable);
+    buffer = new Buffer(bytes);
+
+    return true;
+  }
+
+  @Override
+  public void close() throws IOException {
+    reader.close();
+  }
+
+  private static byte[] getBytes(BytesWritable bw) {
+    // byte[] padded = bw.getBytes();
+    // byte[] bytes = new byte[bw.getLength()];
+    // System.arraycopy(padded, 0, bytes, 0, bytes.length);
+    //
+    // return bytes;
+    return bw.copyBytes();
+  }
+
+  @RequiredArgsConstructor
+  private static class Buffer {
+
+    @NonNull
+    private final byte[] data;
+    private int position = 0;
+
+    public boolean hasNext() {
+      return data.length > position;
+    }
+
+    public byte next() {
+      return data[position++];
+    }
+
   }
 
 }

@@ -19,18 +19,27 @@ import org.junit.Test;
 @Slf4j
 public class CreateVCFFileTaskTest extends AbstractJobTest {
 
+  private static final String COMPRESSED_INPUT = TEST_FIXTURES_DIR + "/compressed/input";
+
   Task task = new CreateVCFFileTask(createSnpEffProperties());
 
   @Before
   @Override
   public void setUp() {
     super.setUp();
-    given(new File(INPUT_TEST_FIXTURES_DIR));
   }
 
   @Test
   public void testExecute() throws Exception {
+    given(new File(INPUT_TEST_FIXTURES_DIR));
     task.execute(createTaskContext(JobType.SUMMARIZE));
+    verifyOutput();
+  }
+
+  @Test
+  public void testExecute_compressed() throws Exception {
+    given(new File(COMPRESSED_INPUT));
+    task.execute(createCompressedTaskContext(JobType.SUMMARIZE));
     verifyOutput();
   }
 

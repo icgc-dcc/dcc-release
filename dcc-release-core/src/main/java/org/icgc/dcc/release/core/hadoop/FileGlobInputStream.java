@@ -30,6 +30,7 @@ import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -59,11 +60,11 @@ public class FileGlobInputStream extends ForwardingInputStream {
 
   };
 
-  public FileGlobInputStream(@NonNull FileSystem fileSystem, @NonNull Path pathPattern) {
-    super(createInputStream(fileSystem, pathPattern), true);
+  public FileGlobInputStream(@NonNull FileSystem fileSystem, @NonNull Path pathPattern, boolean compressed) {
+    super(createInputStream(fileSystem, pathPattern, compressed), true);
   }
 
-  private static InputStream createInputStream(FileSystem fileSystem, Path pathPattern) {
+  private static InputStream createInputStream(FileSystem fileSystem, Path pathPattern, boolean compressed) {
     val inputStreams = Lists.<InputStream> newArrayList();
 
     try {
@@ -72,7 +73,8 @@ public class FileGlobInputStream extends ForwardingInputStream {
       val paths = getPaths(fileSystem, pathPattern);
       for (val path : paths) {
         log.info("Creating input stream for '{}'", path);
-        val inputStream = createDecodedInputStream(fileSystem, path, factory);
+        val inputStream = compressed ? createCompressedInputStream(fileSystem.getConf(), path) :
+            createDecodedInputStream(fileSystem, path, factory);
 
         inputStreams.add(inputStream);
       }
@@ -104,6 +106,10 @@ public class FileGlobInputStream extends ForwardingInputStream {
   private static SequenceInputStream combineInputStreams(Collection<InputStream> inputStreams) {
     // Combine the input streams into a chain
     return new SequenceInputStream(enumeration(inputStreams));
+  }
+
+  private static InputStream createCompressedInputStream(Configuration conf, Path path) throws IOException {
+    return new SequenceFileInputStream(conf, path);
   }
 
   private static InputStream createDecodedInputStream(FileSystem fileSystem, Path file, CompressionCodecFactory factory)
