@@ -67,7 +67,7 @@ public class MethArray implements Type {
   @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
-        .map(new ParseObjectNode())
+        .map(new ParseObjectNode<ObjectNode>())
         .filter(new IsType(METH_ARRAY_TYPE_FIELD_NAME))
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())

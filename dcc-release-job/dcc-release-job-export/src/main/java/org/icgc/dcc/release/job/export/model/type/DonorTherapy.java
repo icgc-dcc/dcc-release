@@ -65,7 +65,7 @@ public class DonorTherapy implements Type {
   @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
-        .map(new ParseObjectNode())
+        .map(new ParseObjectNode<ObjectNode>())
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())
         .filter(new IsNonEmpty(THERAPY_FIELD_NAME))
