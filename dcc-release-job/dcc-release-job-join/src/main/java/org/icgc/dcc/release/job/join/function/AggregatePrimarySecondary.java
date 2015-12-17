@@ -17,13 +17,39 @@
  */
 package org.icgc.dcc.release.job.join.function;
 
-import org.icgc.dcc.common.core.model.FieldNames;
-import org.icgc.dcc.release.core.function.PairRows;
+import static com.google.common.base.Preconditions.checkState;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
 
-public class PairDonorIdSpecimenSample extends PairRows {
+import java.util.Collection;
 
-  public PairDonorIdSpecimenSample() {
-    super(FieldNames.SubmissionFieldNames.SUBMISSION_DONOR_ID);
+import lombok.val;
+
+import org.apache.spark.api.java.function.Function2;
+
+import scala.Tuple2;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
+
+/**
+ * Joins consequences to the primary
+ */
+public final class AggregatePrimarySecondary implements
+    Function2<ObjectNode, Tuple2<ObjectNode, Optional<Collection<ObjectNode>>>, ObjectNode> {
+
+  @Override
+  public ObjectNode call(ObjectNode aggregator, Tuple2<ObjectNode, Optional<Collection<ObjectNode>>> tuple)
+      throws Exception {
+    val primary = tuple._1;
+    checkState(aggregator == null, "There should be only one instance of primary record: '%s'", primary);
+
+    val consequences = tuple._2;
+    val consequenceArray = primary.withArray(CONSEQUENCE_ARRAY_NAME);
+    if (consequences.isPresent()) {
+      consequenceArray.addAll(consequences.get());
+    }
+
+    return primary;
   }
 
 }

@@ -89,6 +89,7 @@ public class JoinJobTest extends AbstractJobTest {
     validateStsm(produces(PROJECT_NAME, FileType.STSM), 46);
 
     validateSsm(produces(PROJECT_NAME, FileType.SSM));
+    verifyResult(PROJECT_NAME, FileType.SGV);
   }
 
   private void validateOccurrences() {

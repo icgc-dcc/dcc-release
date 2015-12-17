@@ -58,6 +58,7 @@ import org.icgc.dcc.release.job.join.task.ResolveDonorSamplesTask;
 import org.icgc.dcc.release.job.join.task.ResolveRawSequenceDataTask;
 import org.icgc.dcc.release.job.join.task.ResolveSampleSurrogateSampleIds;
 import org.icgc.dcc.release.job.join.task.SecondaryJoinTask;
+import org.icgc.dcc.release.job.join.task.SgvJoinTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -207,7 +208,8 @@ public class JoinJob extends GenericJob {
     case SSM_P:
       return new ObservationJoinTask(donorSamples, sampleSurrogateSampleIds, resolveControlledFields());
     case SGV_P:
-      return new SecondaryJoinTask(donorSamples, sampleSurrogateSampleIds, FileType.SGV_P_MASKED);
+      return new SgvJoinTask(donorSamples, sampleSurrogateSampleIds);
+      // return new SecondaryJoinTask(donorSamples, sampleSurrogateSampleIds, FileType.SGV_P_MASKED);
     default:
       return new SecondaryJoinTask(donorSamples, sampleSurrogateSampleIds, executeFileType);
     }

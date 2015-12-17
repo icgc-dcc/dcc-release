@@ -31,6 +31,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.release.core.function.FormatObjectNode;
 import org.icgc.dcc.release.core.function.ParseObjectNode;
 
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -48,6 +49,13 @@ public final class ObjectNodeRDDs {
         .map(new ParseObjectNode<ObjectNode>());
   }
 
+  public static <T> JavaRDD<T> textObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf,
+      Class<T> clazz) {
+    return JavaRDDs.textFile(sparkContext, path, conf)
+        .map(tuple -> tuple._2.toString())
+        .map(new ParseObjectNode<T>(clazz));
+  }
+
   @NonNull
   public static JavaRDD<ObjectNode> sequenceObjectNodeFile(JavaSparkContext sparkContext, String path) {
     return sequenceObjectNodeFile(sparkContext, path, createJobConf(sparkContext));
@@ -57,6 +65,17 @@ public final class ObjectNodeRDDs {
   public static JavaRDD<ObjectNode> sequenceObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf) {
     return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, BytesWritable.class)
         .map(tuple -> SMILE_READER.readValue(tuple._2.getBytes()));
+  }
+
+  public static <T> JavaRDD<T> sequenceObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf,
+      Class<T> clazz) {
+
+    return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, BytesWritable.class)
+        .map(tuple -> {
+          ObjectReader reader = JacksonFactory.SMILE_MAPPER.reader(clazz);
+
+          return reader.readValue(tuple._2.getBytes());
+        });
   }
 
   @NonNull

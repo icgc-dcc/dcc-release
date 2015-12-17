@@ -140,14 +140,14 @@ public class TestJsonNodes {
       return surrogateDonorId.get();
     }
 
-    val specimenId = getIdValue("_specimen_id", json);
-    if (specimenId.isPresent()) {
-      return specimenId.get();
-    }
-
     val sampleId = getIdValue("_sample_id", json);
     if (sampleId.isPresent()) {
       return sampleId.get();
+    }
+
+    val specimenId = getIdValue("_specimen_id", json);
+    if (specimenId.isPresent()) {
+      return specimenId.get();
     }
 
     val geneId = getIdValue("_gene_id", json);

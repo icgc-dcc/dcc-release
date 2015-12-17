@@ -119,8 +119,6 @@ public abstract class GenericTask implements Task {
     }
 
     val input = readInput(taskContext, taskContext.getPath(inputFileType), conf, clazz);
-    // FIXME: Implement custom type reader
-    // logPartitions(log, input.partitions());
 
     return input;
   }

@@ -33,6 +33,7 @@ public class SparkWorkaroundUtils {
    * discussion</a>
    */
   // TODO: Verify if this is fixed in the next Spark version. Current 1.5.2
+  // FIXME: Raise a ticket
   public static <K, V> Map<K, V> toHashMap(Map<? extends K, ? extends V> map) {
     return Maps.newHashMap(map);
   }

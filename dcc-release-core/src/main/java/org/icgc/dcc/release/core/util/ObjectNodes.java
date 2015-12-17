@@ -98,6 +98,14 @@ public class ObjectNodes {
         .anyMatch(e -> e.equals(element));
   }
 
+  public static void addUniqueElements(@NonNull ArrayNode target, @NonNull ArrayNode source) {
+    for (val element : source) {
+      if (!contains(target, element)) {
+        target.add(element);
+      }
+    }
+  }
+
   public static ObjectNode mergeObjects(ObjectNode targetNode, @NonNull ObjectNode sourceNode) {
     val result = targetNode == null ? MAPPER.createObjectNode() : targetNode.deepCopy();
     val fieldNames = sourceNode.fieldNames();

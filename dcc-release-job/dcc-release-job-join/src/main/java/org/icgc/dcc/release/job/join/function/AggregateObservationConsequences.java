@@ -15,10 +15,35 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.task;
+package org.icgc.dcc.release.job.join.function;
 
-import java.io.Serializable;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.TRANSCRIPT_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
 
-public interface SerializableTask extends Task, Serializable {
+import java.util.Collection;
+
+import org.apache.spark.api.java.function.Function2;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+public final class AggregateObservationConsequences implements
+    Function2<Collection<ObjectNode>, ObjectNode, Collection<ObjectNode>> {
+
+  @Override
+  public Collection<ObjectNode> call(Collection<ObjectNode> aggregator, ObjectNode consequence) throws Exception {
+    enrichConsequence(consequence);
+    aggregator.add(consequence);
+
+    return aggregator;
+  }
+
+  private static void enrichConsequence(ObjectNode consequence) {
+    consequence.remove(NORMALIZER_OBSERVATION_ID);
+    consequence.set(GENE_ID, consequence.get(SUBMISSION_GENE_AFFECTED));
+    consequence.set(TRANSCRIPT_ID, consequence.get(SUBMISSION_TRANSCRIPT_AFFECTED));
+  }
 
 }
