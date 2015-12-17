@@ -1,6 +1,5 @@
 package org.icgc.dcc.release.job.document.core;
 
-import static org.icgc.dcc.release.job.document.core.DocumentJob.resolveIndexName;
 import static org.icgc.dcc.release.job.index.utils.TestUtils.createSnpEffProperties;
 
 import java.io.File;
@@ -23,7 +22,6 @@ public class DocumentJobTest extends AbstractJobTest {
    * Class under test.
    */
   DocumentJob job;
-  String index;
 
   @Override
   @Before
@@ -31,7 +29,6 @@ public class DocumentJobTest extends AbstractJobTest {
     super.setUp();
     val properties = new DocumentProperties().setOutputDir(new File(workingDir, "output").getAbsolutePath());
     this.job = new DocumentJob(properties, createSnpEffProperties(), sparkContext);
-    this.index = resolveIndexName(RELEASE_VERSION);
   }
 
   @Test

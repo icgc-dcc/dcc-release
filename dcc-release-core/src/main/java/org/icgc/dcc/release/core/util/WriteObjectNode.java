@@ -15,44 +15,37 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.io;
-
-import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
-
-import java.io.InputStream;
-import java.util.Iterator;
+package org.icgc.dcc.release.core.util;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
-import org.icgc.dcc.release.core.job.FileType;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.spark.api.java.function.PairFunction;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import scala.Tuple2;
+
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 @RequiredArgsConstructor
-public class HDFSMutationsReader {
+public final class WriteObjectNode<T> implements PairFunction<T, NullWritable, BytesWritable> {
 
   @NonNull
-  private final String workingDir;
-  @NonNull
-  private final FileSystem fileSystem;
-  private final boolean compressed;
+  private final Class<T> clazz;
+  private transient ObjectWriter writer;
 
-  public Iterator<ObjectNode> createMutationsIterator() {
-    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
-    val inputStream = new FileGlobInputStream(fileSystem, inputPath, compressed);
+  @Override
+  public Tuple2<NullWritable, BytesWritable> call(T row) throws Exception {
+    checkWriter();
 
-    return readInput(inputStream);
+    return Tuples.tuple(NullWritable.get(), new BytesWritable(writer.writeValueAsBytes(row)));
   }
 
-  @SneakyThrows
-  private static Iterator<ObjectNode> readInput(InputStream inputStream) {
-    return READER.<ObjectNode> readValues(inputStream);
+  private void checkWriter() {
+    if (writer == null) {
+      writer = JacksonFactory.createSmileObjectWriter(clazz);
+    }
   }
 
 }

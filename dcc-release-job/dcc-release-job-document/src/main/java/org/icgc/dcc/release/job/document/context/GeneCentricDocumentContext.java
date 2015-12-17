@@ -20,30 +20,47 @@ package org.icgc.dcc.release.job.document.context;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Collections.emptyList;
 
+import java.util.Collection;
+
+import lombok.NonNull;
+import lombok.val;
+
 import org.icgc.dcc.release.core.document.DocumentType;
+import org.icgc.dcc.release.core.util.JacksonFactory;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
+import org.icgc.dcc.release.job.document.model.Occurrence;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 
 public class GeneCentricDocumentContext extends DefaultDocumentContext {
 
   private final String geneId;
-  private final Optional<Iterable<ObjectNode>> observations;
+  private final Optional<Collection<Occurrence>> observations;
 
-  public GeneCentricDocumentContext(String geneId, DocumentJobContext indexJobContext,
-      Optional<Iterable<ObjectNode>> observations) {
+  public GeneCentricDocumentContext(@NonNull String geneId, @NonNull DocumentJobContext indexJobContext,
+      @NonNull Optional<Collection<Occurrence>> observations) {
     super(DocumentType.GENE_CENTRIC_TYPE, indexJobContext);
     this.geneId = geneId;
     this.observations = observations;
   }
 
   @Override
-  public Iterable<ObjectNode> getObservationsByGeneId(String geneId) {
+  public Iterable<ObjectNode> getObservationsByGeneId(@NonNull String geneId) {
     checkArgument(this.geneId.equals(geneId), "Context for gene %s can't be used to retrieve observations for gene %s",
         this.geneId, geneId);
 
-    return observations.isPresent() ? observations.get() : emptyList();
+    return observations.isPresent() ? transformOccurrences(observations.get()) : emptyList();
+  }
+
+  private static Iterable<ObjectNode> transformOccurrences(Collection<Occurrence> observations) {
+    val jsonObservations = Lists.<ObjectNode> newArrayListWithCapacity(observations.size());
+    for (val observation : observations) {
+      jsonObservations.add(JacksonFactory.MAPPER.valueToTree(observation));
+    }
+
+    return jsonObservations;
   }
 
 }

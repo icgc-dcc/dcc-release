@@ -19,15 +19,38 @@ package org.icgc.dcc.release.core.function;
 
 import java.io.Serializable;
 
-import org.apache.spark.api.java.function.Function;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.core.util.JacksonFactory;
+
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class FormatObjectNode implements Function<ObjectNode, String>, Serializable {
+@RequiredArgsConstructor
+public class FormatObjectNode<T> implements Function<T, String>, Serializable {
+
+  @NonNull
+  private final Class<T> clazz;
+  private transient ObjectWriter writer;
 
   @Override
-  public String call(ObjectNode row) {
-    return row.toString();
+  @SneakyThrows
+  public String call(T row) {
+    if (row instanceof ObjectNode) {
+      return row.toString();
+    }
+
+    checkWriter();
+    return writer.writeValueAsString(row);
+  }
+
+  private void checkWriter() {
+    if (writer == null) {
+      writer = JacksonFactory.createObjectWriter(clazz);
+    }
   }
 
 }

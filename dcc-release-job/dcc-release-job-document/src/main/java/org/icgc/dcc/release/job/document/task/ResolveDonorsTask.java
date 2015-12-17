@@ -28,16 +28,22 @@ import lombok.val;
 
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.task.TaskType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
 public class ResolveDonorsTask extends AbstractDocumentTask {
 
-  private  final Map<String, Map<String, ObjectNode>> donorsByProject = Maps.newConcurrentMap();
+  private final Map<String, Map<String, ObjectNode>> donorsByProject = Maps.newConcurrentMap();
 
   public ResolveDonorsTask(DocumentType type) {
     super(type);
+  }
+
+  @Override
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
   }
 
   @Override

@@ -15,44 +15,56 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.io;
+package org.icgc.dcc.release.job.document.model;
 
-import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
+import java.io.Serializable;
+import java.util.Map;
 
-import java.io.InputStream;
-import java.util.Iterator;
+import lombok.Data;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
+@Data
+public class Project implements Serializable {
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
-import org.icgc.dcc.release.core.job.FileType;
+  private String _project_id;
+  private String primary_site;
+  private String project_name;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+  // These might be used later
+  // private String tumour_subtype;
+  // private String alias;
+  // private ProjectSummary _summary;
+  // private String[] primary_countries;
+  // private String tumour_type;
+  // private String icgc_id;
+  // private String[] pubmed_ids;
+  // private String[] partner_countries;
 
-@RequiredArgsConstructor
-public class HDFSMutationsReader {
+  @Data
+  public static class ProjectSummary implements Serializable {
 
-  @NonNull
-  private final String workingDir;
-  @NonNull
-  private final FileSystem fileSystem;
-  private final boolean compressed;
+    private String _total_specimen_count;
+    private String _total_donor_count;
+    private String _exp_array_tested_donor_count;
+    private String _sgv_tested_donor_count;
+    private String[] available_experimental_analysis_performed;
+    private String _pexp_tested_donor_count;
+    private String _ssm_tested_donor_count;
+    private String _jcn_tested_donor_count;
+    private String _cnsm_tested_donor_count;
+    private String _exp_seq_tested_donor_count;
+    private String _stgv_tested_donor_count;
+    private String _mirna_seq_tested_donor_count;
+    private String _state;
+    private String _total_sample_count;
+    private Map<String, Integer> experimental_analysis_performed_sample_count;
+    private String[] repository;
+    private String _cngv_tested_donor_count;
+    private String[] _available_data_type;
+    private String _stsm_tested_donor_count;
+    private String _meth_array_tested_donor_count;
+    private String _meth_seq_tested_donor_count;
+    private String _total_live_donor_count;
 
-  public Iterator<ObjectNode> createMutationsIterator() {
-    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
-    val inputStream = new FileGlobInputStream(fileSystem, inputPath, compressed);
-
-    return readInput(inputStream);
-  }
-
-  @SneakyThrows
-  private static Iterator<ObjectNode> readInput(InputStream inputStream) {
-    return READER.<ObjectNode> readValues(inputStream);
   }
 
 }

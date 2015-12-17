@@ -52,6 +52,7 @@ import static org.icgc.dcc.release.job.document.util.JsonNodes.addAll;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.isEmpty;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.normalizeTextValue;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -67,6 +68,7 @@ import org.icgc.dcc.release.job.document.context.GeneCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;
+import org.icgc.dcc.release.job.document.model.Occurrence;
 import org.icgc.dcc.release.job.document.util.Fakes;
 
 import scala.Tuple2;
@@ -84,17 +86,17 @@ import com.google.common.collect.Sets;
  */
 @RequiredArgsConstructor
 public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransform implements
-    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> {
+    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Collection<Occurrence>>>>, Document> {
 
   private final DocumentJobContext indexJobContext;
   private static final List<String> DONOR_PROJECT_FIELD_NAMES =
       of(PROJECT_ID, PROJECT_DISPLAY_NAME, PROJECT_PRIMARY_SITE);
 
   @Override
-  public Document call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
+  public Document call(Tuple2<String, Tuple2<ObjectNode, Optional<Collection<Occurrence>>>> tuple) throws Exception {
+    val geneId = tuple._1;
     val gene = tuple._2._1;
     val observations = tuple._2._2;
-    val geneId = getGeneId(gene);
     val documentContext = new GeneCentricDocumentContext(geneId, indexJobContext, observations);
 
     return transformDocument(gene, documentContext);

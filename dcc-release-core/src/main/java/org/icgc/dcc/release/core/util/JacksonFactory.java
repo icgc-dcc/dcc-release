@@ -19,7 +19,10 @@ package org.icgc.dcc.release.core.util;
 
 import static lombok.AccessLevel.PRIVATE;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.val;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -35,19 +38,47 @@ import com.fasterxml.jackson.dataformat.smile.SmileParser;
 @NoArgsConstructor(access = PRIVATE)
 public final class JacksonFactory {
 
-  public static final JsonFactory FACTORY = new SmileFactory()
+  public static final Class<ObjectNode> DEFAULT_CLASS = ObjectNode.class;
+
+  public static final JsonFactory SMILE_FACTORY = new SmileFactory()
       .disable(SmileGenerator.Feature.WRITE_HEADER)
       .disable(SmileParser.Feature.REQUIRE_HEADER)
 
       .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
       .disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
 
-  public static final ObjectMapper MAPPER = new ObjectMapper();
-  public static final ObjectMapper SMILE_MAPPER = new ObjectMapper(FACTORY)
+  public static final ObjectMapper MAPPER = createMapper(null);
+
+  public static final ObjectMapper SMILE_MAPPER = new ObjectMapper(SMILE_FACTORY)
       .disable(SerializationFeature.CLOSE_CLOSEABLE);
 
-  public static final ObjectWriter WRITER = SMILE_MAPPER.writerWithType(ObjectNode.class);
+  public static final ObjectWriter WRITER = MAPPER.writerWithType(ObjectNode.class);
+  public static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
 
-  public static final ObjectReader READER = SMILE_MAPPER.reader(ObjectNode.class);
+  public static final ObjectWriter SMILE_WRITER = SMILE_MAPPER.writerWithType(ObjectNode.class);
+  public static final ObjectReader SMILE_READER = SMILE_MAPPER.reader(ObjectNode.class);
+
+  public static <T> ObjectReader createSmileObjectReader(@NonNull Class<T> clazz) {
+    return ObjectNode.class.equals(clazz) ? SMILE_READER : SMILE_MAPPER.reader(clazz);
+  }
+
+  public static <T> ObjectWriter createSmileObjectWriter(@NonNull Class<T> clazz) {
+    return ObjectNode.class.equals(clazz) ? SMILE_WRITER : SMILE_MAPPER.writerWithType(clazz);
+  }
+
+  public static <T> ObjectReader createObjectReader(@NonNull Class<T> clazz) {
+    return ObjectNode.class.equals(clazz) ? READER : MAPPER.reader(clazz);
+  }
+
+  public static <T> ObjectWriter createObjectWriter(@NonNull Class<T> clazz) {
+    return ObjectNode.class.equals(clazz) ? WRITER : MAPPER.writerWithType(clazz);
+  }
+
+  private static ObjectMapper createMapper(JsonFactory factory) {
+    val mapper = factory == null ? new ObjectMapper() : new ObjectMapper(factory);
+    mapper.setSerializationInclusion(Include.NON_NULL);
+
+    return mapper;
+  }
 
 }

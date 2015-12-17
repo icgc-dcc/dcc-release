@@ -17,8 +17,7 @@
  */
 package org.icgc.dcc.release.core.util;
 
-import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
-import static org.icgc.dcc.release.core.util.JacksonFactory.WRITER;
+import static org.icgc.dcc.release.core.util.JacksonFactory.SMILE_READER;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -31,8 +30,6 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.release.core.function.FormatObjectNode;
 import org.icgc.dcc.release.core.function.ParseObjectNode;
-
-import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -48,7 +45,7 @@ public final class ObjectNodeRDDs {
   public static JavaRDD<ObjectNode> textObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf) {
     return JavaRDDs.textFile(sparkContext, path, conf)
         .map(tuple -> tuple._2.toString())
-        .map(new ParseObjectNode());
+        .map(new ParseObjectNode<ObjectNode>());
   }
 
   @NonNull
@@ -59,7 +56,7 @@ public final class ObjectNodeRDDs {
   @NonNull
   public static JavaRDD<ObjectNode> sequenceObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf) {
     return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, BytesWritable.class)
-        .map(tuple -> READER.readValue(tuple._2.getBytes()));
+        .map(tuple -> SMILE_READER.readValue(tuple._2.getBytes()));
   }
 
   @NonNull
@@ -71,7 +68,7 @@ public final class ObjectNodeRDDs {
   public static JavaRDD<ObjectNode> combineObjectNodeFile(JavaSparkContext sparkContext, String paths, JobConf conf) {
     return JavaRDDs.combineTextFile(sparkContext, paths, conf)
         .map(tuple -> tuple._2.toString())
-        .map(new ParseObjectNode());
+        .map(new ParseObjectNode<ObjectNode>());
   }
 
   public static JavaRDD<ObjectNode> combineObjectNodeSequenceFile(@NonNull JavaSparkContext sparkContext,
@@ -82,12 +79,15 @@ public final class ObjectNodeRDDs {
   public static JavaRDD<ObjectNode> combineObjectNodeSequenceFile(@NonNull JavaSparkContext sparkContext,
       @NonNull String paths, @NonNull JobConf conf) {
     return JavaRDDs.combineSequenceFile(sparkContext, paths, conf)
-        .map(tuple -> READER.readValue(tuple._2.getBytes()));
+        .map(tuple -> SMILE_READER.readValue(tuple._2.getBytes()));
   }
 
-  @NonNull
-  public static void saveAsTextObjectNodeFile(JavaRDD<ObjectNode> rdd, String path) {
-    val output = rdd.map(new FormatObjectNode());
+  public static void saveAsTextObjectNodeFile(@NonNull JavaRDD<ObjectNode> rdd, @NonNull String path) {
+    saveAsTextObjectNodeFile(rdd, path, ObjectNode.class);
+  }
+
+  public static <T> void saveAsTextObjectNodeFile(@NonNull JavaRDD<T> rdd, @NonNull String path, @NonNull Class<T> clazz) {
+    val output = rdd.map(new FormatObjectNode<T>(clazz));
 
     JavaRDDs.saveAsTextFile(output, path);
   }
@@ -98,11 +98,18 @@ public final class ObjectNodeRDDs {
     saveAsSequenceObjectNodeFile(rdd, path, conf);
   }
 
+  public static <T> void saveAsSequenceObjectNodeFile(JavaRDD<T> rdd, String path, Class<T> clazz) {
+    val conf = Configurations.createJobConf(rdd);
+    saveAsSequenceObjectNodeFile(rdd, path, conf, clazz);
+  }
+
   @NonNull
   public static void saveAsSequenceObjectNodeFile(JavaRDD<ObjectNode> rdd, String path, JobConf conf) {
-    val pairRdd = rdd.mapToPair(row ->
-        new Tuple2<NullWritable, BytesWritable>(NullWritable.get(), new BytesWritable(WRITER.writeValueAsBytes(row))));
+    saveAsSequenceObjectNodeFile(rdd, path, conf, ObjectNode.class);
+  }
 
+  public static <T> void saveAsSequenceObjectNodeFile(JavaRDD<T> rdd, String path, JobConf conf, Class<T> clazz) {
+    val pairRdd = rdd.mapToPair(new WriteObjectNode<T>(clazz));
     JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, BytesWritable.class, path, conf);
   }
 

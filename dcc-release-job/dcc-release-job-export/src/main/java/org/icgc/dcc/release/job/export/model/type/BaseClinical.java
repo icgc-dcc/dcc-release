@@ -82,7 +82,7 @@ public abstract class BaseClinical implements Type {
   @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
-        .map(new ParseObjectNode())
+        .map(new ParseObjectNode<ObjectNode>())
         .map(new ProjectFields(firstLevelProjection))
         .map(new AddDonorIdField())
         .map(new AddMissingField(SPECIMEN_FIELD_NAME, secondLevelProjection.keySet()))

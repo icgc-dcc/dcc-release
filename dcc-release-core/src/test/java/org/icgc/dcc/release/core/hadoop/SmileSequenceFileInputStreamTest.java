@@ -1,6 +1,7 @@
 package org.icgc.dcc.release.core.hadoop;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
 
 import java.io.IOException;
 
@@ -9,7 +10,6 @@ import lombok.val;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.release.core.util.JacksonFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,8 +37,7 @@ public class SmileSequenceFileInputStreamTest {
 
   @Test
   public void readTest() throws IOException {
-    val reader = JacksonFactory.MAPPER.reader(ObjectNode.class);
-    val iterator = reader.<ObjectNode> readValues(inputStream);
+    val iterator = READER.<ObjectNode> readValues(inputStream);
     while (iterator.hasNext()) {
       val value = iterator.next();
       assertThat(value.isObject()).isTrue();
