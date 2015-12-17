@@ -333,7 +333,7 @@
 
   <properties>
     <!-- Versions - DCC -->
-    <dcc-common.version>3.8.18.0</dcc-common.version>
+    <dcc-common.version>3.9.1</dcc-common.version>
 
     <!-- Versions - DCC ETL -->
     <dcc-etl.version>3.8.19</dcc-etl.version>

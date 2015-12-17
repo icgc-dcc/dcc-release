@@ -19,6 +19,7 @@ package org.icgc.dcc.release.job.image.function;
 
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_DIGITAL_IMAGE_OF_STAINED_SECTION;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_SPECIMEN_ID;
+import static org.icgc.dcc.common.core.util.URLs.isUrl;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 
 import java.util.Map;
@@ -46,7 +47,8 @@ public class AddSpecimenImage implements Function<ObjectNode, ObjectNode> {
   @Override
   public ObjectNode call(ObjectNode row) throws Exception {
     val specimenId = textValue(row, SUBMISSION_SPECIMEN_ID);
-    val specimenUrl = getSpecimenUrl(specimenId);
+    val imageUrl = textValue(row, SUBMISSION_DIGITAL_IMAGE_OF_STAINED_SECTION);
+    val specimenUrl = isReplaceImageUrl(imageUrl) ? getSpecimenUrl(specimenId) : imageUrl;
 
     row.put(SUBMISSION_DIGITAL_IMAGE_OF_STAINED_SECTION, specimenUrl);
 
@@ -55,6 +57,14 @@ public class AddSpecimenImage implements Function<ObjectNode, ObjectNode> {
 
   private String getSpecimenUrl(String specimenId) {
     return specimenUrls.get(specimenId);
+  }
+
+  private static boolean isReplaceImageUrl(String imageUrl) {
+    if (imageUrl != null && isUrl(imageUrl.trim())) {
+      return false;
+    }
+
+    return true;
   }
 
 }
