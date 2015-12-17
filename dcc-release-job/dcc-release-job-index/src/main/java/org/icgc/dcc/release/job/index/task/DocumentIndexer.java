@@ -24,8 +24,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.DocumentWriter;
 import org.icgc.dcc.release.job.index.factory.TransportClientFactory;
 import org.icgc.dcc.release.job.index.io.ElasticSearchDocumentWriter;
@@ -35,6 +35,8 @@ import com.google.common.collect.Lists;
 @RequiredArgsConstructor
 public final class DocumentIndexer implements FlatMapFunction<Iterator<Document>, Void> {
 
+  private static final long serialVersionUID = 3834434199819463998L;
+  
   @NonNull
   private final String esUri;
   @NonNull

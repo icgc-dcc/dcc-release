@@ -30,8 +30,10 @@ import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.util.AggregateFunctions;
+import org.icgc.dcc.release.core.util.CombineFunctions;
 import org.icgc.dcc.release.core.util.Tuples;
-import org.icgc.dcc.release.job.join.function.CreateSgvs;
+import org.icgc.dcc.release.job.join.function.CreateSgvOccurrence;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 import org.icgc.dcc.release.job.join.model.SgvConsequence;
 
@@ -57,19 +59,13 @@ public class SgvJoinTask extends SecondaryJoinTask {
     val consequences = readConsequeces(taskContext)
         .mapToPair(row -> Tuples.tuple(row.getObservationId(), row))
         .aggregateByKey(zeroValue, primaryPartition,
-            (a, n) -> {
-              a.add(n);
-              return a;
-            },
-            (a, b) -> {
-              a.addAll(b);
-              return a;
-            });
+            AggregateFunctions::aggregateCollection,
+            CombineFunctions::combineCollections);
 
     val sampleSurrogageSampleIds = getSampleSurrogateSampleIds(taskContext, sampleSurrogateSampleIdsByProject);
     val output = primaryPairs
         .leftOuterJoin(consequences)
-        .map(new CreateSgvs())
+        .map(new CreateSgvOccurrence())
         .map(addSurrogateMatchingId(sampleSurrogageSampleIds))
 
     ;

@@ -15,44 +15,55 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.io;
+package org.icgc.dcc.release.core.task;
 
-import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
+import java.io.Serializable;
 
-import java.io.InputStream;
-import java.util.Iterator;
-
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
-import org.icgc.dcc.release.core.job.FileType;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.core.util.Stopwatches;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 
-@RequiredArgsConstructor
-public class HDFSMutationsReader {
+@Slf4j
+public abstract class AbstractRemoteActionTask implements Task, Serializable {
 
-  @NonNull
-  private final String workingDir;
-  @NonNull
-  private final FileSystem fileSystem;
-  private final boolean compressed;
+  @Override
+  public void execute(TaskContext taskContext) {
+    val fsUri = taskContext.getFileSystem().getUri();
+    val workingDir = taskContext.getJobContext().getWorkingDir();
 
-  public Iterator<ObjectNode> createMutationsIterator() {
-    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
-    val inputStream = new FileGlobInputStream(fileSystem, inputPath, compressed);
+    // Note: Can't use val in lambda (e.g. watch, fileSystem), don't try!
+    executeRemote(taskContext.getSparkContext(), ignore -> {
+      Stopwatch watch = Stopwatches.createStarted();
+      log.info("Executing remote action...");
 
-    return readInput(inputStream);
+      FileSystem fileSystem = FileSystem.get(fsUri, new Configuration());
+      executeRemoteAction(fileSystem, new Path(workingDir));
+      log.info("Finished executing action in {}", watch);
+
+      return ignore;
+    });
   }
 
-  @SneakyThrows
-  private static Iterator<ObjectNode> readInput(InputStream inputStream) {
-    return READER.<ObjectNode> readValues(inputStream);
+  private void executeRemote(JavaSparkContext sparkContext, Function<Integer, Integer> function) {
+    val one = 1;
+    val task = ImmutableList.of(one);
+    val numSlices = one;
+
+    sparkContext.parallelize(task, numSlices).map(function).count();
   }
+
+  /**
+   * Template method. Subclasses are required to implement an action to be taken cluster side.
+   */
+  protected abstract void executeRemoteAction(FileSystem fileSystem, Path workingDir);
 
 }

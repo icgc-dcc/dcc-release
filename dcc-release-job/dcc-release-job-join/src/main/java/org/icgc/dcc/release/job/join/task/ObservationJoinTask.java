@@ -22,7 +22,6 @@ import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SUR
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
 import static org.icgc.dcc.release.core.util.JavaRDDs.getPartitionsCount;
 import static org.icgc.dcc.release.core.util.Keys.KEY_SEPARATOR;
-import static org.icgc.dcc.release.job.join.utils.CombineFunctions.combineConsequences;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 import static org.icgc.dcc.release.job.join.utils.Tasks.resolveDonorSamples;
 
@@ -45,6 +44,7 @@ import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.util.CombineFunctions;
 import org.icgc.dcc.release.core.util.Observations;
 import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
 import org.icgc.dcc.release.job.join.function.AggregateObservationConsequences;
@@ -169,7 +169,8 @@ public class ObservationJoinTask extends GenericTask {
     val zeroValue = Sets.<ObjectNode> newHashSet();
     val consequences = parseSsmS(taskContext)
         .mapToPair(PRIMARY_SECONDARY_KEY_FUNCTION)
-        .aggregateByKey(zeroValue, primaryPartitions, new AggregateObservationConsequences(), combineConsequences());
+        .aggregateByKey(zeroValue, primaryPartitions, new AggregateObservationConsequences(),
+            CombineFunctions::combineCollections);
 
     return consequences;
   }

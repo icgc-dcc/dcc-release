@@ -99,7 +99,7 @@ public class STSM implements Type {
   @Override
   public JavaRDD<ObjectNode> process(JavaRDD<String> input) {
     return input
-        .map(new ParseObjectNode())
+        .map(new ParseObjectNode<ObjectNode>())
         .filter(new IsType(STSM_TYPE_FIELD_NAME))
         .map(new ProjectFields(FIRST_LEVEL_PROJECTION))
         .map(new AddDonorIdField())

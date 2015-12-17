@@ -17,18 +17,19 @@
  */
 package org.icgc.dcc.release.core.function;
 
-import static org.icgc.dcc.release.core.util.JacksonFactory.MAPPER;
+import static org.icgc.dcc.release.core.util.JacksonFactory.DEFAULT_CLASS;
+import static org.icgc.dcc.release.core.util.JacksonFactory.createObjectReader;
 
 import java.io.IOException;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @NoArgsConstructor
 public class ParseObjectNode<T> implements Function<String, T> {
@@ -48,11 +49,8 @@ public class ParseObjectNode<T> implements Function<String, T> {
 
   private void createReader() {
     if (reader == null) {
-      if (clazz == null) {
-        reader = MAPPER.reader(ObjectNode.class);
-      } else {
-        reader = MAPPER.reader(clazz);
-      }
+      val clazz = this.clazz == null ? DEFAULT_CLASS : this.clazz;
+      reader = createObjectReader(clazz);
     }
   }
 

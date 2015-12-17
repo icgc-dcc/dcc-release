@@ -15,44 +15,63 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.io;
+package org.icgc.dcc.release.job.document.model;
 
-import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Map;
 
-import java.io.InputStream;
-import java.util.Iterator;
+import lombok.Data;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
+@Data
+public class Donor implements Serializable {
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
-import org.icgc.dcc.release.core.job.FileType;
+  String _donor_id;
+  String _project_id;
+  DonorSummary _summary;
+  String disease_status_last_followup;
+  String donor_age_at_diagnosis;
+  String donor_age_at_enrollment;
+  String donor_age_at_last_followup;
+  String donor_diagnosis_icd10;
+  String donor_id;
+  String donor_interval_of_last_followup;
+  String donor_relapse_interval;
+  String donor_relapse_type;
+  String donor_sex;
+  String donor_survival_time;
+  String donor_tumour_stage_at_diagnosis;
+  String donor_tumour_stage_at_diagnosis_supplemental;
+  String donor_tumour_staging_system_at_diagnosis;
+  String donor_vital_status;
+  Collection<Map<String, Object>> gene;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+  // Added during transformations
+  Project project;
 
-@RequiredArgsConstructor
-public class HDFSMutationsReader {
+  @Data
+  public static class DonorSummary implements Serializable {
 
-  @NonNull
-  private final String workingDir;
-  @NonNull
-  private final FileSystem fileSystem;
-  private final boolean compressed;
+    Integer _affected_gene_count;
+    String[] repository;
+    String[] _studies;
+    String[] experimental_analysis_performed;
+    Map<String, Integer> experimental_analysis_performed_sample_count;
+    String _age_at_diagnosis_group;
+    boolean _cnsm_exists;
+    String[] _available_data_type;
+    boolean _jcn_exists;
+    boolean _meth_array_exists;
+    Integer _ssm_count;
+    boolean _pexp_exists;
+    boolean _stsm_exists;
+    boolean _meth_seq_exists;
+    boolean _exp_array_exists;
+    boolean _sgv_exists;
+    boolean _mirna_seq_exists;
+    boolean _exp_seq_exists;
+    String _state;
 
-  public Iterator<ObjectNode> createMutationsIterator() {
-    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
-    val inputStream = new FileGlobInputStream(fileSystem, inputPath, compressed);
-
-    return readInput(inputStream);
-  }
-
-  @SneakyThrows
-  private static Iterator<ObjectNode> readInput(InputStream inputStream) {
-    return READER.<ObjectNode> readValues(inputStream);
   }
 
 }

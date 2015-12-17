@@ -15,55 +15,56 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.task;
+package org.icgc.dcc.release.job.document.model;
 
 import java.io.Serializable;
+import java.util.Map;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Data;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.util.Stopwatches;
+@Data
+public class Project implements Serializable {
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
+  private String _project_id;
+  private String primary_site;
+  private String project_name;
 
-@Slf4j
-public abstract class RemoteActionTask implements Task, Serializable {
+  // These might be used later
+  // private String tumour_subtype;
+  // private String alias;
+  // private ProjectSummary _summary;
+  // private String[] primary_countries;
+  // private String tumour_type;
+  // private String icgc_id;
+  // private String[] pubmed_ids;
+  // private String[] partner_countries;
 
-  @Override
-  public void execute(TaskContext taskContext) {
-    val fsUri = taskContext.getFileSystem().getUri();
-    val workingDir = taskContext.getJobContext().getWorkingDir();
+  @Data
+  public static class ProjectSummary implements Serializable {
 
-    // Note: Can't use val in lambda (e.g. watch, fileSystem), don't try!
-    executeRemote(taskContext.getSparkContext(), ignore -> {
-      Stopwatch watch = Stopwatches.createStarted();
-      log.info("Executing remote action...");
+    private String _total_specimen_count;
+    private String _total_donor_count;
+    private String _exp_array_tested_donor_count;
+    private String _sgv_tested_donor_count;
+    private String[] available_experimental_analysis_performed;
+    private String _pexp_tested_donor_count;
+    private String _ssm_tested_donor_count;
+    private String _jcn_tested_donor_count;
+    private String _cnsm_tested_donor_count;
+    private String _exp_seq_tested_donor_count;
+    private String _stgv_tested_donor_count;
+    private String _mirna_seq_tested_donor_count;
+    private String _state;
+    private String _total_sample_count;
+    private Map<String, Integer> experimental_analysis_performed_sample_count;
+    private String[] repository;
+    private String _cngv_tested_donor_count;
+    private String[] _available_data_type;
+    private String _stsm_tested_donor_count;
+    private String _meth_array_tested_donor_count;
+    private String _meth_seq_tested_donor_count;
+    private String _total_live_donor_count;
 
-      FileSystem fileSystem = FileSystem.get(fsUri, new Configuration());
-      executeRemoteAction(fileSystem, new Path(workingDir));
-      log.info("Finished executing action in {}", watch);
-
-      return ignore;
-    });
   }
-
-  private void executeRemote(JavaSparkContext sparkContext, Function<Integer, Integer> function) {
-    val one = 1;
-    val task = ImmutableList.of(one);
-    val numSlices = one;
-
-    sparkContext.parallelize(task, numSlices).map(function).count();
-  }
-
-  /**
-   * Template method. Subclasses are required to implement an action to be taken cluster side.
-   */
-  protected abstract void executeRemoteAction(FileSystem fileSystem, Path workingDir);
 
 }

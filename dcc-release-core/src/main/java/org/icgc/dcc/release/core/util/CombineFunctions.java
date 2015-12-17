@@ -15,44 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.io;
+package org.icgc.dcc.release.core.util;
 
-import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
+import static lombok.AccessLevel.PRIVATE;
 
-import java.io.InputStream;
-import java.util.Iterator;
+import java.util.Collection;
 
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
-import org.icgc.dcc.release.core.job.FileType;
+@NoArgsConstructor(access = PRIVATE)
+public final class CombineFunctions {
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+  public static <T> Collection<T> combineCollections(@NonNull Collection<T> prev, @NonNull Collection<T> next) {
+    prev.addAll(next);
 
-@RequiredArgsConstructor
-public class HDFSMutationsReader {
-
-  @NonNull
-  private final String workingDir;
-  @NonNull
-  private final FileSystem fileSystem;
-  private final boolean compressed;
-
-  public Iterator<ObjectNode> createMutationsIterator() {
-    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
-    val inputStream = new FileGlobInputStream(fileSystem, inputPath, compressed);
-
-    return readInput(inputStream);
-  }
-
-  @SneakyThrows
-  private static Iterator<ObjectNode> readInput(InputStream inputStream) {
-    return READER.<ObjectNode> readValues(inputStream);
+    return prev;
   }
 
 }

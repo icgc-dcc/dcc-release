@@ -15,39 +15,37 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.join.function;
+package org.icgc.dcc.release.core.util;
 
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
-import static org.icgc.dcc.release.job.join.task.CreateSgvObservation.convertConsequences;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-import java.util.Collection;
-
-import lombok.val;
-
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.job.join.model.SgvConsequence;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
-public final class CreateSgvs implements
-    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Collection<SgvConsequence>>>>, ObjectNode> {
+@RequiredArgsConstructor
+public final class WriteObjectNode<T> implements PairFunction<T, NullWritable, BytesWritable> {
+
+  @NonNull
+  private final Class<T> clazz;
+  private transient ObjectWriter writer;
 
   @Override
-  public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Collection<SgvConsequence>>>> tuple)
-      throws Exception {
+  public Tuple2<NullWritable, BytesWritable> call(T row) throws Exception {
+    checkWriter();
 
-    val row = tuple._2._1;
-
-    val consequenceArray = row.withArray(CONSEQUENCE_ARRAY_NAME);
-    val consequences = convertConsequences(tuple._2._2);
-
-    if (consequences.isPresent()) {
-      consequenceArray.addAll(consequences.get());
-    }
-
-    return row;
+    return Tuples.tuple(NullWritable.get(), new BytesWritable(writer.writeValueAsBytes(row)));
   }
+
+  private void checkWriter() {
+    if (writer == null) {
+      writer = JacksonFactory.createSmileObjectWriter(clazz);
+    }
+  }
+
 }

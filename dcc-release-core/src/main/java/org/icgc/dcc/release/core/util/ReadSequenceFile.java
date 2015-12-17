@@ -15,44 +15,39 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.io;
+package org.icgc.dcc.release.core.util;
 
-import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
-
-import java.io.InputStream;
-import java.util.Iterator;
-
+import static org.icgc.dcc.release.core.util.JacksonFactory.createSmileObjectReader;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
-import org.icgc.dcc.release.core.job.FileType;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.spark.api.java.function.Function;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import scala.Tuple2;
 
-@RequiredArgsConstructor
-public class HDFSMutationsReader {
+import com.fasterxml.jackson.databind.ObjectReader;
 
-  @NonNull
-  private final String workingDir;
-  @NonNull
-  private final FileSystem fileSystem;
-  private final boolean compressed;
+public final class ReadSequenceFile<T> implements Function<Tuple2<NullWritable, BytesWritable>, T> {
 
-  public Iterator<ObjectNode> createMutationsIterator() {
-    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
-    val inputStream = new FileGlobInputStream(fileSystem, inputPath, compressed);
+  private final Class<T> clazz;
+  private transient ObjectReader reader;
 
-    return readInput(inputStream);
+  public ReadSequenceFile(@NonNull Class<T> clazz) {
+    this.clazz = clazz;
   }
 
-  @SneakyThrows
-  private static Iterator<ObjectNode> readInput(InputStream inputStream) {
-    return READER.<ObjectNode> readValues(inputStream);
+  @Override
+  public T call(Tuple2<NullWritable, BytesWritable> tuple) throws Exception {
+    checkReader();
+
+    return reader.readValue(tuple._2.getBytes());
+  }
+
+  private void checkReader() {
+    if (reader == null) {
+      reader = createSmileObjectReader(clazz);
+    }
   }
 
 }

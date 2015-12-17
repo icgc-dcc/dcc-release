@@ -28,7 +28,9 @@ import org.icgc.dcc.release.core.function.FilterFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.util.JacksonFactory;
 import org.icgc.dcc.release.job.document.model.CollectionFields;
+import org.icgc.dcc.release.job.document.model.Occurrence;
 import org.icgc.dcc.release.job.document.util.CollectionFieldsFilterAdapter;
 import org.icgc.dcc.release.job.document.util.DocumentRdds;
 
@@ -95,7 +97,16 @@ public abstract class AbstractDocumentTask extends GenericTask {
 
   protected void writeDocOutput(TaskContext taskContext, JavaRDD<Document> processed) {
     val outputPath = taskContext.getPath(type.getOutputFileType());
-    DocumentRdds.saveAsTextObjectNodeFile(processed, outputPath);
+    if (taskContext.isCompressOutput()) {
+      DocumentRdds.saveAsSequenceObjectNodeFile(processed, outputPath);
+    } else {
+      DocumentRdds.saveAsTextObjectNodeFile(processed, outputPath);
+    }
+  }
+
+  protected JavaRDD<Occurrence> readOccurrences(TaskContext taskContext) {
+    return readObservations(taskContext)
+        .map(row -> JacksonFactory.MAPPER.treeToValue(row, Occurrence.class));
   }
 
   private static JavaRDD<ObjectNode> filterFields(JavaRDD<ObjectNode> rdd, CollectionFields fields) {

@@ -15,44 +15,39 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.io;
+package org.icgc.dcc.release.job.join.function;
 
-import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
+import static org.icgc.dcc.release.job.join.task.CreateSgvObservation.convertConsequences;
 
-import java.io.InputStream;
-import java.util.Iterator;
+import java.util.Collection;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.val;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
-import org.icgc.dcc.release.core.job.FileType;
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.job.join.model.SgvConsequence;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Optional;
 
-@RequiredArgsConstructor
-public class HDFSMutationsReader {
+public final class CreateSgvOccurrence implements
+    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Collection<SgvConsequence>>>>, ObjectNode> {
 
-  @NonNull
-  private final String workingDir;
-  @NonNull
-  private final FileSystem fileSystem;
-  private final boolean compressed;
+  @Override
+  public ObjectNode call(Tuple2<String, Tuple2<ObjectNode, Optional<Collection<SgvConsequence>>>> tuple)
+      throws Exception {
 
-  public Iterator<ObjectNode> createMutationsIterator() {
-    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
-    val inputStream = new FileGlobInputStream(fileSystem, inputPath, compressed);
+    val row = tuple._2._1;
 
-    return readInput(inputStream);
+    val consequenceArray = row.withArray(CONSEQUENCE_ARRAY_NAME);
+    val consequences = convertConsequences(tuple._2._2);
+
+    if (consequences.isPresent()) {
+      consequenceArray.addAll(consequences.get());
+    }
+
+    return row;
   }
-
-  @SneakyThrows
-  private static Iterator<ObjectNode> readInput(InputStream inputStream) {
-    return READER.<ObjectNode> readValues(inputStream);
-  }
-
 }

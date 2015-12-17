@@ -20,26 +20,13 @@ package org.icgc.dcc.release.job.join.utils;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
 import static org.icgc.dcc.release.core.util.ObjectNodes.addUniqueElements;
-
-import java.util.Collection;
-
 import lombok.NoArgsConstructor;
 import lombok.val;
-
-import org.apache.spark.api.java.function.Function2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class CombineFunctions {
-
-  public static Function2<Collection<ObjectNode>, Collection<ObjectNode>, Collection<ObjectNode>> combineConsequences() {
-    return (a, b) -> {
-      a.addAll(a);
-
-      return a;
-    };
-  }
 
   public static void mergeConsequences(ObjectNode targetOccurrence, ObjectNode sourceOccurrence) {
     val leftObservations = targetOccurrence.withArray(CONSEQUENCE_ARRAY_NAME);

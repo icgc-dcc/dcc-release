@@ -22,7 +22,6 @@ import static org.icgc.dcc.release.job.document.util.DocumentTypes.getBroadcastD
 import static org.icgc.dcc.release.job.document.util.DocumentTypes.getIndexClassName;
 
 import java.lang.reflect.Constructor;
-import java.util.Collection;
 import java.util.Map;
 
 import lombok.NonNull;
@@ -49,7 +48,6 @@ import org.icgc.dcc.release.job.document.task.ResolveProjectsTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -91,13 +89,11 @@ public class DocumentJob extends GenericJob {
     return outputFileTypes.toArray(new FileType[outputFileTypes.size()]);
   }
 
-  static String resolveIndexName(String releaseName) {
-    return "test-release-" + releaseName.toLowerCase();
-  }
-
   private void write(JobContext jobContext) {
-    for (val task : createStreamingTasks(jobContext)) {
-      jobContext.execute(task);
+    for (val documentType : DocumentType.values()) {
+      val indexJobContext = createIndexJobContext(jobContext, documentType);
+      jobContext.execute(createStreamingTask(jobContext, documentType, indexJobContext));
+      destroyBroadcasts(indexJobContext);
     }
 
     // Generate SSM VCF file
@@ -107,15 +103,10 @@ public class DocumentJob extends GenericJob {
   }
 
   @SneakyThrows
-  private Collection<? extends Task> createStreamingTasks(JobContext jobContext) {
-    val tasks = ImmutableList.<Task> builder();
-    for (val documentType : DocumentType.values()) {
-      val constructor = getConstructor(documentType);
-      val indexJobContext = createIndexJobContext(jobContext, documentType);
-      tasks.add((Task) constructor.newInstance(indexJobContext));
-    }
+  private Task createStreamingTask(JobContext jobContext, DocumentType documentType, DocumentJobContext indexJobContext) {
+    val constructor = getConstructor(documentType);
 
-    return tasks.build();
+    return (Task) constructor.newInstance(indexJobContext);
   }
 
   private static Constructor<?> getConstructor(DocumentType documentType) throws ClassNotFoundException,
@@ -180,6 +171,23 @@ public class DocumentJob extends GenericJob {
 
   private <T> Broadcast<T> createBroadcast(T value) {
     return sparkContext.broadcast(value);
+  }
+
+  private static void destroyBroadcasts(DocumentJobContext indexJobContext) {
+    val projects = indexJobContext.getProjectsBroadcast();
+    if (projects != null) {
+      projects.destroy(false);
+    }
+
+    val donors = indexJobContext.getDonorsBroadcast();
+    if (donors != null) {
+      donors.destroy(false);
+    }
+
+    val genes = indexJobContext.getGenesBroadcast();
+    if (genes != null) {
+      genes.destroy(false);
+    }
   }
 
 }

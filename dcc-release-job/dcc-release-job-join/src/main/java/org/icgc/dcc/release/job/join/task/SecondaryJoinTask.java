@@ -29,7 +29,6 @@ import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.PLACEMENT
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.SV_ID;
 import static org.icgc.dcc.release.core.util.JavaRDDs.getPartitionsCount;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
-import static org.icgc.dcc.release.job.join.utils.CombineFunctions.combineConsequences;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 
 import java.util.Collection;
@@ -43,6 +42,7 @@ import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.util.CombineFunctions;
 import org.icgc.dcc.release.job.join.function.AggregateConsequences;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 
@@ -114,9 +114,11 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
     val occurrencePairs = primaryMeta.mapToPair(keyFunction);
     val occurrencePartitions = getPartitionsCount(occurrencePairs);
 
-    val consequences = parseSecondary(secondaryFileType, taskContext)
-        .mapToPair(keyFunction)
-        .aggregateByKey(startValue, occurrencePartitions, new AggregateConsequences(), combineConsequences());
+    val consequences =
+        parseSecondary(secondaryFileType, taskContext)
+            .mapToPair(keyFunction)
+            .aggregateByKey(startValue, occurrencePartitions, new AggregateConsequences(),
+                CombineFunctions::combineCollections);
 
     return occurrencePairs
         .leftOuterJoin(consequences)

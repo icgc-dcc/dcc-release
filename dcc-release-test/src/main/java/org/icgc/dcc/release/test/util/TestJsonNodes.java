@@ -26,6 +26,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -119,43 +120,58 @@ public class TestJsonNodes {
     return result;
   }
 
+  private static Optional<String> getIdValue(String fieldName, JsonNode json) {
+    val id = json.path(fieldName);
+    if (!id.isMissingNode() && !id.isNull()) {
+      return Optional.of(id.textValue());
+    }
+
+    return Optional.empty();
+  }
+
   private static String resolveIdValue(JsonNode json) {
-    if (!json.path("donor_id").isMissingNode()) {
-      return json.get("donor_id").textValue();
+    val donorId = getIdValue("donor_id", json);
+    if (donorId.isPresent()) {
+      return donorId.get();
     }
 
-    if (!json.path("_donor_id").isMissingNode()) {
-      return json.get("_donor_id").textValue();
+    val surrogateDonorId = getIdValue("_donor_id", json);
+    if (surrogateDonorId.isPresent()) {
+      return surrogateDonorId.get();
     }
 
-    if (!json.path("_sample_id").isMissingNode()) {
-      return json.get("_sample_id").textValue();
+    val sampleId = getIdValue("_sample_id", json);
+    if (sampleId.isPresent()) {
+      return sampleId.get();
     }
 
-    if (!json.path("_specimen_id").isMissingNode()) {
-      return json.get("_specimen_id").textValue();
+    val specimenId = getIdValue("_specimen_id", json);
+    if (specimenId.isPresent()) {
+      return specimenId.get();
     }
 
-    if (!json.path("_gene_id").isMissingNode()) {
-      val geneId = json.get("_gene_id").textValue();
-      val transcript = json.path("_transcript_id");
+    val geneId = getIdValue("_gene_id", json);
+    if (geneId.isPresent()) {
+      val transcriptId = getIdValue("_transcript_id", json);
 
-      return transcript.isMissingNode() ? geneId : geneId + transcript.textValue();
+      return transcriptId.isPresent() ? geneId.get() + transcriptId.get() : geneId.get();
     }
 
-    if (!json.path("_mutation_id").isMissingNode()) {
-      return json.get("_mutation_id").textValue();
+    val mutationId = getIdValue("_mutation_id", json);
+    if (mutationId.isPresent()) {
+      return mutationId.get();
     }
 
-    if (!json.path("id").isMissingNode()) {
-      return json.get("id").textValue();
+    val id = getIdValue("id", json);
+    if (id.isPresent()) {
+      return id.get();
     }
 
-    if (!json.path("consequence_type").isMissingNode()) {
-      val consType = json.get("consequence_type").textValue();
-      val funcImpact = json.path("functional_impact_prediction_summary");
+    val consequenceType = getIdValue("consequence_type", json);
+    if (consequenceType.isPresent()) {
+      val funcImpact = getIdValue("functional_impact_prediction_summary", json);
 
-      return funcImpact.isMissingNode() ? consType : consType + funcImpact.textValue();
+      return funcImpact.isPresent() ? consequenceType.get() + funcImpact.get() : consequenceType.get();
     }
 
     return "";

@@ -15,44 +15,30 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.io;
+package org.icgc.dcc.release.core.util;
 
-import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
+import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
 
-import java.io.InputStream;
-import java.util.Iterator;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.icgc.dcc.release.core.function.ParseObjectNode;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
+@NoArgsConstructor(access = PRIVATE)
+public final class HadoopFiles {
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
-import org.icgc.dcc.release.core.job.FileType;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-@RequiredArgsConstructor
-public class HDFSMutationsReader {
-
-  @NonNull
-  private final String workingDir;
-  @NonNull
-  private final FileSystem fileSystem;
-  private final boolean compressed;
-
-  public Iterator<ObjectNode> createMutationsIterator() {
-    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
-    val inputStream = new FileGlobInputStream(fileSystem, inputPath, compressed);
-
-    return readInput(inputStream);
+  public static <T> JavaRDD<T> sequenceFile(JavaSparkContext sparkContext, String path, JobConf conf, Class<T> clazz) {
+    return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, BytesWritable.class)
+        .map(new ReadSequenceFile<T>(clazz));
   }
 
-  @SneakyThrows
-  private static Iterator<ObjectNode> readInput(InputStream inputStream) {
-    return READER.<ObjectNode> readValues(inputStream);
+  public static <T> JavaRDD<T> textFile(JavaSparkContext sparkContext, String path, JobConf conf, Class<T> clazz) {
+    return JavaRDDs.textFile(sparkContext, path, conf)
+        .map(tuple -> tuple._2.toString())
+        .map(new ParseObjectNode<T>(clazz));
   }
 
 }
