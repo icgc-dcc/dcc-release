@@ -87,7 +87,7 @@ public class Occurrence implements Serializable {
     private String control_genotype;
     private String observation_id;
     private Integer mutant_allele_read_count;
-    private Double quality_score;
+    private String quality_score;
     private String expressed_allele;
     private String biological_validation_platform;
     private String analysis_id;
