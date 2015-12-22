@@ -467,6 +467,7 @@ public final class DocumentTypes {
                                 observationFields()
                                     .includedFields(
                                         "_donor_id",
+                                        "_mutation_id", // Don't index
                                         "consequence._gene_id", // Don't index
                                         "consequence._transcript_id", // Don't index
                                         "consequence.consequence_type",

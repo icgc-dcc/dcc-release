@@ -3,6 +3,8 @@ package org.icgc.dcc.release.test.job;
 import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
+import static org.skyscreamer.jsonassert.JSONCompareMode.LENIENT;
 
 import java.io.File;
 import java.util.List;
@@ -11,6 +13,7 @@ import java.util.Optional;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -42,6 +45,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+@Slf4j
 public abstract class AbstractJobTest {
 
   /**
@@ -311,9 +315,29 @@ public abstract class AbstractJobTest {
         .collect(Collectors.toImmutableList());
   }
 
-  private static void compareResults(List<JsonNode> expectedResult, List<JsonNode> actualResult) {
+  private static void compareResults(List<? extends JsonNode> expectedResult, List<? extends JsonNode> actualResult) {
     assertThat(actualResult).hasSameSizeAs(expectedResult);
-    assertThat(actualResult).containsExactlyElementsOf(expectedResult);
+    for (int i = 0; i < expectedResult.size(); i++) {
+      val expectedJson = expectedResult.get(i).toString();
+      val actualJson = actualResult.get(i).toString();
+      compareJsons(expectedJson, actualJson);
+    }
+  }
+
+  @SneakyThrows
+  private static void compareJsons(String expected, String actual) {
+    try {
+      assertEquals(expected, actual, LENIENT);
+    } catch (AssertionError e) {
+      // Account for bug in previous implementation
+      val message = e.getMessage();
+
+      log.info("Expected:    {}", expected);
+      log.warn("Actual:      {}", actual);
+      log.error("Difference: {}", message);
+
+      throw e;
+    }
   }
 
   private static File resolveExpectedFile(FileType fileType) {
