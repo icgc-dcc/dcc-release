@@ -20,18 +20,19 @@ package org.icgc.dcc.release.job.document.transform;
 import static com.google.common.base.Objects.firstNonNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.icgc.dcc.common.core.model.FieldNames.CONSEQUENCE_AA_MUTATION;
+import static org.icgc.dcc.common.core.model.FieldNames.DONOR_PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SYMBOL;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_TRANSCRIPTS;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_OBSERVATION_DONOR;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_OBSERVATION_PROJECT;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS_CONSEQUENCE;
-import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS_GENE;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_IS_ANNOTATED;
@@ -280,6 +281,7 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     List<String> internalFields = newArrayList(OBSERVATION_ID, OBSERVATION_TYPE);
     List<String> migratedFields =
         newArrayList(
+            OBSERVATION_DONOR_ID,
             OBSERVATION_MUTATION_ID,
             OBSERVATION_CONSEQUENCES,
             OBSERVATION_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY,
@@ -290,8 +292,12 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
         .remove(migratedFields)
         .remove(keyFields);
 
+    // Trim donor
+    val donorCopy = donor.deepCopy();
+    donorCopy.remove(DONOR_PROJECT_ID);
+
     // Add entities
-    ssmOccurrence.set(MUTATION_OBSERVATION_DONOR, donor);
+    ssmOccurrence.set(MUTATION_OBSERVATION_DONOR, donorCopy);
     ssmOccurrence.set(MUTATION_OBSERVATION_PROJECT, project);
 
     return ssmOccurrence;
@@ -313,13 +319,12 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     // Remove
     val impactPredictionSummary =
         consequenceCopy.remove(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY);
-    val impactPrediction = consequenceCopy.remove(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION);
+    consequenceCopy.remove(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION);
 
     // Embed
     transcript.set(MUTATION_TRANSCRIPTS_CONSEQUENCE, consequenceCopy);
     transcript.set(MUTATION_TRANSCRIPTS_GENE, geneCopy);
     transcript.set(MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY, impactPredictionSummary);
-    transcript.set(MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION, impactPrediction);
 
     return transcript;
   }

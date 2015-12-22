@@ -385,24 +385,74 @@ public final class DocumentTypes {
                 attributes()
                     .indexClassName(MutationCentricDocumentTask.class.getName())
                     .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
-                    .fields(fields()
-                        .donorFields(
-                            donorFields()
-                                .excludedFields(
-                                    "_id",
-                                    "gene",
-                                    "specimen")
-                        )
-                        .geneFields(
-                            geneFields()
-                                .excludedFields(
-                                    "_id",
-                                    "project",
-                                    "donor",
-                                    "transcripts.domains",
-                                    "transcripts.exons")
+                    .fields(
+                        fields()
+                            .projectFields(
+                                projectFields()
+                                    .includedFields(
+                                        "_project_id",
+                                        "primary_site"
+                                    )
+                            )
+                            .donorFields(
+                                donorFields()
+                                    .includedFields(
+                                        "_donor_id",
+                                        "disease_status_last_followup",
+                                        "donor_relapse_type",
+                                        "donor_sex",
+                                        "donor_tumour_stage_at_diagnosis",
+                                        "donor_vital_status",
+                                        "_summary._age_at_diagnosis_group",
+                                        "_summary._available_data_type",
+                                        "_summary._state",
+                                        "_summary._studies",
+                                        "_summary.experimental_analysis_performed",
+                                        "_project_id" // Used as a foreign key
+                                    )
+                            )
+                            .geneFields(
+                                geneFields()
+                                    .includedFields(
+                                        "_gene_id",
+                                        "biotype",
+                                        "chromosome",
+                                        "curated_set",
+                                        "end",
+                                        "go_term.biological_process",
+                                        "go_term.cellular_component",
+                                        "go_term.molecular_function",
+                                        "pathway",
+                                        "start",
+                                        "symbol",
+                                        "transcripts.id",
+                                        "transcripts.name"
+                                    )
 
-                        )
+                            )
+                            .observationFields(
+                                observationFields()
+                                    .includedFields(
+                                        "_donor_id",
+                                        "consequence._gene_id", // Don't index
+                                        "consequence._transcript_id", // Don't index
+                                        "consequence.consequence_type",
+                                        "consequence.aa_mutation",
+                                        "consequence.gene_affected",
+                                        "consequence.functional_impact_prediction_summary",
+                                        "observation.platform",
+                                        "observation.sequencing_strategy",
+                                        "observation.verification_status"
+                                    )
+                            )
+                            .mutationFields(
+                                mutationFields()
+                                    .excludedFields(
+                                        "_id",
+                                        "assembly_version",
+                                        "reference_genome_allele"
+                                    )
+                            )
                     )
             )
             .build();
