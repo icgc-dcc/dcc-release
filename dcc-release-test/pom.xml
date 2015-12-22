@@ -52,11 +52,6 @@
       <artifactId>dcc-resources</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>dcc-common-test</artifactId>
-      <scope>test</scope>
-    </dependency>
 
     <!-- Testing - Unit, mocking, assertions (note: "test" scope implied due to dep management) -->
     <dependency>

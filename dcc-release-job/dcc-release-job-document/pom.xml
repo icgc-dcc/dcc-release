@@ -45,13 +45,6 @@
       <version>${picard.version}</version>
     </dependency>
 
-    <!-- Testing -->
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>dcc-common-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-
   </dependencies>
 
 </project>

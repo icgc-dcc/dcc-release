@@ -245,14 +245,6 @@
         <version>${jdbi.version}</version>
       </dependency>
 
-      <!-- Testing - DCC -->
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>dcc-common-test</artifactId>
-        <version>${dcc-common.version}</version>
-        <scope>test</scope>
-      </dependency>
-
       <!-- Testing - DCC Release -->
       <dependency>
         <groupId>${project.groupId}</groupId>
@@ -327,6 +319,12 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>dcc-etl-resources</artifactId>
       <version>${dcc-etl.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-common-test</artifactId>
+      <version>${dcc-common.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
