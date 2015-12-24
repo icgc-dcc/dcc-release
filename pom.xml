@@ -321,12 +321,6 @@
       <version>${dcc-etl.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>dcc-common-test</artifactId>
-      <version>${dcc-common.version}</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <properties>

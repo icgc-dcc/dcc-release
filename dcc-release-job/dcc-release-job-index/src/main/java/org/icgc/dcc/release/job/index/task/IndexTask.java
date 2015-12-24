@@ -39,7 +39,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @RequiredArgsConstructor
 public class IndexTask extends GenericTask  {
 
-  private static final long serialVersionUID = 5207503787859232749L;
   
   @NonNull
   private final String esUri;
