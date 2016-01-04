@@ -72,6 +72,11 @@
         <artifactId>dcc-etl-core</artifactId>
         <version>${dcc-etl.version}</version>
       </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-etl-resources</artifactId>
+        <version>${dcc-etl.version}</version>
+      </dependency>
 
       <!-- DCC - Common -->
       <dependency>
@@ -314,13 +319,6 @@
       <artifactId>annotations</artifactId>
     </dependency>
 
-    <!-- Testing - DCC -->
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>dcc-etl-resources</artifactId>
-      <version>${dcc-etl.version}</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <properties>
