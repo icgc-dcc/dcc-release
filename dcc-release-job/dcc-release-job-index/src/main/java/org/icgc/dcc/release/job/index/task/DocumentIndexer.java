@@ -63,7 +63,7 @@ public final class DocumentIndexer implements FlatMapFunction<Iterator<Document>
   private void checkDocumentWriter() {
     if (documentWriter == null) {
       val client = TransportClientFactory.newTransportClient(esUri, true);
-      documentWriter = new ElasticSearchDocumentWriter(client, indexName, documentType, 1);
+      documentWriter = new ElasticSearchDocumentWriter(client, indexName, documentType, 1, true);
     }
   }
 
