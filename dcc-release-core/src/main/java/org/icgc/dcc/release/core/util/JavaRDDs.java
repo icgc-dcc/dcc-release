@@ -102,11 +102,6 @@ public final class JavaRDDs {
   }
 
   public static JavaHadoopRDD<NullWritable, BytesWritable> combineSequenceFile(@NonNull JavaSparkContext sparkContext,
-      @NonNull String paths) {
-    return combineSequenceFile(sparkContext, paths, createJobConf(sparkContext));
-  }
-
-  public static JavaHadoopRDD<NullWritable, BytesWritable> combineSequenceFile(@NonNull JavaSparkContext sparkContext,
       @NonNull String paths, @NonNull JobConf conf) {
     CombineSequenceInputFormat.setInputPaths(conf, paths);
     val hadoopRDD = sparkContext.hadoopRDD(conf, CombineSequenceInputFormat.class, NullWritable.class,

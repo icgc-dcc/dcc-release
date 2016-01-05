@@ -40,6 +40,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class IndexTask extends GenericTask  {
 
   
+  private static final int PARTITION_SIZE_MB = 1024;
+  
   @NonNull
   private final String esUri;
   @NonNull
@@ -59,7 +61,7 @@ public class IndexTask extends GenericTask  {
 
   @Override
   public void execute(TaskContext taskContext) {
-    readInput(taskContext, documentType.getOutputFileType())
+    readInput(taskContext, documentType.getOutputFileType(), PARTITION_SIZE_MB)
         .map(createDocument(documentType))
         .mapPartitions(new DocumentIndexer(esUri, indexName, documentType))
         .count();

@@ -90,6 +90,9 @@ public abstract class GenericTask implements Task {
 
     val sparkContext = taskContext.getSparkContext();
     val path = taskContext.getPath(inputFileType);
+    if (!HadoopUtils.checkExistence(taskContext.getFileSystem(), path)) {
+      return taskContext.getSparkContext().emptyRDD();
+    }
 
     val input = taskContext.isCompressOutput() ?
         ObjectNodeRDDs.combineObjectNodeSequenceFile(sparkContext, path, hadoopConf) :
