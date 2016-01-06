@@ -19,6 +19,7 @@ package org.icgc.dcc.release.job.index.task;
 
 import java.util.Iterator;
 
+import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -26,7 +27,6 @@ import lombok.val;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.document.DocumentWriter;
 import org.icgc.dcc.release.job.index.factory.TransportClientFactory;
 import org.icgc.dcc.release.job.index.io.ElasticSearchDocumentWriter;
 
@@ -36,7 +36,7 @@ import com.google.common.collect.Lists;
 public final class DocumentIndexer implements FlatMapFunction<Iterator<Document>, Void> {
 
   private static final long serialVersionUID = 3834434199819463998L;
-  
+
   @NonNull
   private final String esUri;
   @NonNull
@@ -44,27 +44,19 @@ public final class DocumentIndexer implements FlatMapFunction<Iterator<Document>
   @NonNull
   private final DocumentType documentType;
 
-  private transient DocumentWriter documentWriter;
-
   @Override
   public Iterable<Void> call(Iterator<Document> document) throws Exception {
-    checkDocumentWriter();
+
+    @Cleanup
+    val client = TransportClientFactory.newTransportClient(esUri, true);
+    @Cleanup
+    val documentWriter = new ElasticSearchDocumentWriter(client, indexName, documentType, true);
 
     while (document.hasNext()) {
       documentWriter.write(document.next());
     }
 
-    documentWriter.close();
-    documentWriter = null;
-
     return Lists.newArrayList();
-  }
-
-  private void checkDocumentWriter() {
-    if (documentWriter == null) {
-      val client = TransportClientFactory.newTransportClient(esUri, true);
-      documentWriter = new ElasticSearchDocumentWriter(client, indexName, documentType, 1, true);
-    }
   }
 
 }

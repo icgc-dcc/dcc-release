@@ -194,7 +194,7 @@ public final class DocumentTypes {
                                     "_project_id",
 
                                     // Summary
-                                    "gene._gene_id",
+                                    "gene",
                                     "_summary",
 
                                     // Data

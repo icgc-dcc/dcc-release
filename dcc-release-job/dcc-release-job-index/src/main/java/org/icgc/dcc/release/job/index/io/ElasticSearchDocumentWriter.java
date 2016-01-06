@@ -17,10 +17,9 @@
  */
 package org.icgc.dcc.release.job.index.io;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus.GREEN;
 import static org.elasticsearch.action.bulk.BulkProcessor.builder;
 import static org.elasticsearch.client.Requests.indexRequest;
 import static org.elasticsearch.common.unit.ByteSizeUnit.MB;
@@ -30,7 +29,7 @@ import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.release.job.index.factory.JacksonFactory.newSmileWriter;
 
 import java.io.IOException;
-import java.util.concurrent.Semaphore;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.Getter;
@@ -38,6 +37,8 @@ import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkProcessor.Listener;
@@ -64,11 +65,9 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
    */
   private static final int BULK_ACTIONS = -1; // Unlimited
   private static final ByteSizeValue BULK_SIZE = new ByteSizeValue(75, MB);
-  private static final int SHUTDOWN_PERIOD_MINUTES = 60;
   private static final ObjectWriter BINARY_WRITER = newSmileWriter();
   private static final double TIMEOUT_MUTLIPLIPER = 1.3;
   private static final long DEFAULT_SLEEP_TIMEOUT = 5000L;
-  private static final long DEFAULT_FAILED_EXECUTION_ID = -1L;
   private static final int MAX_FAILED_RETRIES = 5;
 
   /**
@@ -81,17 +80,20 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
   /**
    * Configuration.
    */
-  private final int concurrentRequests;
+  private final String writerId = createWriterId();
 
   /**
    * Batching state.
    */
   private final BulkProcessor processor;
-  private final AtomicInteger batchErrorCount = new AtomicInteger(0);
-  private final Semaphore semaphore; // See https://github.com/elasticsearch/elasticsearch/issues/6314
+
+  /**
+   * A flag that indicates that a bulk load is in progress.
+   */
+  private final AtomicInteger pendingBulkRequest = new AtomicInteger(0);
+  private final AtomicInteger batchRetryCount = new AtomicInteger(0);
   private long sleepTimeout = DEFAULT_SLEEP_TIMEOUT;
-  private long failedExecutionId = DEFAULT_FAILED_EXECUTION_ID;
-  private final boolean isCheckClusterState;
+  private final boolean isCheckClusterStateBeforeLoad;
 
   /**
    * Dependencies.
@@ -105,15 +107,13 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
   @Getter
   private final AtomicInteger totalRetries = new AtomicInteger(0);
 
-  public ElasticSearchDocumentWriter(Client client, String indexName, DocumentType type, int concurrentRequests,
-      boolean isCheckClusterState) {
+  public ElasticSearchDocumentWriter(Client client, String indexName, DocumentType type, boolean isCheckClusterState) {
     this.indexName = indexName;
     this.type = type;
-    this.concurrentRequests = concurrentRequests;
     this.processor = createProcessor(client);
-    this.semaphore = new Semaphore(concurrentRequests);
     this.client = client;
-    this.isCheckClusterState = isCheckClusterState;
+    this.isCheckClusterStateBeforeLoad = isCheckClusterState;
+    log.info("[{}] Created ES document writer.", writerId);
   }
 
   @Override
@@ -127,28 +127,21 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
   @Override
   @SneakyThrows
   public void close() throws IOException {
-    log.info("Closing bulk processor...");
+    // Initiate an index request which will set the pendingBulkRequest
+    processor.flush();
+
+    log.info("[{}] Closing bulk processor...", writerId);
+    waitForPendingRequests();
     processor.close();
-    log.info("Finished closing bulk processor");
-
-    log.info("Sleeping for 1 s...");
-    SECONDS.sleep(1);
-
-    val pendingCount = getPendingCount();
-    if (pendingCount > 0) {
-      log.info("Waiting up to {} mins for pending bulk requests...", SHUTDOWN_PERIOD_MINUTES, pendingCount);
-      checkState(semaphore.tryAcquire(concurrentRequests, SHUTDOWN_PERIOD_MINUTES, MINUTES),
-          "%s bulk requests failed to complete within the shutdown period", getPendingCount());
-    }
-
-    checkState(batchErrorCount.get() == 0, "Encountered %s batch errors when writing to ElasticSearch",
-        batchErrorCount.get());
-
-    log.info("Finished indexing {} '{}' documents", formatCount(documentCount), type.getName());
+    log.info("[{}] Finished indexing {} '{}' documents", writerId, formatCount(documentCount), type.getName());
   }
 
-  private int getPendingCount() {
-    return concurrentRequests - semaphore.availablePermits();
+  @SneakyThrows
+  private void waitForPendingRequests() {
+    while (pendingBulkRequest.get() != 0) {
+      log.info("[{}] The processor has pending requests. Waiting for 5 secs...", writerId);
+      SECONDS.sleep(5);
+    }
   }
 
   private IndexRequest createRequest(String id, Object value) {
@@ -159,34 +152,29 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
         .source(createSource(value));
   }
 
-  private byte[] createSource(Object document) {
-    try {
-      return BINARY_WRITER.writeValueAsBytes(document);
-    } catch (JsonProcessingException e) {
-      propagate(e);
-      return null;
-    }
-  }
-
   private BulkProcessor createProcessor(Client client) {
     return builder(client, createListener())
         .setBulkActions(BULK_ACTIONS)
         .setBulkSize(BULK_SIZE)
-        .setConcurrentRequests(concurrentRequests)
+        .setConcurrentRequests(0)
         .build();
   }
 
-  private void checkIfClusterGreen() {
-    boolean isGreen = false;
-    while (!isGreen) {
-      log.info("Checking for cluster state before loading.");
-      val health = client.admin().cluster().prepareHealth(indexName).execute().actionGet();
+  /**
+   * @throws ExhausedRetryException
+   */
+  private void checkClusterState() {
+    boolean isClusterGreen = false;
 
-      if (health.getStatus() == ClusterHealthStatus.GREEN) {
-        isGreen = true;
+    while (!isClusterGreen) {
+      log.info("[{}] Checking for cluster state before loading.", writerId);
+      val healthStatus = getHealthStatus(client, indexName);
+
+      if (healthStatus == GREEN) {
+        isClusterGreen = true;
         sleepTimeout = DEFAULT_SLEEP_TIMEOUT;
       } else {
-        log.warn("Cluster is {}. Sleeping", health.getStatus());
+        log.warn("[{}] Cluster is '{}'. Sleeping...", writerId, healthStatus);
         sleep();
       }
     }
@@ -198,18 +186,111 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
     sleepTimeout = Math.round(sleepTimeout * TIMEOUT_MUTLIPLIPER);
   }
 
-  private boolean isRetryFailed() {
-    return batchErrorCount.get() < MAX_FAILED_RETRIES;
+  /**
+   * Checks if the retries are not exhausted yet.
+   * @throws ExhausedRetryException
+   */
+  private void checkRetryFailed() {
+    if (batchRetryCount.get() > MAX_FAILED_RETRIES) {
+      log.warn("[{}] Exhausted retries. Giving up...", writerId);
+      throw new ExhausedRetryException();
+    }
   }
 
   /**
-   * Blindly relies on the fact that this loader is single threaded.
+   * Cleans {@code pendingBulkRequest} and {@code batchErrorCount}.
    */
-  private void resetFailedCount(long executionId) {
-    if (executionId == failedExecutionId) {
-      log.info("Successfully load failed index request '{}'", executionId);
-      failedExecutionId = DEFAULT_FAILED_EXECUTION_ID;
-      batchErrorCount.set(0);
+  private void resetIndexState() {
+    pendingBulkRequest.set(0);
+    batchRetryCount.set(0);
+  }
+
+  private void retryRequest(long executionId, BulkRequest request) {
+    checkRetryFailed();
+
+    if (isCheckClusterStateBeforeLoad) {
+      checkClusterState();
+    }
+
+    log.info("[{}] Retrying failed index request '{}'", writerId, executionId);
+    totalRetries.incrementAndGet();
+    batchRetryCount.incrementAndGet();
+    reindexBulkRequest(processor, request);
+  }
+
+  private void printRequestStats(long executionId, BulkRequest request) {
+    val count = request.numberOfActions();
+    val bytes = request.estimatedSizeInBytes();
+    log.info("[{}] Sending '{}' bulk request '{}' with {} items ({} bytes)",
+        writerId, type, executionId, formatCount(count), formatBytes(bytes));
+  }
+
+  private static void reindexBulkRequest(BulkProcessor processor, BulkRequest bulkRequest) {
+    for (ActionRequest<?> request : bulkRequest.requests()) {
+      processor.add(request);
+    }
+    processor.flush();
+  }
+
+  /**
+   * @throws ExhausedRetryException
+   */
+  private static ClusterHealthStatus getHealthStatus(Client client, String indexName) {
+    ClusterHealthStatus healthStatus = null;
+    int availableRetries = MAX_FAILED_RETRIES;
+
+    while (availableRetries-- > 0) {
+      try {
+        healthStatus = getClusterHealthStatus(client, indexName);
+      } catch (ElasticsearchException e) {
+        log.warn("{}", e);
+      }
+    }
+
+    if (healthStatus == null) {
+      throw new ExhausedRetryException();
+    }
+
+    return healthStatus;
+  }
+
+  private static ClusterHealthStatus getClusterHealthStatus(Client client, String indexName) {
+    return client
+        .admin()
+        .cluster()
+        .prepareHealth(indexName)
+        .execute()
+        .actionGet()
+        .getStatus();
+  }
+
+  private static String createWriterId() {
+    val id = new Random().nextInt();
+    return String.valueOf(Math.abs(id));
+  }
+
+  @SuppressWarnings("rawtypes")
+  private static void reindexFailedRequests(BulkProcessor processor, BulkRequest bulkRequest, BulkResponse bulkResponse) {
+    val requests = bulkRequest.requests();
+    val iterator = bulkResponse.iterator();
+
+    while (iterator.hasNext()) {
+      val response = iterator.next();
+      if (response.isFailed()) {
+        val request = requests.get(response.getItemId());
+        processor.add(request);
+      }
+    }
+
+    processor.flush();
+  }
+
+  private static byte[] createSource(Object document) {
+    try {
+      return BINARY_WRITER.writeValueAsBytes(document);
+    } catch (JsonProcessingException e) {
+      propagate(e);
+      return null;
     }
   }
 
@@ -217,51 +298,38 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
     return new BulkProcessor.Listener() {
 
       @Override
-      @SneakyThrows
       public void beforeBulk(long executionId, BulkRequest request) {
-        if (isCheckClusterState) {
-          checkIfClusterGreen();
-        }
-        semaphore.acquire();
-
-        val count = request.numberOfActions();
-        val bytes = request.estimatedSizeInBytes();
-        log.info("Sending '{}' bulk request with {} items ({} bytes)",
-            new Object[] { type, formatCount(count), formatBytes(bytes) });
+        pendingBulkRequest.incrementAndGet();
+        printRequestStats(executionId, request);
       }
 
       @Override
       public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
-        semaphore.release();
+        // Unsuccessful bulk response. Re-index only failed requests.
+        if (response.hasFailures()) {
+          log.info("[{}] Encountered exceptions during bulk load: ", writerId, response.buildFailureMessage());
+          reindexFailedRequests(processor, request, response);
+        }
 
-        checkState(!response.hasFailures(), "Failed to index: %s", response.buildFailureMessage());
-        resetFailedCount(executionId);
+        // Successful bulk response
+        log.info("[{}] Successfully loaded bulk request '{}'.", writerId, executionId);
+        resetIndexState();
       }
 
       @Override
       public void afterBulk(long executionId, BulkRequest request, Throwable failure) {
-        log.info("Encountered exception during bulk load: ", failure);
-        // Record errors for enclosing class
-        batchErrorCount.incrementAndGet();
-        totalRetries.incrementAndGet();
-
-        semaphore.release();
-
-        if (isRetryFailed()) {
-          log.info("Flushing pending requests before retry...");
-          processor.flush();
-          log.info("Flushing finished. Retrying failed index request '{}'", executionId);
-          processor.add(request);
-          failedExecutionId = executionId;
-
-          return;
+        // Exhausted retries. Abort indexing.
+        if (failure instanceof ExhausedRetryException) {
+          propagate(failure);
         }
 
-        log.error("Error performing bulk: ", failure);
-        propagate(failure);
+        log.info("[{}] Encountered exception during bulk load: ", writerId, failure);
+        retryRequest(executionId, request);
       }
 
     };
   }
+
+  private static class ExhausedRetryException extends RuntimeException {}
 
 }
