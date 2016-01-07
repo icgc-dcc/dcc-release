@@ -336,7 +336,6 @@ public final class DocumentTypes {
                                         "description",
                                         "external_db_ids",
                                         "project",
-                                        "sets",
                                         "strand",
                                         "synonyms",
                                         "transcripts"
