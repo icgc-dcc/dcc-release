@@ -67,8 +67,8 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
   private static final int BULK_ACTIONS = -1; // Unlimited
   private static final ByteSizeValue BULK_SIZE = new ByteSizeValue(75, MB);
   private static final ObjectWriter BINARY_WRITER = newSmileWriter();
-  private static final double TIMEOUT_MUTLIPLIPER = 1.3;
-  private static final long DEFAULT_SLEEP_TIMEOUT = 5000L;
+  private static final float TIMEOUT_MUTLIPLIPER = 1.3f;
+  private static final int DEFAULT_SLEEP_TIMEOUT_SECONDS = 5;
   private static final int MAX_FAILED_RETRIES = 5;
 
   /**
@@ -93,7 +93,6 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
    */
   private final AtomicInteger pendingBulkRequest = new AtomicInteger(0);
   private final AtomicInteger batchRetryCount = new AtomicInteger(0);
-  private long sleepTimeout = DEFAULT_SLEEP_TIMEOUT;
   private final boolean isCheckClusterStateBeforeLoad;
 
   /**
@@ -166,25 +165,28 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
    */
   private void checkClusterState() {
     boolean isClusterGreen = false;
+    int timeoutSecs = DEFAULT_SLEEP_TIMEOUT_SECONDS;
 
     while (!isClusterGreen) {
       log.info("[{}] Checking for cluster state before loading.", writerId);
       val healthStatus = getHealthStatus(client, indexName);
-
       if (healthStatus == GREEN) {
         isClusterGreen = true;
-        sleepTimeout = DEFAULT_SLEEP_TIMEOUT;
       } else {
         log.warn("[{}] Cluster is '{}'. Sleeping...", writerId, healthStatus);
-        sleep();
+        timeoutSecs = sleep(timeoutSecs);
       }
     }
   }
 
+  /**
+   * Sleeps for {@code timeoutSeconds} and return next sleep timeout.
+   */
   @SneakyThrows
-  private void sleep() {
-    Thread.sleep(sleepTimeout);
-    sleepTimeout = Math.round(sleepTimeout * TIMEOUT_MUTLIPLIPER);
+  private static int sleep(int timeoutSeconds) {
+    SECONDS.sleep(timeoutSeconds);
+
+    return Math.round(timeoutSeconds * TIMEOUT_MUTLIPLIPER);
   }
 
   /**
@@ -244,6 +246,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
   private static ClusterHealthStatus getHealthStatus(Client client, String indexName) {
     ClusterHealthStatus healthStatus = null;
     int availableRetries = MAX_FAILED_RETRIES;
+    int timeoutSecs = DEFAULT_SLEEP_TIMEOUT_SECONDS;
 
     while (availableRetries-- > 0) {
       try {
@@ -252,6 +255,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
         val retryCount = MAX_FAILED_RETRIES - availableRetries;
         log.warn("[{}/{}] Failed to check cluster health. Retrying because of exception:", retryCount,
             MAX_FAILED_RETRIES, e);
+        timeoutSecs = sleep(timeoutSecs);
       }
     }
 
