@@ -37,11 +37,10 @@ import org.icgc.dcc.release.core.util.ObjectNodes;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @RequiredArgsConstructor
-public class IndexTask extends GenericTask  {
+public class IndexTask extends GenericTask {
 
-  
-  private static final int PARTITION_SIZE_MB = 1024;
-  
+  private static final int PARTITION_SIZE_MB = 512;
+
   @NonNull
   private final String esUri;
   @NonNull

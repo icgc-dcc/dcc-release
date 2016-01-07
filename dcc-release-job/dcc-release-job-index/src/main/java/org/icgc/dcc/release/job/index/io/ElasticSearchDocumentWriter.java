@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.index.io;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus.GREEN;
@@ -209,7 +210,12 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
     checkRetryFailed();
 
     if (isCheckClusterStateBeforeLoad) {
-      checkClusterState();
+      try {
+        checkClusterState();
+      } catch (ExhausedRetryException e) {
+        resetIndexState();
+        throw propagate(e);
+      }
     }
 
     log.info("[{}] Retrying failed index request '{}'", writerId, executionId);
@@ -243,13 +249,19 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
       try {
         healthStatus = getClusterHealthStatus(client, indexName);
       } catch (ElasticsearchException e) {
-        log.warn("{}", e);
+        val retryCount = MAX_FAILED_RETRIES - availableRetries;
+        log.warn("[{}/{}] Failed to check cluster health. Retrying because of exception:", retryCount,
+            MAX_FAILED_RETRIES, e);
       }
     }
 
+    // No more retries and no health status
     if (healthStatus == null) {
+      log.warn("Failed to check cluster health in '{}' attempts. Exiting...", MAX_FAILED_RETRIES);
       throw new ExhausedRetryException();
     }
+
+    checkState(availableRetries != 0, "Cluster healthcheck should failed but instead it's equals to %s", healthStatus);
 
     return healthStatus;
   }
@@ -266,6 +278,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
 
   private static String createWriterId() {
     val id = new Random().nextInt();
+
     return String.valueOf(Math.abs(id));
   }
 
@@ -289,8 +302,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
     try {
       return BINARY_WRITER.writeValueAsBytes(document);
     } catch (JsonProcessingException e) {
-      propagate(e);
-      return null;
+      throw propagate(e);
     }
   }
 
@@ -320,7 +332,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
       public void afterBulk(long executionId, BulkRequest request, Throwable failure) {
         // Exhausted retries. Abort indexing.
         if (failure instanceof ExhausedRetryException) {
-          propagate(failure);
+          throw propagate(failure);
         }
 
         log.info("[{}] Encountered exception during bulk load: ", writerId, failure);
