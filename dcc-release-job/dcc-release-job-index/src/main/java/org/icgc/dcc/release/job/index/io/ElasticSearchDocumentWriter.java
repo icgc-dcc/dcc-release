@@ -19,6 +19,7 @@ package org.icgc.dcc.release.job.index.io;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.propagate;
+import static com.google.common.base.Throwables.propagateIfPossible;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus.GREEN;
 import static org.elasticsearch.action.bulk.BulkProcessor.builder;
@@ -79,7 +80,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
   private final DocumentType type;
 
   /**
-   * Configuration.
+   * Helps to track log records related to this particular writer.
    */
   private final String writerId = createWriterId();
 
@@ -88,12 +89,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
    */
   private final BulkProcessor processor;
 
-  /**
-   * A flag that indicates that a bulk load is in progress.
-   */
-  private final AtomicInteger pendingBulkRequest = new AtomicInteger(0);
-  private final AtomicInteger batchRetryCount = new AtomicInteger(0);
-  private final boolean isCheckClusterStateBeforeLoad;
+  private final boolean checkClusterStateBeforeLoad;
 
   /**
    * Dependencies.
@@ -106,13 +102,16 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
   private int documentCount;
   @Getter
   private final AtomicInteger totalRetries = new AtomicInteger(0);
+  // A flag that indicates that a bulk load is in progress.
+  private final AtomicInteger pendingBulkRequest = new AtomicInteger(0);
+  private final AtomicInteger batchRetryCount = new AtomicInteger(0);
 
   public ElasticSearchDocumentWriter(Client client, String indexName, DocumentType type, boolean isCheckClusterState) {
     this.indexName = indexName;
     this.type = type;
     this.processor = createProcessor(client);
     this.client = client;
-    this.isCheckClusterStateBeforeLoad = isCheckClusterState;
+    this.checkClusterStateBeforeLoad = isCheckClusterState;
     log.info("[{}] Created ES document writer.", writerId);
   }
 
@@ -211,7 +210,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
   private void retryRequest(long executionId, BulkRequest request) {
     checkRetryFailed();
 
-    if (isCheckClusterStateBeforeLoad) {
+    if (checkClusterStateBeforeLoad) {
       try {
         checkClusterState();
       } catch (ExhausedRetryException e) {
@@ -253,7 +252,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
         healthStatus = getClusterHealthStatus(client, indexName);
       } catch (ElasticsearchException e) {
         val retryCount = MAX_FAILED_RETRIES - availableRetries;
-        log.warn("[{}/{}] Failed to check cluster health. Retrying because of exception:", retryCount,
+        log.warn("[{}/{}] Failed to check cluster health. Retrying because of exception: {}", retryCount,
             MAX_FAILED_RETRIES, e);
         timeoutSecs = sleep(timeoutSecs);
       }
@@ -294,8 +293,8 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
     while (iterator.hasNext()) {
       val response = iterator.next();
       if (response.isFailed()) {
-        val request = requests.get(response.getItemId());
-        processor.add(request);
+        val failedRequest = requests.get(response.getItemId());
+        processor.add(failedRequest);
       }
     }
 
@@ -323,7 +322,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
       public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
         // Unsuccessful bulk response. Re-index only failed requests.
         if (response.hasFailures()) {
-          log.info("[{}] Encountered exceptions during bulk load: ", writerId, response.buildFailureMessage());
+          log.info("[{}] Encountered exceptions during bulk load: {}", writerId, response.buildFailureMessage());
           reindexFailedRequests(processor, request, response);
         }
 
@@ -335,11 +334,9 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
       @Override
       public void afterBulk(long executionId, BulkRequest request, Throwable failure) {
         // Exhausted retries. Abort indexing.
-        if (failure instanceof ExhausedRetryException) {
-          throw propagate(failure);
-        }
+        propagateIfPossible(failure, ExhausedRetryException.class);
 
-        log.info("[{}] Encountered exception during bulk load: ", writerId, failure);
+        log.info("[{}] Encountered exception during bulk load: {}", writerId, failure);
         retryRequest(executionId, request);
       }
 
