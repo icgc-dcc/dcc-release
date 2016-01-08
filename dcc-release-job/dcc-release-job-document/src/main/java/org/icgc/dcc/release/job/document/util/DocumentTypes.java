@@ -380,14 +380,10 @@ public final class DocumentTypes {
                                     .includedFields(
                                         "_gene_id",
                                         "biotype",
-                                        "go_term.cellular_component",
-                                        "go_term.biological_process",
-                                        "go_term.molecular_function",
-                                        "curated_set",
                                         "chromosome",
                                         "start",
                                         "end",
-                                        "pathway")
+                                        "sets")
 
                             )
                             .observationFields(
@@ -486,12 +482,8 @@ public final class DocumentTypes {
                                         "_gene_id",
                                         "biotype",
                                         "chromosome",
-                                        "curated_set",
                                         "end",
-                                        "go_term.biological_process",
-                                        "go_term.cellular_component",
-                                        "go_term.molecular_function",
-                                        "pathway",
+                                        "sets",
                                         "start",
                                         "symbol",
                                         "transcripts.id",
