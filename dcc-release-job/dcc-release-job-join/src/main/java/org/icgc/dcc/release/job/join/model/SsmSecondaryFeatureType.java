@@ -25,7 +25,9 @@ import lombok.Data;
 public class SsmSecondaryFeatureType implements Serializable {
 
   protected String aa_change;
+  protected String aa_mutation;
   protected String cds_change;
+  protected String cds_mutation;
   protected String consequence_type;
   protected String gene_affected;
   protected String gene_build_version;

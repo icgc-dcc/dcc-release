@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.join.function;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collection;
@@ -70,7 +71,7 @@ public final class CreateOccurrence implements
 
     // Get meta
     val meta = getMeta(getPrimaryMetaKey(primary));
-    checkState(meta != null, "A primary record must have a corresponding meta record. {}", primary);
+    checkNotNull(meta, "A primary record must have a corresponding meta record. %s", primary);
 
     // Create occurrence
     val occurrence = SsmOccurrenceFactory.createSsmOccurrence(primary, meta);

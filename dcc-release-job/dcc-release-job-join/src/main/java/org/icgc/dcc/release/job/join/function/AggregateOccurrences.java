@@ -17,8 +17,15 @@
  */
 package org.icgc.dcc.release.job.join.function;
 
+import java.util.Set;
+
+import lombok.val;
+
 import org.apache.spark.api.java.function.Function2;
 import org.icgc.dcc.release.job.join.model.SsmOccurrence;
+import org.icgc.dcc.release.job.join.model.SsmOccurrence.Consequence;
+
+import com.google.common.collect.Sets;
 
 public class AggregateOccurrences implements Function2<SsmOccurrence, SsmOccurrence, SsmOccurrence> {
 
@@ -28,10 +35,24 @@ public class AggregateOccurrences implements Function2<SsmOccurrence, SsmOccurre
       return occurrence;
     }
 
-    aggregator.getConsequence().addAll(occurrence.getConsequence());
+    val occurrenceConsequences = occurrence.getConsequence();
+    if (occurrenceConsequences != null) {
+      getConsequeces(aggregator).addAll(occurrenceConsequences);
+    }
+
     aggregator.getObservation().addAll(occurrence.getObservation());
 
     return aggregator;
+  }
+
+  private static Set<Consequence> getConsequeces(SsmOccurrence occurrence) {
+    Set<Consequence> consequences = occurrence.getConsequence();
+    if (consequences == null) {
+      consequences = Sets.newHashSet();
+      occurrence.setConsequence(consequences);
+    }
+
+    return consequences;
   }
 
 }

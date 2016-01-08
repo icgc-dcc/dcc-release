@@ -37,9 +37,11 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
+import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 import org.icgc.dcc.common.core.model.Marking;
+import org.icgc.dcc.common.core.util.Separators;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
@@ -118,7 +120,7 @@ public class ObservationJoinTask extends GenericTask {
     return t -> {
       SsmPrimaryFeatureType row = t._2;
       Optional<Marking> marking = Marking.from(row.getMarking());
-      checkState(marking.isPresent(), "Failed to resolve marking from {}", row);
+      checkState(marking.isPresent(), "Failed to resolve marking from %s", row);
 
       return !marking.get().isControlled();
     };
@@ -131,29 +133,25 @@ public class ObservationJoinTask extends GenericTask {
       JavaPairRDD<String, Collection<Consequence>> consequences,
       Broadcast<Map<String, SsmMetaFeatureType>> metaPairsBroadcast)
   {
+    SsmOccurrence zeroValue = null;
+    val createOccurrences = new CreateOccurrence(metaPairsBroadcast, donorSamples, sampleToSurrogageSampleId);
 
     val occurrences = primary
         .leftOuterJoin(consequences)
-        .aggregateByKey(null,
-            new CreateOccurrence(metaPairsBroadcast, donorSamples, sampleToSurrogageSampleId),
-            combinePrimarySecondary())
+        .aggregateByKey(zeroValue, createOccurrences, combinePrimarySecondary())
         .mapToPair(new KeyDonorMutataionId(donorSamples));
 
     // Merge occurrences
     val aggregateFunction = new AggregateOccurrences();
 
     return occurrences
-        .aggregateByKey(null, aggregateFunction, aggregateFunction)
+        .aggregateByKey(zeroValue, aggregateFunction, aggregateFunction)
         .values();
   }
 
   private Broadcast<Map<String, SsmMetaFeatureType>> resolveMeta(TaskContext taskContext) {
     val metaPairs = parseSsmM(taskContext)
-        .mapToPair(meta -> {
-          String key = Keys.getKey(meta.getAnalysis_id(), meta.getAnalyzed_sample_id());
-
-          return tuple(key, meta);
-        })
+        .mapToPair(keyMeta())
         .collectAsMap();
 
     final Broadcast<Map<String, SsmMetaFeatureType>> metaPairsBroadcast = taskContext
@@ -209,11 +207,12 @@ public class ObservationJoinTask extends GenericTask {
       throws NoSuchMethodException {
     val methodName = resolveMethodName(field, prefix);
     val method = primary.getClass().getMethod(methodName, params);
+
     return method;
   }
 
   private static String resolveMethodName(String field, String prefix) {
-    val methodName = field.startsWith("_") ? field : capitalizeFirstLetter(field);
+    val methodName = field.startsWith(Separators.UNDERSCORE) ? field : capitalizeFirstLetter(field);
 
     return prefix + methodName;
   }
@@ -222,7 +221,16 @@ public class ObservationJoinTask extends GenericTask {
     if (original == null || original.length() == 0) {
       return original;
     }
+
     return original.substring(0, 1).toUpperCase() + original.substring(1);
+  }
+
+  private static PairFunction<SsmMetaFeatureType, String, SsmMetaFeatureType> keyMeta() {
+    return meta -> {
+      String key = Keys.getKey(meta.getAnalysis_id(), meta.getAnalyzed_sample_id());
+
+      return tuple(key, meta);
+    };
   }
 
   private void writeSsm(TaskContext taskContext, JavaRDD<SsmOccurrence> output) {
