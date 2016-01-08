@@ -184,7 +184,7 @@ public class ObservationJoinTask extends GenericTask {
       List<String> controlledFields) {
     return row -> {
       for (String field : controlledFields) {
-        val clazz = getParamType(row, field);
+        Class<?> clazz = getParamType(row, field);
         unsetField(row, field, clazz);
       }
 
