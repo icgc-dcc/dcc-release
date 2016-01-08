@@ -21,6 +21,9 @@ import java.io.Serializable;
 
 import lombok.Value;
 
+/**
+ * A container for _donor_id, _specimen_id, _sample_id.
+ */
 @Value
 public class DonorSample implements Serializable {
 

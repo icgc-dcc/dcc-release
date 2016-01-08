@@ -18,19 +18,19 @@
 package org.icgc.dcc.release.job.join.task;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_DONOR_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
 import static org.icgc.dcc.release.core.util.JavaRDDs.getPartitionsCount;
-import static org.icgc.dcc.release.core.util.Keys.KEY_SEPARATOR;
+import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 import static org.icgc.dcc.release.job.join.utils.Tasks.resolveDonorSamples;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaPairRDD;
@@ -40,32 +40,30 @@ import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 import org.icgc.dcc.common.core.model.Marking;
-import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.util.CombineFunctions;
-import org.icgc.dcc.release.core.util.Observations;
+import org.icgc.dcc.release.core.util.JacksonFactory;
+import org.icgc.dcc.release.core.util.Keys;
 import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
 import org.icgc.dcc.release.job.join.function.AggregateObservationConsequences;
-import org.icgc.dcc.release.job.join.function.AggregateObservations;
-import org.icgc.dcc.release.job.join.function.AggregatePrimarySecondary;
-import org.icgc.dcc.release.job.join.function.CombineObservations;
-import org.icgc.dcc.release.job.join.function.KeyAnalysisIdAnalyzedSampleIdField;
+import org.icgc.dcc.release.job.join.function.AggregateOccurrences;
+import org.icgc.dcc.release.job.join.function.CreateOccurrence;
 import org.icgc.dcc.release.job.join.function.KeyDonorMutataionId;
 import org.icgc.dcc.release.job.join.model.DonorSample;
+import org.icgc.dcc.release.job.join.model.SsmMetaFeatureType;
+import org.icgc.dcc.release.job.join.model.SsmOccurrence;
+import org.icgc.dcc.release.job.join.model.SsmOccurrence.Consequence;
+import org.icgc.dcc.release.job.join.model.SsmPrimaryFeatureType;
 
 import scala.Tuple2;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
 @RequiredArgsConstructor
 public class ObservationJoinTask extends GenericTask {
-
-  private static final int DONOR_ID_INDEX = 0;
-  private static final KeyFields PRIMARY_SECONDARY_KEY_FUNCTION = new KeyFields(NORMALIZER_OBSERVATION_ID);
 
   @NonNull
   private final Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesBroadcast;
@@ -81,9 +79,8 @@ public class ObservationJoinTask extends GenericTask {
     val sampleToSurrogageSampleId = getSampleSurrogateSampleIds(taskContext, sampleSurrogateSampleIdsBroadcast);
 
     // Prepare primaries
-    val primarySecondaryKeyFunction = new KeyFields(NORMALIZER_OBSERVATION_ID);
     val primary = parseSsmP(taskContext)
-        .mapToPair(primarySecondaryKeyFunction);
+        .mapToPair(o -> tuple(o.getObservation_id(), o));
 
     val primaryPartitions = getPartitionsCount(primary);
     primary.persist(StorageLevel.MEMORY_ONLY_SER());
@@ -109,111 +106,148 @@ public class ObservationJoinTask extends GenericTask {
     consequences.unpersist(false);
   }
 
-  private static JavaPairRDD<String, ObjectNode> filterControlledData(JavaPairRDD<String, ObjectNode> primary,
+  private static JavaPairRDD<String, SsmPrimaryFeatureType> filterControlledData(
+      JavaPairRDD<String, SsmPrimaryFeatureType> primary,
       List<String> controlledFields) {
     return primary
         .filter(filterControlledRecords())
         .mapValues(removeControlledFields(controlledFields));
   }
 
-  private static Function<Tuple2<String, ObjectNode>, Boolean> filterControlledRecords() {
+  private static Function<Tuple2<String, SsmPrimaryFeatureType>, Boolean> filterControlledRecords() {
     return t -> {
-      ObjectNode row = t._2;
-      Optional<Marking> marking = Observations.getMarking(row);
+      SsmPrimaryFeatureType row = t._2;
+      Optional<Marking> marking = Marking.from(row.getMarking());
       checkState(marking.isPresent(), "Failed to resolve marking from {}", row);
 
       return !marking.get().isControlled();
     };
   }
 
-  private static JavaRDD<ObjectNode> join(
+  private static JavaRDD<SsmOccurrence> join(
       Map<String, DonorSample> donorSamples,
       Map<String, String> sampleToSurrogageSampleId,
-      JavaPairRDD<String, ObjectNode> primary,
-      JavaPairRDD<String, Collection<ObjectNode>> consequences,
-      Broadcast<Map<String, ObjectNode>> metaPairsBroadcast)
+      JavaPairRDD<String, SsmPrimaryFeatureType> primary,
+      JavaPairRDD<String, Collection<Consequence>> consequences,
+      Broadcast<Map<String, SsmMetaFeatureType>> metaPairsBroadcast)
   {
-    val ssm = primary.leftOuterJoin(consequences)
-        .aggregateByKey(null, new AggregatePrimarySecondary(), combinePrimarySecondary())
-        .mapToPair(new KeyDonorMutataionId(donorSamples))
-        // create actual observation
-        .aggregateByKey(null, new AggregateObservations(metaPairsBroadcast, donorSamples, sampleToSurrogageSampleId),
-            new CombineObservations())
-        .map(ObservationJoinTask::addSurrogateDonorId);
 
-    return ssm;
+    val occurrences = primary
+        .leftOuterJoin(consequences)
+        .aggregateByKey(null,
+            new CreateOccurrence(metaPairsBroadcast, donorSamples, sampleToSurrogageSampleId),
+            combinePrimarySecondary())
+        .mapToPair(new KeyDonorMutataionId(donorSamples));
+
+    // Merge occurrences
+    val aggregateFunction = new AggregateOccurrences();
+
+    return occurrences
+        .aggregateByKey(null, aggregateFunction, aggregateFunction)
+        .values();
   }
 
-  private static ObjectNode addSurrogateDonorId(Tuple2<String, ObjectNode> tuple) {
-    val occurrence = tuple._2;
-    val donorIdMutationId = tuple._1;
-    occurrence.put(SURROGATE_DONOR_ID, resolveDonorId(donorIdMutationId));
-
-    return occurrence;
-  }
-
-  private Broadcast<Map<String, ObjectNode>> resolveMeta(TaskContext taskContext) {
+  private Broadcast<Map<String, SsmMetaFeatureType>> resolveMeta(TaskContext taskContext) {
     val metaPairs = parseSsmM(taskContext)
-        .mapToPair(new KeyAnalysisIdAnalyzedSampleIdField())
+        .mapToPair(meta -> {
+          String key = Keys.getKey(meta.getAnalysis_id(), meta.getAnalyzed_sample_id());
+
+          return tuple(key, meta);
+        })
         .collectAsMap();
 
-    final Broadcast<Map<String, ObjectNode>> metaPairsBroadcast = taskContext
+    final Broadcast<Map<String, SsmMetaFeatureType>> metaPairsBroadcast = taskContext
         .getSparkContext()
         .broadcast(SparkWorkaroundUtils.toHashMap(metaPairs));
 
     return metaPairsBroadcast;
   }
 
-  private JavaPairRDD<String, Collection<ObjectNode>> aggregateConsequences(TaskContext taskContext,
+  private JavaPairRDD<String, Collection<Consequence>> aggregateConsequences(TaskContext taskContext,
       int primaryPartitions) {
-    val zeroValue = Sets.<ObjectNode> newHashSet();
-    val consequences = parseSsmS(taskContext)
-        .mapToPair(PRIMARY_SECONDARY_KEY_FUNCTION)
+    val zeroValue = Sets.<Consequence> newHashSet();
+
+    return parseSsmS(taskContext)
+        .mapToPair(o -> tuple(o.getObservation_id(), o))
         .aggregateByKey(zeroValue, primaryPartitions, new AggregateObservationConsequences(),
             CombineFunctions::combineCollections);
-
-    return consequences;
   }
 
-  private static Function2<ObjectNode, ObjectNode, ObjectNode> combinePrimarySecondary() {
+  private static Function2<SsmOccurrence, SsmOccurrence, SsmOccurrence> combinePrimarySecondary() {
     return (a, b) -> {
       throw new IllegalStateException("This function should never be called, as primary and secondary files should be"
           + " located on the same partition");
     };
   }
 
-  private static Function<ObjectNode, ObjectNode> removeControlledFields(List<String> controlledFields) {
+  private static Function<SsmPrimaryFeatureType, SsmPrimaryFeatureType> removeControlledFields(
+      List<String> controlledFields) {
     return row -> {
-      row.remove(controlledFields);
+      for (String field : controlledFields) {
+        val clazz = getParamType(row, field);
+        unsetField(row, field, clazz);
+      }
 
       return row;
     };
   }
 
-  private void writeSsm(TaskContext taskContext, JavaRDD<ObjectNode> output) {
+  @SneakyThrows
+  private static void unsetField(SsmPrimaryFeatureType primary, String field, Class<?> clazz) {
+    val setter = getMethod(primary, field, "set", clazz);
+    setter.invoke(primary, new Object[] { null });
+  }
+
+  @SneakyThrows
+  private static Class<?> getParamType(SsmPrimaryFeatureType primary, String field) {
+    val getter = getMethod(primary, field, "get");
+
+    return getter.getReturnType();
+  }
+
+  private static Method getMethod(SsmPrimaryFeatureType primary, String field, String prefix, Class<?>... params)
+      throws NoSuchMethodException {
+    val methodName = resolveMethodName(field, prefix);
+    val method = primary.getClass().getMethod(methodName, params);
+    return method;
+  }
+
+  private static String resolveMethodName(String field, String prefix) {
+    val methodName = field.startsWith("_") ? field : capitalizeFirstLetter(field);
+
+    return prefix + methodName;
+  }
+
+  private static String capitalizeFirstLetter(String original) {
+    if (original == null || original.length() == 0) {
+      return original;
+    }
+    return original.substring(0, 1).toUpperCase() + original.substring(1);
+  }
+
+  private void writeSsm(TaskContext taskContext, JavaRDD<SsmOccurrence> output) {
     val outputFileType = FileType.SSM;
-    writeOutput(taskContext, output, outputFileType);
+    writeOutput(taskContext, output, outputFileType, SsmOccurrence.class);
   }
 
-  private void writeObservation(TaskContext taskContext, JavaRDD<ObjectNode> output) {
+  private void writeObservation(TaskContext taskContext, JavaRDD<SsmOccurrence> output) {
     val outputFileType = FileType.OBSERVATION;
-    writeOutput(taskContext, output, outputFileType);
+    writeOutput(taskContext, output, outputFileType, SsmOccurrence.class);
   }
 
-  private JavaRDD<ObjectNode> parseSsmM(TaskContext taskContext) {
-    return readInput(taskContext, FileType.SSM_M);
+  private JavaRDD<SsmMetaFeatureType> parseSsmM(TaskContext taskContext) {
+    return readInput(taskContext, FileType.SSM_M)
+        .map(row -> JacksonFactory.MAPPER.treeToValue(row, SsmMetaFeatureType.class));
   }
 
-  private JavaRDD<ObjectNode> parseSsmP(TaskContext taskContext) {
-    return readInput(taskContext, FileType.SSM_P_MASKED_SURROGATE_KEY);
+  private JavaRDD<SsmPrimaryFeatureType> parseSsmP(TaskContext taskContext) {
+    return readInput(taskContext, FileType.SSM_P_MASKED_SURROGATE_KEY)
+        .map(row -> JacksonFactory.MAPPER.treeToValue(row, SsmPrimaryFeatureType.class));
   }
 
-  private JavaRDD<ObjectNode> parseSsmS(TaskContext taskContext) {
-    return readInput(taskContext, FileType.SSM_S);
-  }
-
-  private static String resolveDonorId(String donorIdMutationId) {
-    return donorIdMutationId.split(KEY_SEPARATOR)[DONOR_ID_INDEX];
+  private JavaRDD<Consequence> parseSsmS(TaskContext taskContext) {
+    return readInput(taskContext, FileType.SSM_S)
+        .map(row -> JacksonFactory.MAPPER.treeToValue(row, Consequence.class));
   }
 
 }

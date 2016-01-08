@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -17,26 +17,21 @@
  */
 package org.icgc.dcc.release.job.join.function;
 
-import java.util.Collection;
-
 import org.apache.spark.api.java.function.Function2;
-import org.icgc.dcc.release.job.join.model.SsmOccurrence.Consequence;
+import org.icgc.dcc.release.job.join.model.SsmOccurrence;
 
-public final class AggregateObservationConsequences implements
-    Function2<Collection<Consequence>, Consequence, Collection<Consequence>> {
+public class AggregateOccurrences implements Function2<SsmOccurrence, SsmOccurrence, SsmOccurrence> {
 
   @Override
-  public Collection<Consequence> call(Collection<Consequence> aggregator, Consequence consequence) throws Exception {
-    enrichConsequence(consequence);
-    aggregator.add(consequence);
+  public SsmOccurrence call(SsmOccurrence aggregator, SsmOccurrence occurrence) throws Exception {
+    if (aggregator == null) {
+      return occurrence;
+    }
+
+    aggregator.getConsequence().addAll(occurrence.getConsequence());
+    aggregator.getObservation().addAll(occurrence.getObservation());
 
     return aggregator;
-  }
-
-  private static void enrichConsequence(Consequence consequence) {
-    consequence.setObservation_id(null);
-    consequence.set_gene_id(consequence.getGene_affected());
-    consequence.set_transcript_id(consequence.getTranscript_affected());
   }
 
 }

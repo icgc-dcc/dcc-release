@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,28 +15,29 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.join.function;
+package org.icgc.dcc.release.job.join.model;
 
-import java.util.Collection;
+import java.io.Serializable;
 
-import org.apache.spark.api.java.function.Function2;
-import org.icgc.dcc.release.job.join.model.SsmOccurrence.Consequence;
+import lombok.Data;
 
-public final class AggregateObservationConsequences implements
-    Function2<Collection<Consequence>, Consequence, Collection<Consequence>> {
+@Data
+public class SsmMetaFeatureType implements Serializable {
 
-  @Override
-  public Collection<Consequence> call(Collection<Consequence> aggregator, Consequence consequence) throws Exception {
-    enrichConsequence(consequence);
-    aggregator.add(consequence);
-
-    return aggregator;
-  }
-
-  private static void enrichConsequence(Consequence consequence) {
-    consequence.setObservation_id(null);
-    consequence.set_gene_id(consequence.getGene_affected());
-    consequence.set_transcript_id(consequence.getTranscript_affected());
-  }
+  private String _project_id;
+  private String alignment_algorithm;
+  private String analysis_id;
+  private String analyzed_sample_id;
+  private String assembly_version;
+  private String base_calling_algorithm;
+  private String experimental_protocol;
+  private String matched_sample_id;
+  private String other_analysis_algorithm;
+  private String platform;
+  private String raw_data_accession;
+  private String raw_data_repository;
+  private Double seq_coverage;
+  private String sequencing_strategy;
+  private String variation_calling_algorithm;
 
 }

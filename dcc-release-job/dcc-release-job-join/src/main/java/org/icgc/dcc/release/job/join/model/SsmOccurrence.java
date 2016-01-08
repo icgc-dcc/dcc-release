@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,28 +15,44 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.join.function;
+package org.icgc.dcc.release.job.join.model;
 
-import java.util.Collection;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Set;
 
-import org.apache.spark.api.java.function.Function2;
-import org.icgc.dcc.release.job.join.model.SsmOccurrence.Consequence;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-public final class AggregateObservationConsequences implements
-    Function2<Collection<Consequence>, Consequence, Collection<Consequence>> {
+import org.icgc.dcc.release.core.model.Observation;
 
-  @Override
-  public Collection<Consequence> call(Collection<Consequence> aggregator, Consequence consequence) throws Exception {
-    enrichConsequence(consequence);
-    aggregator.add(consequence);
+@Data
+public class SsmOccurrence implements Serializable {
 
-    return aggregator;
-  }
+  private String _donor_id;
+  private String _mutation_id;
+  private String _project_id;
+  private String _type;
+  private String assembly_version;
+  private String chromosome;
+  private String chromosome_end;
+  private String chromosome_start;
+  private String chromosome_strand;
+  private Set<Consequence> consequence;
+  private String mutated_from_allele;
+  private String mutated_to_allele;
+  private String mutation;
+  private String mutation_type;
+  private List<Observation> observation;
+  private String reference_genome_allele;
 
-  private static void enrichConsequence(Consequence consequence) {
-    consequence.setObservation_id(null);
-    consequence.set_gene_id(consequence.getGene_affected());
-    consequence.set_transcript_id(consequence.getTranscript_affected());
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  public static class Consequence extends SsmSecondaryFeatureType {
+
+    private String _gene_id;
+    private String _transcript_id;
+
   }
 
 }
