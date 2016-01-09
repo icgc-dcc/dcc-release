@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,41 +15,40 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.join.function;
+package org.icgc.dcc.release.core.model;
 
-import static com.google.common.base.Preconditions.checkState;
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
+import java.io.Serializable;
 
-import java.util.Collection;
+import lombok.Data;
 
-import lombok.val;
+@Data
+public class Observation implements Serializable {
 
-import org.apache.spark.api.java.function.Function2;
-
-import scala.Tuple2;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
-
-/**
- * Joins consequences to the primary
- */
-public final class AggregatePrimarySecondary implements
-    Function2<ObjectNode, Tuple2<ObjectNode, Optional<Collection<ObjectNode>>>, ObjectNode> {
-
-  @Override
-  public ObjectNode call(ObjectNode aggregator, Tuple2<ObjectNode, Optional<Collection<ObjectNode>>> tuple)
-      throws Exception {
-    val primary = tuple._1;
-    checkState(aggregator == null, "There should be only one instance of primary record: '%s'", primary);
-
-    val consequences = tuple._2;
-    val consequenceArray = primary.withArray(CONSEQUENCE_ARRAY_NAME);
-    if (consequences.isPresent()) {
-      consequenceArray.addAll(consequences.get());
-    }
-
-    return primary;
-  }
+  protected String _matched_sample_id;
+  protected String _sample_id;
+  protected String _specimen_id;
+  protected String alignment_algorithm;
+  protected String analysis_id;
+  protected String analyzed_sample_id;
+  protected String base_calling_algorithm;
+  protected String biological_validation_platform;
+  protected String biological_validation_status;
+  protected String experimental_protocol;
+  protected String marking;
+  protected String matched_sample_id;
+  protected Integer mutant_allele_read_count;
+  protected String observation_id;
+  protected String other_analysis_algorithm;
+  protected String platform;
+  protected Double probability;
+  protected String quality_score;
+  protected String raw_data_accession;
+  protected String raw_data_repository;
+  protected Double seq_coverage;
+  protected String sequencing_strategy;
+  protected Integer total_read_count;
+  protected String variation_calling_algorithm;
+  protected String verification_platform;
+  protected String verification_status;
 
 }

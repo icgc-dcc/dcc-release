@@ -18,10 +18,7 @@
 package org.icgc.dcc.release.job.join.function;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_MUTATION_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
 import static org.icgc.dcc.release.core.util.Keys.getKey;
-import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 
 import java.util.Map;
@@ -32,13 +29,13 @@ import lombok.val;
 
 import org.apache.spark.api.java.function.PairFunction;
 import org.icgc.dcc.release.job.join.model.DonorSample;
+import org.icgc.dcc.release.job.join.model.SsmOccurrence;
+import org.icgc.dcc.release.job.join.utils.Occurrences;
 
 import scala.Tuple2;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 @RequiredArgsConstructor
-public final class KeyDonorMutataionId implements PairFunction<Tuple2<String, ObjectNode>, String, ObjectNode> {
+public final class KeyDonorMutataionId implements PairFunction<Tuple2<String, SsmOccurrence>, String, SsmOccurrence> {
 
   /**
    * Used to resolve {@code _donor_id}.
@@ -47,16 +44,22 @@ public final class KeyDonorMutataionId implements PairFunction<Tuple2<String, Ob
   private final Map<String, DonorSample> donorSamples;
 
   @Override
-  public Tuple2<String, ObjectNode> call(Tuple2<String, ObjectNode> tuple) throws Exception {
+  public Tuple2<String, SsmOccurrence> call(Tuple2<String, SsmOccurrence> tuple) throws Exception {
     val primary = tuple._2;
-    val mutationId = textValue(primary, SURROGATE_MUTATION_ID);
-    val sampleId = textValue(primary, SUBMISSION_ANALYZED_SAMPLE_ID);
+    val mutationId = primary.get_mutation_id();
+    val sampleId = resolveSampleId(primary);
 
     val donorInfo = donorSamples.get(sampleId);
     checkState(donorInfo != null, "Failed to resolve donor info for sample id '%s' from ssm_p: '%s'", sampleId, primary);
     val key = getKey(donorInfo.getDonorId(), mutationId);
 
     return tuple(key, primary);
+  }
+
+  private static String resolveSampleId(SsmOccurrence occurrence) {
+    val observation = Occurrences.getObservation(occurrence);
+
+    return observation.getAnalyzed_sample_id();
   }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,28 +15,25 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.join.function;
+package org.icgc.dcc.release.job.join.model;
 
-import java.util.Collection;
+import java.io.Serializable;
 
-import org.apache.spark.api.java.function.Function2;
-import org.icgc.dcc.release.job.join.model.SsmOccurrence.Consequence;
+import lombok.Data;
 
-public final class AggregateObservationConsequences implements
-    Function2<Collection<Consequence>, Consequence, Collection<Consequence>> {
+@Data
+public class SsmSecondaryFeatureType implements Serializable {
 
-  @Override
-  public Collection<Consequence> call(Collection<Consequence> aggregator, Consequence consequence) throws Exception {
-    enrichConsequence(consequence);
-    aggregator.add(consequence);
-
-    return aggregator;
-  }
-
-  private static void enrichConsequence(Consequence consequence) {
-    consequence.setObservation_id(null);
-    consequence.set_gene_id(consequence.getGene_affected());
-    consequence.set_transcript_id(consequence.getTranscript_affected());
-  }
+  protected String aa_change;
+  protected String aa_mutation;
+  protected String cds_change;
+  protected String cds_mutation;
+  protected String consequence_type;
+  protected String gene_affected;
+  protected String gene_build_version;
+  protected String note;
+  protected String observation_id;
+  protected String protein_domain_affected;
+  protected String transcript_affected;
 
 }

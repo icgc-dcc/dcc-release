@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 public class Occurrence implements Serializable {
@@ -65,37 +66,12 @@ public class Occurrence implements Serializable {
   }
 
   @Data
-  public static class Observation implements Serializable {
+  @EqualsAndHashCode(callSuper = true)
+  public static class Observation extends org.icgc.dcc.release.core.model.Observation {
 
-    private String raw_data_accession;
-    private Integer total_read_count;
-    private String sequencing_strategy;
-    private String _sample_id;
-    private String base_calling_algorithm;
-    private String tumour_genotype;
-    private String seq_coverage;
-    private String analyzed_sample_id;
-    private String raw_data_repository;
-    private String verification_platform;
-    private String _specimen_id;
-    private String matched_sample_id;
-    private Double probability;
-    private String marking;
-    private String experimental_protocol;
-    private String other_analysis_algorithm;
-    private String platform;
     private String control_genotype;
-    private String observation_id;
-    private Integer mutant_allele_read_count;
-    private String quality_score;
     private String expressed_allele;
-    private String biological_validation_platform;
-    private String analysis_id;
-    private String verification_status;
-    private String alignment_algorithm;
-    private String _matched_sample_id;
-    private String variation_calling_algorithm;
-    private String biological_validation_status;
+    private String tumour_genotype;
 
   }
 

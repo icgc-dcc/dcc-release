@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,28 +15,23 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.join.function;
+package org.icgc.dcc.release.job.join.utils;
 
-import java.util.Collection;
+import static com.google.common.base.Preconditions.checkState;
+import lombok.val;
+import lombok.experimental.UtilityClass;
 
-import org.apache.spark.api.java.function.Function2;
-import org.icgc.dcc.release.job.join.model.SsmOccurrence.Consequence;
+import org.icgc.dcc.release.core.model.Observation;
+import org.icgc.dcc.release.job.join.model.SsmOccurrence;
 
-public final class AggregateObservationConsequences implements
-    Function2<Collection<Consequence>, Consequence, Collection<Consequence>> {
+@UtilityClass
+public class Occurrences {
 
-  @Override
-  public Collection<Consequence> call(Collection<Consequence> aggregator, Consequence consequence) throws Exception {
-    enrichConsequence(consequence);
-    aggregator.add(consequence);
+  public static Observation getObservation(SsmOccurrence occurrence) {
+    val observations = occurrence.getObservation();
+    checkState(observations.size() == 1, "SSM Occurrence has to contain 1 Observation before merging. %s", occurrence);
 
-    return aggregator;
-  }
-
-  private static void enrichConsequence(Consequence consequence) {
-    consequence.setObservation_id(null);
-    consequence.set_gene_id(consequence.getGene_affected());
-    consequence.set_transcript_id(consequence.getTranscript_affected());
+    return observations.get(0);
   }
 
 }
