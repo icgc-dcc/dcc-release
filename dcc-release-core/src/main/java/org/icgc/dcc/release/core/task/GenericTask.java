@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.core.task;
 
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
+import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.checkExistence;
 import static org.icgc.dcc.release.core.util.JavaRDDs.exists;
 
 import java.util.List;
@@ -90,6 +91,9 @@ public abstract class GenericTask implements Task {
 
     val sparkContext = taskContext.getSparkContext();
     val path = taskContext.getPath(inputFileType);
+    if (!checkExistence(taskContext.getFileSystem(), path)) {
+      return taskContext.getSparkContext().emptyRDD();
+    }
 
     val input = taskContext.isCompressOutput() ?
         ObjectNodeRDDs.combineObjectNodeSequenceFile(sparkContext, path, hadoopConf) :

@@ -182,8 +182,7 @@ public final class DocumentTypes {
                                     "_project_id",
 
                                     // Data
-                                    "primary_site",
-                                    "project_name")
+                                    "primary_site")
                         )
                         .donorFields(
                             donorFields()
@@ -195,25 +194,16 @@ public final class DocumentTypes {
                                     "_project_id",
 
                                     // Summary
-                                    "gene._gene_id",
-                                    "gene._summary._ssm_count",
+                                    "gene",
                                     "_summary",
 
                                     // Data
-                                    "donor_id",
                                     "disease_status_last_followup",
                                     "donor_age_at_diagnosis",
-                                    "donor_age_at_enrollment",
-                                    "donor_age_at_last_followup",
-                                    "donor_diagnosis_icd10",
-                                    "donor_interval_of_last_followup",
-                                    "donor_relapse_interval",
                                     "donor_relapse_type",
                                     "donor_sex",
                                     "donor_survival_time",
                                     "donor_tumour_stage_at_diagnosis",
-                                    "donor_tumour_stage_at_diagnosis_supplemental",
-                                    "donor_tumour_staging_system_at_diagnosis",
                                     "donor_vital_status")
                         )
                         .geneFields(
@@ -246,13 +236,13 @@ public final class DocumentTypes {
                                     "consequence.functional_impact_prediction_summary",
                                     "_type",
                                     "mutation_type",
-                                    "platform",
-                                    "validation_status",
-                                    "verification_status",
                                     "chromosome",
                                     "chromosome_end",
                                     "chromosome_start",
-                                    "observation")
+                                    "observation.platform",
+                                    "observation.sequencing_strategy",
+                                    "observation.verification_status"
+                                )
                         )
                     )
             )
@@ -293,21 +283,64 @@ public final class DocumentTypes {
                 attributes()
                     .indexClassName(GeneCentricDocumentTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.DONOR, BroadcastType.PROJECT))
-                    .fields(fields()
-                        .donorFields(
-                            donorFields()
-                                .excludedFields(
-                                    "_id",
-                                    "gene",
-                                    "specimen")
-                        )
-                        .observationFields(
-                            observationFields()
-                                .excludedFields(
-                                    "_id",
-                                    "functional_impact_prediction_summary",
-                                    "consequence.functional_impact_prediction")
-                        )
+                    .fields(
+                        fields()
+                            .projectFields(
+                                projectFields()
+                                    .includedFields(
+                                        "_project_id",
+                                        "primary_site"
+                                    )
+                            )
+                            .donorFields(
+                                donorFields()
+                                    .includedFields(
+                                        "_donor_id",
+                                        "_project_id",
+                                        "_summary._age_at_diagnosis_group",
+                                        "_summary._available_data_type",
+                                        "_summary._state",
+                                        "_summary._studies",
+                                        "_summary.experimental_analysis_performed",
+                                        "disease_status_last_followup",
+                                        "donor_relapse_type",
+                                        "donor_sex",
+                                        "donor_tumour_stage_at_diagnosis",
+                                        "donor_vital_status"
+                                    )
+                            )
+                            .observationFields(
+                                observationFields()
+                                    .includedFields(
+                                        "_mutation_id",
+                                        "_donor_id", // Don't index
+                                        "_type", // Don't index
+                                        "chromosome",
+                                        "chromosome_end",
+                                        "chromosome_start",
+                                        "consequence._gene_id",
+                                        "consequence.consequence_type",
+                                        "consequence.transcript_affected",
+                                        "consequence.functional_impact_prediction_summary",
+                                        "mutation_type",
+                                        "observation.platform",
+                                        "observation.sequencing_strategy",
+                                        "observation.verification_status"
+                                    )
+                            )
+                            .geneFields(
+                                geneFields()
+                                    .excludedFields(
+                                        "_id",
+                                        "canonical_transcript_id",
+                                        "description",
+                                        "external_db_ids",
+                                        "project",
+                                        "strand",
+                                        "synonyms",
+                                        "transcripts"
+                                    )
+                            )
                     )
             )
 
@@ -316,37 +349,69 @@ public final class DocumentTypes {
                 attributes()
                     .indexClassName(ObservationCentricDocumentTask.class.getName())
                     .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
-                    .fields(fields()
-                        .projectFields(
-                            projectFields()
-                                .includedFields(
-                                    "_project_id",
-                                    "project_name",
-                                    "primary_site")
-                        )
-                        .donorFields(
-                            donorFields()
-                                .excludedFields(
-                                    "_id",
-                                    "gene",
-                                    "specimen")
-                        )
-                        .geneFields(
-                            geneFields()
-                                .excludedFields(
-                                    "_id",
-                                    "project",
-                                    "donor",
-                                    "transcripts")
+                    .fields(
+                        fields()
+                            .projectFields(
+                                projectFields()
+                                    .includedFields(
+                                        "_project_id",
+                                        "primary_site")
+                            )
+                            .donorFields(
+                                donorFields()
+                                    .includedFields(
+                                        "_donor_id",
+                                        "_project_id", // FK. Don't index
 
-                        )
-                        .observationFields(
-                            observationFields()
-                                .excludedFields(
-                                    "_id",
-                                    "functional_impact_prediction_summary",
-                                    "consequence.functional_impact_prediction")
-                        )
+                                        // Data
+                                        "donor_sex",
+                                        "donor_tumour_stage_at_diagnosis",
+                                        "donor_vital_status",
+                                        "disease_status_last_followup",
+                                        "donor_relapse_type",
+                                        "_summary._age_at_diagnosis_group",
+                                        "_summary._available_data_type",
+                                        "_summary._studies",
+                                        "_summary.experimental_analysis_performed",
+                                        "_summary._state")
+                            )
+                            .geneFields(
+                                geneFields()
+                                    .includedFields(
+                                        "_gene_id",
+                                        "biotype",
+                                        "chromosome",
+                                        "start",
+                                        "end",
+                                        "sets")
+
+                            )
+                            .observationFields(
+                                observationFields()
+                                    .excludedFields(
+                                        "_id",
+                                        "assembly_version",
+                                        "mutated_to_allele",
+                                        "mutated_from_allele",
+                                        "reference_genome_allele",
+                                        "chromosome_strand",
+                                        "functional_impact_prediction_summary",
+
+                                        // Consequence
+                                        "consequence.gene_build_version",
+                                        "consequence.transcript_affected",
+                                        "consequence.gene_affected",
+                                        "consequence._transcript_id",
+                                        "consequence.functional_impact_prediction",
+
+                                        // Observation
+                                        "observation.analysis_id",
+                                        "observation.quality_score",
+                                        "observation.verification_platform",
+                                        "observation.marking",
+                                        "observation.observation_id",
+                                        "observation.seq_coverage")
+                            )
                     )
             )
 
@@ -385,24 +450,69 @@ public final class DocumentTypes {
                 attributes()
                     .indexClassName(MutationCentricDocumentTask.class.getName())
                     .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
-                    .fields(fields()
-                        .donorFields(
-                            donorFields()
-                                .excludedFields(
-                                    "_id",
-                                    "gene",
-                                    "specimen")
-                        )
-                        .geneFields(
-                            geneFields()
-                                .excludedFields(
-                                    "_id",
-                                    "project",
-                                    "donor",
-                                    "transcripts.domains",
-                                    "transcripts.exons")
+                    .fields(
+                        fields()
+                            .projectFields(
+                                projectFields()
+                                    .includedFields(
+                                        "_project_id",
+                                        "primary_site"
+                                    )
+                            )
+                            .donorFields(
+                                donorFields()
+                                    .includedFields(
+                                        "_donor_id",
+                                        "disease_status_last_followup",
+                                        "donor_relapse_type",
+                                        "donor_sex",
+                                        "donor_tumour_stage_at_diagnosis",
+                                        "donor_vital_status",
+                                        "_summary._age_at_diagnosis_group",
+                                        "_summary._available_data_type",
+                                        "_summary._state",
+                                        "_summary._studies",
+                                        "_summary.experimental_analysis_performed",
+                                        "_project_id" // Used as a foreign key
+                                    )
+                            )
+                            .geneFields(
+                                geneFields()
+                                    .includedFields(
+                                        "_gene_id",
+                                        "biotype",
+                                        "chromosome",
+                                        "end",
+                                        "sets",
+                                        "start",
+                                        "symbol",
+                                        "transcripts.id",
+                                        "transcripts.name"
+                                    )
 
-                        )
+                            )
+                            .observationFields(
+                                observationFields()
+                                    .includedFields(
+                                        "_donor_id",
+                                        "_mutation_id", // Don't index
+                                        "consequence._gene_id", // Don't index
+                                        "consequence._transcript_id", // Don't index
+                                        "consequence.consequence_type",
+                                        "consequence.aa_mutation",
+                                        "consequence.gene_affected",
+                                        "consequence.functional_impact_prediction_summary",
+                                        "observation.platform",
+                                        "observation.sequencing_strategy",
+                                        "observation.verification_status"
+                                    )
+                            )
+                            .mutationFields(
+                                mutationFields()
+                                    .excludedFields(
+                                        "_id"
+                                    )
+                            )
                     )
             )
             .build();

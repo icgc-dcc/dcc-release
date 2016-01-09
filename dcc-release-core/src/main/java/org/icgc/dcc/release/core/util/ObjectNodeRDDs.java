@@ -91,11 +91,6 @@ public final class ObjectNodeRDDs {
   }
 
   public static JavaRDD<ObjectNode> combineObjectNodeSequenceFile(@NonNull JavaSparkContext sparkContext,
-      @NonNull String paths) {
-    return combineObjectNodeSequenceFile(sparkContext, paths, createJobConf(sparkContext));
-  }
-
-  public static JavaRDD<ObjectNode> combineObjectNodeSequenceFile(@NonNull JavaSparkContext sparkContext,
       @NonNull String paths, @NonNull JobConf conf) {
     return JavaRDDs.combineSequenceFile(sparkContext, paths, conf)
         .map(tuple -> SMILE_READER.readValue(tuple._2.getBytes()));

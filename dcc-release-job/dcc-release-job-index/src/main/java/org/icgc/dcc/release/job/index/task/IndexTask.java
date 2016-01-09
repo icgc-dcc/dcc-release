@@ -37,10 +37,10 @@ import org.icgc.dcc.release.core.util.ObjectNodes;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @RequiredArgsConstructor
-public class IndexTask extends GenericTask  {
+public class IndexTask extends GenericTask {
 
-  private static final long serialVersionUID = 5207503787859232749L;
-  
+  private static final int PARTITION_SIZE_MB = 512;
+
   @NonNull
   private final String esUri;
   @NonNull
@@ -60,7 +60,7 @@ public class IndexTask extends GenericTask  {
 
   @Override
   public void execute(TaskContext taskContext) {
-    readInput(taskContext, documentType.getOutputFileType())
+    readInput(taskContext, documentType.getOutputFileType(), PARTITION_SIZE_MB)
         .map(createDocument(documentType))
         .mapPartitions(new DocumentIndexer(esUri, indexName, documentType))
         .count();

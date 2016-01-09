@@ -15,6 +15,11 @@
   <description>${project.name}</description>
   
   <dependencies>
+    <!-- DCC -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-etl-resources</artifactId>
+    </dependency>
 
     <!-- Search -->
     <dependency>

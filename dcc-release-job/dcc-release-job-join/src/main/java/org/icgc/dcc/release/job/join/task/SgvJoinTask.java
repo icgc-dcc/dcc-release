@@ -66,9 +66,8 @@ public class SgvJoinTask extends SecondaryJoinTask {
     val output = primaryPairs
         .leftOuterJoin(consequences)
         .map(new CreateSgvOccurrence())
-        .map(addSurrogateMatchingId(sampleSurrogageSampleIds))
+        .map(addSurrogateMatchingId(sampleSurrogageSampleIds));
 
-    ;
     writeOutput(taskContext, output, resolveOutputFileType(primaryFileType));
   }
 
