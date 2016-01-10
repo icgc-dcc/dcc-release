@@ -1,4 +1,4 @@
-ICGC DCC - Release Workflow
+ICGC DCC - Release Client
 ===
 
 Entry point to the Release process.
