@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Image
+ICGC DCC - Release Image Job
 ===
 
 Image module

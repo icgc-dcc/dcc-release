@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Core
+ICGC DCC - Release Core
 ===
 
 Core module

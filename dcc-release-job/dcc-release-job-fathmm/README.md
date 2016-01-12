@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Fathmm
+ICGC DCC - Release Fathmm Job
 ===
 
 Fathmm module

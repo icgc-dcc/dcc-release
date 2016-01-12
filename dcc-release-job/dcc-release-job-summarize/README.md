@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Summarize
+ICGC DCC - Release Summarize Job
 ===
 
 Summarize module

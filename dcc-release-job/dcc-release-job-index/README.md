@@ -1,7 +1,7 @@
-ICGC DCC - Release Import Job
+ICGC DCC - Release Index Job
 ===
 
-Import module
+Index module
 
 Build
 ---

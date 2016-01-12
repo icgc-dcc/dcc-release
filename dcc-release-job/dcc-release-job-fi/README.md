@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 FI
+ICGC DCC - Release FI Job
 ===
 
 Functional Impact module

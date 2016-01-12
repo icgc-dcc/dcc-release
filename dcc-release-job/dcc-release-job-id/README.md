@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 ID
+ICGC DCC - Release ID Job
 ===
 
 ID module
