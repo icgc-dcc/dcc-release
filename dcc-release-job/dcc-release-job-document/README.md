@@ -1,4 +1,4 @@
-ICGC DCC - Release Document
+ICGC DCC - Release Document Job
 ===
 
 Index module

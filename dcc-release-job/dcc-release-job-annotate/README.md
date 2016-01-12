@@ -1,4 +1,4 @@
-ICGC DCC - Release Annotate
+ICGC DCC - Release Annotate Job
 ===
 
 Annotate module

@@ -1,4 +1,4 @@
-ICGC DCC - Release Index
+ICGC DCC - Release Index Job
 ===
 
 Index module

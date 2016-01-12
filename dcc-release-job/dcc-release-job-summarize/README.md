@@ -1,4 +1,4 @@
-ICGC DCC - Release Summarize
+ICGC DCC - Release Summarize Job
 ===
 
 Summarize module

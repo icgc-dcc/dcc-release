@@ -1,4 +1,4 @@
-ICGC DCC - Release Fathmm
+ICGC DCC - Release Fathmm Job
 ===
 
 Fathmm module

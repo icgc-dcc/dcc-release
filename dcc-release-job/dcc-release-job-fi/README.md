@@ -1,4 +1,4 @@
-ICGC DCC - Release FI
+ICGC DCC - Release FI Job
 ===
 
 Functional Impact module

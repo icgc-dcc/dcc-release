@@ -1,4 +1,4 @@
-ICGC DCC - Release Image
+ICGC DCC - Release Image Job
 ===
 
 Image module

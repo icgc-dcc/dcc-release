@@ -1,4 +1,4 @@
-ICGC DCC - Release Import
+ICGC DCC - Release Import Job
 ===
 
 Import module

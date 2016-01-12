@@ -1,4 +1,4 @@
-ICGC DCC - Release Stage
+ICGC DCC - Release Stage Job
 ===
 
 Stage module for loading files from the submission system into a canonical ETL format. 

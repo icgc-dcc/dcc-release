@@ -1,4 +1,4 @@
-ICGC DCC - Release Mask
+ICGC DCC - Release Mask Job
 ===
 
 Mask module

@@ -1,4 +1,4 @@
-ICGC DCC - Release Join
+ICGC DCC - Release Join Job
 ===
 
 Join module
