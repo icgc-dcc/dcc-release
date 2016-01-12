@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Import
+ICGC DCC - Release Import
 ===
 
 Import module

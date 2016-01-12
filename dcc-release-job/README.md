@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Job
+ICGC DCC - Release Job
 ===
 
 Job parent module

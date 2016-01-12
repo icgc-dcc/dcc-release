@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Export
+ICGC DCC - Release Export
 ===
 
 Export module

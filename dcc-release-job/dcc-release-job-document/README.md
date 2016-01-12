@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Index
+ICGC DCC - Release Document
 ===
 
 Index module

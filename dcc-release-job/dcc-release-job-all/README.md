@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Jobs (All)
+ICGC DCC - Release Jobs (All)
 ===
 
 All jobs module. Used for repackaging purposes.

@@ -42,7 +42,7 @@ import com.beust.jcommander.ParameterException;
 @Configuration
 @EnableAutoConfiguration
 @ComponentScan("org.icgc.dcc.release")
-public class WorkflowMain {
+public class ClientMain {
 
   /**
    * Constants.
@@ -80,7 +80,7 @@ public class WorkflowMain {
   }
 
   private static void execute(Options options, String[] args) {
-    val applicationContext = new SpringApplicationBuilder(WorkflowMain.class).web(false).run(args);
+    val applicationContext = new SpringApplicationBuilder(ClientMain.class).web(false).run(args);
     val workflow = applicationContext.getBean(Workflow.class);
     val workflowContext = createWorkflowContext(options);
     log.info("{}\n", repeat("-", 100));

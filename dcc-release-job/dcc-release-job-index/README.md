@@ -1,7 +1,7 @@
-ICGC DCC - Release Summarize
+ICGC DCC - Release Index
 ===
 
-Summarize module
+Index module
 
 Build
 ---

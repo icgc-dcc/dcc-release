@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Join
+ICGC DCC - Release Join
 ===
 
 Join module

@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Mask
+ICGC DCC - Release Mask
 ===
 
 Mask module

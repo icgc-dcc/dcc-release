@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Test
+ICGC DCC - Release Test
 ===
 
 Test module

@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Stage
+ICGC DCC - Release Stage
 ===
 
 Stage module for loading files from the submission system into a canonical ETL format. 

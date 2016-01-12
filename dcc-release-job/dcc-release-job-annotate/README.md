@@ -1,4 +1,4 @@
-ICGC DCC - ETL2 Annotate
+ICGC DCC - Release Annotate
 ===
 
 Annotate module
