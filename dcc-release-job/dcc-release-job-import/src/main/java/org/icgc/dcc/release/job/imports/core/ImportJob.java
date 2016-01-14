@@ -30,7 +30,6 @@ import static org.icgc.dcc.release.core.job.FileType.PROJECT;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
@@ -66,7 +65,7 @@ public class ImportJob extends GenericJob {
   }
 
   private void clean(JobContext jobContext) {
-    delete(jobContext, FileType.PROJECT, FileType.GENE, FileType.GENE_SET, FileType.DIAGRAM);
+    delete(jobContext, PROJECT, GENE, GENE_SET, DIAGRAM, DRUG);
   }
 
   private void imports(JobContext jobContext) {
