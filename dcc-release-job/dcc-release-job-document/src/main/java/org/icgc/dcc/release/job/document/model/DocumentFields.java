@@ -50,6 +50,10 @@ public class DocumentFields {
   private final CollectionFields mutationFields;
   @NonNull
   private final CollectionFields geneSetFields;
+  @NonNull
+  private final CollectionFields drugFields;
+  @NonNull
+  private final CollectionFields diagramFields;
 
   public CollectionFields getFields(ReleaseCollection collection) {
     switch (collection) {
@@ -67,6 +71,10 @@ public class DocumentFields {
       return mutationFields;
     case GENE_SET_COLLECTION:
       return geneSetFields;
+    case DRUG_COLLECTION:
+      return drugFields;
+    case DIAGRAM_COLLECTION:
+      return diagramFields;
     }
 
     throw new IllegalArgumentException("Unexpected release collection: " + collection);
@@ -85,6 +93,8 @@ public class DocumentFields {
     private CollectionFields observationFields = DEFAULT_COLLECTION_FIELDS;
     private CollectionFields mutationFields = DEFAULT_COLLECTION_FIELDS;
     private CollectionFields geneSetFields = DEFAULT_COLLECTION_FIELDS;
+    private CollectionFields drugFields = DEFAULT_COLLECTION_FIELDS;
+    private CollectionFields diagramFields = DEFAULT_COLLECTION_FIELDS;
 
     private Builder() {
     }
@@ -154,6 +164,16 @@ public class DocumentFields {
       return this;
     }
 
+    public Builder drugFields(@NonNull CollectionFields.Builder builder) {
+      this.drugFields = builder.build();
+      return this;
+    }
+
+    public Builder diagramFields(@NonNull CollectionFields.Builder builder) {
+      this.drugFields = builder.build();
+      return this;
+    }
+
     public DocumentFields build() {
       return new DocumentFields(
           releaseFields,
@@ -162,7 +182,9 @@ public class DocumentFields {
           geneFields,
           observationFields,
           mutationFields,
-          geneSetFields);
+          geneSetFields,
+          drugFields,
+          diagramFields);
     }
 
   }

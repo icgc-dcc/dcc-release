@@ -48,8 +48,13 @@ public abstract class AbstractDocumentTask extends GenericTask {
   }
 
   protected JavaRDD<ObjectNode> readDiagrams(TaskContext taskContext) {
-    val fields = getFields(type).getReleaseFields();
+    val fields = getFields(type).getDiagramFields();
     return filterFields(readInput(taskContext, FileType.DIAGRAM), fields);
+  }
+
+  protected JavaRDD<ObjectNode> readDrugs(TaskContext taskContext) {
+    val fields = getFields(type).getDrugFields();
+    return filterFields(readInput(taskContext, FileType.DRUG), fields);
   }
 
   protected JavaRDD<ObjectNode> readReleases(TaskContext taskContext) {

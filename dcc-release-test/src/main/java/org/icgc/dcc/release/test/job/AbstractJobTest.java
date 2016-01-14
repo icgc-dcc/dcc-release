@@ -3,8 +3,6 @@ package org.icgc.dcc.release.test.job;
 import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
-import static org.skyscreamer.jsonassert.JSONCompareMode.LENIENT;
 
 import java.io.File;
 import java.util.List;
@@ -14,12 +12,12 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.jsonunit.JsonAssert;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.common.core.util.stream.Collectors;
 import org.icgc.dcc.release.core.job.DefaultJobContext;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -296,7 +294,7 @@ public abstract class AbstractJobTest {
     val actualResult = produces(fileType);
     val expectedFile = resolveExpectedFile(fileType);
     val expectedResult = TestFiles.readInputFile(expectedFile);
-    compareResults(normalizeJson(expectedResult), normalizeJson(actualResult));
+    compareResults(expectedResult, actualResult);
   }
 
   /**
@@ -306,30 +304,22 @@ public abstract class AbstractJobTest {
     val actualResult = produces(projectName, fileType);
     val expectedFile = resolveExpectedFile(projectName, fileType);
     val expectedResult = TestFiles.readInputFile(expectedFile);
-    compareResults(normalizeJson(expectedResult), normalizeJson(actualResult));
-  }
-
-  private static List<JsonNode> normalizeJson(List<? extends JsonNode> expectedResult) {
-    return expectedResult.stream()
-        .map(j -> TestJsonNodes.sortFields(j))
-        .collect(Collectors.toImmutableList());
+    compareResults(expectedResult, actualResult);
   }
 
   private static void compareResults(List<? extends JsonNode> expectedResult, List<? extends JsonNode> actualResult) {
     assertThat(actualResult).hasSameSizeAs(expectedResult);
     for (int i = 0; i < expectedResult.size(); i++) {
-      val expectedJson = expectedResult.get(i).toString();
-      val actualJson = actualResult.get(i).toString();
+      val expectedJson = expectedResult.get(i);
+      val actualJson = actualResult.get(i);
       compareJsons(expectedJson, actualJson);
     }
   }
 
-  @SneakyThrows
-  private static void compareJsons(String expected, String actual) {
+  private static void compareJsons(Object expected, Object actual) {
     try {
-      assertEquals(expected, actual, LENIENT);
+      JsonAssert.assertJsonEquals(expected, actual);
     } catch (AssertionError e) {
-      // Account for bug in previous implementation
       val message = e.getMessage();
 
       log.info("Expected:    {}", expected);

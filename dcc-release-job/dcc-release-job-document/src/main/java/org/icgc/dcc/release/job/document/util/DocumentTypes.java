@@ -37,6 +37,8 @@ import org.icgc.dcc.release.job.document.task.DiagramDocumentTask;
 import org.icgc.dcc.release.job.document.task.DonorCentricDocumentTask;
 import org.icgc.dcc.release.job.document.task.DonorDocumentTask;
 import org.icgc.dcc.release.job.document.task.DonorTextDocumentTask;
+import org.icgc.dcc.release.job.document.task.DrugCentricDocumentTask;
+import org.icgc.dcc.release.job.document.task.DrugTextDocumentTask;
 import org.icgc.dcc.release.job.document.task.GeneCentricDocumentTask;
 import org.icgc.dcc.release.job.document.task.GeneDocumentTask;
 import org.icgc.dcc.release.job.document.task.GeneSetDocumentTask;
@@ -74,7 +76,25 @@ public final class DocumentTypes {
         ImmutableMap
             .<DocumentType, DocumentTypeAttributes> builder()
             .put(DocumentType.DIAGRAM_TYPE, attributes().indexClassName(DiagramDocumentTask.class.getName()))
+            .put(DocumentType.DRUG_CENTRIC_TYPE, attributes().indexClassName(DrugCentricDocumentTask.class.getName()))
             .put(DocumentType.RELEASE_TYPE, attributes().indexClassName(ReleaseDocumentTask.class.getName()))
+
+            .put(DocumentType.DRUG_TEXT_TYPE,
+                attributes()
+                    .indexClassName(DrugTextDocumentTask.class.getName())
+                    .fields(fields()
+                        .drugFields(
+                            drugFields()
+                                .excludedFields(
+                                    "_id",
+                                    "cancer_trial_count",
+                                    "genes",
+                                    "large_image_url",
+                                    "small_image_url"
+                                )
+                        )
+                    )
+            )
 
             .put(DocumentType.GENE_SET_TYPE,
                 attributes()
@@ -536,6 +556,10 @@ public final class DocumentTypes {
   }
 
   private static CollectionFields.Builder geneFields() {
+    return CollectionFields.collectionFields();
+  }
+
+  private static CollectionFields.Builder drugFields() {
     return CollectionFields.collectionFields();
   }
 
