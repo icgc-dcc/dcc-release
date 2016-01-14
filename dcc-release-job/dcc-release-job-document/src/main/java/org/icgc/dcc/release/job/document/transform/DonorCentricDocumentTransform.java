@@ -54,13 +54,13 @@ import com.google.common.collect.Multimap;
 public final class DonorCentricDocumentTransform implements
     Function<Tuple2<String, Tuple2<ObjectNode, Optional<Collection<Occurrence>>>>, Donor> {
 
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
   private final DocumentTransform delegate;
   private transient Kryo objectClonner;
 
-  public DonorCentricDocumentTransform(@NonNull DocumentJobContext indexJobContext) {
-    this.indexJobContext = indexJobContext;
-    this.delegate = new DonorDocumentTransform(indexJobContext);
+  public DonorCentricDocumentTransform(@NonNull DocumentJobContext documentJobContext) {
+    this.documentJobContext = documentJobContext;
+    this.delegate = new DonorDocumentTransform(documentJobContext);
 
   }
 
@@ -79,8 +79,8 @@ public final class DonorCentricDocumentTransform implements
 
     checkObjectClonnerInitialized();
     val occurrences = occurrencesOpt.get();
-    val donorGenesObservations = indexDonorGenesObservations(occurrences);
-    val donorGeneSummaries = indexDonorGeneSummaries(donor.getGene());
+    val donorGenesObservations = documentDonorGenesObservations(occurrences);
+    val donorGeneSummaries = documentDonorGeneSummaries(donor.getGene());
 
     // Nest
     for (val donorGeneId : donorGenesObservations.keySet()) {
@@ -164,8 +164,8 @@ public final class DonorCentricDocumentTransform implements
   /**
    * Maps {@code _gene_id} to the donor's GeneSummary.
    */
-  private static Map<String, Map<String, Object>> indexDonorGeneSummaries(Collection<Map<String, Object>> donorGenes) {
-    val index = ImmutableMap.<String, Map<String, Object>> builder();
+  private static Map<String, Map<String, Object>> documentDonorGeneSummaries(Collection<Map<String, Object>> donorGenes) {
+    val document = ImmutableMap.<String, Map<String, Object>> builder();
 
     boolean hasFake = false;
     for (val donorGene : donorGenes) {
@@ -174,7 +174,7 @@ public final class DonorCentricDocumentTransform implements
         hasFake = true;
       }
 
-      index.put(donorGeneId, donorGene);
+      document.put(donorGeneId, donorGene);
     }
 
     if (!hasFake) {
@@ -182,31 +182,31 @@ public final class DonorCentricDocumentTransform implements
       val fake = createFakeGene();
       donorGenes.add(fake);
 
-      index.put(FAKE_GENE_ID, fake);
+      document.put(FAKE_GENE_ID, fake);
     }
 
-    return index.build();
+    return document.build();
   }
 
   /**
    * Maps {@code _gene_id} to {@code occurrences}.
    */
-  private static Multimap<String, Occurrence> indexDonorGenesObservations(Iterable<Occurrence> occurrences) {
-    val index = ImmutableSetMultimap.<String, Occurrence> builder();
+  private static Multimap<String, Occurrence> documentDonorGenesObservations(Iterable<Occurrence> occurrences) {
+    val document = ImmutableSetMultimap.<String, Occurrence> builder();
 
     for (val occurrence : occurrences) {
       val consequences = occurrence.getConsequence();
 
       if (consequences == null || consequences.isEmpty()) {
-        index.put(FAKE_GENE_ID, occurrence);
+        document.put(FAKE_GENE_ID, occurrence);
       } else {
         for (val consequence : consequences) {
-          index.put(resolveObservationConsequenceGeneId(consequence), occurrence);
+          document.put(resolveObservationConsequenceGeneId(consequence), occurrence);
         }
       }
     }
 
-    return index.build();
+    return document.build();
   }
 
   private static String resolveObservationConsequenceGeneId(Consequence consequence) {
@@ -222,7 +222,7 @@ public final class DonorCentricDocumentTransform implements
       return createFakeGene();
     }
 
-    val gene = indexJobContext.getGenesBroadcast().value().get(donorGeneId);
+    val gene = documentJobContext.getGenesBroadcast().value().get(donorGeneId);
     Map<String, Object> map = Maps.newHashMap();
     map = JacksonFactory.MAPPER.treeToValue(gene, map.getClass());
 
@@ -248,7 +248,7 @@ public final class DonorCentricDocumentTransform implements
   }
 
   private DocumentContext createContext(String donorId) {
-    return new DonorCentricDocumentContext(donorId, indexJobContext, Optional.absent());
+    return new DonorCentricDocumentContext(donorId, documentJobContext, Optional.absent());
   }
 
   private void checkObjectClonnerInitialized() {

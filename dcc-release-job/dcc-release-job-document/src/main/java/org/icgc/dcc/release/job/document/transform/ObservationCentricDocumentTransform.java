@@ -60,8 +60,8 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
 
   private final DocumentContext documentContext;
 
-  public ObservationCentricDocumentTransform(DocumentJobContext indexJobContext) {
-    this.documentContext = new DefaultDocumentContext(DocumentType.OBSERVATION_CENTRIC_TYPE, indexJobContext);
+  public ObservationCentricDocumentTransform(@NonNull DocumentJobContext documentJobContext) {
+    this.documentContext = new DefaultDocumentContext(DocumentType.OBSERVATION_CENTRIC_TYPE, documentJobContext);
   }
 
   @Override

@@ -41,11 +41,11 @@ import com.google.common.collect.Lists;
 
 public class DonorCentricDocumentTask extends AbstractDocumentTask {
 
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
 
-  public DonorCentricDocumentTask(@NonNull DocumentJobContext indexJobContext) {
+  public DonorCentricDocumentTask(@NonNull DocumentJobContext documentJobContext) {
     super(DocumentType.DONOR_CENTRIC_TYPE);
-    this.indexJobContext = indexJobContext;
+    this.documentJobContext = documentJobContext;
   }
 
   @Override
@@ -60,7 +60,7 @@ public class DonorCentricDocumentTask extends AbstractDocumentTask {
         .mapToPair(donor -> tuple(getDonorId(donor), donor));
 
     val output = donors.leftOuterJoin(occurrences, partitionNumbers)
-        .map(new DonorCentricDocumentTransform(indexJobContext));
+        .map(new DonorCentricDocumentTransform(documentJobContext));
 
     writeDonors(taskContext, output);
   }

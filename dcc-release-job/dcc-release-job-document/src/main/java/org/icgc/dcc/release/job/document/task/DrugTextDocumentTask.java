@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -17,9 +17,11 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
+import static org.icgc.dcc.release.core.document.DocumentType.DRUG_TEXT_TYPE;
+import static org.icgc.dcc.release.core.task.TaskType.FILE_TYPE;
+import lombok.NonNull;
 import lombok.val;
 
-import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -27,13 +29,13 @@ import org.icgc.dcc.release.job.document.transform.DrugTextDocumentTransform;
 
 public class DrugTextDocumentTask extends AbstractDocumentTask {
 
-  public DrugTextDocumentTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.DRUG_TEXT_TYPE);
+  public DrugTextDocumentTask(@NonNull DocumentJobContext documentJobContext) {
+    super(DRUG_TEXT_TYPE);
   }
 
   @Override
   public TaskType getType() {
-    return TaskType.FILE_TYPE;
+    return FILE_TYPE;
   }
 
   @Override

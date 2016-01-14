@@ -31,9 +31,9 @@ public class MutationCentricDocumentContext extends DefaultDocumentContext {
   private final String mutationId;
   private final Optional<Iterable<ObjectNode>> observations;
 
-  public MutationCentricDocumentContext(String mutationId, DocumentJobContext indexJobContext,
+  public MutationCentricDocumentContext(String mutationId, DocumentJobContext documentJobContext,
       Optional<Iterable<ObjectNode>> observations) {
-    super(DocumentType.MUTATION_CENTRIC_TYPE, indexJobContext);
+    super(DocumentType.MUTATION_CENTRIC_TYPE, documentJobContext);
     this.mutationId = mutationId;
     this.observations = observations;
   }

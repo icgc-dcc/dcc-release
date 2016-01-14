@@ -25,7 +25,7 @@ import org.icgc.dcc.release.job.document.task.ResolveGenesTask;
 import org.icgc.dcc.release.job.document.task.ResolveProjectsTask;
 
 /**
- * Type of broadcast a particular index task depends on.
+ * Type of broadcast a particular document task depends on.
  */
 public enum BroadcastType {
 

@@ -52,7 +52,7 @@ public class DocumentTypeAttributes {
   @NonNull
   DocumentClassifier classifier = DEFAULT_CLASSIFIER;
   @NonNull
-  String indexClassName;
+  String documentClassName;
   @NonNull
   FileType outputFileType;
   @NonNull

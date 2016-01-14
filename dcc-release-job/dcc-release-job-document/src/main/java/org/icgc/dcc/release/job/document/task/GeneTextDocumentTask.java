@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
+import lombok.NonNull;
 import lombok.val;
 
 import org.icgc.dcc.release.core.document.DocumentType;
@@ -27,11 +28,11 @@ import org.icgc.dcc.release.job.document.transform.GeneTextDocumentTransform;
 
 public class GeneTextDocumentTask extends AbstractDocumentTask {
 
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
 
-  public GeneTextDocumentTask(DocumentJobContext indexJobContext) {
+  public GeneTextDocumentTask(@NonNull DocumentJobContext documentJobContext) {
     super(DocumentType.GENE_TEXT_TYPE);
-    this.indexJobContext = indexJobContext;
+    this.documentJobContext = documentJobContext;
   }
 
   @Override
@@ -42,7 +43,7 @@ public class GeneTextDocumentTask extends AbstractDocumentTask {
   @Override
   public void execute(TaskContext taskContext) {
     val genes = readGenesPivoted(taskContext);
-    val output = genes.map(new GeneTextDocumentTransform(indexJobContext));
+    val output = genes.map(new GeneTextDocumentTransform(documentJobContext));
 
     writeDocOutput(taskContext, output);
   }

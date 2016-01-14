@@ -1,6 +1,7 @@
 package org.icgc.dcc.release.test.job;
 
 import static com.google.common.base.Preconditions.checkState;
+import static net.javacrumbs.jsonunit.JsonAssert.assertJsonEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -12,7 +13,6 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.jsonunit.JsonAssert;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -318,7 +318,7 @@ public abstract class AbstractJobTest {
 
   private static void compareJsons(Object expected, Object actual) {
     try {
-      JsonAssert.assertJsonEquals(expected, actual);
+      assertJsonEquals(expected, actual);
     } catch (AssertionError e) {
       val message = e.getMessage();
 

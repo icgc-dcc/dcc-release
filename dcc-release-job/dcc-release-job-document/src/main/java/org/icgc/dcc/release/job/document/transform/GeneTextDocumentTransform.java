@@ -38,8 +38,8 @@ public class GeneTextDocumentTransform implements DocumentTransform, Function<Ob
 
   private final DocumentContext documentContext;
 
-  public GeneTextDocumentTransform(DocumentJobContext indexJobContext) {
-    this.documentContext = new DefaultDocumentContext(DocumentType.GENE_TEXT_TYPE, indexJobContext);
+  public GeneTextDocumentTransform(@NonNull DocumentJobContext documentJobContext) {
+    this.documentContext = new DefaultDocumentContext(DocumentType.GENE_TEXT_TYPE, documentJobContext);
   }
 
   @Override

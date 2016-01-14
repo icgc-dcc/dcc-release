@@ -39,7 +39,7 @@ public class DefaultDocumentContext implements DocumentContext {
   @NonNull
   private final DocumentType type;
   @NonNull
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
 
   @Getter(lazy = true)
   private final Map<String, ObjectNode> projects = filterProjects();
@@ -93,15 +93,15 @@ public class DefaultDocumentContext implements DocumentContext {
   }
 
   private Map<String, ObjectNode> filterGenes() {
-    return indexJobContext.getGenesBroadcast().getValue();
+    return documentJobContext.getGenesBroadcast().getValue();
   }
 
   private Map<String, ObjectNode> filterProjects() {
-    return indexJobContext.getProjectsBroadcast().getValue();
+    return documentJobContext.getProjectsBroadcast().getValue();
   }
 
   private Map<String, ObjectNode> filterDonors() {
-    return indexJobContext.getDonorsBroadcast().getValue();
+    return documentJobContext.getDonorsBroadcast().getValue();
   }
 
   private UnsupportedOperationException throwUnsupportedOperationException() {

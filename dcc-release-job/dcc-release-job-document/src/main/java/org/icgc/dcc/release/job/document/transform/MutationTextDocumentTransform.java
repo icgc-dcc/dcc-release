@@ -55,14 +55,14 @@ public class MutationTextDocumentTransform implements DocumentTransform,
     Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> {
 
   @NonNull
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
 
   @Override
   public Document call(Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>> tuple) throws Exception {
     val mutation = tuple._2._1;
     val observations = tuple._2._2;
     val mutationId = getMutationId(mutation);
-    val documentContext = new MutationCentricDocumentContext(mutationId, indexJobContext, observations);
+    val documentContext = new MutationCentricDocumentContext(mutationId, documentJobContext, observations);
 
     return transformDocument(mutation, documentContext);
   }

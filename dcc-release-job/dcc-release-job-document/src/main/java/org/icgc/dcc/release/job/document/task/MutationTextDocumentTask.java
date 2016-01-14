@@ -17,14 +17,16 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
+import lombok.NonNull;
+
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.transform.MutationTextDocumentTransform;
 
 public class MutationTextDocumentTask extends AbstractMutationDocumentTask {
 
-  public MutationTextDocumentTask(DocumentJobContext indexJobContext) {
-    super(DocumentType.MUTATION_TEXT_TYPE, new MutationTextDocumentTransform(indexJobContext));
+  public MutationTextDocumentTask(@NonNull DocumentJobContext documentJobContext) {
+    super(DocumentType.MUTATION_TEXT_TYPE, new MutationTextDocumentTransform(documentJobContext));
   }
 
 }

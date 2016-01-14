@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
+import lombok.NonNull;
 import lombok.val;
 
 import org.icgc.dcc.release.core.document.DocumentType;
@@ -26,17 +27,17 @@ import org.icgc.dcc.release.job.document.transform.DonorTextDocumentTransform;
 
 public class DonorTextDocumentTask extends AbstractDocumentTask {
 
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
 
-  public DonorTextDocumentTask(DocumentJobContext indexJobContext) {
+  public DonorTextDocumentTask(@NonNull DocumentJobContext documentJobContext) {
     super(DocumentType.DONOR_TEXT_TYPE);
-    this.indexJobContext = indexJobContext;
+    this.documentJobContext = documentJobContext;
   }
 
   @Override
   public void execute(TaskContext taskContext) {
     val donors = readDonors(taskContext);
-    val output = donors.map(new DonorTextDocumentTransform(indexJobContext));
+    val output = donors.map(new DonorTextDocumentTransform(documentJobContext));
 
     writeDocOutput(taskContext, output);
   }

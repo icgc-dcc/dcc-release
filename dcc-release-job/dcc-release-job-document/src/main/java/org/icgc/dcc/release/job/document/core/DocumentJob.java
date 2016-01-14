@@ -19,7 +19,7 @@ package org.icgc.dcc.release.job.document.core;
 
 import static java.lang.String.format;
 import static org.icgc.dcc.release.job.document.util.DocumentTypes.getBroadcastDependencies;
-import static org.icgc.dcc.release.job.document.util.DocumentTypes.getIndexClassName;
+import static org.icgc.dcc.release.job.document.util.DocumentTypes.getDocumentClassName;
 
 import java.lang.reflect.Constructor;
 import java.util.Map;
@@ -91,9 +91,9 @@ public class DocumentJob extends GenericJob {
 
   private void write(JobContext jobContext) {
     for (val documentType : DocumentType.values()) {
-      val indexJobContext = createIndexJobContext(jobContext, documentType);
-      jobContext.execute(createStreamingTask(jobContext, documentType, indexJobContext));
-      destroyBroadcasts(indexJobContext);
+      val documentJobContext = createDocumentJobContext(jobContext, documentType);
+      jobContext.execute(createStreamingTask(jobContext, documentType, documentJobContext));
+      destroyBroadcasts(documentJobContext);
     }
 
     // Generate SSM VCF file
@@ -103,44 +103,44 @@ public class DocumentJob extends GenericJob {
   }
 
   @SneakyThrows
-  private Task createStreamingTask(JobContext jobContext, DocumentType documentType, DocumentJobContext indexJobContext) {
+  private Task createStreamingTask(JobContext jobContext, DocumentType documentType, DocumentJobContext documentJobContext) {
     val constructor = getConstructor(documentType);
 
-    return (Task) constructor.newInstance(indexJobContext);
+    return (Task) constructor.newInstance(documentJobContext);
   }
 
   private static Constructor<?> getConstructor(DocumentType documentType) throws ClassNotFoundException,
       NoSuchMethodException {
-    val indexClassName = getIndexClassName(documentType);
-    val clazz = Class.forName(indexClassName);
+    val documentClassName = getDocumentClassName(documentType);
+    val clazz = Class.forName(documentClassName);
     val constructor = clazz.getConstructor(DocumentJobContext.class);
 
     return constructor;
   }
 
-  private DocumentJobContext createIndexJobContext(JobContext jobContext, DocumentType documentType) {
-    val indexJobBuilder = DocumentJobContext.builder();
-    val indexJobDependencies = resolveDependencies(jobContext, documentType);
-    setDependencies(indexJobBuilder, indexJobDependencies);
+  private DocumentJobContext createDocumentJobContext(JobContext jobContext, DocumentType documentType) {
+    val documentJobBuilder = DocumentJobContext.builder();
+    val documentJobDependencies = resolveDependencies(jobContext, documentType);
+    setDependencies(documentJobBuilder, documentJobDependencies);
 
-    return indexJobBuilder.build();
+    return documentJobBuilder.build();
   }
 
-  private void setDependencies(DocumentJobContextBuilder indexJobBuilder,
-      Map<BroadcastType, ? extends Task> indexJobDependencies) {
-    for (val entry : indexJobDependencies.entrySet()) {
+  private void setDependencies(DocumentJobContextBuilder documentJobBuilder,
+      Map<BroadcastType, ? extends Task> documentJobDependencies) {
+    for (val entry : documentJobDependencies.entrySet()) {
       switch (entry.getKey()) {
       case PROJECT:
         val resolveProjectsTask = (ResolveProjectsTask) entry.getValue();
-        indexJobBuilder.projectsBroadcast(createBroadcast(resolveProjectsTask.getProjectIdProjects()));
+        documentJobBuilder.projectsBroadcast(createBroadcast(resolveProjectsTask.getProjectIdProjects()));
         break;
       case DONOR:
         val resolveDonorsTask = (ResolveDonorsTask) entry.getValue();
-        indexJobBuilder.donorsBroadcast(createBroadcast(resolveDonorsTask.getProjectDonors()));
+        documentJobBuilder.donorsBroadcast(createBroadcast(resolveDonorsTask.getProjectDonors()));
         break;
       case GENE:
         val resolveGenesTask = (ResolveGenesTask) entry.getValue();
-        indexJobBuilder.genesBroadcast(createBroadcast(resolveGenesTask.getGeneIdGenes()));
+        documentJobBuilder.genesBroadcast(createBroadcast(resolveGenesTask.getGeneIdGenes()));
         break;
       default:
         throw new IllegalArgumentException(format("Unrecoginzed broadcast type %s", entry.getKey()));
@@ -173,18 +173,18 @@ public class DocumentJob extends GenericJob {
     return sparkContext.broadcast(value);
   }
 
-  private static void destroyBroadcasts(DocumentJobContext indexJobContext) {
-    val projects = indexJobContext.getProjectsBroadcast();
+  private static void destroyBroadcasts(DocumentJobContext documentJobContext) {
+    val projects = documentJobContext.getProjectsBroadcast();
     if (projects != null) {
       projects.destroy(false);
     }
 
-    val donors = indexJobContext.getDonorsBroadcast();
+    val donors = documentJobContext.getDonorsBroadcast();
     if (donors != null) {
       donors.destroy(false);
     }
 
-    val genes = indexJobContext.getGenesBroadcast();
+    val genes = documentJobContext.getGenesBroadcast();
     if (genes != null) {
       genes.destroy(false);
     }

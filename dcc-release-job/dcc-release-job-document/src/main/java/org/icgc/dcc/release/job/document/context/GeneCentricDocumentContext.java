@@ -39,9 +39,9 @@ public class GeneCentricDocumentContext extends DefaultDocumentContext {
   private final String geneId;
   private final Optional<Collection<Occurrence>> observations;
 
-  public GeneCentricDocumentContext(@NonNull String geneId, @NonNull DocumentJobContext indexJobContext,
+  public GeneCentricDocumentContext(@NonNull String geneId, @NonNull DocumentJobContext documentJobContext,
       @NonNull Optional<Collection<Occurrence>> observations) {
-    super(DocumentType.GENE_CENTRIC_TYPE, indexJobContext);
+    super(DocumentType.GENE_CENTRIC_TYPE, documentJobContext);
     this.geneId = geneId;
     this.observations = observations;
   }

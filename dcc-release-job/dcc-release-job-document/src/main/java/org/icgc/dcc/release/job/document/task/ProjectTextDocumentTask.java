@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
+import lombok.NonNull;
 import lombok.val;
 
 import org.icgc.dcc.release.core.document.DocumentType;
@@ -27,11 +28,11 @@ import org.icgc.dcc.release.job.document.transform.ProjectTextDocumentTransform;
 
 public class ProjectTextDocumentTask extends AbstractDocumentTask {
 
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
 
-  public ProjectTextDocumentTask(DocumentJobContext indexJobContext) {
+  public ProjectTextDocumentTask(@NonNull DocumentJobContext documentJobContext) {
     super(DocumentType.PROJECT_TEXT_TYPE);
-    this.indexJobContext = indexJobContext;
+    this.documentJobContext = documentJobContext;
   }
 
   @Override
@@ -42,7 +43,7 @@ public class ProjectTextDocumentTask extends AbstractDocumentTask {
   @Override
   public void execute(TaskContext taskContext) {
     val projects = readProjects(taskContext);
-    val output = projects.map(new ProjectTextDocumentTransform(indexJobContext));
+    val output = projects.map(new ProjectTextDocumentTransform(documentJobContext));
 
     writeDocOutput(taskContext, output);
   }
