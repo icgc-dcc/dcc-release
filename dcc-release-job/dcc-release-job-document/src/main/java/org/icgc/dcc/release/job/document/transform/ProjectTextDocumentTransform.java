@@ -42,8 +42,8 @@ public class ProjectTextDocumentTransform implements DocumentTransform, Function
 
   private final DocumentContext documentContext;
 
-  public ProjectTextDocumentTransform(DocumentJobContext indexJobContext) {
-    this.documentContext = new DefaultDocumentContext(DocumentType.PROJECT_TEXT_TYPE, indexJobContext);
+  public ProjectTextDocumentTransform(@NonNull DocumentJobContext documentJobContext) {
+    this.documentContext = new DefaultDocumentContext(DocumentType.PROJECT_TEXT_TYPE, documentJobContext);
   }
 
   @Override

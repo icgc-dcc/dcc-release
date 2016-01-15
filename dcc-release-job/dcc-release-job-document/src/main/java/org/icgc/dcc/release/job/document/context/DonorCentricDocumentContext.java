@@ -31,9 +31,9 @@ public class DonorCentricDocumentContext extends DefaultDocumentContext {
   private final String donorId;
   private final Optional<Iterable<ObjectNode>> observations;
 
-  public DonorCentricDocumentContext(String donorId, DocumentJobContext indexJobContext,
+  public DonorCentricDocumentContext(String donorId, DocumentJobContext documentJobContext,
       Optional<Iterable<ObjectNode>> observations) {
-    super(DocumentType.DONOR_CENTRIC_TYPE, indexJobContext);
+    super(DocumentType.DONOR_CENTRIC_TYPE, documentJobContext);
     this.donorId = donorId;
     this.observations = observations;
   }

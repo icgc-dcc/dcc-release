@@ -3,23 +3,21 @@ package org.icgc.dcc.release.test.job;
 import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
-import static org.skyscreamer.jsonassert.JSONCompareMode.LENIENT;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.icgc.dcc.common.core.util.stream.Collectors;
 import org.icgc.dcc.release.core.job.DefaultJobContext;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -28,6 +26,7 @@ import org.icgc.dcc.release.core.task.DefaultTaskContext;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskExecutor;
 import org.icgc.dcc.release.core.util.Partitions;
+import org.icgc.dcc.release.test.function.JsonComparator;
 import org.icgc.dcc.release.test.model.TestFile;
 import org.icgc.dcc.release.test.model.TestFile.TestFileBuilder;
 import org.icgc.dcc.release.test.util.TestFiles;
@@ -37,15 +36,14 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Table;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-@Slf4j
 public abstract class AbstractJobTest {
 
   /**
@@ -55,6 +53,7 @@ public abstract class AbstractJobTest {
   protected static final String INPUT_TEST_FIXTURES_DIR = TEST_FIXTURES_DIR + "/input";
   protected static final String OUTPUT_TEST_FIXTURES_DIR = TEST_FIXTURES_DIR + "/output";
   protected static final String RELEASE_VERSION = "ICGC19-0-2";
+  private static final JsonComparator JSON_COMPARATOR = new JsonComparator();
 
   /**
    * Collaborators.
@@ -293,51 +292,55 @@ public abstract class AbstractJobTest {
    * Compares actual output with output located in {@link OUTPUT_TEST_FIXTURES_DIR}.
    */
   protected void verifyResult(FileType fileType) {
-    val actualResult = produces(fileType);
-    val expectedFile = resolveExpectedFile(fileType);
-    val expectedResult = TestFiles.readInputFile(expectedFile);
-    compareResults(normalizeJson(expectedResult), normalizeJson(actualResult));
+    verifyResult(Optional.empty(), fileType, JSON_COMPARATOR);
   }
 
   /**
    * Compares actual output with output located in {@link OUTPUT_TEST_FIXTURES_DIR}.
    */
   protected void verifyResult(String projectName, FileType fileType) {
-    val actualResult = produces(projectName, fileType);
-    val expectedFile = resolveExpectedFile(projectName, fileType);
-    val expectedResult = TestFiles.readInputFile(expectedFile);
-    compareResults(normalizeJson(expectedResult), normalizeJson(actualResult));
+    verifyResult(Optional.of(projectName), fileType, JSON_COMPARATOR);
   }
 
-  private static List<JsonNode> normalizeJson(List<? extends JsonNode> expectedResult) {
-    return expectedResult.stream()
-        .map(j -> TestJsonNodes.sortFields(j))
-        .collect(Collectors.toImmutableList());
+  protected void verifyResult(Optional<String> projectName, FileType fileType,
+      Consumer<Entry<ObjectNode, ObjectNode>> resultComaparator) {
+    val actualResult = projectName.isPresent() ? produces(projectName.get(), fileType) : produces(fileType);
+    val expectedResult = projectName.isPresent() ?
+        getExpectedJson(projectName.get(), fileType) : getExpectedJson(fileType);
+    compareResults(actualResult, expectedResult, resultComaparator);
   }
 
-  private static void compareResults(List<? extends JsonNode> expectedResult, List<? extends JsonNode> actualResult) {
+  private static void compareResults(List<ObjectNode> actualResult, List<ObjectNode> expectedResult,
+      Consumer<Entry<ObjectNode, ObjectNode>> resultComaparator) {
     assertThat(actualResult).hasSameSizeAs(expectedResult);
-    for (int i = 0; i < expectedResult.size(); i++) {
-      val expectedJson = expectedResult.get(i).toString();
-      val actualJson = actualResult.get(i).toString();
-      compareJsons(expectedJson, actualJson);
-    }
+
+    val entries = createEntriesList(actualResult, expectedResult);
+    entries.forEach(resultComaparator);
   }
 
-  @SneakyThrows
-  private static void compareJsons(String expected, String actual) {
-    try {
-      assertEquals(expected, actual, LENIENT);
-    } catch (AssertionError e) {
-      // Account for bug in previous implementation
-      val message = e.getMessage();
-
-      log.info("Expected:    {}", expected);
-      log.warn("Actual:      {}", actual);
-      log.error("Difference: {}", message);
-
-      throw e;
+  private static List<Entry<ObjectNode, ObjectNode>> createEntriesList(List<ObjectNode> actualResult,
+      List<ObjectNode> expectedResult) {
+    val entries = ImmutableList.<Entry<ObjectNode, ObjectNode>> builder();
+    for (int i = 0; i < expectedResult.size(); i++) {
+      val expectedJson = expectedResult.get(i);
+      val actualJson = actualResult.get(i);
+      entries.add(Maps.immutableEntry(actualJson, expectedJson));
     }
+
+    return entries.build();
+  }
+
+  private static List<ObjectNode> getExpectedJson(FileType fileType) {
+    val expectedFile = resolveExpectedFile(fileType);
+    val expectedResult = TestFiles.readInputFile(expectedFile);
+
+    return expectedResult;
+  }
+
+  private static List<ObjectNode> getExpectedJson(String projectName, FileType fileType) {
+    val expectedFile = resolveExpectedFile(projectName, fileType);
+
+    return TestFiles.readInputFile(expectedFile);
   }
 
   private static File resolveExpectedFile(FileType fileType) {

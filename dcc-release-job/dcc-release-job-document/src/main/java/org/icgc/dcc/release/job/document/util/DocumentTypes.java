@@ -37,6 +37,8 @@ import org.icgc.dcc.release.job.document.task.DiagramDocumentTask;
 import org.icgc.dcc.release.job.document.task.DonorCentricDocumentTask;
 import org.icgc.dcc.release.job.document.task.DonorDocumentTask;
 import org.icgc.dcc.release.job.document.task.DonorTextDocumentTask;
+import org.icgc.dcc.release.job.document.task.DrugCentricDocumentTask;
+import org.icgc.dcc.release.job.document.task.DrugTextDocumentTask;
 import org.icgc.dcc.release.job.document.task.GeneCentricDocumentTask;
 import org.icgc.dcc.release.job.document.task.GeneDocumentTask;
 import org.icgc.dcc.release.job.document.task.GeneSetDocumentTask;
@@ -57,8 +59,8 @@ public final class DocumentTypes {
 
   private static final Map<DocumentType, DocumentTypeAttributes> DOCUMENT_TYPES = defineDocumentTypes();
 
-  public static String getIndexClassName(@NonNull DocumentType documentType) {
-    return DOCUMENT_TYPES.get(documentType).indexClassName();
+  public static String getDocumentClassName(@NonNull DocumentType documentType) {
+    return DOCUMENT_TYPES.get(documentType).documentClassName();
   }
 
   public static Collection<BroadcastType> getBroadcastDependencies(@NonNull DocumentType documentType) {
@@ -73,12 +75,31 @@ public final class DocumentTypes {
     val documentTypes =
         ImmutableMap
             .<DocumentType, DocumentTypeAttributes> builder()
-            .put(DocumentType.DIAGRAM_TYPE, attributes().indexClassName(DiagramDocumentTask.class.getName()))
-            .put(DocumentType.RELEASE_TYPE, attributes().indexClassName(ReleaseDocumentTask.class.getName()))
+            .put(DocumentType.DIAGRAM_TYPE, attributes().documentClassName(DiagramDocumentTask.class.getName()))
+            .put(DocumentType.DRUG_CENTRIC_TYPE,
+                attributes().documentClassName(DrugCentricDocumentTask.class.getName()))
+            .put(DocumentType.RELEASE_TYPE, attributes().documentClassName(ReleaseDocumentTask.class.getName()))
+
+            .put(DocumentType.DRUG_TEXT_TYPE,
+                attributes()
+                    .documentClassName(DrugTextDocumentTask.class.getName())
+                    .fields(fields()
+                        .drugFields(
+                            drugFields()
+                                .excludedFields(
+                                    "_id",
+                                    "cancer_trial_count",
+                                    "genes",
+                                    "large_image_url",
+                                    "small_image_url"
+                                )
+                        )
+                    )
+            )
 
             .put(DocumentType.GENE_SET_TYPE,
                 attributes()
-                    .indexClassName(GeneSetDocumentTask.class.getName())
+                    .documentClassName(GeneSetDocumentTask.class.getName())
                     .fields(fields()
                         .geneFields(
                             geneFields()
@@ -107,7 +128,7 @@ public final class DocumentTypes {
             )
             .put(DocumentType.GENE_SET_TEXT_TYPE,
                 attributes()
-                    .indexClassName(GeneSetTextDocumentTask.class.getName())
+                    .documentClassName(GeneSetTextDocumentTask.class.getName())
                     .fields(fields()
                         .geneSetFields(
                             geneSetFields()
@@ -121,10 +142,10 @@ public final class DocumentTypes {
                     )
             )
 
-            .put(DocumentType.PROJECT_TYPE, attributes().indexClassName(ProjectDocumentTask.class.getName()))
+            .put(DocumentType.PROJECT_TYPE, attributes().documentClassName(ProjectDocumentTask.class.getName()))
             .put(DocumentType.PROJECT_TEXT_TYPE,
                 attributes()
-                    .indexClassName(ProjectTextDocumentTask.class.getName())
+                    .documentClassName(ProjectTextDocumentTask.class.getName())
                     .fields(fields()
                         .projectFields(
                             projectFields()
@@ -141,7 +162,7 @@ public final class DocumentTypes {
 
             .put(DocumentType.DONOR_TYPE,
                 attributes()
-                    .indexClassName(DonorDocumentTask.class.getName())
+                    .documentClassName(DonorDocumentTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.PROJECT))
                     .fields(fields()
                         .donorFields(
@@ -154,7 +175,7 @@ public final class DocumentTypes {
             )
             .put(DocumentType.DONOR_TEXT_TYPE,
                 attributes()
-                    .indexClassName(DonorTextDocumentTask.class.getName())
+                    .documentClassName(DonorTextDocumentTask.class.getName())
                     .fields(fields()
                         .donorFields(
                             donorFields()
@@ -172,7 +193,7 @@ public final class DocumentTypes {
             )
             .put(DocumentType.DONOR_CENTRIC_TYPE,
                 attributes()
-                    .indexClassName(DonorCentricDocumentTask.class.getName())
+                    .documentClassName(DonorCentricDocumentTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.GENE, BroadcastType.PROJECT))
                     .fields(fields()
                         .projectFields(
@@ -249,7 +270,7 @@ public final class DocumentTypes {
 
             .put(DocumentType.GENE_TYPE,
                 attributes()
-                    .indexClassName(GeneDocumentTask.class.getName())
+                    .documentClassName(GeneDocumentTask.class.getName())
                     .fields(fields()
                         .geneFields(geneFields()
                             .excludedFields("donor")
@@ -266,7 +287,7 @@ public final class DocumentTypes {
             )
             .put(DocumentType.GENE_TEXT_TYPE,
                 attributes()
-                    .indexClassName(GeneTextDocumentTask.class.getName())
+                    .documentClassName(GeneTextDocumentTask.class.getName())
                     .fields(fields()
                         .geneFields(
                             geneFields()
@@ -281,7 +302,7 @@ public final class DocumentTypes {
             )
             .put(DocumentType.GENE_CENTRIC_TYPE,
                 attributes()
-                    .indexClassName(GeneCentricDocumentTask.class.getName())
+                    .documentClassName(GeneCentricDocumentTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.DONOR, BroadcastType.PROJECT))
                     .fields(
                         fields()
@@ -347,7 +368,7 @@ public final class DocumentTypes {
             .put(
                 DocumentType.OBSERVATION_CENTRIC_TYPE,
                 attributes()
-                    .indexClassName(ObservationCentricDocumentTask.class.getName())
+                    .documentClassName(ObservationCentricDocumentTask.class.getName())
                     .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
                     .fields(
                         fields()
@@ -422,7 +443,7 @@ public final class DocumentTypes {
 
             .put(DocumentType.MUTATION_TEXT_TYPE,
                 attributes()
-                    .indexClassName(MutationTextDocumentTask.class.getName())
+                    .documentClassName(MutationTextDocumentTask.class.getName())
                     .broadcastDependencies(ImmutableList.of(BroadcastType.GENE))
                     .fields(fields()
                         .mutationFields(
@@ -453,7 +474,7 @@ public final class DocumentTypes {
             .put(
                 DocumentType.MUTATION_CENTRIC_TYPE,
                 attributes()
-                    .indexClassName(MutationCentricDocumentTask.class.getName())
+                    .documentClassName(MutationCentricDocumentTask.class.getName())
                     .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
                     .fields(
                         fields()
@@ -536,6 +557,10 @@ public final class DocumentTypes {
   }
 
   private static CollectionFields.Builder geneFields() {
+    return CollectionFields.collectionFields();
+  }
+
+  private static CollectionFields.Builder drugFields() {
     return CollectionFields.collectionFields();
   }
 

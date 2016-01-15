@@ -42,11 +42,11 @@ import com.google.common.collect.Lists;
 
 public class GeneCentricDocumentTask extends AbstractDocumentTask {
 
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
 
-  public GeneCentricDocumentTask(@NonNull DocumentJobContext indexJobContext) {
+  public GeneCentricDocumentTask(@NonNull DocumentJobContext documentJobContext) {
     super(DocumentType.GENE_CENTRIC_TYPE);
-    this.indexJobContext = indexJobContext;
+    this.documentJobContext = documentJobContext;
   }
 
   @Override
@@ -73,7 +73,7 @@ public class GeneCentricDocumentTask extends AbstractDocumentTask {
     val output = genes
         .mapToPair(gene -> tuple(getGeneId(gene), gene))
         .leftOuterJoin(occurrancePairs, partitionsNumber)
-        .map(new GeneCentricDocumentTransform(indexJobContext));
+        .map(new GeneCentricDocumentTransform(documentJobContext));
 
     return output;
   }

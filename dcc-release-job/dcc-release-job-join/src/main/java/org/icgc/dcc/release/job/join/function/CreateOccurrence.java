@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import lombok.NonNull;
@@ -91,6 +92,8 @@ public final class CreateOccurrence implements
     if (consequencesOpt.isPresent()) {
       val consequences = consequencesOpt.get();
       occurrence.setConsequence(Sets.newHashSet(consequences));
+    } else {
+      occurrence.setConsequence(Collections.emptySet());
     }
 
     return occurrence;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,37 +15,45 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.task;
+package org.icgc.dcc.release.test.function;
 
-import lombok.NonNull;
+import static net.javacrumbs.jsonunit.JsonAssert.assertJsonEquals;
+
+import java.util.Map.Entry;
+import java.util.function.Consumer;
+
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.core.task.TaskType;
-import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.transform.ProjectTextDocumentTransform;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ProjectTextDocumentTask extends AbstractDocumentTask {
-
-  private final DocumentJobContext documentJobContext;
-
-  public ProjectTextDocumentTask(@NonNull DocumentJobContext documentJobContext) {
-    super(DocumentType.PROJECT_TEXT_TYPE);
-    this.documentJobContext = documentJobContext;
-  }
+/**
+ * This class is used to compare actual results produced by a job to actual results. Implement the {@code compare()}
+ * method to provide specific comparison logic.
+ */
+@Slf4j
+public class JsonComparator implements Consumer<Entry<ObjectNode, ObjectNode>> {
 
   @Override
-  public TaskType getType() {
-    return TaskType.FILE_TYPE;
+  public void accept(Entry<ObjectNode, ObjectNode> entry) {
+    val actual = entry.getKey();
+    val expected = entry.getValue();
+
+    try {
+      compare(actual, expected);
+    } catch (AssertionError e) {
+      val message = e.getMessage();
+
+      log.info("Expected:    {}", expected);
+      log.warn("Actual:      {}", actual);
+      log.error("Difference: {}", message);
+
+      throw e;
+    }
   }
 
-  @Override
-  public void execute(TaskContext taskContext) {
-    val projects = readProjects(taskContext);
-    val output = projects.map(new ProjectTextDocumentTransform(documentJobContext));
-
-    writeDocOutput(taskContext, output);
+  protected void compare(ObjectNode actual, ObjectNode expected) {
+    assertJsonEquals(actual, expected);
   }
 
 }

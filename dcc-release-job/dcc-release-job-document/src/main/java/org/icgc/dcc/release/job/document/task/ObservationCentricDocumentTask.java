@@ -17,11 +17,12 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
+import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.transform.ObservationCentricDocumentTransform;
@@ -30,11 +31,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ObservationCentricDocumentTask extends AbstractDocumentTask {
 
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
 
-  public ObservationCentricDocumentTask(DocumentJobContext indexJobContext) {
+  public ObservationCentricDocumentTask(@NonNull DocumentJobContext documentJobContext) {
     super(DocumentType.OBSERVATION_CENTRIC_TYPE);
-    this.indexJobContext = indexJobContext;
+    this.documentJobContext = documentJobContext;
   }
 
   @Override
@@ -46,7 +47,7 @@ public class ObservationCentricDocumentTask extends AbstractDocumentTask {
   }
 
   private JavaRDD<Document> transform(JavaRDD<ObjectNode> observations) {
-    val transformed = observations.map(new ObservationCentricDocumentTransform(indexJobContext));
+    val transformed = observations.map(new ObservationCentricDocumentTransform(documentJobContext));
 
     return transformed;
   }

@@ -27,7 +27,7 @@ import org.icgc.dcc.release.job.document.transform.BasicDocumentTransform;
 
 public class ReleaseDocumentTask extends AbstractDocumentTask {
 
-  public ReleaseDocumentTask(DocumentJobContext indexJobContext) {
+  public ReleaseDocumentTask(DocumentJobContext documentJobContext) {
     super(DocumentType.RELEASE_TYPE);
   }
 

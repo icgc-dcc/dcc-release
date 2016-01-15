@@ -34,8 +34,8 @@ public class GeneSetTextDocumentTransform implements DocumentTransform, Function
 
   private final DocumentContext documentContext;
 
-  public GeneSetTextDocumentTransform(DocumentJobContext indexJobContext) {
-    this.documentContext = new DefaultDocumentContext(DocumentType.GENE_SET_TEXT_TYPE, indexJobContext);
+  public GeneSetTextDocumentTransform(@NonNull DocumentJobContext documentJobContext) {
+    this.documentContext = new DefaultDocumentContext(DocumentType.GENE_SET_TEXT_TYPE, documentJobContext);
   }
 
   @Override

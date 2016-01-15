@@ -52,11 +52,6 @@
       <artifactId>dcc-resources</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>dcc-common-test</artifactId>
-      <version>${dcc-common.version}</version>
-    </dependency>
 
     <!-- Testing - Unit, mocking, assertions (note: "test" scope implied due to dep management) -->
     <dependency>
@@ -74,7 +69,16 @@
       <artifactId>mockito-core</artifactId>
       <version>${mockito.version}</version>
     </dependency>
+    <dependency>
+      <groupId>net.javacrumbs.json-unit</groupId>
+      <artifactId>json-unit</artifactId>
+      <version>${json-unit.version}</version>
+    </dependency>
 
   </dependencies>
+  
+  <properties>
+    <json-unit.version>1.9.0</json-unit.version>
+  </properties>
 
 </project>

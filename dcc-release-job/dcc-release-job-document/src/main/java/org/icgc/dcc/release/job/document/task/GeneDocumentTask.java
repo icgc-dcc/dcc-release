@@ -27,7 +27,7 @@ import org.icgc.dcc.release.job.document.transform.BasicDocumentTransform;
 
 public class GeneDocumentTask extends AbstractDocumentTask {
 
-  public GeneDocumentTask(DocumentJobContext indexJobContext) {
+  public GeneDocumentTask(DocumentJobContext documentJobContext) {
     super(DocumentType.GENE_TYPE);
   }
 

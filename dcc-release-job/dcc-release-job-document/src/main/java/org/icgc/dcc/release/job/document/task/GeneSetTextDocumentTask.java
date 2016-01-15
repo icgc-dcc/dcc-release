@@ -27,11 +27,11 @@ import org.icgc.dcc.release.job.document.transform.GeneSetTextDocumentTransform;
 
 public class GeneSetTextDocumentTask extends AbstractDocumentTask {
 
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
 
-  public GeneSetTextDocumentTask(DocumentJobContext indexJobContext) {
+  public GeneSetTextDocumentTask(DocumentJobContext documentJobContext) {
     super(DocumentType.GENE_SET_TEXT_TYPE);
-    this.indexJobContext = indexJobContext;
+    this.documentJobContext = documentJobContext;
   }
 
   @Override
@@ -42,7 +42,7 @@ public class GeneSetTextDocumentTask extends AbstractDocumentTask {
   @Override
   public void execute(TaskContext taskContext) {
     val geneSets = readGeneSets(taskContext);
-    val output = geneSets.map(new GeneSetTextDocumentTransform(indexJobContext));
+    val output = geneSets.map(new GeneSetTextDocumentTransform(documentJobContext));
 
     writeDocOutput(taskContext, output);
   }

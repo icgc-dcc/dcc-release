@@ -17,16 +17,18 @@
  */
 package org.icgc.dcc.release.core.document;
 
+import static org.icgc.dcc.common.core.model.Entity.DIAGRAM;
 import static org.icgc.dcc.common.core.model.Entity.DONOR;
+import static org.icgc.dcc.common.core.model.Entity.DRUG;
 import static org.icgc.dcc.common.core.model.Entity.GENE;
 import static org.icgc.dcc.common.core.model.Entity.GENE_SET;
 import static org.icgc.dcc.common.core.model.Entity.MUTATION;
 import static org.icgc.dcc.common.core.model.Entity.OBSERVATION;
-import static org.icgc.dcc.common.core.model.Entity.PATHWAY;
 import static org.icgc.dcc.common.core.model.Entity.PROJECT;
 import static org.icgc.dcc.common.core.model.Entity.RELEASE;
 import static org.icgc.dcc.common.core.model.FieldNames.DIAGRAM_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.DRUG_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
@@ -53,9 +55,28 @@ public enum DocumentType {
   DIAGRAM_TYPE(
       attributes()
           .name("diagram")
-          .entity(PATHWAY)
+          .entity(DIAGRAM)
           .outputFileType(FileType.DIAGRAM_DOCUMENT)
           .primaryKey(DIAGRAM_ID)
+  ),
+
+  /**
+   * Drug type(s).
+   */
+  DRUG_TEXT_TYPE(
+      attributes()
+          .name("drug-text")
+          .entity(DRUG)
+          .outputFileType(FileType.DRUG_TEXT_DOCUMENT)
+          .primaryKey(DRUG_ID)
+  ),
+
+  DRUG_CENTRIC_TYPE(
+      attributes()
+          .name("drug-centric")
+          .entity(DRUG)
+          .outputFileType(FileType.DRUG_CENTRIC_DOCUMENT)
+          .primaryKey(DRUG_ID)
   ),
 
   /**

@@ -17,11 +17,12 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
+import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.transform.DonorDocumentTransform;
@@ -30,11 +31,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DonorDocumentTask extends AbstractDocumentTask {
 
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
 
-  public DonorDocumentTask(DocumentJobContext indexJobContext) {
+  public DonorDocumentTask(@NonNull DocumentJobContext documentJobContext) {
     super(DocumentType.DONOR_TYPE);
-    this.indexJobContext = indexJobContext;
+    this.documentJobContext = documentJobContext;
   }
 
   @Override
@@ -46,7 +47,7 @@ public class DonorDocumentTask extends AbstractDocumentTask {
   }
 
   private JavaRDD<Document> transform(JavaRDD<ObjectNode> donors) {
-    return donors.map(new DonorDocumentTransform(indexJobContext));
+    return donors.map(new DonorDocumentTransform(documentJobContext));
   }
 
 }

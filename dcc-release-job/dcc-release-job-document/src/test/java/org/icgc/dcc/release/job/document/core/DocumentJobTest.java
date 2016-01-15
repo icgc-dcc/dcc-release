@@ -36,8 +36,10 @@ public class DocumentJobTest extends AbstractJobTest {
     given(new File(INPUT_TEST_FIXTURES_DIR));
     job.execute(createJobContext(job.getType(), ImmutableList.of(PROJECT)));
 
+    verifyResult(FileType.DRUG_TEXT_DOCUMENT);
+    verifyResult(FileType.DRUG_CENTRIC_DOCUMENT);
+    verifyResult(FileType.DIAGRAM_DOCUMENT);
     verifyResult(PROJECT, FileType.OBSERVATION_CENTRIC_DOCUMENT);
-
     verifyResult(FileType.PROJECT_DOCUMENT);
     verifyResult(FileType.PROJECT_TEXT_DOCUMENT);
 

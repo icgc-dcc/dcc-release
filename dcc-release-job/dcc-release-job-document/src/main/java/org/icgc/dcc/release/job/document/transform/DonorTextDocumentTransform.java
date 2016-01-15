@@ -48,8 +48,8 @@ public class DonorTextDocumentTransform implements DocumentTransform, Function<O
 
   private final DocumentContext documentContext;
 
-  public DonorTextDocumentTransform(DocumentJobContext indexJobContext) {
-    this.documentContext = new DefaultDocumentContext(DocumentType.DONOR_TEXT_TYPE, indexJobContext);
+  public DonorTextDocumentTransform(@NonNull DocumentJobContext documentJobContext) {
+    this.documentContext = new DefaultDocumentContext(DocumentType.DONOR_TEXT_TYPE, documentJobContext);
   }
 
   @Override

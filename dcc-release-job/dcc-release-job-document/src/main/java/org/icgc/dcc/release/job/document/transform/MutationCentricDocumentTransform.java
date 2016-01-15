@@ -127,7 +127,7 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> {
 
   @NonNull
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
   private static final DocumentCallback SUMMARY_CALLBACK = new MutationCentricSummaryCallback();
 
   @Override
@@ -135,7 +135,7 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     val mutation = tuple._2._1;
     val observations = tuple._2._2;
     val mutationId = getMutationId(mutation);
-    val documentContext = new MutationCentricDocumentContext(mutationId, indexJobContext, observations);
+    val documentContext = new MutationCentricDocumentContext(mutationId, documentJobContext, observations);
 
     return transformDocument(mutation, documentContext);
   }

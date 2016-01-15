@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
+import lombok.NonNull;
 import lombok.val;
 
 import org.icgc.dcc.release.core.document.DocumentType;
@@ -27,7 +28,7 @@ import org.icgc.dcc.release.job.document.transform.BasicDocumentTransform;
 
 public class DiagramDocumentTask extends AbstractDocumentTask {
 
-  public DiagramDocumentTask(DocumentJobContext indexJobContext) {
+  public DiagramDocumentTask(@NonNull DocumentJobContext documentJobContext) {
     super(DocumentType.DIAGRAM_TYPE);
   }
 

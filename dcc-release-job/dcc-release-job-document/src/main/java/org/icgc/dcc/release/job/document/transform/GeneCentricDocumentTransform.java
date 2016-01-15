@@ -62,14 +62,14 @@ import com.google.common.collect.Multimap;
 public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransform implements
     Function<Tuple2<String, Tuple2<ObjectNode, Optional<Collection<Occurrence>>>>, Document> {
 
-  private final DocumentJobContext indexJobContext;
+  private final DocumentJobContext documentJobContext;
 
   @Override
   public Document call(Tuple2<String, Tuple2<ObjectNode, Optional<Collection<Occurrence>>>> tuple) throws Exception {
     val geneId = tuple._1;
     val gene = tuple._2._1;
     val observations = tuple._2._2;
-    val documentContext = new GeneCentricDocumentContext(geneId, indexJobContext, observations);
+    val documentContext = new GeneCentricDocumentContext(geneId, documentJobContext, observations);
 
     return transformDocument(gene, documentContext);
   }
@@ -79,7 +79,7 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
     // Index observations by donor id
     val geneId = getGeneId(gene);
     val geneObservations = context.getObservationsByGeneId(geneId);
-    val geneDonorsObservations = indexGeneDonorsObservations(geneObservations);
+    val geneDonorsObservations = documentGeneDonorsObservations(geneObservations);
 
     /**
      * Donors: {@code gene.donors}(s).
@@ -181,16 +181,16 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
     return realAffectedDonorCount;
   }
 
-  private static Multimap<String, ObjectNode> indexGeneDonorsObservations(@NonNull Iterable<ObjectNode> observations) {
+  private static Multimap<String, ObjectNode> documentGeneDonorsObservations(@NonNull Iterable<ObjectNode> observations) {
     // Set and multi-semantics are required
-    val index = ImmutableSetMultimap.<String, ObjectNode> builder();
+    val document = ImmutableSetMultimap.<String, ObjectNode> builder();
     for (val observation : observations) {
       val donorId = getObservationDonorId(observation);
 
-      index.put(donorId, observation);
+      document.put(donorId, observation);
     }
 
-    return index.build();
+    return document.build();
   }
 
 }

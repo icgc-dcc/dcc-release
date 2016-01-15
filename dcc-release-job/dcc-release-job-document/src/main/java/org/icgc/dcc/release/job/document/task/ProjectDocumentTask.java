@@ -27,7 +27,7 @@ import org.icgc.dcc.release.job.document.transform.BasicDocumentTransform;
 
 public class ProjectDocumentTask extends AbstractDocumentTask {
 
-  public ProjectDocumentTask(DocumentJobContext indexJobContext) {
+  public ProjectDocumentTask(DocumentJobContext documentJobContext) {
     super(DocumentType.PROJECT_TYPE);
   }
 

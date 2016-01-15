@@ -18,17 +18,18 @@
 package org.icgc.dcc.release.job.imports.core;
 
 import static org.icgc.dcc.common.core.model.ReleaseCollection.DIAGRAM_COLLECTION;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.DRUG_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.GENE_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.GENE_SET_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.PROJECT_COLLECTION;
 import static org.icgc.dcc.release.core.job.FileType.DIAGRAM;
+import static org.icgc.dcc.release.core.job.FileType.DRUG;
 import static org.icgc.dcc.release.core.job.FileType.GENE;
 import static org.icgc.dcc.release.core.job.FileType.GENE_SET;
 import static org.icgc.dcc.release.core.job.FileType.PROJECT;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
@@ -64,7 +65,7 @@ public class ImportJob extends GenericJob {
   }
 
   private void clean(JobContext jobContext) {
-    delete(jobContext, FileType.PROJECT, FileType.GENE, FileType.GENE_SET, FileType.DIAGRAM);
+    delete(jobContext, PROJECT, GENE, GENE_SET, DIAGRAM, DRUG);
   }
 
   private void imports(JobContext jobContext) {
@@ -72,6 +73,7 @@ public class ImportJob extends GenericJob {
         new MongoImportTask(properties, MONGO_REFERENCE_DB, PROJECT_COLLECTION.getId(), PROJECT),
         new MongoImportTask(properties, MONGO_REFERENCE_DB, GENE_COLLECTION.getId(), GENE),
         new MongoImportTask(properties, MONGO_REFERENCE_DB, GENE_SET_COLLECTION.getId(), GENE_SET),
+        new MongoImportTask(properties, MONGO_REFERENCE_DB, DRUG_COLLECTION.getId(), DRUG),
         new MongoImportTask(properties, MONGO_REFERENCE_DB, DIAGRAM_COLLECTION.getId(), DIAGRAM));
   }
 }

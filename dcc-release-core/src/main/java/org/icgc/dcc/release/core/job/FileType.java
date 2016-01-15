@@ -130,6 +130,7 @@ public enum FileType implements Identifiable {
   OBSERVATION(true),
   MUTATION(false),
   DIAGRAM(false),
+  DRUG(false),
 
   OBSERVATION_FATHMM(true),
   OBSERVATION_FI(true),
@@ -147,6 +148,8 @@ public enum FileType implements Identifiable {
   DONOR_DOCUMENT(true),
   DONOR_TEXT_DOCUMENT(true),
   DIAGRAM_DOCUMENT(false),
+  DRUG_TEXT_DOCUMENT(false),
+  DRUG_CENTRIC_DOCUMENT(false),
 
   GENE_CENTRIC_DOCUMENT(false),
   GENE_TEXT_DOCUMENT(false),
