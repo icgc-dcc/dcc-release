@@ -351,15 +351,36 @@ public final class DocumentTypes {
                             )
                             .geneFields(
                                 geneFields()
-                                    .excludedFields(
-                                        "_id",
-                                        "canonical_transcript_id",
+                                    .includedFields(
+                                        "_gene_id",
+                                        "biotype",
+                                        "chromosome",
                                         "description",
+                                        "donor",
+                                        "end",
                                         "external_db_ids",
-                                        "project",
+                                        "name",
+                                        "sets",
+                                        "start",
                                         "strand",
-                                        "synonyms",
-                                        "transcripts"
+                                        "symbol",
+                                        "transcripts.biotype",
+                                        "transcripts.cdna_coding_end",
+                                        "transcripts.cdna_coding_start",
+                                        "transcripts.coding_region_end",
+                                        "transcripts.coding_region_start",
+                                        "transcripts.exons.cdna_coding_end",
+                                        "transcripts.exons.cdna_coding_start",
+                                        "transcripts.exons.cdna_end",
+                                        "transcripts.exons.cdna_start",
+                                        "transcripts.exons.genomic_coding_end",
+                                        "transcripts.exons.genomic_coding_start",
+                                        "transcripts.exons.end",
+                                        "transcripts.exons.start",
+                                        "transcripts.domains",
+                                        "transcripts.id",
+                                        "transcripts.length_amino_acid",
+                                        "transcripts.name"
                                     )
                             )
                     )
@@ -482,7 +503,12 @@ public final class DocumentTypes {
                                 projectFields()
                                     .includedFields(
                                         "_project_id",
-                                        "primary_site"
+                                        "_summary._affected_donor_count",
+                                        "_summary._ssm_tested_donor_count",
+                                        "primary_site",
+                                        "project_name",
+                                        "tumour_type",
+                                        "tumour_subtype"
                                     )
                             )
                             .donorFields(
