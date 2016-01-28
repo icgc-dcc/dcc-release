@@ -88,6 +88,11 @@
       <artifactId>dcc-release-job-summarize</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-job-legacy-export</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
   </dependencies>
 
