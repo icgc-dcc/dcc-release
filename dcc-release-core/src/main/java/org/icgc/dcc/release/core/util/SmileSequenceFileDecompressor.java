@@ -34,7 +34,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.release.core.hadoop.SmileSequenceFileInputStream;
 
-public class SnappyDecompressor {
+public class SmileSequenceFileDecompressor {
 
   private static final int DEFAULT_BUFFER_SIZE = 32768;
 
@@ -43,7 +43,7 @@ public class SnappyDecompressor {
     val inFile = new File(args[0]);
     checkArgument(inFile.canRead(), "Can't read file %s", inFile);
 
-    new SnappyDecompressor().execute(inFile);
+    new SmileSequenceFileDecompressor().execute(inFile);
   }
 
   @SneakyThrows
@@ -57,10 +57,10 @@ public class SnappyDecompressor {
 
   public static void decompress(InputStream in, OutputStream out) throws IOException {
     byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-    int len = in.read(buffer);
-    while (len != -1) {
-      out.write(buffer, 0, len);
-      len = in.read(buffer);
+    int length = in.read(buffer);
+    while (length != -1) {
+      out.write(buffer, 0, length);
+      length = in.read(buffer);
     }
   }
 
