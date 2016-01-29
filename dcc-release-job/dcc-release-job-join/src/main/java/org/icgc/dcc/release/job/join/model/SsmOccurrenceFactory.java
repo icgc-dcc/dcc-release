@@ -56,7 +56,9 @@ public class SsmOccurrenceFactory {
     observation.setBase_calling_algorithm(meta.getBase_calling_algorithm());
     observation.setBiological_validation_platform(primary.getBiological_validation_platform());
     observation.setBiological_validation_status(primary.getBiological_validation_status());
+    observation.setControl_genotype(primary.getControl_genotype());
     observation.setExperimental_protocol(meta.getExperimental_protocol());
+    observation.setExpressed_allele(primary.getExpressed_allele());
     observation.setMarking(primary.getMarking());
     observation.setMatched_sample_id(meta.getMatched_sample_id());
     observation.setMutant_allele_read_count(primary.getMutant_allele_read_count());
@@ -70,6 +72,7 @@ public class SsmOccurrenceFactory {
     observation.setSeq_coverage(meta.getSeq_coverage());
     observation.setSequencing_strategy(meta.getSequencing_strategy());
     observation.setTotal_read_count(primary.getTotal_read_count());
+    observation.setTumour_genotype(primary.getTumour_genotype());
     observation.setVariation_calling_algorithm(meta.getVariation_calling_algorithm());
     observation.setVerification_platform(primary.getVerification_platform());
     observation.setVerification_status(primary.getVerification_status());
