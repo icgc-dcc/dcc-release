@@ -33,7 +33,9 @@ public class Observation implements Serializable {
   protected String base_calling_algorithm;
   protected String biological_validation_platform;
   protected String biological_validation_status;
+  protected String control_genotype;
   protected String experimental_protocol;
+  protected String expressed_allele;
   protected String marking;
   protected String matched_sample_id;
   protected Integer mutant_allele_read_count;
@@ -47,6 +49,7 @@ public class Observation implements Serializable {
   protected Double seq_coverage;
   protected String sequencing_strategy;
   protected Integer total_read_count;
+  protected String tumour_genotype;
   protected String variation_calling_algorithm;
   protected String verification_platform;
   protected String verification_status;

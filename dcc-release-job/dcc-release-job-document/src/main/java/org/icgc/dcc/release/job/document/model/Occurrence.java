@@ -21,7 +21,8 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import org.icgc.dcc.release.core.model.Observation;
 
 @Data
 public class Occurrence implements Serializable {
@@ -62,16 +63,6 @@ public class Occurrence implements Serializable {
     private String note;
     private String gene_affected;
     private String transcript_affected;
-
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public static class Observation extends org.icgc.dcc.release.core.model.Observation {
-
-    private String control_genotype;
-    private String expressed_allele;
-    private String tumour_genotype;
 
   }
 

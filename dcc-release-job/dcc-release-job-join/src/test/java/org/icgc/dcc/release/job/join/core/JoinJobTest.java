@@ -25,7 +25,6 @@ import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.AVAILABLE_RAW_SEQUENCE_DATA;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.OBSERVATION_ARRAY_NAME;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.EXPOSURE;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.FAMILY;
@@ -88,22 +87,12 @@ public class JoinJobTest extends AbstractJobTest {
     validateSecondaryType(produces(PROJECT_NAME, FileType.SGV), 34);
     validateStsm(produces(PROJECT_NAME, FileType.STSM), 46);
 
-    validateSsm(produces(PROJECT_NAME, FileType.SSM));
+    verifyResult(PROJECT_NAME, FileType.SSM);
     verifyResult(PROJECT_NAME, FileType.SGV);
   }
 
   private void validateOccurrences() {
     verifyResult(PROJECT_NAME, FileType.OBSERVATION);
-  }
-
-  private static void validateSsm(List<ObjectNode> results) {
-    assertThat(results).hasSize(2);
-    for (val occurrence : results) {
-      assertThat(keys(occurrence)).hasSize(16);
-      assertThat(occurrence.get(OBSERVATION_ARRAY_NAME)).isNotEmpty();
-      assertThat(occurrence.get(CONSEQUENCE_ARRAY_NAME)).isNotEmpty();
-    }
-
   }
 
   private static void validateStsm(List<ObjectNode> produces, int fieldsCount) {
