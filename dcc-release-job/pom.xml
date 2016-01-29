@@ -31,6 +31,7 @@
     <module>dcc-release-job-mask</module>
     <module>dcc-release-job-stage</module>
     <module>dcc-release-job-summarize</module>
+    <module>dcc-release-job-legacy-export</module>
   </modules>
 
   <dependencies>

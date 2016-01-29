@@ -53,6 +53,7 @@ import org.icgc.dcc.release.job.export.test.hbase.EmbeddedHBase;
 import org.icgc.dcc.release.job.export.util.HTableManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -136,6 +137,7 @@ public class ExportJobTest {
     System.clearProperty("spark.master.port");
   }
 
+  @Ignore("Job decommissioned")
   @SuppressWarnings("deprecation")
   @Test
   @SneakyThrows
