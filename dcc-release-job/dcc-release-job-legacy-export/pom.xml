@@ -14,12 +14,12 @@
 
   <name>${project.artifactId}</name>
   <description>${project.name}</description>
-  
+
   <dependencies>
-        <dependency>
-        <groupId>com.hadoop.gplcompression</groupId>
-        <artifactId>hadoop-lzo</artifactId>
-      </dependency>
+    <dependency>
+      <groupId>com.hadoop.gplcompression</groupId>
+      <artifactId>hadoop-lzo</artifactId>
+    </dependency>
   </dependencies>
 
 </project>

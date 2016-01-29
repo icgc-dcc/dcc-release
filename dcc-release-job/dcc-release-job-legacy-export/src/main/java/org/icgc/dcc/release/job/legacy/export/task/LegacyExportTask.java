@@ -26,6 +26,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
+import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.core.task.TaskContext;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -35,6 +36,11 @@ import com.hadoop.compression.lzo.LzopCodec;
 public class LegacyExportTask extends GenericTask {
 
   private final FileType fileType;
+
+  @Override
+  public String getName() {
+    return Task.getName(super.getName(), fileType.getId());
+  }
 
   @Override
   public void execute(TaskContext taskContext) {
@@ -52,7 +58,6 @@ public class LegacyExportTask extends GenericTask {
     val workingDir = taskContext.getJobContext().getWorkingDir();
     val fileTypePath = new Path(new Path(new Path(workingDir), EXPORT_DIR), fileType.getDirName());
 
-    taskContext.getPath(fileType);
     val projectName = taskContext.getProjectName();
     if (projectName.isPresent()) {
       val projectFileTypePath = new Path(fileTypePath, projectName.get());
