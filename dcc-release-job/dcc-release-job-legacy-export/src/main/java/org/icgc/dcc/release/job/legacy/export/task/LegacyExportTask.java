@@ -17,10 +17,12 @@
  */
 package org.icgc.dcc.release.job.legacy.export.task;
 
+import static org.icgc.dcc.release.core.util.Tasks.hasInput;
 import static org.icgc.dcc.release.job.legacy.export.core.LegacyExportJob.EXPORT_DIR;
 import static org.icgc.dcc.release.job.legacy.export.core.LegacyExportJob.getOutputFileType;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
@@ -32,6 +34,7 @@ import org.icgc.dcc.release.core.task.TaskContext;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.hadoop.compression.lzo.LzopCodec;
 
+@Slf4j
 @RequiredArgsConstructor
 public class LegacyExportTask extends GenericTask {
 
@@ -44,6 +47,11 @@ public class LegacyExportTask extends GenericTask {
 
   @Override
   public void execute(TaskContext taskContext) {
+    if (!hasInput(taskContext, fileType)) {
+      log.debug("[{}] No input for '{}'. Skipping...", getName(), fileType);
+      return;
+    }
+
     val output = readInput(taskContext, fileType);
     val outputPath = getOutputPath(taskContext, getOutputFileType(fileType));
 

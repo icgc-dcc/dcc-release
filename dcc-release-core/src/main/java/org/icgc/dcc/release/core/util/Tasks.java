@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
 
+import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.TaskContext;
 
 @NoArgsConstructor(access = PRIVATE)
@@ -34,6 +35,10 @@ public final class Tasks {
     val project = taskContext.getProjectName();
 
     return project.isPresent() ? project.get() : Tasks.NO_PROJECTS;
+  }
+
+  public static boolean hasInput(TaskContext taskContext, FileType inputFileType) {
+    return taskContext.exists(inputFileType);
   }
 
 }

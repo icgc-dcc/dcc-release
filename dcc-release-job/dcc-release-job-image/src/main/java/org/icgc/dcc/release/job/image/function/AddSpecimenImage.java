@@ -19,36 +19,39 @@ package org.icgc.dcc.release.job.image.function;
 
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_DIGITAL_IMAGE_OF_STAINED_SECTION;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_SPECIMEN_ID;
-import static org.icgc.dcc.common.core.util.URLs.isUrl;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 
 import java.util.Map;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.common.core.model.Programs;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * This modifies the digital_image_of_stained_section field in donor specimen to a real URL, if applicable;
  */
-@RequiredArgsConstructor
 public class AddSpecimenImage implements Function<ObjectNode, ObjectNode> {
 
   /**
    * State.
    */
-  @NonNull
   private final Map<String, String> specimenUrls;
+  private final boolean replaceImageUrl;
+
+  public AddSpecimenImage(@NonNull Map<String, String> specimenUrls, @NonNull String projectName) {
+    this.specimenUrls = specimenUrls;
+    this.replaceImageUrl = Programs.isTCGA(projectName);
+  }
 
   @Override
   public ObjectNode call(ObjectNode row) throws Exception {
     val specimenId = textValue(row, SUBMISSION_SPECIMEN_ID);
     val imageUrl = textValue(row, SUBMISSION_DIGITAL_IMAGE_OF_STAINED_SECTION);
-    val specimenUrl = isReplaceImageUrl(imageUrl) ? getSpecimenUrl(specimenId) : imageUrl;
+    val specimenUrl = replaceImageUrl ? getSpecimenUrl(specimenId) : imageUrl;
 
     row.put(SUBMISSION_DIGITAL_IMAGE_OF_STAINED_SECTION, specimenUrl);
 
@@ -57,14 +60,6 @@ public class AddSpecimenImage implements Function<ObjectNode, ObjectNode> {
 
   private String getSpecimenUrl(String specimenId) {
     return specimenUrls.get(specimenId);
-  }
-
-  private static boolean isReplaceImageUrl(String imageUrl) {
-    if (imageUrl != null && isUrl(imageUrl.trim())) {
-      return false;
-    }
-
-    return true;
   }
 
 }

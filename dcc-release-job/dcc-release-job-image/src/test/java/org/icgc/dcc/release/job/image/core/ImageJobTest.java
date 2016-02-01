@@ -1,18 +1,20 @@
 package org.icgc.dcc.release.job.image.core;
 
-import static com.google.common.collect.ImmutableList.of;
-import static org.assertj.core.api.Assertions.assertThat;
+import static java.util.Arrays.asList;
+
+import java.io.File;
+
 import lombok.val;
 
 import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.job.image.core.ImageJob;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class ImageJobTest extends AbstractJobTest {
+
+  private static final String TCGA_PROJECT = "BLCA-US";
+  private static final String NON_TCGA_PROJECT = "PACA-CA";
 
   /**
    * Class under test.
@@ -28,19 +30,12 @@ public class ImageJobTest extends AbstractJobTest {
 
   @Test
   public void testExecute() {
-    val projectName = "PACA-CA";
-
-    given(inputFile(projectName)
-        .fileType(FileType.SPECIMEN_SURROGATE_KEY)
-        .rows(of(row("{specimen_id: 1}"))));
-
-    val jobContext = createJobContext(job.getType(), ImmutableList.of(projectName));
+    given(new File(INPUT_TEST_FIXTURES_DIR));
+    val jobContext = createJobContext(job.getType(), asList(TCGA_PROJECT, NON_TCGA_PROJECT));
     job.execute(jobContext);
 
-    val results = produces(projectName, FileType.SPECIMEN_SURROGATE_KEY_IMAGE);
-
-    assertThat(results).hasSize(1);
-    assertThat(results.get(0)).isEqualTo(row("{specimen_id: 1, digital_image_of_stained_section: null}"));
+    verifyResult(TCGA_PROJECT, FileType.SPECIMEN_SURROGATE_KEY_IMAGE);
+    verifyResult(NON_TCGA_PROJECT, FileType.SPECIMEN_SURROGATE_KEY_IMAGE);
   }
 
 }

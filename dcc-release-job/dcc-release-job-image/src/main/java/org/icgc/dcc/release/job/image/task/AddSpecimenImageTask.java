@@ -17,29 +17,37 @@
  */
 package org.icgc.dcc.release.job.image.task;
 
+import static org.icgc.dcc.release.core.job.FileType.SPECIMEN_SURROGATE_KEY_IMAGE;
+import static org.icgc.dcc.release.core.util.Tasks.hasInput;
+
 import java.util.Map;
 
-import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.task.GenericProcessTask;
+import org.icgc.dcc.release.core.task.GenericTask;
+import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.image.function.AddSpecimenImage;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+@Slf4j
+@RequiredArgsConstructor
+public class AddSpecimenImageTask extends GenericTask {
 
-public class AddSpecimenImageTask extends GenericProcessTask {
-
+  private static final FileType INPUT_FILE_TYPE = FileType.SPECIMEN_SURROGATE_KEY;
   private final Map<String, String> specimenImageUrls;
 
-  public AddSpecimenImageTask(@NonNull Map<String, String> specimenImageUrls) {
-    super(FileType.SPECIMEN_SURROGATE_KEY, FileType.SPECIMEN_SURROGATE_KEY_IMAGE);
-    this.specimenImageUrls = specimenImageUrls;
-  }
-
   @Override
-  protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input.map(new AddSpecimenImage(specimenImageUrls));
+  public void execute(TaskContext taskContext) {
+    if (!hasInput(taskContext, INPUT_FILE_TYPE)) {
+      log.debug("[{}] No input for '{}'. Skipping...", getName(), INPUT_FILE_TYPE);
+      return;
+    }
+
+    val input = readInput(taskContext, INPUT_FILE_TYPE);
+    val processed = input.map(new AddSpecimenImage(specimenImageUrls, taskContext.getProjectName().get()));
+    writeOutput(taskContext, processed, SPECIMEN_SURROGATE_KEY_IMAGE);
   }
 
 }
