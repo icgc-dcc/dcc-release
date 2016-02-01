@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,35 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.join.function;
+package org.icgc.dcc.release.job.join.utils;
 
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.PROJECT_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.MUTATION_ID;
-import static org.icgc.dcc.release.job.join.utils.Consequences.enrichConsequence;
-
-import java.util.Collection;
-import java.util.Set;
-
-import org.apache.spark.api.java.function.Function2;
+import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.TRANSCRIPT_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_GENE_AFFECTED;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_TRANSCRIPT_AFFECTED;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableSet;
 
-public final class AggregateConsequences implements
-    Function2<Collection<ObjectNode>, ObjectNode, Collection<ObjectNode>> {
+@NoArgsConstructor(access = PRIVATE)
+public final class Consequences {
 
-  public static final Set<String> REMOVE_CONSEQUENCE_FIELDS = ImmutableSet.of(PROJECT_ID, MUTATION_ID,
-      SUBMISSION_OBSERVATION_ANALYSIS_ID, SUBMISSION_ANALYZED_SAMPLE_ID);
-
-  @Override
-  public Collection<ObjectNode> call(Collection<ObjectNode> consequences, ObjectNode consequence) throws Exception {
-    consequence.remove(REMOVE_CONSEQUENCE_FIELDS);
-    enrichConsequence(consequence);
-    consequences.add(consequence);
-
-    return consequences;
+  public static void enrichConsequence(@NonNull ObjectNode consequence) {
+    consequence.set(GENE_ID, consequence.get(SUBMISSION_GENE_AFFECTED));
+    consequence.set(TRANSCRIPT_ID, consequence.get(SUBMISSION_TRANSCRIPT_AFFECTED));
   }
 
 }

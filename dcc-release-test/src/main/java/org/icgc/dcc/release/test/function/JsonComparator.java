@@ -53,7 +53,7 @@ public class JsonComparator implements Consumer<Entry<ObjectNode, ObjectNode>> {
   }
 
   protected void compare(ObjectNode actual, ObjectNode expected) {
-    assertJsonEquals(actual, expected);
+    assertJsonEquals(expected, actual);
   }
 
 }

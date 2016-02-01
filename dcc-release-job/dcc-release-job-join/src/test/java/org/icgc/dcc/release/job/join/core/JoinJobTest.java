@@ -83,8 +83,7 @@ public class JoinJobTest extends AbstractJobTest {
     validatePrimaryMeta(produces(PROJECT_NAME, FileType.EXP_ARRAY), 18);
     validatePrimaryMeta(produces(PROJECT_NAME, FileType.METH_ARRAY), 21);
 
-    validateSecondaryType(produces(PROJECT_NAME, FileType.CNSM), 40);
-    validateSecondaryType(produces(PROJECT_NAME, FileType.SGV), 34);
+    verifyResult(PROJECT_NAME, FileType.CNSM);
     validateStsm(produces(PROJECT_NAME, FileType.STSM), 46);
 
     verifyResult(PROJECT_NAME, FileType.SSM);
@@ -99,16 +98,6 @@ public class JoinJobTest extends AbstractJobTest {
     validatePrimaryMeta(produces, fieldsCount);
     val occurrence = produces.get(0);
     assertThat(getElements(occurrence.get(CONSEQUENCE_ARRAY_NAME))).isEmpty();
-  }
-
-  private static void validateSecondaryType(List<ObjectNode> results, int fieldsCount) {
-    log.debug("{}", results);
-    validatePrimaryMeta(results, fieldsCount);
-    val occurrence = results.get(0);
-
-    val consequences = occurrence.get(CONSEQUENCE_ARRAY_NAME);
-    assertThat(consequences).isNotEmpty();
-    assertThat(keys(consequences.get(0)).size()).isGreaterThan(2);
   }
 
   private static void validatePrimaryMeta(List<ObjectNode> results, int expectedFieldsCount) {

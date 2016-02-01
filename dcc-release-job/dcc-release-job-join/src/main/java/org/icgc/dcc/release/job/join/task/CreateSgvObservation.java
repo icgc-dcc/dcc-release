@@ -23,7 +23,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NOR
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MATCHED_SAMPLE_ID;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.job.join.function.AggregateConsequences.REMOVE_CONSEQUENCE_FIELDS;
-import static org.icgc.dcc.release.job.join.function.AggregateConsequences.enrichConsequence;
+import static org.icgc.dcc.release.job.join.utils.Consequences.enrichConsequence;
 
 import java.util.Collection;
 import java.util.Map;
