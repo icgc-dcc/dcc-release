@@ -88,7 +88,6 @@ public class ObservationJoinTask extends GenericTask {
     primary.persist(StorageLevel.MEMORY_ONLY_SER());
 
     // Aggregate consequences
-    // TODO: confirm consequences are already unique
     val consequences = aggregateConsequences(taskContext, primaryPartitions);
     consequences.persist(StorageLevel.MEMORY_ONLY_SER());
 
@@ -163,6 +162,8 @@ public class ObservationJoinTask extends GenericTask {
 
   private JavaPairRDD<String, Collection<Consequence>> aggregateConsequences(TaskContext taskContext,
       int primaryPartitions) {
+    // Submitted(generated) consequences(ssm_s, sgv_s, cmsm_s and stsm_s files) might not be unique.
+    // After speaking with our bioinformatician it was decided to enforce their uniqueness when they are joined.
     val zeroValue = Sets.<Consequence> newHashSet();
 
     return parseSsmS(taskContext)
