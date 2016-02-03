@@ -88,7 +88,6 @@ public class ObservationJoinTask extends GenericTask {
     primary.persist(StorageLevel.MEMORY_ONLY_SER());
 
     // Aggregate consequences
-    // TODO: confirm consequences are already unique
     val consequences = aggregateConsequences(taskContext, primaryPartitions);
     consequences.persist(StorageLevel.MEMORY_ONLY_SER());
 
@@ -163,6 +162,7 @@ public class ObservationJoinTask extends GenericTask {
 
   private JavaPairRDD<String, Collection<Consequence>> aggregateConsequences(TaskContext taskContext,
       int primaryPartitions) {
+    // Consequences might not be unique. Enforce uniqueness
     val zeroValue = Sets.<Consequence> newHashSet();
 
     return parseSsmS(taskContext)
