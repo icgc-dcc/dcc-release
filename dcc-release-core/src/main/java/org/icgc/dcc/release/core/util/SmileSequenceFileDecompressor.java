@@ -18,13 +18,13 @@
 package org.icgc.dcc.release.core.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
 
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import lombok.Cleanup;
 import lombok.SneakyThrows;
@@ -34,40 +34,39 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.release.core.hadoop.SmileSequenceFileInputStream;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class SmileSequenceFileDecompressor {
 
-  private static final int DEFAULT_BUFFER_SIZE = 32768;
-
   public static void main(String... args) {
-    checkArgument(args.length == 1, "Expected input file");
+    checkArgument(args.length == 2, "Expected input and output file");
     val inFile = new File(args[0]);
+    val outFile = new File(args[1]);
     checkArgument(inFile.canRead(), "Can't read file %s", inFile);
 
-    new SmileSequenceFileDecompressor().execute(inFile);
+    new SmileSequenceFileDecompressor().execute(inFile, outFile);
   }
 
   @SneakyThrows
-  public void execute(File inFile) {
+  public void execute(File inFile, File outFile) {
     @Cleanup
     val in = getInputStream(inFile);
     @Cleanup
-    val out = getOutStream(inFile);
+    val out = getOutWriter(outFile);
     decompress(in, out);
   }
 
-  public static void decompress(InputStream in, OutputStream out) throws IOException {
-    byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-    int length = in.read(buffer);
-    while (length != -1) {
-      out.write(buffer, 0, length);
-      length = in.read(buffer);
+  public static void decompress(InputStream in, BufferedWriter out) throws IOException {
+    val iterator = READER.<ObjectNode> readValues(in);
+    while (iterator.hasNext()) {
+      val value = iterator.next();
+      out.write(value.toString());
+      out.newLine();
     }
   }
 
-  private FileOutputStream getOutStream(File inFile) throws FileNotFoundException {
-    val outFile = new File("/tmp/" + inFile.getName() + ".out");
-
-    return new FileOutputStream(outFile);
+  private static BufferedWriter getOutWriter(File outFile) throws IOException {
+    return new BufferedWriter(new FileWriter(outFile));
   }
 
   @SneakyThrows
