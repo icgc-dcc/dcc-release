@@ -20,7 +20,6 @@ package org.icgc.dcc.release.core.function;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Collections.disjoint;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
@@ -50,8 +49,7 @@ import com.google.common.collect.ImmutableSet;
  * A function which unwinds {@code unwindPath} and joins it to the parent object if requested.<br>
  * <br>
  * The function works like <a href="http://docs.mongodb.org/manual/reference/operator/aggregation/unwind/">Mongo's
- * unwind function</a>, however if it was requested to include the parent object and requested to unwind array does not
- * exists only parent's fields will be returned.
+ * unwind function</a>.
  */
 @RequiredArgsConstructor(access = PRIVATE)
 public class Unwind implements FlatMapFunction<ObjectNode, ObjectNode> {
@@ -82,12 +80,6 @@ public class Unwind implements FlatMapFunction<ObjectNode, ObjectNode> {
   }
 
   private Iterable<ObjectNode> createMissingElementsObject(ObjectNode row) {
-    if (includeParent) {
-      row.remove(resolveTopLevelFieldName(unwindPath));
-
-      return singleton(row);
-    }
-
     return emptyList();
   }
 

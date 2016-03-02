@@ -298,6 +298,13 @@
           </exclusion>
         </exclusions>
       </dependency>
+      
+      <!-- JSON assert -->
+      <dependency>
+        <groupId>net.javacrumbs.json-unit</groupId>
+        <artifactId>json-unit</artifactId>
+        <version>${json-unit.version}</version>
+      </dependency>
 
     </dependencies>
   </dependencyManagement>
@@ -356,6 +363,9 @@
     <jackson-smile.version>${jackson.version}</jackson-smile.version>
     <jackson-yaml.version>${jackson.version}</jackson-yaml.version>
     <jackson-csv.version>${jackson.version}</jackson-csv.version>
+    
+    <!-- JSON assert -->
+    <json-unit.version>1.9.0</json-unit.version>
   </properties>
 
 </project>

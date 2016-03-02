@@ -19,10 +19,14 @@ package org.icgc.dcc.release.job.join.task;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.release.core.job.FileType.EXP_ARRAY_M;
+import static org.icgc.dcc.release.core.job.FileType.METH_ARRAY_M;
+import static org.icgc.dcc.release.core.job.FileType.PEXP_M;
 import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import lombok.Getter;
 import lombok.val;
@@ -33,9 +37,13 @@ import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 public class ResolveRawSequenceDataTask extends GenericTask {
+
+  private static final Set<FileType> EXCLUDE_RAW_SEQUENCE_FILE_TYPES = ImmutableSet.of(METH_ARRAY_M, EXP_ARRAY_M,
+      PEXP_M);
 
   @Getter
   private final Map<String, JavaRDD<ObjectNode>> projectRawSequenceData = Maps.newConcurrentMap();
@@ -68,7 +76,7 @@ public class ResolveRawSequenceDataTask extends GenericTask {
 
   private static List<FileType> filterMetaTypes() {
     return newArrayList(FileType.values()).stream()
-        .filter(ft -> ft.isMetaFileType())
+        .filter(ft -> ft.isMetaFileType() && !EXCLUDE_RAW_SEQUENCE_FILE_TYPES.contains(ft))
         .collect(toList());
   }
 

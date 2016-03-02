@@ -241,7 +241,7 @@ public final class DonorCentricDocumentTransform implements
   private static Donor convertDonor(ObjectNode row) {
     val donor = JacksonFactory.MAPPER.treeToValue(row, Donor.class);
     if (donor.getGene() == null) {
-      donor.setGene(Lists.newLinkedList());
+      donor.setGene(Collections.singleton(createFakeGene()));
     }
 
     return donor;

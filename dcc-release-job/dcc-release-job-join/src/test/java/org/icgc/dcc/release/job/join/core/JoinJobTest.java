@@ -21,24 +21,18 @@ import static com.google.common.collect.ImmutableList.copyOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.AVAILABLE_RAW_SEQUENCE_DATA;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.EXPOSURE;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.FAMILY;
-import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.THERAPY;
 import static org.icgc.dcc.release.test.util.TestJsonNodes.getElements;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.core.util.ObjectNodes;
+import org.icgc.dcc.release.test.function.DonorJsonComparator;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.icgc.dcc.release.test.util.SubmissionFiles;
 import org.junit.Before;
@@ -46,14 +40,12 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
 
 @Slf4j
 public class JoinJobTest extends AbstractJobTest {
 
   private static final String PROJECT_NAME = "BRCA-UK";
   private static final String EMPTY_PROJECT_NAME = "EMPTY";
-  private static final List<String> VALID_SAMPLES = ImmutableList.of("ASID1", "ASID2");
 
   JoinJob job;
 
@@ -70,8 +62,8 @@ public class JoinJobTest extends AbstractJobTest {
     val jobContext = createJobContext(job.getType(), asList(PROJECT_NAME, EMPTY_PROJECT_NAME));
     job.execute(jobContext);
 
-    validateClinicalResults(produces(PROJECT_NAME, FileType.CLINICAL));
-    validateEmptyProjectClinicalResults(produces(EMPTY_PROJECT_NAME, FileType.CLINICAL));
+    verifyResult(Optional.of(PROJECT_NAME), FileType.CLINICAL, new DonorJsonComparator());
+    verifyResult(Optional.of(EMPTY_PROJECT_NAME), FileType.CLINICAL, new DonorJsonComparator());
 
     validateOccurrences();
 
@@ -105,72 +97,6 @@ public class JoinJobTest extends AbstractJobTest {
     assertThat(results).hasSize(1);
     val joined = results.get(0);
     assertThat(keys(joined)).hasSize(expectedFieldsCount);
-  }
-
-  private static void validateClinicalResults(List<ObjectNode> results) {
-    log.debug("Clinical - {}", results);
-    assertThat(results).hasSize(2);
-    val donor = results.get(0);
-    validateTherapyFamilyExposure(donor.get(THERAPY));
-    validateTherapyFamilyExposure(donor.get(FAMILY));
-    validateTherapyFamilyExposure(donor.get(EXPOSURE));
-    validateSpecimen(donor.get(DONOR_SPECIMEN));
-  }
-
-  private static void validateSpecimen(JsonNode specimenArray) {
-    assertThat(specimenArray.isArray()).isTrue();
-    val specimens = getElements(specimenArray);
-    assertThat(specimens).hasSize(1);
-
-    val specimen = specimens.get(0);
-    assertThat(keys(specimen)).hasSize(30);
-    val samples = getElements(specimen.get(DONOR_SAMPLE));
-    assertThat(samples).hasSize(2);
-
-    samples.stream().forEach(s -> validateSamples(s));
-  }
-
-  private static void validateTherapyFamilyExposure(JsonNode node) {
-    assertThat(node.isArray()).isTrue();
-    val elements = getElements(node);
-    assertThat(elements).hasSize(1);
-  }
-
-  private static void validateSamples(JsonNode sample) {
-    val sampleId = ObjectNodes.textValue(sample, SUBMISSION_ANALYZED_SAMPLE_ID);
-    assertThat(VALID_SAMPLES).contains(sampleId);
-    // Sample has 9 fields
-    assertThat(keys(sample)).hasSize(9);
-
-    if (sampleId.equals("ASID1")) {
-      verifyRawSequenceData(sample, 11);
-    } else {
-      verifyRawSequenceData(sample, 0);
-    }
-
-  }
-
-  private static void verifyRawSequenceData(JsonNode sample, int expectedExementsCount) {
-    val elements = getElements(sample.get(AVAILABLE_RAW_SEQUENCE_DATA));
-    assertThat(elements).hasSize(expectedExementsCount);
-
-    if (expectedExementsCount > 0) {
-      elements.stream()
-          .forEach(node -> {
-            // Each RawSequenceData object has 3 fields
-              assertThat(keys(node)).hasSize(3);
-              assertThat(node.path(SUBMISSION_ANALYZED_SAMPLE_ID).isMissingNode()).isTrue();
-            });
-    }
-  }
-
-  private static void validateEmptyProjectClinicalResults(List<ObjectNode> results) {
-    assertThat(results).hasSize(1);
-    val donor = results.get(0);
-    assertThat(donor.findPath(THERAPY).isMissingNode()).isTrue();
-    assertThat(donor.findPath(FAMILY).isMissingNode()).isTrue();
-    assertThat(donor.findPath(EXPOSURE).isMissingNode()).isTrue();
-    assertThat(donor.findPath(DONOR_SPECIMEN).isMissingNode()).isTrue();
   }
 
   private static List<String> keys(JsonNode node) {
