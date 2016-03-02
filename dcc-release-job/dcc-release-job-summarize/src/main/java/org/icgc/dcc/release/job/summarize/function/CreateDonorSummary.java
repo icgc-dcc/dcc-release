@@ -126,9 +126,9 @@ public final class CreateDonorSummary implements Function<ObjectNode, ObjectNode
   private static Map<String, Integer> mergeLibraryStrategies(Map<String, Integer> map1, Map<String, Integer> map2) {
     val result = Maps.newHashMap(map1);
     for (val entry : map2.entrySet()) {
-      val map1Entry = map1.get(entry.getKey());
-      if (map1Entry != null) {
-        result.put(entry.getKey(), map1Entry + entry.getValue());
+      val map1Value = map1.get(entry.getKey());
+      if (map1Value != null) {
+        result.put(entry.getKey(), map1Value + entry.getValue());
       } else {
         result.put(entry.getKey(), entry.getValue());
       }
@@ -141,16 +141,10 @@ public final class CreateDonorSummary implements Function<ObjectNode, ObjectNode
     val sampleLibStrategies = Maps.<String, Integer> newHashMap();
     for (val sampleSequenceData : sample.path(DONOR_SAMPLE_SEQUENCE_DATA)) {
       val libStrategy = textValue(sampleSequenceData, SEQUENCE_DATA_LIBRARY_STRATEGY);
-      if (libStrategy != null) {
-        sampleLibStrategies.put(libStrategy, incrementLibraryStrategyValue(sampleLibStrategies.get(libStrategy)));
-      }
+      sampleLibStrategies.put(libStrategy, 1);
     }
 
     return sampleLibStrategies;
-  }
-
-  private static Integer incrementLibraryStrategyValue(Integer value) {
-    return value == null ? 1 : value + 1;
   }
 
   private static void summarizeDonorAgeGroups(ObjectNode row, ObjectNode summaryNode) {
