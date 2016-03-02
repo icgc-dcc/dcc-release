@@ -72,13 +72,9 @@
     <dependency>
       <groupId>net.javacrumbs.json-unit</groupId>
       <artifactId>json-unit</artifactId>
-      <version>${json-unit.version}</version>
     </dependency>
 
   </dependencies>
   
-  <properties>
-    <json-unit.version>1.9.0</json-unit.version>
-  </properties>
 
 </project>

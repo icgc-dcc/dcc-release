@@ -33,18 +33,6 @@ public class UnwindTest {
   }
 
   @Test
-  public void noElementButINcludeParent() throws Exception {
-    val sourceNode = $("{id:'1'}");
-    unwindFunction = unwindToParent("three.times.nested");
-    val result = unwindFunction.call(sourceNode);
-    assertThat(result).hasSize(1);
-    val node = get(result, 0);
-
-    assertThat(node.get("id").textValue()).isEqualTo("1");
-    assertThat(node.path("type").isMissingNode()).isTrue();
-  }
-
-  @Test
   public void unwindDeepNestedTest() throws Exception {
     val sourceNode = $("{id:'1', three:{times:{nested:[{id:5, type:'2'},{id:5, type:'3'}] }}}");
     unwindFunction = unwind("three.times.nested");
@@ -68,10 +56,7 @@ public class UnwindTest {
     unwindFunction = unwindToParent("nested");
 
     val result = unwindFunction.call(sourceNode);
-    assertThat(result).hasSize(1);
-    val node = get(result, 0);
-    assertThat(node).hasSize(1);
-    assertThat(node.get("id").textValue()).isEqualTo("1");
+    assertThat(result).isEmpty();
   }
 
   @Test
