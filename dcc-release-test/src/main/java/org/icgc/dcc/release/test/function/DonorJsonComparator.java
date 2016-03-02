@@ -29,7 +29,6 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.icgc.dcc.common.core.model.FieldNames;
-import org.icgc.dcc.common.json.Jackson;
 import org.icgc.dcc.release.core.util.ArrayNodes;
 import org.icgc.dcc.release.core.util.Keys;
 
@@ -63,9 +62,7 @@ public final class DonorJsonComparator extends JsonComparator {
 
     for (val specimen : speciments) {
       normalizeSample(specimen);
-
     }
-
   }
 
   private static void normalizeSample(JsonNode specimen) {
@@ -81,14 +78,13 @@ public final class DonorJsonComparator extends JsonComparator {
 
   private static void normalizeAvailableRawSequenceData(JsonNode sample) {
     val sequencingDataNode = sample.path(FieldNames.DONOR_SAMPLE_SEQUENCE_DATA);
-
     if (sequencingDataNode.isMissingNode()) {
       return;
     }
 
     val sequencingData = ArrayNodes.toMutableList(asArrayNode(sequencingDataNode));
     Collections.sort(sequencingData, DonorJsonComparator::compareSequencingData);
-    val sampleObject = Jackson.asObjectNode(sample);
+    val sampleObject = asObjectNode(sample);
     sampleObject.set(FieldNames.DONOR_SAMPLE_SEQUENCE_DATA, ArrayNodes.toArrayNode(sequencingData));
   }
 
