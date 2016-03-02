@@ -241,10 +241,17 @@ public final class DonorCentricDocumentTransform implements
   private static Donor convertDonor(ObjectNode row) {
     val donor = JacksonFactory.MAPPER.treeToValue(row, Donor.class);
     if (donor.getGene() == null) {
-      donor.setGene(Collections.singleton(createFakeGene()));
+      donor.setGene(Collections.singleton(createNoGeneIdFakeGene()));
     }
 
     return donor;
+  }
+
+  private static Map<String, Object> createNoGeneIdFakeGene() {
+    val fakeGene = Maps.<String, Object> newHashMap();
+    fakeGene.put("fake", Boolean.TRUE);
+
+    return fakeGene;
   }
 
   private DocumentContext createContext(String donorId) {
