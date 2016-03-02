@@ -2,28 +2,21 @@ package org.icgc.dcc.release.job.summarize.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.common.core.model.FieldNames.RELEASE_DATE;
-import static org.icgc.dcc.common.json.Jackson.asArrayNode;
-import static org.icgc.dcc.common.json.Jackson.asObjectNode;
 import static org.icgc.dcc.release.test.util.TestJsonNodes.$;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.Optional;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.test.function.JsonComparator;
+import org.icgc.dcc.release.test.function.DonorJsonComparator;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 @Slf4j
 public class SummarizeJobTest extends AbstractJobTest {
@@ -61,23 +54,9 @@ public class SummarizeJobTest extends AbstractJobTest {
   }
 
   private void verifyDonor() {
-    verifyResult(Optional.of(BRCA_PROJECT_NAME), FileType.DONOR_SUMMARY, new JsonComparator() {
-
-      @Override
-      protected void compare(ObjectNode actual, ObjectNode expected) {
-        super.compare(normalizeDonor(actual), expected);
-      }
-
-    });
-
-    verifyResult(Optional.of(DCC_PROJECT_NAME), FileType.DONOR_SUMMARY, new JsonComparator() {
-
-      @Override
-      protected void compare(ObjectNode actual, ObjectNode expected) {
-        super.compare(normalizeDonor(actual), expected);
-      }
-
-    });
+    val donorComaparator = new DonorJsonComparator();
+    verifyResult(Optional.of(BRCA_PROJECT_NAME), FileType.DONOR_SUMMARY, donorComaparator);
+    verifyResult(Optional.of(DCC_PROJECT_NAME), FileType.DONOR_SUMMARY, donorComaparator);
   }
 
   private void assertRelease() {
@@ -92,29 +71,6 @@ public class SummarizeJobTest extends AbstractJobTest {
     val releaseDate = release.remove(RELEASE_DATE).textValue();
     assertThat(releaseDate.length()).isEqualTo(29);
     assertThat(expectedRelease).isEqualTo(release);
-  }
-
-  private static ObjectNode normalizeDonor(ObjectNode donor) {
-    val summary = asObjectNode(donor.get(FieldNames.DONOR_SUMMARY));
-    val dataTypes = asArrayNode(summary.get(FieldNames.AVAILABLE_DATA_TYPES));
-    val sortedDataTypes = sortStringsArrayNode(dataTypes);
-    summary.set(FieldNames.AVAILABLE_DATA_TYPES, sortedDataTypes);
-
-    return donor;
-  }
-
-  private static ArrayNode sortStringsArrayNode(ArrayNode arrayNode) {
-    val list = Lists.<String> newArrayList();
-    for (val element : arrayNode) {
-      list.add(element.textValue());
-    }
-
-    Collections.sort(list);
-
-    val sortedArrayNode = arrayNode.arrayNode();
-    list.forEach(e -> sortedArrayNode.add(e));
-
-    return sortedArrayNode;
   }
 
 }
