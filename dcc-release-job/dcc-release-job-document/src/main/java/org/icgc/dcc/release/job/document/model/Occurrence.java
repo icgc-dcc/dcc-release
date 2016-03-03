@@ -33,8 +33,8 @@ public class Occurrence implements Serializable {
   private Collection<Consequence> consequence;
   private String mutation_type;
   private String chromosome;
-  private String chromosome_start;
-  private String chromosome_end;
+  private Integer chromosome_start;
+  private Integer chromosome_end;
   private String chromosome_strand;
   private Collection<Observation> observation;
 
