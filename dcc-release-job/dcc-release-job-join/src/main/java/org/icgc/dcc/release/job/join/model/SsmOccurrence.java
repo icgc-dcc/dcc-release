@@ -35,8 +35,8 @@ public class SsmOccurrence implements Serializable {
   private String _type;
   private String assembly_version;
   private String chromosome;
-  private String chromosome_end;
-  private String chromosome_start;
+  private Integer chromosome_end;
+  private Integer chromosome_start;
   private String chromosome_strand;
   private Set<Consequence> consequence;
   private String mutated_from_allele;

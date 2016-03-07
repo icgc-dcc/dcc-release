@@ -18,8 +18,10 @@
 package org.icgc.dcc.release.job.document.transform;
 
 import static com.google.common.base.Objects.firstNonNull;
+import static java.util.Collections.singleton;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
+import static org.icgc.dcc.release.job.document.util.Fakes.createFakeGenePOJO;
 import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
 
 import java.util.Collection;
@@ -89,10 +91,13 @@ public final class DonorCentricDocumentTransform implements
       // Construct
       val donorGeneObservations = donorGenesObservations.get(donorGeneId);
       val donorGeneTree = createDonorGeneTree(gene, donorGeneObservations, objectClonner);
-      //
-      // // Merge
+
+      // Merge
       val donorGene = donorGeneSummaries.get(donorGeneId);
       donorGene.putAll(donorGeneTree);
+      if (isFakeGeneId(donorGeneId)) {
+        donorGene.remove(GENE_ID);
+      }
     }
 
     return donor;
@@ -111,7 +116,8 @@ public final class DonorCentricDocumentTransform implements
       val array = getTypeArray(gene, observationType);
 
       // Remove unrelated gene consequences
-      val consequences = filterGeneObservationConsequences((String) donorGene.get(GENE_ID), donorGeneObservation);
+      val donorGeneId = getGeneId((String) donorGene.get(GENE_ID));
+      val consequences = filterGeneObservationConsequences(donorGeneId, donorGeneObservation);
       donorGeneObservation.setConsequence(consequences);
 
       unsetGeneId(donorGeneObservation);
@@ -150,7 +156,7 @@ public final class DonorCentricDocumentTransform implements
 
     val filteredConsequenes = Lists.<Consequence> newArrayList();
     for (val consequence : consequences) {
-      val consequenceGeneId = firstNonNull(consequence.get_gene_id(), FAKE_GENE_ID);
+      val consequenceGeneId = getGeneId(consequence.get_gene_id());
       val related = geneId.equals(consequenceGeneId);
 
       if (related) {
@@ -169,7 +175,7 @@ public final class DonorCentricDocumentTransform implements
 
     boolean hasFake = false;
     for (val donorGene : donorGenes) {
-      val donorGeneId = firstNonNull((String) donorGene.get(GENE_ID), FAKE_GENE_ID);
+      val donorGeneId = getGeneId((String) donorGene.get(GENE_ID));
       if (isFakeGeneId(donorGeneId)) {
         hasFake = true;
       }
@@ -179,7 +185,7 @@ public final class DonorCentricDocumentTransform implements
 
     if (!hasFake) {
       // Special case since the summarize did not produce
-      val fake = createFakeGene();
+      val fake = createFakeGenePOJO();
       donorGenes.add(fake);
 
       document.put(FAKE_GENE_ID, fake);
@@ -210,8 +216,10 @@ public final class DonorCentricDocumentTransform implements
   }
 
   private static String resolveObservationConsequenceGeneId(Consequence consequence) {
-    val geneId = consequence.get_gene_id();
+    return getGeneId(consequence.get_gene_id());
+  }
 
+  private static String getGeneId(String geneId) {
     return firstNonNull(geneId, FAKE_GENE_ID);
   }
 
@@ -219,7 +227,7 @@ public final class DonorCentricDocumentTransform implements
   @SuppressWarnings("unchecked")
   private Map<String, Object> getGene(String donorGeneId) {
     if (FAKE_GENE_ID.equals(donorGeneId)) {
-      return createFakeGene();
+      return createFakeGenePOJO();
     }
 
     val gene = documentJobContext.getGenesBroadcast().value().get(donorGeneId);
@@ -229,19 +237,11 @@ public final class DonorCentricDocumentTransform implements
     return map;
   }
 
-  private static Map<String, Object> createFakeGene() {
-    val fakeGene = Maps.<String, Object> newHashMap();
-    fakeGene.put(GENE_ID, FAKE_GENE_ID);
-    fakeGene.put("fake", Boolean.TRUE);
-
-    return fakeGene;
-  }
-
   @SneakyThrows
   private static Donor convertDonor(ObjectNode row) {
     val donor = JacksonFactory.MAPPER.treeToValue(row, Donor.class);
     if (donor.getGene() == null) {
-      donor.setGene(Collections.singleton(createFakeGene()));
+      donor.setGene(singleton(createFakeGenePOJO()));
     }
 
     return donor;

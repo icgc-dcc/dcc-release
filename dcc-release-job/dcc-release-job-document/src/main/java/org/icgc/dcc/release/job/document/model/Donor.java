@@ -30,7 +30,7 @@ public class Donor implements Serializable {
   String _project_id;
   DonorSummary _summary;
   String disease_status_last_followup;
-  String donor_age_at_diagnosis;
+  Integer donor_age_at_diagnosis;
   String donor_age_at_enrollment;
   String donor_age_at_last_followup;
   String donor_diagnosis_icd10;
@@ -39,7 +39,7 @@ public class Donor implements Serializable {
   String donor_relapse_interval;
   String donor_relapse_type;
   String donor_sex;
-  String donor_survival_time;
+  Integer donor_survival_time;
   String donor_tumour_stage_at_diagnosis;
   String donor_tumour_stage_at_diagnosis_supplemental;
   String donor_tumour_staging_system_at_diagnosis;

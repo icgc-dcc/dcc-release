@@ -31,8 +31,8 @@ public class SsmPrimaryFeatureType implements Serializable {
   private String biological_validation_platform;
   private String biological_validation_status;
   private String chromosome;
-  private String chromosome_end;
-  private String chromosome_start;
+  private Integer chromosome_end;
+  private Integer chromosome_start;
   private String chromosome_strand;
   private String control_genotype;
   private String expressed_allele;

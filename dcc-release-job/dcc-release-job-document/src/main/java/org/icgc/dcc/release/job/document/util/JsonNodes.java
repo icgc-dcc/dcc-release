@@ -83,7 +83,7 @@ public final class JsonNodes {
   }
 
   public static void defaultMissing(JsonNode jsonNode, String fieldName, String missingValue) {
-    if (jsonNode.isObject() && !jsonNode.has(fieldName)) {
+    if (jsonNode.isObject() && (!jsonNode.has(fieldName) || jsonNode.path(fieldName).isNull())) {
       ObjectNode objectNode = (ObjectNode) jsonNode;
 
       objectNode.put(fieldName, missingValue);

@@ -38,11 +38,12 @@ import org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.job.document.context.MutationCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
-import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
+import org.icgc.dcc.release.job.document.core.DocumentTransform;
 
 import scala.Tuple2;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
@@ -89,7 +90,7 @@ public class MutationTextDocumentTransform implements DocumentTransform,
         val aaMutation = consequence.path(CONSEQUENCE_AA_MUTATION);
 
         // Index transcript by transcript id
-        if (geneSymbol.isValueNode() && aaMutation.isValueNode()) {
+        if (hasValue(geneSymbol) && hasValue(aaMutation)) {
           geneMutations.add(geneSymbol.asText() + " " + aaMutation.asText());
         }
       }
@@ -117,6 +118,10 @@ public class MutationTextDocumentTransform implements DocumentTransform,
 
   private String formatMutationString(String chromosome, String chromosomeStart, String mutation) {
     return "chr" + chromosome + ":g." + chromosomeStart + mutation;
+  }
+
+  private static boolean hasValue(JsonNode node) {
+    return !node.isNull() && node.isValueNode();
   }
 
 }

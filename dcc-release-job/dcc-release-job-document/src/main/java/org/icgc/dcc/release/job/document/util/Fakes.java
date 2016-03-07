@@ -20,12 +20,17 @@ package org.icgc.dcc.release.job.document.util;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_GENE_GENE_ID;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.isBlank;
+
+import java.util.Map;
+
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.val;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Maps;
 
 /**
  * The concept of a "fake" is an implementation technique to provide "Null Object" semantics to document nodes and
@@ -93,6 +98,17 @@ public final class Fakes {
 
   public static boolean isFakeDonorGene(@NonNull ObjectNode donorGene) {
     return isBlank(donorGene, DONOR_GENE_GENE_ID);
+  }
+
+  public static Map<String, Object> createFakeGenePOJO() {
+    val fakeGene = Maps.<String, Object> newHashMap();
+    fakeGene.put(GENE_FAKE_FLAG, Boolean.TRUE);
+
+    return fakeGene;
+  }
+
+  public static boolean isFakeGene(Map<String, Object> gene) {
+    return gene.containsKey(GENE_FAKE_FLAG) && Boolean.TRUE.equals(gene.get(GENE_FAKE_FLAG));
   }
 
 }
