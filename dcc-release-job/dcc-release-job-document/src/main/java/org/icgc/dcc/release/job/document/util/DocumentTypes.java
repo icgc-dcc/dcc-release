@@ -72,25 +72,25 @@ public final class DocumentTypes {
   }
 
   private static Map<DocumentType, DocumentTypeAttributes> defineDocumentTypes() {
-    val documentTypes =ImmutableMap.<DocumentType, DocumentTypeAttributes> builder()
-            .put(DocumentType.DIAGRAM_TYPE, defineDiagramType())
-            .put(DocumentType.DRUG_CENTRIC_TYPE, defineDrugCentricType())
-            .put(DocumentType.RELEASE_TYPE, defineReleaseType())
-            .put(DocumentType.DRUG_TEXT_TYPE, defineDrugTextType())
-            .put(DocumentType.GENE_SET_TYPE, defineGeneSetType())
-            .put(DocumentType.GENE_SET_TEXT_TYPE, defineGeneSetTextType())
-            .put(DocumentType.PROJECT_TYPE, defineProjectType())
-            .put(DocumentType.PROJECT_TEXT_TYPE, defineProjectTextType())
-            .put(DocumentType.DONOR_TYPE, defineDonorType())
-            .put(DocumentType.DONOR_TEXT_TYPE, defineDonorTextType())
-            .put(DocumentType.DONOR_CENTRIC_TYPE, defineDonorCentricType())
-            .put(DocumentType.GENE_TYPE, defineGeneType())
-            .put(DocumentType.GENE_TEXT_TYPE, defineGeneTextType())
-            .put(DocumentType.GENE_CENTRIC_TYPE, defineGeneCentricType())
-            .put(DocumentType.OBSERVATION_CENTRIC_TYPE, defineObservationCentricType())
-            .put(DocumentType.MUTATION_TEXT_TYPE, defineMutationTextType())
-            .put(DocumentType.MUTATION_CENTRIC_TYPE, defineMutationCentricType())
-            .build();
+    val documentTypes = ImmutableMap.<DocumentType, DocumentTypeAttributes> builder()
+        .put(DocumentType.DIAGRAM_TYPE, defineDiagramType())
+        .put(DocumentType.DRUG_CENTRIC_TYPE, defineDrugCentricType())
+        .put(DocumentType.RELEASE_TYPE, defineReleaseType())
+        .put(DocumentType.DRUG_TEXT_TYPE, defineDrugTextType())
+        .put(DocumentType.GENE_SET_TYPE, defineGeneSetType())
+        .put(DocumentType.GENE_SET_TEXT_TYPE, defineGeneSetTextType())
+        .put(DocumentType.PROJECT_TYPE, defineProjectType())
+        .put(DocumentType.PROJECT_TEXT_TYPE, defineProjectTextType())
+        .put(DocumentType.DONOR_TYPE, defineDonorType())
+        .put(DocumentType.DONOR_TEXT_TYPE, defineDonorTextType())
+        .put(DocumentType.DONOR_CENTRIC_TYPE, defineDonorCentricType())
+        .put(DocumentType.GENE_TYPE, defineGeneType())
+        .put(DocumentType.GENE_TEXT_TYPE, defineGeneTextType())
+        .put(DocumentType.GENE_CENTRIC_TYPE, defineGeneCentricType())
+        .put(DocumentType.OBSERVATION_CENTRIC_TYPE, defineObservationCentricType())
+        .put(DocumentType.MUTATION_TEXT_TYPE, defineMutationTextType())
+        .put(DocumentType.MUTATION_CENTRIC_TYPE, defineMutationCentricType())
+        .build();
 
     checkState(documentTypes.size() == DocumentType.values().length);
 
@@ -574,7 +574,9 @@ public final class DocumentTypes {
                             "external_db_ids.uniprotkb_swissprot",
                             "sets",
                             "start",
+                            "strand",
                             "symbol",
+                            "transcripts.biotype",
                             "transcripts.id",
                             "transcripts.name"
                         )
@@ -589,6 +591,7 @@ public final class DocumentTypes {
                             "consequence._transcript_id", // Don't index
                             "consequence.consequence_type",
                             "consequence.aa_mutation",
+                            "consequence.cds_mutation",
                             "consequence.gene_affected",
                             "consequence.functional_impact_prediction_summary",
                             "observation.platform",
