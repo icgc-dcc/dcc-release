@@ -45,7 +45,7 @@ public class ImportJob extends GenericJob {
   /**
    * Constants.
    */
-  private static final String MONGO_REFERENCE_DB = "dcc-genome";
+  private static final String MONGO_REFERENCE_DB = "dcc-import";
 
   /**
    * Dependencies.
