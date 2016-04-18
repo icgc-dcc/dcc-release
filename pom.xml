@@ -347,7 +347,7 @@
     <scala.version>${scala-build.version}.4</scala.version>
 
     <!-- Versions- Spark -->
-    <spark.version>1.5.2</spark.version>
+    <spark.version>1.6.1</spark.version>
 
     <!-- Versions - HBase -->
     <hbase-cdh.version>0.98.6-${cdh.version}</hbase-cdh.version>
