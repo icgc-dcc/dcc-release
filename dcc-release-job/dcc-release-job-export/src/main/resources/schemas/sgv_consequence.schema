@@ -1,0 +1,7 @@
+_gene_id:StringType
+_transcript_id:StringType
+consequence_type:StringType
+gene_affected:StringType
+gene_build_version:StringType
+observation_id:StringType
+transcript_affected:StringType

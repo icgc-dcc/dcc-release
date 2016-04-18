@@ -16,10 +16,11 @@
 
 	<dependencies>
 
-		<!-- -->
-		<!-- NOTE: This "Spark" needs to be here, at the top, to force priority 
-			over HBase for testing purposes -->
-		<!-- -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-release-test</artifactId>
+      <scope>test</scope>
+    </dependency>
 
 		<!-- Spark -->
 		<dependency>
@@ -27,36 +28,10 @@
 			<artifactId>spark-core_${scala-build.version}</artifactId>
 			<scope>provided</scope>
 		</dependency>
-
-		<!-- HBase -->
-		<dependency>
-			<groupId>org.apache.hbase</groupId>
-			<artifactId>hbase-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hbase</groupId>
-			<artifactId>hbase-server</artifactId><!-- Need for LoadIncrementalHFiles -->
-		</dependency>
-
-		<!-- Testing - Hadoop -->
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-minicluster</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<!-- Testing - HBase -->
-		<dependency>
-			<groupId>org.apache.hbase</groupId>
-			<artifactId>hbase-testing-util</artifactId>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_${scala-build.version}</artifactId>
+    </dependency>
 
 	</dependencies>
 

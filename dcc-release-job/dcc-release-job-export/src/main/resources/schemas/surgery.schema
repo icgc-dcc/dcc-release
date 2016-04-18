@@ -1,0 +1,5 @@
+procedure_interval:IntegerType
+procedure_site:StringType
+procedure_type:StringType
+resection_status:StringType
+specimen_id:StringType

@@ -17,40 +17,50 @@
  */
 package org.icgc.dcc.release.job.export.core;
 
-import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableMap;
+import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.checkExistence;
+import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.mkdirs;
+import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.rmr;
 
-import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.hadoop.conf.Configuration;
-import org.icgc.dcc.release.core.job.Job;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.types.StructType;
+import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
-import org.icgc.dcc.release.job.export.model.ExportTable;
-import org.icgc.dcc.release.job.export.task.ExportTableTask;
+import org.icgc.dcc.release.core.task.Task;
+import org.icgc.dcc.release.job.export.config.ExportProperties;
+import org.icgc.dcc.release.job.export.model.ExportType;
+import org.icgc.dcc.release.job.export.task.ExportProjectTask;
+import org.icgc.dcc.release.job.export.task.ExportTask;
+import org.icgc.dcc.release.job.export.util.SchemaGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-/**
- * See https://github.com/unicredit/hbase-rdd/blob/master/src/main/scala/unicredit/spark/hbase/HFileSupport.scala
- */
 @Slf4j
 @Component
-class ExportJob implements Job {
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+public class ExportJob extends GenericJob {
 
-  /**
-   * Dependencies.
-   */
-  private final Configuration conf;
-
-  @Autowired
-  public ExportJob(@NonNull @Qualifier("hbaseConf") Configuration conf) {
-    this.conf = conf;
-  }
+  @NonNull
+  private final ExportProperties exportProperties;
+  @NonNull
+  private final FileSystem fileSystem;
+  @NonNull
+  private final JavaSparkContext sparkContext;
 
   @Override
   public JobType getType() {
@@ -59,17 +69,76 @@ class ExportJob implements Job {
 
   @Override
   public void execute(@NonNull JobContext jobContext) {
-    val exportTasks = createExportTasks();
-    jobContext.execute(exportTasks);
+    clean(jobContext);
+    export(jobContext);
   }
 
-  private Collection<ExportTableTask> createExportTasks() {
-    val tables = ExportTable.stream();
+  private void clean(JobContext jobContext) {
+    val outputDir = getOutputDir(jobContext);
 
-    return tables.map(table -> {
-      log.info("Adding task to export to table '{}'...", table);
-      return new ExportTableTask(table, conf);
-    }).collect(toList());
+    if (checkExistence(fileSystem, outputDir)) {
+      log.info("Deleting directory {} ...", outputDir);
+      rmr(fileSystem, outputDir);
+    }
+
+    log.info("Creating directory {} ...", outputDir);
+    mkdirs(fileSystem, outputDir);
+  }
+
+  private void export(JobContext jobContext) {
+    val generator = new SchemaGenerator();
+    val dataTypes = initDataTypes(generator);
+
+    for (val task : createTasks(dataTypes)) {
+      if (task instanceof ExportProjectTask) {
+        jobContext.executeSequentially(task);
+      } else {
+        jobContext.execute(task);
+      }
+    }
+  }
+
+  private List<Task> createTasks(Map<ExportType, StructType> dataTypes) {
+    val sqlContext = createSqlContext();
+    val runExportTypes = exportProperties.getExportTypes();
+
+    return dataTypes.entrySet().stream()
+        .filter(dt -> {
+          if (runExportTypes.isEmpty()) {
+            return true;
+          } else {
+            return runExportTypes.contains(dt.getKey().getId());
+          }
+        })
+        .map(createTask(sqlContext))
+        .collect(toImmutableList());
+  }
+
+  private Function<Entry<ExportType, StructType>, ? extends Task> createTask(SQLContext sqlContext) {
+    return e -> {
+      ExportType type = e.getKey();
+      if (type.isSplitByProject()) {
+        return new ExportProjectTask(exportProperties.getExportDir(), type, e.getValue(), sqlContext);
+      } else {
+        return new ExportTask(exportProperties.getExportDir(), type, e.getValue(), sqlContext);
+      }
+    };
+  }
+
+  private Path getOutputDir(JobContext jobContext) {
+    return new Path(new Path(jobContext.getWorkingDir()), exportProperties.getExportDir());
+  }
+
+  private static Map<ExportType, StructType> initDataTypes(SchemaGenerator generator) {
+    return ExportType.getExportTypes().stream()
+        .collect(toImmutableMap(et -> et, et -> generator.createDataType(et)));
+  }
+
+  private SQLContext createSqlContext() {
+    val sqlContext = new SQLContext(sparkContext);
+    sqlContext.setConf("spark.sql.parquet.compression.codec", exportProperties.getCompressionCodec());
+
+    return sqlContext;
   }
 
 }

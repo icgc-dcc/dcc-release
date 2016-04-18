@@ -1,0 +1,13 @@
+first_therapy_duration:IntegerType
+first_therapy_response:StringType
+first_therapy_start_interval:IntegerType
+first_therapy_therapeutic_intent:StringType
+first_therapy_type:StringType
+other_therapy:StringType
+other_therapy_response:StringType
+second_therapy_duration:IntegerType
+second_therapy_response:StringType
+second_therapy_start_interval:IntegerType
+second_therapy_therapeutic_intent:StringType
+second_therapy_type:StringType
+therapy_notes:StringType

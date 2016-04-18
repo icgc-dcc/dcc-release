@@ -1,0 +1,8 @@
+_sample_id:StringType
+_project_id:StringType
+analyzed_sample_id:StringType
+analyzed_sample_interval:IntegerType
+analyzed_sample_notes:StringType
+level_of_cellularity:StringType
+percentage_cellularity:IntegerType
+study:StringType

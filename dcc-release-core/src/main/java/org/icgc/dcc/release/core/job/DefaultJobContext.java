@@ -38,4 +38,14 @@ public class DefaultJobContext implements JobContext {
     executor.execute(this, tasks);
   }
 
+  @Override
+  public void executeSequentially(Task... tasks) {
+    executeSequentially(ImmutableList.copyOf(tasks));
+  }
+
+  @Override
+  public void executeSequentially(Collection<? extends Task> tasks) {
+    executor.executeSequentially(this, tasks);
+  }
+
 }

@@ -27,13 +27,9 @@
 	<logger name="org.apache.zookeeper" level="ERROR" />
 	<logger name="org.apache.hadoop" level="ERROR" />
 
-	<!-- Turn up -->
-	<logger name="org.apache.hadoop.hbase.mapreduce.HFileOutputFormat"
-		level="INFO" />
-	<logger name="org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles"
-		level="INFO" />
+  <logger name="org.icgc.dcc" level="DEBUG" />
 
-	<root level="INFO">
+	<root level="WARN">
 		<appender-ref ref="STDOUT" />
 	</root>
 

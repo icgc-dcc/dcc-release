@@ -21,16 +21,12 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_SERIALIZATIO
 
 import java.io.IOException;
 
-import lombok.val;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.io.serializer.WritableSerialization;
 import org.icgc.dcc.release.client.config.WorkflowProperties.HadoopProperties;
 import org.icgc.dcc.release.core.hadoop.ObjectNodeSerialization;
 import org.icgc.dcc.release.core.util.Configurations;
-import org.icgc.dcc.release.job.export.config.HBaseProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -53,8 +49,6 @@ public class HadoopConfig {
   Configuration conf;
   @Autowired
   HadoopProperties hadoop;
-  @Autowired
-  HBaseProperties hbase;
 
   @Bean
   @Primary
@@ -66,14 +60,6 @@ public class HadoopConfig {
         WritableSerialization.class.getName() + "," + ObjectNodeSerialization.class.getName());
 
     return conf;
-  }
-
-  @Bean
-  public Configuration hbaseConf() {
-    val config = HBaseConfiguration.create(hadoopConf());
-    Configurations.setAll(config, hbase.getProperties());
-
-    return config;
   }
 
   @Bean

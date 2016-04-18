@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,54 +15,52 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.export.core;
+package org.icgc.dcc.release.job.export.function;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Map;
 
-import java.io.File;
-
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-import org.icgc.dcc.release.job.export.config.ExportProperties;
-import org.icgc.dcc.release.test.job.AbstractJobTest;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.sql.Row;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 
-public class ExportJobTest extends AbstractJobTest {
+@RequiredArgsConstructor
+public final class KeyByDonor implements Function<Row, String> {
 
-  private static final String PROJECT1 = "TST1-CA";
-  private static final String PROJECT2 = "TST2-CA";
-
-  /**
-   * Class under test.
-   */
-  ExportJob job;
+  private final int partitionFactor;
+  private final Map<String, Integer> idPartitions = Maps.newHashMap();
+  private static final Integer DEFAULT_PARTITION = 1;
 
   @Override
-  @Before
-  public void setUp() {
-    super.setUp();
-    val exportProperties = new ExportProperties().setCompressionCodec("gzip");
-    this.job = new ExportJob(exportProperties, fileSystem, sparkContext);
+  public String call(Row row) throws Exception {
+    // Assumes that _donor_id is always first. What is the case as fields are sorted by name
+    val id = row.getString(0);
+    if (partitionFactor == 1) {
+      return id;
+    } else {
+      return id + "#" + getNextPartition(id);
+    }
   }
 
-  @Test
-  public void testExecute() {
-    given(new File(INPUT_TEST_FIXTURES_DIR));
+  private Integer getNextPartition(String id) {
+    Integer currentPartition = idPartitions.get(id);
+    if (currentPartition == null) {
+      idPartitions.put(id, DEFAULT_PARTITION);
 
-    val jobContext = createJobContext(job.getType(), ImmutableList.of(PROJECT1, PROJECT2));
-    job.execute(jobContext);
+      return DEFAULT_PARTITION;
+    }
 
-    val sqlContext = new org.apache.spark.sql.SQLContext(sparkContext);
-    val inputPath = new File(workingDir, "export/donor").getAbsolutePath();
+    if (currentPartition >= partitionFactor) {
+      currentPartition = DEFAULT_PARTITION;
+    } else {
+      ++currentPartition;
+    }
+    idPartitions.put(id, currentPartition);
 
-    val input = sqlContext.read().parquet(inputPath);
-    input.show();
-
-    assertThat(input.count()).isEqualTo(4L);
-    assertThat(input.groupBy("_donor_id").count().count()).isEqualTo(4L);
+    return currentPartition;
   }
 
 }

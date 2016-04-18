@@ -1,0 +1,7 @@
+donor_has_relative_with_cancer_history:StringType
+relationship_age:IntegerType
+relationship_disease:StringType
+relationship_disease_icd10:StringType
+relationship_sex:StringType
+relationship_type:StringType
+relationship_type_other:StringType

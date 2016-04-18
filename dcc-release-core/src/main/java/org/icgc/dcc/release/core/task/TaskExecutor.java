@@ -21,6 +21,7 @@ import static com.google.common.base.Throwables.propagate;
 import static org.icgc.dcc.release.core.util.Stopwatches.createStarted;
 
 import java.util.Collection;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
@@ -39,6 +40,8 @@ import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.util.Stopwatches;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -55,15 +58,11 @@ public class TaskExecutor {
   protected final FileSystem fileSystem;
 
   public void execute(@NonNull JobContext jobContext, Collection<? extends Task> tasks) {
-    val watch = createStarted();
-    try {
-      log.info("Starting {} task(s)...", tasks.size());
-      executeTasks(jobContext, tasks);
-      log.info("Finished {} task(s) in {}", tasks.size(), watch);
-    } catch (Throwable t) {
-      log.error("Aborting task(s) executions due to exception...", t);
-      propagate(t);
-    }
+    execute(jobContext, tasks, true);
+  }
+
+  public void executeSequentially(@NonNull JobContext jobContext, Collection<? extends Task> tasks) {
+    execute(jobContext, tasks, false);
   }
 
   public void shutdown() {
@@ -72,30 +71,58 @@ public class TaskExecutor {
     log.info("Cancelled all tasks");
   }
 
-  @SneakyThrows
-  private int executeTasks(JobContext jobContext, Collection<? extends Task> tasks) {
-    val service = createCompletionService();
+  private void execute(JobContext jobContext, Collection<? extends Task> tasks, boolean parallel) {
+    val watch = createStarted();
+    try {
+      log.info("Starting {} task(s)...", tasks.size());
+      executeTasks(jobContext, tasks, parallel);
+      log.info("Finished {} task(s) in {}", tasks.size(), watch);
+    } catch (Throwable t) {
+      log.error("Aborting task(s) executions due to exception...", t);
+      propagate(t);
+    }
+  }
 
+  @SneakyThrows
+  private int executeTasks(JobContext jobContext, Collection<? extends Task> tasks, boolean parallel) {
+    val service = createCompletionService();
     val watch = createStarted();
     int taskCount = 0;
-    for (val task : tasks) {
-      if (task.getType() == TaskType.FILE_TYPE_PROJECT) {
-        for (val projectName : jobContext.getProjectNames()) {
-          submitTask(service, jobContext, new ProjectTask(task, projectName), Optional.of(projectName));
+    val submitTasks = getSubmitTasks(jobContext, tasks);
 
-          taskCount++;
-        }
-      } else {
-        submitTask(service, jobContext, task, Optional.empty());
+    for (val entry : submitTasks) {
+      val task = entry.getKey();
+      val projectName = entry.getValue();
+      submitTask(service, jobContext, task, projectName);
+      taskCount++;
 
-        taskCount++;
+      if (!parallel) {
+        await(service);
       }
     }
 
-    await(service, taskCount);
+    if (parallel) {
+      await(service, taskCount);
+    }
     log.info("Finished executing {} tasks in {}!", taskCount, watch);
 
     return taskCount;
+  }
+
+  private static Collection<Entry<? extends Task, Optional<String>>> getSubmitTasks(JobContext jobContext,
+      Collection<? extends Task> tasks) {
+    val submitTasks = ImmutableList.<Entry<? extends Task, Optional<String>>> builder();
+    for (val task : tasks) {
+      if (task.getType() == TaskType.FILE_TYPE_PROJECT) {
+        for (val projectName : jobContext.getProjectNames()) {
+          submitTasks.add(Maps.immutableEntry(new ProjectTask(task, projectName), Optional.of(projectName)));
+        }
+      } else {
+        submitTasks.add(Maps.immutableEntry(task, Optional.empty()));
+      }
+    }
+
+    return submitTasks.build();
   }
 
   private void submitTask(CompletionService<String> service, JobContext jobContext, Task task,
@@ -140,6 +167,11 @@ public class TaskExecutor {
       val taskName = service.take().get();
       log.info("Finished processing task '{}'", taskName);
     }
+  }
+
+  private static void await(CompletionService<String> service) throws InterruptedException, ExecutionException {
+    val taskName = service.take().get();
+    log.info("Finished processing task '{}'", taskName);
   }
 
   private static class ProjectTask extends ForwardingTask {

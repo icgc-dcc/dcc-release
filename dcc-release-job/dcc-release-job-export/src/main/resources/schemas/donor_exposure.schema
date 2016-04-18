@@ -1,0 +1,7 @@
+alcohol_history:StringType
+alcohol_history_intensity:StringType
+exposure_intensity:IntegerType
+exposure_notes:StringType
+exposure_type:StringType
+tobacco_smoking_history_indicator:StringType
+tobacco_smoking_intensity:IntegerType

@@ -1,0 +1,3 @@
+raw_data_accession:StringType
+repository:StringType
+library_strategy:StringType

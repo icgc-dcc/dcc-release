@@ -1,0 +1,14 @@
+_donor_id:StringType
+_mutation_id:StringType
+_project_id:StringType
+_type:StringType
+assembly_version:StringType
+chromosome:StringType
+chromosome_end:IntegerType
+chromosome_start:IntegerType
+chromosome_strand:StringType
+mutated_from_allele:StringType
+mutated_to_allele:StringType
+mutation:StringType
+mutation_type:StringType
+reference_genome_allele:StringType

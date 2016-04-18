@@ -1,0 +1,5 @@
+_gene_id:StringType
+_transcript_id:StringType
+gene_affected:StringType
+gene_build_version:StringType
+transcript_affected:StringType

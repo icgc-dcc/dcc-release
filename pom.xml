@@ -124,6 +124,21 @@
           </exclusion>
         </exclusions>
       </dependency>
+      <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-sql_${scala-build.version}</artifactId>
+        <version>${spark.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
 
       <!-- Spring -->
       <dependency>
@@ -371,7 +386,7 @@
     <!-- Versions - Utils -->
     <externalsort.version>0.1.9</externalsort.version>
     
-    <!-- Required for Spark 1.5.2 -->
+    <!-- Required for Spark -->
     <jackson.version>2.4.4</jackson.version>
     <jackson-smile.version>${jackson.version}</jackson-smile.version>
     <jackson-yaml.version>${jackson.version}</jackson-yaml.version>

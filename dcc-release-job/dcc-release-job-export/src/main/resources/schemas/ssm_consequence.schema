@@ -1,0 +1,13 @@
+_gene_id:StringType
+_transcript_id:StringType
+aa_change:StringType
+aa_mutation:StringType
+cds_change:StringType
+cds_mutation:StringType
+consequence_type:StringType
+gene_affected:StringType
+gene_build_version:StringType
+note:StringType
+observation_id:StringType
+protein_domain_affected:StringType
+transcript_affected:StringType

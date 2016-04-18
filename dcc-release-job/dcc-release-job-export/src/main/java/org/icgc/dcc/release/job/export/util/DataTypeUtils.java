@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,54 +15,38 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.export.core;
+package org.icgc.dcc.release.job.export.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static java.lang.String.format;
+import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
+import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.DataTypes;
 
-import lombok.val;
+@Slf4j
+@NoArgsConstructor(access = PRIVATE)
+public final class DataTypeUtils {
 
-import org.icgc.dcc.release.job.export.config.ExportProperties;
-import org.icgc.dcc.release.test.job.AbstractJobTest;
-import org.junit.Before;
-import org.junit.Test;
+  public static void checkDataType(Object value, DataType dataType, String fieldName) {
+    log.debug("Verifying field name: '{}', Value: '{}'. Expected type: '{}'", fieldName, value, dataType);
+    if (value == null) {
+      return;
+    }
 
-import com.google.common.collect.ImmutableList;
-
-public class ExportJobTest extends AbstractJobTest {
-
-  private static final String PROJECT1 = "TST1-CA";
-  private static final String PROJECT2 = "TST2-CA";
-
-  /**
-   * Class under test.
-   */
-  ExportJob job;
-
-  @Override
-  @Before
-  public void setUp() {
-    super.setUp();
-    val exportProperties = new ExportProperties().setCompressionCodec("gzip");
-    this.job = new ExportJob(exportProperties, fileSystem, sparkContext);
+    if (DataTypes.IntegerType.equals(dataType) && !(value instanceof Integer)) {
+      throwException(fieldName, value, "Integer");
+    } else if (DataTypes.StringType.equals(dataType) && !(value instanceof String)) {
+      throwException(fieldName, value, "String");
+    } else if (DataTypes.DoubleType.equals(dataType) && !(value instanceof Double)) {
+      throwException(fieldName, value, "Double");
+    }
   }
 
-  @Test
-  public void testExecute() {
-    given(new File(INPUT_TEST_FIXTURES_DIR));
-
-    val jobContext = createJobContext(job.getType(), ImmutableList.of(PROJECT1, PROJECT2));
-    job.execute(jobContext);
-
-    val sqlContext = new org.apache.spark.sql.SQLContext(sparkContext);
-    val inputPath = new File(workingDir, "export/donor").getAbsolutePath();
-
-    val input = sqlContext.read().parquet(inputPath);
-    input.show();
-
-    assertThat(input.count()).isEqualTo(4L);
-    assertThat(input.groupBy("_donor_id").count().count()).isEqualTo(4L);
+  private static void throwException(String fieldName, Object actualType, String expectedType) {
+    throw new IllegalArgumentException(format("Field '%s' has incorrect value type '%s'. Expected: '%s'.", fieldName,
+        actualType.getClass().getSimpleName(), expectedType));
   }
 
 }

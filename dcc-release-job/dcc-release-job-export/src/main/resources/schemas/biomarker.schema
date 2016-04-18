@@ -1,0 +1,4 @@
+biomarker_name:StringType
+biomarker_positive:StringType
+biomarker_threshold:StringType
+specimen_id:StringType
