@@ -35,7 +35,7 @@ public class AddSurrogateSpecimenId extends AddSurrogateId {
   public ObjectNode call(ObjectNode row) throws Exception {
     val submittedSpecimenId = row.get(SUBMISSION_SPECIMEN_ID).textValue();
     val submittedProjectId = getSubmittedProjectId(row);
-    val specimenId = client().getSpecimenId(submittedSpecimenId, submittedProjectId).get();
+    val specimenId = client().createSpecimenId(submittedSpecimenId, submittedProjectId);
 
     row.put(IdentifierFieldNames.SURROGATE_SPECIMEN_ID, specimenId);
 

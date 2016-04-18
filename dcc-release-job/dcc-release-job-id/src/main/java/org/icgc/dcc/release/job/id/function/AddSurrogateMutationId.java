@@ -51,8 +51,7 @@ public class AddSurrogateMutationId extends AddSurrogateId {
     String assemblyVersion = ASSEMBLY_VERSION;
 
     val mutationId = client()
-        .getMutationId(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion)
-        .get();
+        .createMutationId(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion);
 
     row.put(IdentifierFieldNames.SURROGATE_MUTATION_ID, mutationId);
 
