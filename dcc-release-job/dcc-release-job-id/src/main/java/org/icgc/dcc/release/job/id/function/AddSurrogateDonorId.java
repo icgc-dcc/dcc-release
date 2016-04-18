@@ -36,7 +36,7 @@ public class AddSurrogateDonorId extends AddSurrogateId {
     val submittedDonorId = row.get(SubmissionFieldNames.SUBMISSION_DONOR_ID).textValue();
     val submittedProjectId = getSubmittedProjectId(row);
 
-    val donorId = client().getDonorId(submittedDonorId, submittedProjectId).get();
+    val donorId = client().createDonorId(submittedDonorId, submittedProjectId);
 
     row.put(IdentifierFieldNames.SURROGATE_DONOR_ID, donorId);
 

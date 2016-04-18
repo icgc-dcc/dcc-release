@@ -36,7 +36,7 @@ public class IndexJob extends GenericJob {
   private final IndexProperties properties;
 
   static String resolveIndexName(String releaseName) {
-    return "test-release-" + releaseName.toLowerCase();
+    return releaseName.toLowerCase();
   }
 
   @Override
