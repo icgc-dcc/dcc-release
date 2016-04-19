@@ -78,7 +78,7 @@ public class SnpEffProcess extends Process {
         getConfigFile(),
         databaseVersion);
 
-    log.info("Process command: {}", builder.command());
+    log.error("Process command: {}", builder.command());
     return builder.start();
   }
 

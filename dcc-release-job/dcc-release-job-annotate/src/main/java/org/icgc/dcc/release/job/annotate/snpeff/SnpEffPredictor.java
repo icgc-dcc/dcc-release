@@ -102,9 +102,11 @@ public class SnpEffPredictor {
 
   @SneakyThrows
   private void initializeSnpEff() {
+    log.warn("Initializing SnpEff...");
     // VariantContextWriterFactory requires a non-null FILE. Create any and delete it on exit
     val prefix = "zzz";
     val file = File.createTempFile(prefix, null);
+    file.deleteOnExit();
     val writer = VariantContextWriterFactory.create(file, stream, null);
     writer.writeHeader(createAnnotatedVCFHeader());
     stream.flush();

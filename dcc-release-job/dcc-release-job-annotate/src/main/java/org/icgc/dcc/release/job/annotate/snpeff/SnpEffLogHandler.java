@@ -42,7 +42,7 @@ public class SnpEffLogHandler implements Runnable {
     val reader = new BufferedReader(new InputStreamReader(input, UTF_8));
     String line = null;
     while ((line = reader.readLine()) != null) {
-      log.info("*** SnpEff log: {}", line);
+      log.warn("*** SnpEff log: {}", line);
     }
   }
 

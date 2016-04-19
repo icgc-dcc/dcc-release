@@ -81,7 +81,7 @@ public class SnpEffJarResolver extends DirectoryResourceResolver<File> {
   }
 
   private URL getUrl(String artifactId, String version) throws MalformedURLException {
-    val resourceUrl = "http://seqwaremaven.oicr.on.ca/artifactory/simple/dcc-dependencies";
+    val resourceUrl = "https://seqwaremaven.oicr.on.ca/artifactory/simple/dcc-dependencies";
     val groupPath = "ca/mcgill/mcb/pcingola/snpeff";
     val url = new URL(resourceUrl + "/" + groupPath + "/" + version + "/" + artifactId + "-" + version + ".jar");
 
