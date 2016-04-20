@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.id.core;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import lombok.NonNull;
 import lombok.val;
@@ -38,6 +39,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class IdJob extends GenericJob {
+
+  /**
+   * Constants.
+   */
+  private static final String RELEASE_NAME_REGEX = "ICGC\\d+";
 
   /**
    * Dependencies.
@@ -65,7 +71,7 @@ public class IdJob extends GenericJob {
   }
 
   private void id(JobContext jobContext) {
-    val releaseName = jobContext.getReleaseName();
+    val releaseName = resolveReleaseName(jobContext.getReleaseName());
     val idClientFactory = createIdClientFactory(releaseName);
 
     jobContext.execute(
@@ -73,6 +79,14 @@ public class IdJob extends GenericJob {
         new AddSurrogateSpecimenIdTask(idClientFactory),
         new AddSurrogateSampleIdTask(idClientFactory),
         new AddSurrogateMutationIdTask(idClientFactory));
+  }
+
+  private static String resolveReleaseName(String releaseName) {
+    val idReleaseName = releaseName.toUpperCase().split("-")[0];
+    checkState(idReleaseName.matches(RELEASE_NAME_REGEX), "Release name %s does not match regex %s", idReleaseName,
+        RELEASE_NAME_REGEX);
+
+    return idReleaseName;
   }
 
   private IdClientFactory createIdClientFactory(String release) {
