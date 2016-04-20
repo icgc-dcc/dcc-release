@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.job.document.transform;
 
 import static com.google.common.base.Objects.firstNonNull;
+import static org.icgc.dcc.common.core.model.FieldNames.DRUG_ID;
 import static org.icgc.dcc.common.core.util.Separators.EMPTY_STRING;
 import static org.icgc.dcc.release.core.document.DocumentType.DRUG_TEXT_TYPE;
 
@@ -55,7 +56,7 @@ public class DrugTextDocumentTransform implements DocumentTransform, Function<Ob
 
   @Override
   public Document transformDocument(@NonNull ObjectNode drug, @NonNull DocumentContext context) {
-    val id = drug.remove(DRUG_TEXT_TYPE.getPrimaryKey()).textValue();
+    val id = drug.remove(DRUG_ID).textValue();
     enrichDrug(id, drug);
 
     log.debug("[{}] Processsing drug: {}", id, drug);
@@ -70,7 +71,7 @@ public class DrugTextDocumentTransform implements DocumentTransform, Function<Ob
   }
 
   private static void enrichDrug(String id, ObjectNode drug) {
-    drug.put("id", id);
+    drug.put(DRUG_TEXT_TYPE.getPrimaryKey(), id);
     drug.put("type", "compound");
   }
 

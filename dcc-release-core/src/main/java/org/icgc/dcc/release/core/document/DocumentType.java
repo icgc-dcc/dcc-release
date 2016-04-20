@@ -68,7 +68,7 @@ public enum DocumentType {
           .name("drug-text")
           .entity(DRUG)
           .outputFileType(FileType.DRUG_TEXT_DOCUMENT)
-          .primaryKey(DRUG_ID)
+          .primaryKey(IndexFieldNames.TEXT_TYPE_ID)
   ),
 
   DRUG_CENTRIC_TYPE(

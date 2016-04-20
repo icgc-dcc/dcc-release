@@ -73,7 +73,7 @@ public class IndexTask extends GenericTask {
       String id = documentType == DocumentType.OBSERVATION_CENTRIC_TYPE ?
           UUID.randomUUID().toString()
           : ObjectNodes.textValue(o, idFieldName);
-      checkState(!isNullOrEmpty(id), "Document ID can't be null or empty. {}", o);
+      checkState(!isNullOrEmpty(id), "Document ID can't be null or empty. %s", o);
 
       return new Document(documentType, id, o);
     };

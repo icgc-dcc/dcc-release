@@ -35,6 +35,7 @@ import org.skife.jdbi.v2.Query;
 /**
  * This is a Data Access Object for FatHMM on postgresql database
  */
+// TODO: remove? it was used in the refactored version of Fathmm predictor
 public class FathmmRepository implements Closeable {
 
   @NonNull
@@ -92,13 +93,14 @@ public class FathmmRepository implements Closeable {
     return unweightedProbabilityQuery.bind("sequenceId", sequenceId).bind("substitution", substitution).first();
   }
 
-  public List<Map<String, Object>> getDomains(@NonNull String sequenceId, int substitution) {
+  public List<Map<String, Object>> getDomains(int sequenceId, int substitution) {
     return domainQuery.bind("sequenceId", sequenceId).bind("substitution", substitution).list();
   }
 
   private Query<Map<String, Object>> createWeightQuery(String weights) {
-    return handle.createQuery("select disease, other from \"WEIGHTS\" where id=:wid and type=:type").bind("type",
-        weights);
+    return handle.createQuery("select disease, other from \"WEIGHTS\" where id=:wid and type=:type\\:\\:weights_type")
+        .bind("type",
+            weights);
   }
 
   public Map<String, Object> getProbability(@NonNull String hmm, @NonNull Integer residue) {

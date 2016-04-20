@@ -31,11 +31,11 @@ import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.ConsequenceType;
 import org.icgc.dcc.release.job.fathmm.core.FathmmPredictor;
-import org.icgc.dcc.release.job.fathmm.model.FathmmRepository;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.Lists;
 
+@Slf4j
 @RequiredArgsConstructor
 public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeable {
 
@@ -58,7 +59,6 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeabl
   /**
    * State.
    */
-  private transient FathmmRepository fathmmRepository;
   private transient FathmmPredictor predictor;
 
   @Override
@@ -70,11 +70,11 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeabl
       for (val consequence : consequences) {
         consequenceList.add(consequence);
 
-        val aaMutation = consequence.get(OBSERVATION_CONSEQUENCES_AA_MUTATION);
-        val transcriptId = consequence.get(OBSERVATION_CONSEQUENCES_TRANSCRIPT_ID);
-        val consequenceType = consequence.get(OBSERVATION_CONSEQUENCE_TYPES);
+        val aaMutation = consequence.path(OBSERVATION_CONSEQUENCES_AA_MUTATION);
+        val transcriptId = consequence.path(OBSERVATION_CONSEQUENCES_TRANSCRIPT_ID);
+        val consequenceType = consequence.path(OBSERVATION_CONSEQUENCE_TYPES);
 
-        if (null == aaMutation || null == transcriptId
+        if (!hasValue(aaMutation) || !hasValue(transcriptId)
             || !consequenceType.textValue().equals(ConsequenceType.MISSENSE_VARIANT.getId())) {
           continue;
         }
@@ -85,33 +85,35 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeabl
           continue;
         }
 
-        val fathmmNode = calculateFATHMM(translationIdStr, aaMutationStr);
-        if (fathmmNode != null) {
-          if (consequence.get(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION) == null) {
-            ((ObjectNode) consequence).set(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION,
-                JsonNodeFactory.instance.objectNode());
+        try {
+          val fathmmNode = calculateFATHMM(translationIdStr, aaMutationStr);
+          if (fathmmNode != null) {
+            if (consequence.get(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION) == null) {
+              ((ObjectNode) consequence).set(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION,
+                  JsonNodeFactory.instance.objectNode());
+            }
+            ((ObjectNode) consequence.get(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION)).set(
+                "fathmm", fathmmNode);
           }
-          ((ObjectNode) consequence.get(OBSERVATION_CONSEQUENCES_CONSEQUENCE_FUNCTIONAL_IMPACT_PREDICTION)).set(
-              "fathmm", fathmmNode);
+        } catch (Exception e) {
+          log.error("Failed to predict Fathmm for Consequence {} of Observation : {}", consequence, observation);
+          throw e;
         }
+
       }
     }
 
     return observation;
   }
 
-  private FathmmRepository fathmmRepository() {
-    if (fathmmRepository == null) {
-      fathmmRepository = new FathmmRepository(fathmmRepositoryUrl);
-    }
-
-    return fathmmRepository;
+  private boolean hasValue(JsonNode aaMutation) {
+    return aaMutation != null && !aaMutation.isMissingNode() && !aaMutation.isNull();
   }
 
   @Override
   public void close() throws IOException {
-    if (fathmmRepository != null) {
-      fathmmRepository.close();
+    if (predictor != null) {
+      predictor.close();
     }
   }
 
@@ -130,7 +132,7 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeabl
 
   private Map<String, String> predict(String translationIdStr, String aaMutationStr) {
     if (predictor == null) {
-      predictor = new FathmmPredictor(fathmmRepository());
+      predictor = new FathmmPredictor(fathmmRepositoryUrl);
     }
 
     return predictor.predict(translationIdStr, aaMutationStr);

@@ -14,7 +14,6 @@ import java.util.Map;
 import lombok.val;
 
 import org.icgc.dcc.release.job.fathmm.core.FathmmPredictor;
-import org.icgc.dcc.release.job.fathmm.model.FathmmRepository;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,7 +29,7 @@ public class PredictFathmmTest {
 
   @Before
   public void setUp() {
-    predictor = new FathmmPredictor(new FathmmRepository(JDBC_URL));
+    predictor = new FathmmPredictor(JDBC_URL);
   }
 
   @Test
