@@ -2,9 +2,9 @@
 <!-- DCC ETL2 Workflow - Logging configuration -->
 <!--                                           -->
 <configuration debug="false">
-  <property name="log.dir" value="/u/btiernay/lib/dcc-etl2"/>
-  <property name="log.name" value="workflow" />
-  <property name="log.debug.name" value="workflow.debug" />
+  <property name="log.dir" value="."/>
+  <property name="log.name" value="dcc-release" />
+  <property name="log.debug.name" value="dcc-release.debug" />
   <property name="pattern" value="%date{ISO8601} [%thread] %-5level %logger{20} - %msg%n" />
 
   <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
