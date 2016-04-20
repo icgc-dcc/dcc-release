@@ -1,5 +1,5 @@
 <!--                                           -->
-<!-- DCC ETL2 Workflow - Logging configuration -->
+<!-- DCC Release - Logging configuration -->
 <!--                                           -->
 <configuration debug="false">
   <property name="log.dir" value="."/>
