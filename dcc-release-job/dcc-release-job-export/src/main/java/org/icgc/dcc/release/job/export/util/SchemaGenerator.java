@@ -25,7 +25,7 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableMap;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -40,6 +40,7 @@ import org.apache.spark.sql.types.StructType;
 import org.icgc.dcc.common.core.util.Splitters;
 import org.icgc.dcc.release.job.export.model.ExportType;
 
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -67,15 +68,14 @@ public class SchemaGenerator {
     return DataTypes.createStructType(structFields);
   }
 
-  private List<String> getSortedFieldNames(ExportType exportType, Map<String, String> fileSchema) {
-    val fields = Lists.<String> newArrayList(fileSchema.keySet());
-    fields.addAll(getChildFields(exportType));
-    Collections.sort(fields);
-
-    return fields;
+  private static Collection<String> getSortedFieldNames(ExportType exportType, Map<String, String> fileSchema) {
+    return ImmutableSortedSet.<String> naturalOrder()
+        .addAll(fileSchema.keySet())
+        .addAll(getChildFields(exportType))
+        .build();
   }
 
-  private Map<String, DataType> convertToDataType(Map<String, String> schemaDef) {
+  private static Map<String, DataType> convertToDataType(Map<String, String> schemaDef) {
     return schemaDef.entrySet().stream()
         .collect(toImmutableMap(e -> e.getKey(), e -> parseDataType(e.getValue())));
   }
@@ -100,7 +100,7 @@ public class SchemaGenerator {
         .collect(toList());
   }
 
-  private String getSchemaPath(ExportType exportType) {
+  private static String getSchemaPath(ExportType exportType) {
     return SCHEMA_DEF_DIR + "/" + exportType.getId() + ".schema";
   }
 

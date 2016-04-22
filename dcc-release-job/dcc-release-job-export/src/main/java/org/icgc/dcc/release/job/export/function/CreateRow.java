@@ -40,7 +40,6 @@ import org.icgc.dcc.release.job.export.model.ExportType;
 import org.icgc.dcc.release.job.export.stats.StatsCalculator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -59,15 +58,9 @@ public final class CreateRow implements Function<ObjectNode, Row> {
   @NonNull
   private final StatsCalculator statsCalculator;
 
-  /**
-   * Dependencies.
-   */
-  private transient ObjectMapper mapper;
-
   @Override
   public Row call(ObjectNode json) {
     statsCalculator.calculate(json);
-    createMapper();
     val map = convert(json);
     Row row = null;
     try {
@@ -84,7 +77,7 @@ public final class CreateRow implements Function<ObjectNode, Row> {
   private Map<String, Object> convert(ObjectNode json) {
     val jsonString = json.toString();
     Map<String, Object> map = Maps.<String, Object> newHashMap();
-    map = mapper.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
+    map = Jackson.DEFAULT.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
 
     return map;
   }
@@ -109,6 +102,10 @@ public final class CreateRow implements Function<ObjectNode, Row> {
       }
     }
 
+    return create(rowValues);
+  }
+
+  private static Row create(List<? extends Object> rowValues) {
     return RowFactory.create(rowValues.toArray(new Object[rowValues.size()]));
   }
 
@@ -126,12 +123,6 @@ public final class CreateRow implements Function<ObjectNode, Row> {
 
   private static boolean isSimpleType(Object value) {
     return !(value instanceof List);
-  }
-
-  private void createMapper() {
-    if (mapper == null) {
-      mapper = Jackson.DEFAULT;
-    }
   }
 
 }

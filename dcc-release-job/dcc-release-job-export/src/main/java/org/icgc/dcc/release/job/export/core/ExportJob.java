@@ -55,6 +55,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class ExportJob extends GenericJob {
 
+  /**
+   * Dependencies.
+   */
   @NonNull
   private final ExportProperties exportProperties;
   @NonNull
