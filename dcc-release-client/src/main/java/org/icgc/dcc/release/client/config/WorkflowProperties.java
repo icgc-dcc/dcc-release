@@ -21,8 +21,6 @@ import static com.google.common.collect.Maps.newLinkedHashMap;
 
 import java.util.Map;
 
-import lombok.Data;
-
 import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.job.document.config.DocumentProperties;
 import org.icgc.dcc.release.job.export.config.ExportProperties;
@@ -32,6 +30,8 @@ import org.icgc.dcc.release.job.index.config.IndexProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import lombok.Data;
 
 @Configuration
 public class WorkflowProperties {

@@ -28,12 +28,6 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.release.client.config.WorkflowProperties.MailProperties;
 import org.icgc.dcc.release.core.job.JobSummary;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +38,12 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * See http://www.thymeleaf.org/doc/articles/springmail.html
@@ -84,7 +84,7 @@ public class Mailer {
     // TODO: Format nicely
     val message = new MimeMessageHelper(mailSender.createMimeMessage(), true, UTF_8.name());
     message.setSubject(createSubject(templateName));
-    message.setText(e.toString(), true);
+    message.setText("<h1>ERROR</h1><br><pre>" + e.toString() + "</pre>", true);
     message.setTo(mail.getRecipients());
 
     mailSender.send(message.getMimeMessage());
@@ -106,10 +106,8 @@ public class Mailer {
         String.format("%s|%s|%s",
             "(?<=[A-Z])(?=[A-Z][a-z])",
             "(?<=[^A-Z])(?=[A-Z])",
-            "(?<=[A-Za-z])(?=[^A-Za-z])"
-            ),
-        " "
-        );
+            "(?<=[A-Za-z])(?=[^A-Za-z])"),
+        " ");
 
     return SUBJECT_PREFIX + jobDescription;
   }

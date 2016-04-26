@@ -17,9 +17,8 @@
  */
 package org.icgc.dcc.release.client.config;
 
+import static org.icgc.dcc.release.client.util.Names.APPLICATION_BASE_NAME;
 import static scala.collection.JavaConversions.asScalaMap;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -29,6 +28,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Spark configuration.
@@ -50,14 +52,14 @@ public class SparkConfig {
   public SparkConf sparkConf() {
     log.info("Creating SparkConf with spark properties '{}'", spark);
     return new SparkConf()
-        .setAppName("dcc-etl-workflow")
+        .setAppName(APPLICATION_BASE_NAME + "-workflow")
         .setMaster(spark.getMaster())
         .setAll(asScalaMap(spark.getProperties()));
   }
 
   @Bean(destroyMethod = "stop")
   public JavaSparkContext sparkContext() {
-    log.info("Creating JavaSparkContext...");
+    log.info("Creating JavaSparkContext for application id {}...", sparkConf().getAppId());
     val sparkContext = new JavaSparkContext(sparkConf());
 
     val jobJar = getJobJar();

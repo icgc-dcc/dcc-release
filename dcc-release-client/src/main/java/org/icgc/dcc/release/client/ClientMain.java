@@ -21,11 +21,9 @@ package org.icgc.dcc.release.client;
 import static com.google.common.base.Strings.repeat;
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 import static java.lang.System.err;
+import static org.icgc.dcc.release.client.util.Names.APPLICATION_BASE_NAME;
 
 import java.util.concurrent.TimeUnit;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.release.client.cli.Options;
 import org.icgc.dcc.release.client.core.Workflow;
@@ -38,6 +36,9 @@ import org.springframework.context.annotation.Configuration;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 @Configuration
 @EnableAutoConfiguration
@@ -47,7 +48,7 @@ public class ClientMain {
   /**
    * Constants.
    */
-  public static final String APPLICATION_NAME = "dcc-release-workflow";
+  public static final String APPLICATION_NAME = APPLICATION_BASE_NAME + "-client";
   public static final int SUCCESS_STATUS_CODE = 0;
   public static final int FAILURE_STATUS_CODE = 1;
 
