@@ -137,9 +137,22 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
 
   @SneakyThrows
   private void waitForPendingRequests() {
+    val timeoutSeconds = 5;
+    val requestsPerMinute = 60 / timeoutSeconds;
+
+    // Wait for 15 minutes before fail
+    val pendingRequestTimeoutMins = 15;
+    int retriesLeft = requestsPerMinute * pendingRequestTimeoutMins;
     while (pendingBulkRequest.get() != 0) {
       log.info("[{}] The processor has pending requests. Waiting for 5 secs...", writerId);
-      SECONDS.sleep(5);
+      SECONDS.sleep(timeoutSeconds);
+
+      retriesLeft--;
+      if (retriesLeft <= 0) {
+        log.error("Tired of waiting for the pending requests after {} mins. Killing myself...",
+            pendingRequestTimeoutMins);
+        throw new ExhausedRetryException();
+      }
     }
   }
 
@@ -320,6 +333,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
 
       @Override
       public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
+        log.debug("Received successful response for request {}", executionId);
         // Unsuccessful bulk response. Re-index only failed requests.
         if (response.hasFailures()) {
           log.info("[{}] Encountered exceptions during bulk load: {}", writerId, response.buildFailureMessage());
@@ -333,6 +347,7 @@ public class ElasticSearchDocumentWriter implements DocumentWriter {
 
       @Override
       public void afterBulk(long executionId, BulkRequest request, Throwable failure) {
+        log.debug("Received unsuccessful response for request {}", executionId);
         // Exhausted retries. Abort indexing.
         propagateIfPossible(failure, ExhausedRetryException.class);
 

@@ -20,6 +20,7 @@ package org.icgc.dcc.release.job.document.task;
 import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.getTestedTypeCountFieldName;
+import static org.icgc.dcc.release.job.document.vcf.util.TempFiles.createTempFile;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -96,14 +97,6 @@ public class CreateVCFFileTask extends GenericTask {
     while (mutationsIterator.hasNext()) {
       writer.write(mutationsIterator.next());
     }
-  }
-
-  @SneakyThrows
-  private static File createTempFile() {
-    val tmpFile = File.createTempFile("vcf-file", "-tmp");
-    tmpFile.deleteOnExit();
-
-    return tmpFile;
   }
 
   private Integer resolveTotalSsmTestedDonorCount(TaskContext taskContext) {

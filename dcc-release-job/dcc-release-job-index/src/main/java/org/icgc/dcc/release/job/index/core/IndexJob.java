@@ -1,5 +1,7 @@
 package org.icgc.dcc.release.job.index.core;
 
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.release.core.document.DocumentType.DONOR_CENTRIC_TYPE;
 import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newTransportClient;
 
 import java.util.Collection;
@@ -11,6 +13,7 @@ import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.icgc.dcc.common.core.util.stream.Streams;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -21,8 +24,6 @@ import org.icgc.dcc.release.job.index.service.IndexService;
 import org.icgc.dcc.release.job.index.task.IndexTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.google.common.collect.ImmutableList;
 
 @Slf4j
 @Component
@@ -85,18 +86,23 @@ public class IndexJob extends GenericJob {
   }
 
   private void index(JobContext jobContext, String indexName) {
+    // Index donor-centric first which frequently breaks Elasticsearch
+    jobContext.execute(createIndexTask(indexName, DONOR_CENTRIC_TYPE));
     jobContext.execute(createStreamingTasks(indexName));
   }
 
   @SneakyThrows
-  private Collection<? extends Task> createStreamingTasks(String indexName) {
-    val esUri = properties.getEsUri();
-    val tasks = ImmutableList.<Task> builder();
-    for (val documentType : DocumentType.values()) {
-      tasks.add(new IndexTask(esUri, indexName, documentType));
-    }
+  private Collection<? extends Task> createStreamingTasks(final String indexName) {
+    return Streams.stream(DocumentType.values())
+        .filter(dt -> dt != DONOR_CENTRIC_TYPE)
+        .map(dt -> createIndexTask(indexName, dt))
+        .collect(toImmutableList());
+  }
 
-    return tasks.build();
+  private IndexTask createIndexTask(String indexName, DocumentType documentType) {
+    val esUri = properties.getEsUri();
+
+    return new IndexTask(esUri, indexName, documentType);
   }
 
 }

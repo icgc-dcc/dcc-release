@@ -19,6 +19,8 @@ package org.icgc.dcc.release.client.config;
 
 import static org.icgc.dcc.release.client.util.Names.APPLICATION_BASE_NAME;
 import static scala.collection.JavaConversions.asScalaMap;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -28,9 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Spark configuration.
@@ -59,7 +58,7 @@ public class SparkConfig {
 
   @Bean(destroyMethod = "stop")
   public JavaSparkContext sparkContext() {
-    log.info("Creating JavaSparkContext for application id {}...", sparkConf().getAppId());
+    log.info("Creating JavaSparkContext...");
     val sparkContext = new JavaSparkContext(sparkConf());
 
     val jobJar = getJobJar();

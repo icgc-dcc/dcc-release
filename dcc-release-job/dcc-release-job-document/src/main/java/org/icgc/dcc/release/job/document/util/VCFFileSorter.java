@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.job.document.util;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.icgc.dcc.release.job.document.vcf.util.TempFiles.createTempFile;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -47,7 +48,7 @@ public class VCFFileSorter {
   public void sortAndSave(@NonNull OutputStream outputStream) throws IOException {
     checkState(dataFile.canRead() && headerFile.canRead(), "Either header file %s or data file %s is not readable",
         headerFile, dataFile);
-    val sorted = createTmpFile();
+    val sorted = createTempFile();
     ExternalSort.sort(dataFile, sorted);
 
     @Cleanup
@@ -66,13 +67,6 @@ public class VCFFileSorter {
     while ((readBytes = inputStream.read(buffer, 0, DEFAULT_BUFFER_SIZE)) != -1) {
       outputStream.write(buffer, 0, readBytes);
     }
-  }
-
-  private static File createTmpFile() throws IOException {
-    val tmpFile = File.createTempFile("vcf-", ".sorted");
-    tmpFile.deleteOnExit();
-
-    return tmpFile;
   }
 
   @SneakyThrows
