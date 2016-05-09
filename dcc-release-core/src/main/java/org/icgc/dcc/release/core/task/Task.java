@@ -33,6 +33,10 @@ public interface Task {
     return TaskType.FILE_TYPE_PROJECT;
   }
 
+  default TaskPriority getPriority() {
+    return TaskPriority.NORMAL;
+  }
+
   void execute(TaskContext taskContext);
 
   static String getName(Class<? extends Task> taskClass, String... info) {

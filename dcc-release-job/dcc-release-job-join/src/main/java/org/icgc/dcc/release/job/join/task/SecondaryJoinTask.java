@@ -27,8 +27,8 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.MUTATION_ID;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.PLACEMENT;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.SV_ID;
-import static org.icgc.dcc.release.core.util.JavaRDDs.getPartitionsCount;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
+import static org.icgc.dcc.release.core.util.Partitions.getPartitionsCount;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 
 import java.util.Collection;

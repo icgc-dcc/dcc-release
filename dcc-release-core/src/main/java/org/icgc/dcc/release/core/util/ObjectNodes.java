@@ -19,15 +19,16 @@ package org.icgc.dcc.release.core.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
+import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.common.json.Jackson.asObjectNode;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
-import lombok.experimental.UtilityClass;
 
 import org.icgc.dcc.common.core.util.Splitters;
 
@@ -40,8 +41,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
-@UtilityClass
-public class ObjectNodes {
+@NoArgsConstructor(access = PRIVATE)
+public final class ObjectNodes {
 
   public static final ObjectMapper MAPPER = new ObjectMapper();
 

@@ -17,15 +17,6 @@
  */
 package org.icgc.dcc.release.core.document;
 
-import static org.icgc.dcc.common.core.model.Entity.DIAGRAM;
-import static org.icgc.dcc.common.core.model.Entity.DONOR;
-import static org.icgc.dcc.common.core.model.Entity.DRUG;
-import static org.icgc.dcc.common.core.model.Entity.GENE;
-import static org.icgc.dcc.common.core.model.Entity.GENE_SET;
-import static org.icgc.dcc.common.core.model.Entity.MUTATION;
-import static org.icgc.dcc.common.core.model.Entity.OBSERVATION;
-import static org.icgc.dcc.common.core.model.Entity.PROJECT;
-import static org.icgc.dcc.common.core.model.Entity.RELEASE;
 import static org.icgc.dcc.common.core.model.FieldNames.DIAGRAM_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.DRUG_ID;
@@ -33,7 +24,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.RELEASE_ID;
-import static org.icgc.dcc.release.core.document.DocumentClassifier.CENTRIC;
+import static org.icgc.dcc.release.core.task.TaskPriority.HIGH;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
@@ -42,6 +33,7 @@ import org.icgc.dcc.common.core.model.Entity;
 import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.common.core.model.IndexType;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.task.TaskPriority;
 import org.icgc.dcc.release.core.util.FieldNames.IndexFieldNames;
 
 import com.google.common.collect.ImmutableList;
@@ -54,8 +46,7 @@ public enum DocumentType {
    */
   DIAGRAM_TYPE(
       attributes()
-          .name("diagram")
-          .entity(DIAGRAM)
+          .indexType(IndexType.DIAGRAM_TYPE)
           .outputFileType(FileType.DIAGRAM_DOCUMENT)
           .primaryKey(DIAGRAM_ID)
   ),
@@ -65,16 +56,14 @@ public enum DocumentType {
    */
   DRUG_TEXT_TYPE(
       attributes()
-          .name("drug-text")
-          .entity(DRUG)
+          .indexType(IndexType.DRUG_TEXT_TYPE)
           .outputFileType(FileType.DRUG_TEXT_DOCUMENT)
           .primaryKey(IndexFieldNames.TEXT_TYPE_ID)
   ),
 
   DRUG_CENTRIC_TYPE(
       attributes()
-          .name("drug-centric")
-          .entity(DRUG)
+          .indexType(IndexType.DRUG_CENTRIC_TYPE)
           .outputFileType(FileType.DRUG_CENTRIC_DOCUMENT)
           .primaryKey(DRUG_ID)
   ),
@@ -84,8 +73,7 @@ public enum DocumentType {
    */
   RELEASE_TYPE(
       attributes()
-          .name("release")
-          .entity(RELEASE)
+          .indexType(IndexType.RELEASE_TYPE)
           .outputFileType(FileType.RELEASE_DOCUMENT)
           .primaryKey(RELEASE_ID)
   ),
@@ -94,15 +82,13 @@ public enum DocumentType {
    * Gene Set type(s).
    */
   GENE_SET_TYPE(attributes()
-      .name("gene-set")
-      .entity(GENE_SET)
+      .indexType(IndexType.GENE_SET_TYPE)
       .outputFileType(FileType.GENE_SET_DOCUMENT)
       .primaryKey(GENE_SET_ID)
   ),
 
   GENE_SET_TEXT_TYPE(attributes()
-      .name("gene-set-text")
-      .entity(GENE_SET)
+      .indexType(IndexType.GENE_SET_TEXT_TYPE)
       .outputFileType(FileType.GENE_SET_TEXT_DOCUMENT)
       .primaryKey(IndexFieldNames.TEXT_TYPE_ID)
   ),
@@ -112,16 +98,14 @@ public enum DocumentType {
    */
   PROJECT_TYPE(
       attributes()
-          .name("project")
-          .entity(PROJECT)
+          .indexType(IndexType.PROJECT_TYPE)
           .outputFileType(FileType.PROJECT_DOCUMENT)
           .primaryKey(PROJECT_ID)
   ),
 
   PROJECT_TEXT_TYPE(
       attributes()
-          .name("project-text")
-          .entity(PROJECT)
+          .indexType(IndexType.PROJECT_TEXT_TYPE)
           .outputFileType(FileType.PROJECT_TEXT_DOCUMENT)
           .primaryKey(IndexFieldNames.TEXT_TYPE_ID)
   ),
@@ -131,27 +115,25 @@ public enum DocumentType {
    */
   DONOR_TYPE(
       attributes()
-          .name("donor")
-          .entity(DONOR)
+          .indexType(IndexType.DONOR_TYPE)
           .outputFileType(FileType.DONOR_DOCUMENT)
           .primaryKey(DONOR_ID)
   ),
 
   DONOR_TEXT_TYPE(
       attributes()
-          .name("donor-text")
-          .entity(DONOR)
+          .indexType(IndexType.DONOR_TEXT_TYPE)
           .outputFileType(FileType.DONOR_TEXT_DOCUMENT)
           .primaryKey(IndexFieldNames.TEXT_TYPE_ID)
   ),
 
   DONOR_CENTRIC_TYPE(
       attributes()
-          .name("donor-centric")
-          .entity(DONOR)
-          .classifier(CENTRIC)
+          .indexType(IndexType.DONOR_CENTRIC_TYPE)
           .outputFileType(FileType.DONOR_CENTRIC_DOCUMENT)
           .primaryKey(DONOR_ID)
+          .parallelism(2)
+          .priority(HIGH)
   ),
 
   /**
@@ -159,25 +141,21 @@ public enum DocumentType {
    */
   GENE_TYPE(
       attributes()
-          .name("gene")
-          .entity(GENE)
+          .indexType(IndexType.GENE_TYPE)
           .outputFileType(FileType.GENE_DOCUMENT)
           .primaryKey(GENE_ID)
   ),
 
   GENE_TEXT_TYPE(
       attributes()
-          .name("gene-text")
-          .entity(GENE)
+          .indexType(IndexType.GENE_TEXT_TYPE)
           .outputFileType(FileType.GENE_TEXT_DOCUMENT)
           .primaryKey(IndexFieldNames.TEXT_TYPE_ID)
   ),
 
   GENE_CENTRIC_TYPE(
       attributes()
-          .name("gene-centric")
-          .entity(GENE)
-          .classifier(CENTRIC)
+          .indexType(IndexType.GENE_CENTRIC_TYPE)
           .outputFileType(FileType.GENE_CENTRIC_DOCUMENT)
           .primaryKey(GENE_ID)
   ),
@@ -187,9 +165,7 @@ public enum DocumentType {
    */
   OBSERVATION_CENTRIC_TYPE(
       attributes()
-          .name("observation-centric")
-          .entity(OBSERVATION)
-          .classifier(CENTRIC)
+          .indexType(IndexType.OBSERVATION_CENTRIC_TYPE)
           .outputFileType(FileType.OBSERVATION_CENTRIC_DOCUMENT)
           .primaryKey("")
 
@@ -200,20 +176,19 @@ public enum DocumentType {
    */
   MUTATION_TEXT_TYPE(
       attributes()
-          .name("mutation-text")
-          .entity(MUTATION)
+          .indexType(IndexType.MUTATION_TEXT_TYPE)
           .outputFileType(FileType.MUTATION_TEXT_DOCUMENT)
           .primaryKey(IndexFieldNames.TEXT_TYPE_ID)
   ),
 
   MUTATION_CENTRIC_TYPE(
       attributes()
-          .name("mutation-centric")
-          .entity(MUTATION)
-          .classifier(CENTRIC)
+          .indexType(IndexType.MUTATION_CENTRIC_TYPE)
           .outputFileType(FileType.MUTATION_CENTRIC_DOCUMENT)
           .primaryKey(FieldNames.MUTATION_ID)
   );
+
+  public static final int DEFAULT_PARALLELISM = 0;
 
   /**
    * The corresponding entity of the index type.
@@ -226,11 +201,6 @@ public enum DocumentType {
   private final String name;
 
   /**
-   * The classifier of the index type.
-   */
-  private final DocumentClassifier classifier;
-
-  /**
    * Output file type of the document.
    */
   private final FileType outputFileType;
@@ -240,12 +210,23 @@ public enum DocumentType {
    */
   private final String primaryKey;
 
+  /**
+   * How many mappers to use for a document type indexing.
+   */
+  private final int parallelism;
+
+  /**
+   * Indexing priority of this type.
+   */
+  private final TaskPriority priority;
+
   private DocumentType(@NonNull DocumentTypeAttributes attributes) {
-    this.entity = attributes.entity;
-    this.name = attributes.name;
-    this.classifier = attributes.classifier;
+    this.entity = attributes.indexType.getEntity();
+    this.name = attributes.indexType.getName();
     this.outputFileType = attributes.outputFileType;
     this.primaryKey = attributes.primaryKey;
+    this.parallelism = attributes.parallelism;
+    this.priority = attributes.priority;
   }
 
   public static Iterable<DocumentType> convert(Iterable<IndexType> indexTypes) {
@@ -271,6 +252,10 @@ public enum DocumentType {
   @Override
   public String toString() {
     return name;
+  }
+
+  public boolean hasDefaultParallelism() {
+    return this.parallelism == DEFAULT_PARALLELISM;
   }
 
   private static DocumentTypeAttributes attributes() {

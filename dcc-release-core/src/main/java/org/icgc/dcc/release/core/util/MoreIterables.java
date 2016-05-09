@@ -18,15 +18,16 @@
 package org.icgc.dcc.release.core.util;
 
 import static com.google.common.base.Preconditions.checkState;
+import static lombok.AccessLevel.PRIVATE;
 
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.experimental.UtilityClass;
 
-@UtilityClass
-public class MoreIterables {
+@NoArgsConstructor(access = PRIVATE)
+public final class MoreIterables {
 
   @NonNull
   public static <T> Iterable<T> once(Iterator<T> source) {

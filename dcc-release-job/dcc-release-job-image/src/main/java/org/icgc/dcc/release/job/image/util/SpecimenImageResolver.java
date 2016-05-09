@@ -18,13 +18,13 @@
 package org.icgc.dcc.release.job.image.util;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Stopwatch.createStarted;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static java.util.Collections.emptySet;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
-import static org.icgc.dcc.release.core.util.Stopwatches.createStarted;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

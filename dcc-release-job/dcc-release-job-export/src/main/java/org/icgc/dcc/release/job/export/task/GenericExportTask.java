@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.job.export.task;
 
 import static org.icgc.dcc.common.core.util.Separators.NEWLINE;
+import static org.icgc.dcc.release.core.util.Partitions.getPartitionsCount;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -81,6 +82,7 @@ public abstract class GenericExportTask extends GenericTask {
 
   @Override
   public void execute(TaskContext taskContext) {
+    log.info("Executing export task for '{}'...", exportType.getId());
     // ReadInput
     val input = readInput(taskContext);
 
@@ -100,7 +102,7 @@ public abstract class GenericExportTask extends GenericTask {
   protected abstract void writeOutput(TaskContext taskContext, DataFrame output);
 
   protected DataFrame createDataFrame(JavaRDD<ObjectNode> input, TaskContext taskContext) {
-    val partitionsNum = input.partitions().size();
+    val partitionsNum = getPartitionsCount(input);
 
     accumulator = createStatsAccumulator(taskContext);
     val statsCalculator = getStatsCalculator(accumulator);

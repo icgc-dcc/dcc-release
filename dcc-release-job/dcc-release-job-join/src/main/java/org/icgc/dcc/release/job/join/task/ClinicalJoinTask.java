@@ -25,7 +25,7 @@ import static org.icgc.dcc.release.core.job.FileType.SAMPLE_SURROGATE_KEY;
 import static org.icgc.dcc.release.core.job.FileType.SPECIMEN_SURROGATE_KEY_IMAGE;
 import static org.icgc.dcc.release.core.job.FileType.SURGERY;
 import static org.icgc.dcc.release.core.job.FileType.THERAPY;
-import static org.icgc.dcc.release.core.util.JavaRDDs.getPartitionsCount;
+import static org.icgc.dcc.release.core.util.Partitions.getPartitionsCount;
 import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;
 
 import java.util.Map;

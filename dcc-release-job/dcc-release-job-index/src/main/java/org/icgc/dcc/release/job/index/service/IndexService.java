@@ -21,37 +21,46 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.base.Strings.repeat;
 import static com.google.common.base.Throwables.propagate;
+import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.ImmutableMap.of;
+import static com.google.common.collect.Iterables.toArray;
 import static com.google.common.io.Resources.getResource;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static lombok.AccessLevel.PRIVATE;
+import static org.elasticsearch.client.Requests.deleteMappingRequest;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
-import static org.icgc.dcc.release.job.index.factory.JacksonFactory.newDefaultMapper;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.release.core.util.JacksonFactory.MAPPER;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.ClusterAdminClient;
 import org.elasticsearch.client.IndicesAdminClient;
-import org.icgc.dcc.common.core.model.IndexType;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 @Slf4j
@@ -72,7 +81,7 @@ public class IndexService implements Closeable {
   @Getter(lazy = true, value = PRIVATE)
   private final ClusterAdminClient clusterClient = client.admin().cluster();
 
-  public void initializeIndex(@NonNull String indexName) {
+  public void initializeIndex(@NonNull String indexName, @NonNull Set<DocumentType> types) {
     val client = getIndexClient();
 
     log.info("Checking index '{}' for existence...", indexName);
@@ -82,12 +91,26 @@ public class IndexService implements Closeable {
         .isExists();
 
     if (exists) {
-      log.info("Deleting index '{}'...", indexName);
-      checkState(client.prepareDelete(indexName)
-          .execute()
-          .actionGet()
-          .isAcknowledged(),
-          "Index '%s' deletion was not acknowledged", indexName);
+      if (isLoadAll(types)) {
+        log.info("Deleting index '{}'...", indexName);
+        checkState(client.prepareDelete(indexName)
+            .execute()
+            .actionGet()
+            .isAcknowledged(),
+            "Index '%s' deletion was not acknowledged", indexName);
+
+        // Partial load
+      } else {
+        log.info("Unfreezing index...");
+        unfreezeIndex(indexName);
+
+        log.info("Deleting types {}...", types);
+        deleteTypes(indexName, types);
+
+        log.info("Initializing types {}...", types);
+        initializeTypeMappings(indexName, types);
+        return;
+      }
     }
 
     try {
@@ -100,23 +123,49 @@ public class IndexService implements Closeable {
           .isAcknowledged(),
           "Index '%s' creation was not acknowledged!", indexName);
 
-      for (IndexType type : IndexType.values()) {
-        String typeName = type.getName();
-        String source = IndexService.getTypeMapping(typeName).toString();
-
-        log.info("Creating index '{}' mapping for type '{}'...", indexName, typeName);
-        checkState(client.preparePutMapping(indexName)
-            .setType(typeName)
-            .setSource(source)
-            .execute()
-            .actionGet()
-            .isAcknowledged(),
-            "Index '%s' type mapping in index '%s' was not acknowledged for release '%s'!",
-            typeName, indexName);
-      }
+      initializeTypeMappings(indexName, copyOf(DocumentType.values()));
     } catch (Throwable t) {
       propagate(t);
     }
+  }
+
+  private void deleteTypes(String indexName, Set<DocumentType> types) {
+    val typeNames = types.stream()
+        .map(type -> type.getName())
+        .collect(toImmutableList());
+
+    val request = deleteMappingRequest(indexName).types(toArray(typeNames, String.class));
+    val deleted = getIndexClient()
+        .deleteMapping(request)
+        .actionGet()
+        .isAcknowledged();
+    checkState(deleted, "Types deletion was not acknowledged!");
+  }
+
+  @SneakyThrows
+  private void initializeTypeMappings(String indexName, Iterable<DocumentType> types) {
+    for (val type : types) {
+      initializeIndexType(indexName, type);
+    }
+  }
+
+  private void initializeIndexType(String indexName, DocumentType type) throws JsonProcessingException, IOException {
+    val typeName = type.getName();
+    val source = IndexService.getTypeMapping(typeName).toString();
+
+    log.info("Creating index '{}' mapping for type '{}'...", indexName, typeName);
+    checkState(getIndexClient().preparePutMapping(indexName)
+        .setType(typeName)
+        .setSource(source)
+        .execute()
+        .actionGet()
+        .isAcknowledged(),
+        "Index '%s' type mapping in index '%s' was not acknowledged for release '%s'!",
+        typeName, indexName);
+  }
+
+  private static boolean isLoadAll(Set<DocumentType> types) {
+    return types.size() == DocumentType.values().length;
   }
 
   public void aliasIndex(@NonNull String indexName, @NonNull String alias) {
@@ -149,15 +198,22 @@ public class IndexService implements Closeable {
 
   public void optimizeIndex(@NonNull String indexName) {
     // Optimize the the index for faster search operations by reducing the number of segments by merging
-    getIndexClient().prepareOptimize(indexName).execute().actionGet();
+    getIndexClient()
+        .prepareOptimize(indexName)
+        .setMaxNumSegments(1)
+        .execute()
+        .actionGet();
   }
 
   public void freezeIndex(@NonNull String indexName) {
-    getIndexClient()
-        .prepareUpdateSettings(indexName)
-        .setSettings(of("index.blocks.write", (Object) true))
-        .execute()
-        .actionGet();
+    // Don't use index.blocks.read_only
+    // as it's buggy
+    // https://github.com/elastic/elasticsearch/issues/5855 and https://github.com/elastic/elasticsearch/issues/2833
+    setIndexSettings(indexName, of("index.blocks.write", TRUE));
+  }
+
+  public void unfreezeIndex(@NonNull String indexName) {
+    setIndexSettings(indexName, of("index.blocks.write", FALSE));
   }
 
   public void reportIndex(@NonNull String indexName) {
@@ -179,11 +235,34 @@ public class IndexService implements Closeable {
     log.info("                    {} ", formatBytes(indexStats.getTotal().getStore().getSizeInBytes()));
   }
 
+  public void optimizeForIndexing(String indexName) {
+    // https://jira.oicr.on.ca/browse/DCC-4681
+    val settings = ImmutableMap.<String, Object> builder()
+        .put("index.number_of_replicas", 0)
+        .put("index.refresh_interval", "-1")
+        .build();
+
+    setIndexSettings(indexName, settings);
+    // TODO: search for recovery delay setting
+    setClusterSettings(of("indices.recovery.concurrent_streams", 1));
+  }
+
+  public void optimizeForSearching(String indexName) {
+    // https://jira.oicr.on.ca/browse/DCC-4681
+    val settings = ImmutableMap.<String, Object> builder()
+        .put("index.number_of_replicas", 1)
+        .put("index.refresh_interval", "1s")
+        .build();
+
+    setIndexSettings(indexName, settings);
+    setClusterSettings(of("indices.recovery.concurrent_streams", 3));
+  }
+
   public static ObjectNode getSettings() throws IOException {
     String resourceName = format("%s/index.settings.json", ES_CONFIG_BASE_PATH);
     URL settingsFileUrl = getResource(resourceName);
 
-    return (ObjectNode) newDefaultMapper().readTree(settingsFileUrl);
+    return (ObjectNode) MAPPER.readTree(settingsFileUrl);
   }
 
   public static ObjectNode getTypeMapping(String typeName) throws JsonProcessingException, IOException {
@@ -205,6 +284,11 @@ public class IndexService implements Closeable {
     return (ObjectNode) typeMapping;
   }
 
+  @Override
+  public void close() {
+    client.close();
+  }
+
   private Set<String> getIndexNames() {
     val state = client.admin()
         .cluster()
@@ -221,9 +305,20 @@ public class IndexService implements Closeable {
     return result.build();
   }
 
-  @Override
-  public void close() {
-    client.close();
+  private void setIndexSettings(String indexName, Map<String, Object> settings) {
+    getIndexClient()
+        .prepareUpdateSettings(indexName)
+        .setSettings(settings)
+        .execute()
+        .actionGet();
+  }
+
+  private void setClusterSettings(Map<String, Object> settings) {
+    getClusterClient()
+        .prepareUpdateSettings()
+        .setTransientSettings(settings)
+        .execute()
+        .actionGet();
   }
 
 }

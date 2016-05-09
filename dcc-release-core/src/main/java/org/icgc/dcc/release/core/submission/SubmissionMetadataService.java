@@ -1,8 +1,8 @@
 package org.icgc.dcc.release.core.submission;
 
+import static com.google.common.base.Stopwatch.createStarted;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
-import static org.icgc.dcc.release.core.util.Stopwatches.createStarted;
 
 import java.util.List;
 import java.util.Map;

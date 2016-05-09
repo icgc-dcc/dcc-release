@@ -29,24 +29,56 @@ import org.apache.spark.sql.types.DataTypes;
 @NoArgsConstructor(access = PRIVATE)
 public final class DataTypeUtils {
 
-  public static void checkDataType(Object value, DataType dataType, String fieldName) {
+  public static boolean checkDataType(Object value, DataType dataType, String fieldName) {
     log.debug("Verifying field name: '{}', Value: '{}'. Expected type: '{}'", fieldName, value, dataType);
     if (value == null) {
-      return;
+      return true;
     }
 
     if (DataTypes.IntegerType.equals(dataType) && !(value instanceof Integer)) {
-      throwException(fieldName, value, "Integer");
+      reportWarn(fieldName, value, "Integer");
+
+      return false;
     } else if (DataTypes.StringType.equals(dataType) && !(value instanceof String)) {
-      throwException(fieldName, value, "String");
+
+      reportWarn(fieldName, value, "String");
+      return false;
     } else if (DataTypes.DoubleType.equals(dataType) && !(value instanceof Double)) {
-      throwException(fieldName, value, "Double");
+
+      reportWarn(fieldName, value, "Double");
+      return false;
+    }
+
+    return true;
+  }
+
+  public static Object convertValue(Object value, DataType dataType) {
+    if (DataTypes.IntegerType.equals(dataType)) {
+      return toInt(value);
+    } else if (DataTypes.StringType.equals(dataType)) {
+      return toString(value);
+    } else if (DataTypes.DoubleType.equals(dataType)) {
+      return toDouble(value);
+    } else {
+      throw new IllegalArgumentException(format("Unsupported type %s", dataType));
     }
   }
 
-  private static void throwException(String fieldName, Object actualType, String expectedType) {
-    throw new IllegalArgumentException(format("Field '%s' has incorrect value type '%s'. Expected: '%s'.", fieldName,
-        actualType.getClass().getSimpleName(), expectedType));
+  public static Double toDouble(Object value) {
+    return value == null ? null : Double.valueOf(toString(value));
+  }
+
+  public static Integer toInt(Object value) {
+    return value == null ? null : Integer.valueOf(toString(value));
+  }
+
+  public static String toString(Object value) {
+    return value == null ? null : String.valueOf(value);
+  }
+
+  private static void reportWarn(String fieldName, Object actualType, String expectedType) {
+    log.warn("Field '{}' has incorrect value type '{}'. Expected: '{}'.", fieldName,
+        actualType.getClass().getSimpleName(), expectedType);
   }
 
 }

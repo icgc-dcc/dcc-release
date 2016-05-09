@@ -15,24 +15,63 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.join.utils;
+package org.icgc.dcc.release.job.index.utils;
 
 import static com.google.common.base.Preconditions.checkState;
 import static lombok.AccessLevel.PRIVATE;
+import static org.apache.hadoop.fs.Path.SEPARATOR;
+import static org.icgc.dcc.common.core.util.Separators.UNDERSCORE;
+
+import java.util.List;
+
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.val;
 
-import org.icgc.dcc.release.core.model.Observation;
-import org.icgc.dcc.release.job.join.model.SsmOccurrence;
+import org.apache.hadoop.fs.Path;
+import org.icgc.dcc.common.core.util.Separators;
+import org.icgc.dcc.common.core.util.Splitters;
+import org.icgc.dcc.release.core.document.DocumentType;
 
 @NoArgsConstructor(access = PRIVATE)
-public final class Occurrences {
+public final class IndexTasks {
 
-  public static Observation getObservation(SsmOccurrence occurrence) {
-    val observations = occurrence.getObservation();
-    checkState(observations.size() == 1, "SSM Occurrence has to contain 1 Observation before merging. %s", occurrence);
+  public static final String GZIP_EXTENSION = ".gz";
+  private static final String BIG_FILES_DIR = "big_files";
 
-    return observations.get(0);
+  public static String getBigFilesDir(@NonNull String workingDir) {
+    return workingDir + SEPARATOR + BIG_FILES_DIR;
+  }
+
+  public static Path getBigFilesPath(@NonNull String workingDir) {
+    return new Path(getBigFilesDir(workingDir));
+  }
+
+  public static String getBigFileName(@NonNull DocumentType documentType, @NonNull String id) {
+    return documentType.getName() + UNDERSCORE + id + GZIP_EXTENSION;
+  }
+
+  public static String getIndexName(@NonNull String releaseName) {
+    return releaseName.toLowerCase();
+  }
+
+  public static DocumentType getDocumentTypeFromFileName(@NonNull String fileName) {
+    val parts = getParts(fileName);
+
+    return DocumentType.byName(parts.get(0));
+  }
+
+  public static String getIdFromFileName(@NonNull String fileName) {
+    val parts = getParts(fileName);
+
+    return parts.get(1).replace(GZIP_EXTENSION, Separators.EMPTY_STRING);
+  }
+
+  private static List<String> getParts(String fileName) {
+    val parts = Splitters.UNDERSCORE.splitToList(fileName);
+    checkState(parts.size() == 2, "Failed to resolve DocumentType from file name %s", fileName);
+
+    return parts;
   }
 
 }

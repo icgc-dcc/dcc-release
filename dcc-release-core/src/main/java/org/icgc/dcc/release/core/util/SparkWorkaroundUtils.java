@@ -17,14 +17,16 @@
  */
 package org.icgc.dcc.release.core.util;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import java.util.Map;
 
-import lombok.experimental.UtilityClass;
+import lombok.NoArgsConstructor;
 
 import com.google.common.collect.Maps;
 
-@UtilityClass
-public class SparkWorkaroundUtils {
+@NoArgsConstructor(access = PRIVATE)
+public final class SparkWorkaroundUtils {
 
   /**
    * Broadcast variabled don't work with all Map implementations.

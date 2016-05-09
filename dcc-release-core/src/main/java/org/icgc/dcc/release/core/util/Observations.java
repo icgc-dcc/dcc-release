@@ -17,8 +17,9 @@
  */
 package org.icgc.dcc.release.core.util;
 
+import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.experimental.UtilityClass;
 
 import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.common.core.model.Marking;
@@ -26,8 +27,8 @@ import org.icgc.dcc.common.core.model.Marking;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Optional;
 
-@UtilityClass
-public class Observations {
+@NoArgsConstructor(access = PRIVATE)
+public final class Observations {
 
   public static Optional<Marking> getMarking(@NonNull JsonNode observation) {
     String markingValue = ObjectNodes.textValue(observation, FieldNames.NormalizerFieldNames.NORMALIZER_MARKING);

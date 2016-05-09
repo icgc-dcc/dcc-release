@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -20,18 +20,23 @@ package org.icgc.dcc.release.job.index.task;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+import java.util.Map;
 import java.util.UUID;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.task.TaskPriority;
 import org.icgc.dcc.release.core.task.TaskType;
+import org.icgc.dcc.release.core.util.Configurations;
 import org.icgc.dcc.release.core.util.ObjectNodes;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -39,7 +44,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @RequiredArgsConstructor
 public class IndexTask extends GenericTask {
 
-  private static final int PARTITION_SIZE_MB = 512;
+  private static final int PARTITION_SIZE_MB = 256;
 
   @NonNull
   private final String esUri;
@@ -47,10 +52,20 @@ public class IndexTask extends GenericTask {
   private final String indexName;
   @NonNull
   private final DocumentType documentType;
+  private final int bigDocumentThresholdMb;
 
   @Override
   public TaskType getType() {
-    return documentType.getOutputFileType().isPartitioned() ? TaskType.FILE_TYPE_PROJECT : TaskType.FILE_TYPE;
+    if (documentType.hasDefaultParallelism()) {
+      return documentType.getOutputFileType().isPartitioned() ? TaskType.FILE_TYPE_PROJECT : TaskType.FILE_TYPE;
+    }
+
+    return TaskType.FILE_TYPE;
+  }
+
+  @Override
+  public TaskPriority getPriority() {
+    return documentType.getPriority();
   }
 
   @Override
@@ -60,10 +75,30 @@ public class IndexTask extends GenericTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    readInput(taskContext, documentType.getOutputFileType(), PARTITION_SIZE_MB)
-        .map(createDocument(documentType))
-        .mapPartitions(new DocumentIndexer(esUri, indexName, documentType))
+    JavaRDD<Document> documents = readDocuments(taskContext);
+    // If the documentType has parallelism set coalesce the number of mappers to that number.
+    if (!documentType.hasDefaultParallelism()) {
+      documents = documents.coalesce(documentType.getParallelism());
+    }
+
+    documents.mapPartitions(new DocumentIndexer(
+        esUri,
+        indexName,
+        getFileSystemConfig(taskContext),
+        bigDocumentThresholdMb,
+        taskContext.getJobContext().getWorkingDir()))
+
+        // Calling count() to trigger calculation of the RDD. Using the count() action to iterate over the whole
+        // partition. first(), for example, will stop after processing of the first element.
         .count();
+  }
+
+  private JavaRDD<Document> readDocuments(TaskContext taskContext) {
+    val input = documentType.hasDefaultParallelism() ?
+        readInput(taskContext, documentType.getOutputFileType(), PARTITION_SIZE_MB) :
+        readUnpartitionedInput(taskContext, documentType.getOutputFileType());
+
+    return input.map(createDocument(documentType));
   }
 
   private static Function<ObjectNode, Document> createDocument(DocumentType documentType) {
@@ -77,6 +112,10 @@ public class IndexTask extends GenericTask {
 
       return new Document(documentType, id, o);
     };
+  }
+
+  private static Map<String, String> getFileSystemConfig(TaskContext taskContext) {
+    return Configurations.getSettings(taskContext.getFileSystem().getConf());
   }
 
 }

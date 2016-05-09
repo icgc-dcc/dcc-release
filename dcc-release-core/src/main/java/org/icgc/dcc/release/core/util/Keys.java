@@ -18,17 +18,18 @@
 package org.icgc.dcc.release.core.util;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
+import lombok.NoArgsConstructor;
 import lombok.val;
-import lombok.experimental.UtilityClass;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
-// TODO: This class should be removed and replaced with ProjectFields 
-@UtilityClass
-public class Keys {
+// TODO: This class should be removed and replaced with ProjectFields
+@NoArgsConstructor(access = PRIVATE)
+public final class Keys {
 
   public static final String KEY_SEPARATOR = "#";
   public static final String NULL_KEY = "NULL_KEY";

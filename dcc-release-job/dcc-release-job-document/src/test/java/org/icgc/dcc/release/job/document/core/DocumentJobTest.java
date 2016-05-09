@@ -27,7 +27,7 @@ public class DocumentJobTest extends AbstractJobTest {
   @Before
   public void setUp() {
     super.setUp();
-    val properties = new DocumentProperties().setOutputDir(new File(workingDir, "output").getAbsolutePath());
+    val properties = new DocumentProperties();
     this.job = new DocumentJob(properties, createSnpEffProperties(), sparkContext);
   }
 

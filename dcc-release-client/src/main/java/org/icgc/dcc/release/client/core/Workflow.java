@@ -1,8 +1,8 @@
 package org.icgc.dcc.release.client.core;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Stopwatch.createStarted;
 import static com.google.common.base.Strings.repeat;
-import static org.icgc.dcc.release.core.util.Stopwatches.createStarted;
 
 import java.util.List;
 

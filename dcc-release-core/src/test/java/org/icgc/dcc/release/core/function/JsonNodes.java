@@ -20,15 +20,18 @@ package org.icgc.dcc.release.core.function;
 import static com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_COMMENTS;
 import static com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_SINGLE_QUOTES;
 import static com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES;
+import static lombok.AccessLevel.PRIVATE;
 
 import java.io.File;
 
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class JsonNodes {
+@NoArgsConstructor(access = PRIVATE)
+public final class JsonNodes {
 
   /**
    * Allow for more liberal JSON strings to simplify literals with constants, etc.

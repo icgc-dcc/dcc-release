@@ -17,36 +17,16 @@
  */
 package org.icgc.dcc.release.job.document.config;
 
-import java.io.File;
 import java.io.Serializable;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
 @NoArgsConstructor
 public class DocumentProperties implements Serializable {
-
-  /**
-   * The output {@link FileSystem} URI.
-   */
-  @NonNull
-  String fsUri;
-
-  /**
-   * The output archive dir.
-   */
-  @NonNull
-  String outputDir;
-
-  /**
-   * The input FASTA file.
-   */
-  @NonNull
-  File fastaFile;
 
   /**
    * Whether to export mutation VCF file.

@@ -17,28 +17,33 @@
  */
 package org.icgc.dcc.release.core.document;
 
+import static org.icgc.dcc.release.core.document.DocumentType.DEFAULT_PARALLELISM;
+import static org.icgc.dcc.release.core.task.TaskPriority.NORMAL;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import org.icgc.dcc.common.core.model.Entity;
+import org.icgc.dcc.common.core.model.IndexType;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.task.TaskPriority;
 
 @Setter
 @Accessors(fluent = true, chain = true)
 public class DocumentTypeAttributes {
 
-  private final static DocumentClassifier DEFAULT_CLASSIFIER = DocumentClassifier.BASIC;
-
+  @NonNull
+  IndexType indexType;
   @NonNull
   String name;
   @NonNull
   Entity entity;
   @NonNull
-  DocumentClassifier classifier = DEFAULT_CLASSIFIER;
-  @NonNull
   FileType outputFileType;
   @NonNull
   String primaryKey;
+  int parallelism = DEFAULT_PARALLELISM;
+  @NonNull
+  TaskPriority priority = NORMAL;
 
 }

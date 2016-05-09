@@ -22,7 +22,6 @@ import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.document.Document;
-import org.icgc.dcc.release.core.document.DocumentClassifier;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
@@ -35,7 +34,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * {@link DocumentTransform} implementation that simply creates a resulting document consisting of the supplied
  * {@code root}.
  * <p>
- * Intended to be used with {@link DocumentClassifier#BASIC} document types.
+ * Intended to be used with non-centric document types.
  */
 public class BasicDocumentTransform implements DocumentTransform, Function<ObjectNode, Document> {
 

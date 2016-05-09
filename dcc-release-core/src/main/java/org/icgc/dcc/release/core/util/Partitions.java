@@ -17,11 +17,17 @@
  */
 package org.icgc.dcc.release.core.util;
 
+import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.experimental.UtilityClass;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-@UtilityClass
-public class Partitions {
+import org.apache.spark.api.java.AbstractJavaRDDLike;
+
+@Slf4j
+@NoArgsConstructor(access = PRIVATE)
+public final class Partitions {
 
   /**
    * Constants.
@@ -30,6 +36,34 @@ public class Partitions {
 
   public static String getPartitionName(@NonNull String projectName) {
     return PARTITION_NAME + "=" + projectName;
+  }
+
+  /**
+   * This method is usually called for performance improvements, where the {@code primaryRdd} is joined to the
+   * {@code secondaryRdd} with the {@code leftOuterJoin}. Usually the {@code primaryRdd} is bigger than the
+   * {@code secondaryRdd}, so we want to repartition to the {@code primaryRdd}. However, if the {@code primaryRdd} is
+   * empty and the {@code secondaryRdd} is not, the result of the join produces an empty RDD. To avoid such a situation
+   * this method returns the biggest partition count of the two RDDs.
+   */
+  public static int getPartitionsCount(@NonNull AbstractJavaRDDLike<?, ?> primaryRdd,
+      @NonNull AbstractJavaRDDLike<?, ?> secondaryRdd) {
+    val primaryPartitions = primaryRdd.partitions().size();
+    val secondaryPartitions = secondaryRdd.partitions().size();
+    val partitionsCount = primaryPartitions == 0 ? secondaryPartitions : primaryPartitions;
+    if (partitionsCount == 0) {
+      log.warn("Resolved partitions count to 0. It may cause an incorrect join of 2 RDDs.");
+    }
+
+    return partitionsCount;
+  }
+
+  public static int getPartitionsCount(@NonNull AbstractJavaRDDLike<?, ?> rdd) {
+    val partitionsCount = rdd.partitions().size();
+    if (partitionsCount == 0) {
+      log.warn("Resolved partitions count to 0. It may cause an incorrect join of 2 RDDs.");
+    }
+
+    return partitionsCount;
   }
 
 }

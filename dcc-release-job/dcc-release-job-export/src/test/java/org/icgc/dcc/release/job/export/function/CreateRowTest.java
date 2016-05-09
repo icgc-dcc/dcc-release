@@ -61,13 +61,15 @@ public class CreateRowTest {
     assertThat(seqDataArray.get(0).length()).isEqualTo(3);
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void callTest_wrongData() {
+  @Test
+  public void callTest_wrongDataType() {
     function = new CreateRow(ExportType.SAMPLE, createStructType(), statsCalculator);
     val sourceNode = $("{_project_id:1,_sample_id:'SA000002',available_raw_sequence_data:["
         + "{raw_data_accession:'123',repository:'EGA',library_strategy:'WGS'}]}");
 
-    function.call(sourceNode);
+    val row = function.call(sourceNode);
+    val projectId = row.get(0);
+    assertThat(projectId).isInstanceOf(String.class);
   }
 
   private static StructType createStructType() {

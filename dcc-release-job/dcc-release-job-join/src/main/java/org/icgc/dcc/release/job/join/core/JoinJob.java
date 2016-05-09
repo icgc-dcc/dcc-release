@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.join.core;
 
+import static com.google.common.base.Stopwatch.createStarted;
 import static java.lang.System.getProperty;
 import static java.util.Collections.emptyList;
 import static org.icgc.dcc.common.core.util.Splitters.COMMA;
@@ -48,7 +49,6 @@ import org.icgc.dcc.release.core.submission.SubmissionFileField;
 import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
 import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.core.util.Loggers;
-import org.icgc.dcc.release.core.util.Stopwatches;
 import org.icgc.dcc.release.job.join.model.DonorSample;
 import org.icgc.dcc.release.job.join.task.ClinicalJoinTask;
 import org.icgc.dcc.release.job.join.task.MethArrayJoinTask;
@@ -168,7 +168,7 @@ public class JoinJob extends GenericJob {
   private static void executeTasks(JobContext jobContext, List<Task> tasks) {
     val totalTasks = tasks.size();
     int currentTaskId = 1;
-    val watches = Stopwatches.createStarted();
+    val watches = createStarted();
     for (val task : tasks) {
       Loggers.logWithHeader("[{}/{}] Joining '{}'", currentTaskId, totalTasks, task.getName());
       watches.reset().start();

@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
+import static org.icgc.dcc.release.core.util.Partitions.getPartitionsCount;
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorId;
 
@@ -54,11 +55,11 @@ public class DonorCentricDocumentTask extends AbstractDocumentTask {
     val occurrences = readOccurrences(taskContext)
         .mapToPair(keyOccurrence())
         .aggregateByKey(zeroValue, AggregateFunctions::aggregateCollection, CombineFunctions::combineCollections);
-    val partitionNumbers = occurrences.partitions().size();
 
     val donors = readDonors(taskContext)
         .mapToPair(donor -> tuple(getDonorId(donor), donor));
 
+    val partitionNumbers = getPartitionsCount(occurrences, donors);
     val output = donors.leftOuterJoin(occurrences, partitionNumbers)
         .map(new DonorCentricDocumentTransform(documentJobContext));
 

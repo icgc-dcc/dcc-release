@@ -60,9 +60,6 @@ mail:
     mail.smtp.from: no-reply@oicr.on.ca
 
 document:
-  fsUri: "***REMOVED***"
-  outputDir: /tmp
-  fastaFile: "/u/dcc_dev/dcc-etl/data/genome/GRCh37.75/GRCh37.75.fasta"
   exportVCF: false
   
 index:

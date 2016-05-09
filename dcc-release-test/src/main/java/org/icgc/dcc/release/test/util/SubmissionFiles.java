@@ -17,9 +17,11 @@
  */
 package org.icgc.dcc.release.test.util;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import java.util.List;
 
-import lombok.experimental.UtilityClass;
+import lombok.NoArgsConstructor;
 
 import org.icgc.dcc.common.core.meta.FileCodeListsResolver;
 import org.icgc.dcc.common.core.meta.FileDictionaryResolver;
@@ -27,8 +29,8 @@ import org.icgc.dcc.release.core.submission.SubmissionFileSchema;
 import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
 import org.icgc.dcc.release.core.submission.SubmissionMetadataService;
 
-@UtilityClass
-public class SubmissionFiles {
+@NoArgsConstructor(access = PRIVATE)
+public final class SubmissionFiles {
 
   private static final String TEST_FIXTURES_DIR = "../../dcc-release-test/src/main/resources/fixtures";
   private static final String DICTIONARY_FILE = TEST_FIXTURES_DIR + "/dictionary.json.gz";

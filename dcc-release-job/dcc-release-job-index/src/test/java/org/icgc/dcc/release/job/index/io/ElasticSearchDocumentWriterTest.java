@@ -17,16 +17,21 @@
  */
 package org.icgc.dcc.release.job.index.io;
 
+import static org.icgc.dcc.release.job.index.io.DocumentWriterFactory.createDocumentWriter;
 import static org.mockito.Mockito.when;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.cluster.node.DiscoveryNode;
+import org.elasticsearch.transport.ReceiveTimeoutTransportException;
 import org.icgc.dcc.common.json.Jackson;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
+import org.icgc.dcc.release.core.document.DocumentWriter;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -35,6 +40,7 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+@Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class ElasticSearchDocumentWriterTest {
 
@@ -44,22 +50,28 @@ public class ElasticSearchDocumentWriterTest {
   Client esClient;
   @Mock
   ActionFuture<BulkResponse> action;
+  @Mock
+  DiscoveryNode node;
+  @Mock
+  ReceiveTimeoutTransportException exception;
 
-  ElasticSearchDocumentWriter writer;
+  DocumentWriter writer;
 
   @Before
   public void setUp() {
-    writer = new ElasticSearchDocumentWriter(esClient, INDEX, DocumentType.RELEASE_TYPE, false);
+    writer = createDocumentWriter(esClient, INDEX, DocumentType.RELEASE_TYPE);
   }
 
   @Test
   @SneakyThrows
   @Ignore("Ignored as can't reproduce failure with this test so far.")
   public void processTest() {
-    when(esClient.bulk(Matchers.any(BulkRequest.class))).thenReturn(action);
+    when(esClient.bulk(Matchers.any(BulkRequest.class))).thenThrow(exception);
 
     writer.write(createDocument());
+    log.info("Close");
     writer.close();
+    log.info("Exit.");
   }
 
   private Document createDocument() {

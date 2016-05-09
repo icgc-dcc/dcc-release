@@ -29,7 +29,6 @@ import lombok.experimental.Accessors;
 
 import org.icgc.dcc.common.core.model.Entity;
 import org.icgc.dcc.common.core.model.ReleaseCollection;
-import org.icgc.dcc.release.core.document.DocumentClassifier;
 import org.icgc.dcc.release.core.job.FileType;
 
 @Data
@@ -39,7 +38,6 @@ import org.icgc.dcc.release.core.job.FileType;
 public class DocumentTypeAttributes {
 
   private static final Collection<BroadcastType> DEFAULT_BROADCASTS = Collections.emptyList();
-  private final static DocumentClassifier DEFAULT_CLASSIFIER = DocumentClassifier.BASIC;
   private final static int DEFAULT_BATCH_SIZE = 1;
   private final static int DEFAULT_STATUS_INTERVAL = 1000;
 
@@ -49,8 +47,6 @@ public class DocumentTypeAttributes {
   Entity entity;
   @NonNull
   ReleaseCollection collection;
-  @NonNull
-  DocumentClassifier classifier = DEFAULT_CLASSIFIER;
   @NonNull
   String documentClassName;
   @NonNull

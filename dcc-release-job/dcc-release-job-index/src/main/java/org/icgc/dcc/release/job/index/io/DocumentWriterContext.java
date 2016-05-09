@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,18 +15,21 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.util;
+package org.icgc.dcc.release.job.index.io;
 
-import lombok.experimental.UtilityClass;
+import java.util.Map;
 
-import com.google.common.base.Stopwatch;
+import lombok.Builder;
+import lombok.Value;
 
-@UtilityClass
-public class Stopwatches {
+@Value
+@Builder
+public class DocumentWriterContext {
 
-  public static Stopwatch createStarted() {
-    // Can't use the new API here because of dependency conflicts.
-    return new Stopwatch().start();
-  }
+  String indexName;
+  int documentThreshold;
+  String workingDir;
+  Map<String, String> fsSettings;
+  String esUri;
 
 }

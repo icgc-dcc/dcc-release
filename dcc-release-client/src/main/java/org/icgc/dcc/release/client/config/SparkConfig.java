@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.client.config;
 
 import static org.icgc.dcc.release.client.util.Names.APPLICATION_BASE_NAME;
+import static org.icgc.dcc.release.core.util.Configurations.configureJobScheduling;
 import static scala.collection.JavaConversions.asScalaMap;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -50,10 +51,13 @@ public class SparkConfig {
   @Bean
   public SparkConf sparkConf() {
     log.info("Creating SparkConf with spark properties '{}'", spark);
-    return new SparkConf()
+    val sparkConfig = new SparkConf()
         .setAppName(APPLICATION_BASE_NAME + "-workflow")
         .setMaster(spark.getMaster())
         .setAll(asScalaMap(spark.getProperties()));
+    configureJobScheduling(sparkConfig);
+
+    return sparkConfig;
   }
 
   @Bean(destroyMethod = "stop")

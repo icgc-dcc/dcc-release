@@ -18,20 +18,33 @@
 package org.icgc.dcc.release.core.util;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.io.Files.copy;
+import static com.google.common.io.Resources.asByteSource;
+import static com.google.common.io.Resources.getResource;
+import static lombok.AccessLevel.PRIVATE;
 
+import java.io.File;
 import java.util.Map;
 
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
-import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 
-@UtilityClass
-public class Configurations {
+import com.google.common.collect.ImmutableMap;
+
+@Slf4j
+@NoArgsConstructor(access = PRIVATE)
+public final class Configurations {
+
+  public static final String SCHEDULER_CONFIG = "scheduler.xml";
 
   public static void addCompressionCodec(@NonNull JobConf conf, Class<? extends CompressionCodec> codecClass) {
     val codecsProperty = "io.compression.codecs";
@@ -49,6 +62,37 @@ public class Configurations {
 
   public static JobConf createJobConf(@NonNull JavaRDD<?> rdd) {
     return new JobConf(rdd.context().hadoopConfiguration());
+  }
+
+  public static void configureJobScheduling(SparkConf sparkConf) {
+    sparkConf.set("spark.scheduler.mode", "FAIR");
+    sparkConf.set("spark.scheduler.allocation.file", getSchedulerConfigPath());
+  }
+
+  @SneakyThrows
+  public static String getSchedulerConfigPath() {
+    val configFile = File.createTempFile("dcc-release", ".conf");
+    log.debug("Temp scheduler config: {}", configFile.getAbsolutePath());
+    configFile.deleteOnExit();
+    copyConfig(configFile);
+
+    return configFile.getAbsolutePath();
+  }
+
+  public static Map<String, String> getSettings(@NonNull Configuration conf) {
+    val settings = ImmutableMap.<String, String> builder();
+    for (val entry : conf) {
+      settings.put(entry);
+    }
+
+    return settings.build();
+  }
+
+  @SneakyThrows
+  private static void copyConfig(File configFile) {
+    val configLocation = getResource(SCHEDULER_CONFIG);
+    log.debug("Config location: {}", configLocation);
+    copy(asByteSource(configLocation), configFile);
   }
 
 }

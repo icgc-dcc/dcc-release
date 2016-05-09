@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.release.core.task;
 
+import static com.google.common.base.Stopwatch.createStarted;
 import static com.google.common.base.Throwables.propagate;
-import static org.icgc.dcc.release.core.util.Stopwatches.createStarted;
 
 import java.util.Collection;
 import java.util.concurrent.CompletionService;

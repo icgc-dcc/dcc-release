@@ -19,6 +19,7 @@ package org.icgc.dcc.release.job.export.function;
 
 import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.release.job.export.util.DataTypeUtils.checkDataType;
+import static org.icgc.dcc.release.job.export.util.DataTypeUtils.convertValue;
 
 import java.util.List;
 import java.util.Map;
@@ -88,8 +89,16 @@ public final class CreateRow implements Function<ObjectNode, Row> {
 
     for (val field : schemaFields) {
       val fieldName = field.name();
-      val value = map.get(fieldName);
-      checkDataType(value, field.dataType(), fieldName);
+      Object value = map.get(fieldName);
+      val dataType = field.dataType();
+      if (!checkDataType(value, dataType, fieldName)) {
+        try {
+          value = convertValue(value, dataType);
+        } catch (NumberFormatException e) {
+          log.error("Failed to convert field {} to {}.", fieldName, dataType);
+          throw e;
+        }
+      }
 
       if (value == null) {
         rowValues.add(null);
@@ -97,7 +106,7 @@ public final class CreateRow implements Function<ObjectNode, Row> {
         rowValues.add(value);
       } else {
         val childExportType = ExportType.getChildType(exportType, fieldName);
-        val arrayType = (ArrayType) field.dataType();
+        val arrayType = (ArrayType) dataType;
         rowValues.add(convertArray(value, childExportType, (StructType) arrayType.elementType()));
       }
     }

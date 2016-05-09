@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.release.job.join.task;
 
-import static org.icgc.dcc.release.core.util.JavaRDDs.getPartitionsCount;
+import static org.icgc.dcc.release.core.util.Partitions.getPartitionsCount;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 
 import java.util.Collection;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,41 +15,21 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.index.factory;
+package org.icgc.dcc.release.core.task;
 
 import static lombok.AccessLevel.PRIVATE;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+@Getter
+@RequiredArgsConstructor(access = PRIVATE)
+public enum TaskPriority {
 
-@NoArgsConstructor(access = PRIVATE)
-public final class JacksonFactory {
+  HIGH("high"),
 
-  /**
-   * Mappers.
-   */
-  private static final ObjectMapper DEFAULT_MAPPER = new ObjectMapper();
+  // Setting scheduler pool to default. http://spark.apache.org/docs/latest/job-scheduling.html#fair-scheduler-pools
+  NORMAL(null);
 
-  private static final JsonFactory SMILE_FACTORY = new SmileFactory();
-  private static final ObjectMapper SMILE_MAPPER = new ObjectMapper(SMILE_FACTORY);
-  private static final ObjectReader SMILE_READER = SMILE_MAPPER.reader(ObjectNode.class);
-  private static final ObjectWriter SMILE_WRITER = SMILE_MAPPER.writerWithType(ObjectNode.class);
-
-  public static ObjectMapper newDefaultMapper() {
-    return DEFAULT_MAPPER;
-  }
-
-  public static ObjectReader newSmileReader() {
-    return SMILE_READER;
-  }
-
-  public static ObjectWriter newSmileWriter() {
-    return SMILE_WRITER;
-  }
+  private final String pool;
 
 }

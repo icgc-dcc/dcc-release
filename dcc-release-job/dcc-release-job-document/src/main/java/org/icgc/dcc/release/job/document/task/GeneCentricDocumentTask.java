@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.document.task;
 
+import static org.icgc.dcc.release.core.util.Partitions.getPartitionsCount;
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneId;
 
@@ -68,8 +69,8 @@ public class GeneCentricDocumentTask extends AbstractDocumentTask {
     val occurrancePairs = occurrences
         .flatMapToPair(new PairGeneIdObservation())
         .aggregateByKey(zeroValue, AggregateFunctions::aggregateCollection, CombineFunctions::combineCollections);
-    val partitionsNumber = occurrancePairs.partitions().size();
 
+    val partitionsNumber = getPartitionsCount(occurrancePairs, genes);
     val output = genes
         .mapToPair(gene -> tuple(getGeneId(gene), gene))
         .leftOuterJoin(occurrancePairs, partitionsNumber)

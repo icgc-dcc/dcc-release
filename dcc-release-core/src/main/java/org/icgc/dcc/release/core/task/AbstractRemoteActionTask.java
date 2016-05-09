@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.release.core.task;
 
+import static com.google.common.base.Stopwatch.createStarted;
+
 import java.io.Serializable;
 
 import lombok.val;
@@ -27,7 +29,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.release.core.util.Stopwatches;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
@@ -42,7 +43,7 @@ public abstract class AbstractRemoteActionTask implements Task, Serializable {
 
     // Note: Can't use val in lambda (e.g. watch, fileSystem), don't try!
     executeRemote(taskContext.getSparkContext(), ignore -> {
-      Stopwatch watch = Stopwatches.createStarted();
+      Stopwatch watch = createStarted();
       log.info("Executing remote action...");
 
       FileSystem fileSystem = FileSystem.get(fsUri, new Configuration());

@@ -17,16 +17,17 @@
  */
 package org.icgc.dcc.release.job.join.model;
 
+import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
+import lombok.NoArgsConstructor;
 import lombok.val;
-import lombok.experimental.UtilityClass;
 
 import org.icgc.dcc.release.core.model.Observation;
 
 import com.google.common.collect.Lists;
 
-@UtilityClass
-public class SsmOccurrenceFactory {
+@NoArgsConstructor(access = PRIVATE)
+public final class SsmOccurrenceFactory {
 
   public static SsmOccurrence createSsmOccurrence(SsmPrimaryFeatureType primary, SsmMetaFeatureType meta) {
     val occurrence = new SsmOccurrence();

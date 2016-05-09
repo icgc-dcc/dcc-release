@@ -40,6 +40,8 @@ public final class JacksonFactory {
 
   public static final Class<ObjectNode> DEFAULT_CLASS = ObjectNode.class;
 
+  public static final JsonFactory DEFAULT_SMILE_FACOTRY = new SmileFactory();
+
   public static final JsonFactory SMILE_FACTORY = new SmileFactory()
       .disable(SmileGenerator.Feature.WRITE_HEADER)
       .disable(SmileParser.Feature.REQUIRE_HEADER)
@@ -49,6 +51,7 @@ public final class JacksonFactory {
 
   public static final ObjectMapper MAPPER = createMapper(null);
 
+  public static final ObjectMapper DEFAULT_SMILE_MAPPER = new ObjectMapper(DEFAULT_SMILE_FACOTRY);
   public static final ObjectMapper SMILE_MAPPER = new ObjectMapper(SMILE_FACTORY)
       .disable(SerializationFeature.CLOSE_CLOSEABLE);
 
@@ -56,6 +59,7 @@ public final class JacksonFactory {
   public static final ObjectReader READER = MAPPER.reader(ObjectNode.class);
 
   public static final ObjectWriter SMILE_WRITER = SMILE_MAPPER.writerWithType(ObjectNode.class);
+  public static final ObjectWriter DEFAULT_SMILE_WRITER = DEFAULT_SMILE_MAPPER.writerWithType(ObjectNode.class);
   public static final ObjectReader SMILE_READER = SMILE_MAPPER.reader(ObjectNode.class);
 
   public static <T> ObjectReader createSmileObjectReader(@NonNull Class<T> clazz) {

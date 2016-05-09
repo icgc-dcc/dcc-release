@@ -1,7 +1,7 @@
 package org.icgc.dcc.release.core.submission;
 
+import static com.google.common.base.Stopwatch.createStarted;
 import static com.google.common.collect.Lists.newArrayList;
-import static org.icgc.dcc.release.core.util.Stopwatches.createStarted;
 
 import java.util.List;
 

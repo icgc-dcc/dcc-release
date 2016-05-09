@@ -1,12 +1,12 @@
 package org.icgc.dcc.release.core.hadoop;
 
+import static com.google.common.base.Stopwatch.createStarted;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_SERIALIZATIONS_KEY;
 import static org.apache.hadoop.io.SequenceFile.Writer.compression;
 import static org.apache.hadoop.io.SequenceFile.Writer.file;
 import static org.apache.hadoop.io.SequenceFile.Writer.keyClass;
 import static org.apache.hadoop.io.SequenceFile.Writer.valueClass;
 import static org.icgc.dcc.release.core.function.JsonNodes.MAPPER;
-import static org.icgc.dcc.release.core.util.Stopwatches.createStarted;
 
 import java.io.File;
 import java.io.IOException;

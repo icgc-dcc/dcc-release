@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.release.core.task;
 
+import static com.google.common.base.Stopwatch.createStarted;
 import static com.google.common.base.Throwables.propagate;
-import static org.icgc.dcc.release.core.util.Stopwatches.createStarted;
 
 import java.util.Collection;
 import java.util.Map.Entry;
@@ -37,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.release.core.job.JobContext;
-import org.icgc.dcc.release.core.util.Stopwatches;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
@@ -132,7 +131,7 @@ public class TaskExecutor {
 
     // Submit async
     service.submit(() -> {
-      Stopwatch watch = Stopwatches.createStarted();
+      Stopwatch watch = createStarted();
       prepareSubmission(task);
 
       try {
@@ -151,6 +150,13 @@ public class TaskExecutor {
     val description = "Task of type " + task.getType();
 
     sparkContext.setJobGroup(task.getName(), description, interrupt);
+    setPriority(task.getPriority());
+  }
+
+  private void setPriority(TaskPriority priority) {
+    // This setting is thread local. It will be visible only to the current task.
+    // See http://spark.apache.org/docs/latest/job-scheduling.html#fair-scheduler-pools
+    sparkContext.setLocalProperty("spark.scheduler.pool", priority.getPool());
   }
 
   private TaskContext createTaskContext(JobContext jobContext, Optional<String> projectName) {

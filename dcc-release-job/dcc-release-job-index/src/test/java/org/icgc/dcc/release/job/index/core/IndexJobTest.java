@@ -33,6 +33,7 @@ import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.Job;
 import org.icgc.dcc.release.job.index.config.IndexProperties;
+import org.icgc.dcc.release.job.index.utils.IndexTasks;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.After;
 import org.junit.Before;
@@ -59,7 +60,7 @@ public class IndexJobTest extends AbstractJobTest {
     val properties = new IndexProperties().setEsUri(ES_URI);
 
     this.job = new IndexJob(properties);
-    this.index = IndexJob.resolveIndexName(RELEASE_VERSION);
+    this.index = IndexTasks.getIndexName(RELEASE_VERSION);
     this.esClient = newTransportClient(ES_URI);
     cleanUpIndex(esClient, index);
   }

@@ -164,15 +164,6 @@ public final class JavaRDDs {
     }
   }
 
-  /**
-   * Get number of partitions in {@code rdd}. It's a good practice to repartition {@code RDD} to the same number of
-   * partitions to avoid additional shuffles.
-   * @see http://blog.cloudera.com/blog/2015/03/how-to-tune-your-apache-spark-jobs-part-1/
-   */
-  public static <K, V> int getPartitionsCount(JavaPairRDD<K, V> rdd) {
-    return rdd.partitions().size();
-  }
-
   private static JobConf createJobConf(JavaPairRDD<?, ?> rdd) {
     return new JobConf(rdd.context().hadoopConfiguration());
   }

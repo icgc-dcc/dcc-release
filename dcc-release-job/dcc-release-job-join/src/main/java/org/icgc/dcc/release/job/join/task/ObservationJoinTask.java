@@ -18,7 +18,7 @@
 package org.icgc.dcc.release.job.join.task;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.icgc.dcc.release.core.util.JavaRDDs.getPartitionsCount;
+import static org.icgc.dcc.release.core.util.Partitions.getPartitionsCount;
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import static org.icgc.dcc.release.job.join.utils.Tasks.getSampleSurrogateSampleIds;
 import static org.icgc.dcc.release.job.join.utils.Tasks.resolveDonorSamples;

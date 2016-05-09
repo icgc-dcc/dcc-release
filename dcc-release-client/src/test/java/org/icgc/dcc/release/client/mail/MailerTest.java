@@ -1,6 +1,6 @@
 package org.icgc.dcc.release.client.mail;
 
-import static org.icgc.dcc.release.core.util.Stopwatches.createStarted;
+import static com.google.common.base.Stopwatch.createStarted;
 import lombok.val;
 
 import org.icgc.dcc.release.client.config.MailConfig;

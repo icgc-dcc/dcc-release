@@ -17,7 +17,10 @@
  */
 package org.icgc.dcc.release.job.index.task;
 
+import static org.icgc.dcc.release.job.index.io.DocumentWriterFactory.createFilteringDocumentWriter;
+
 import java.util.Iterator;
+import java.util.Map;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -26,9 +29,7 @@ import lombok.val;
 
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.icgc.dcc.release.core.document.Document;
-import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.job.index.factory.TransportClientFactory;
-import org.icgc.dcc.release.job.index.io.ElasticSearchDocumentWriter;
+import org.icgc.dcc.release.job.index.io.DocumentWriterContext;
 
 import com.google.common.collect.Lists;
 
@@ -42,21 +43,31 @@ public final class DocumentIndexer implements FlatMapFunction<Iterator<Document>
   @NonNull
   private final String indexName;
   @NonNull
-  private final DocumentType documentType;
+  private final Map<String, String> fsSettings;
+  private final int documentThreshold;
+  @NonNull
+  private final String workingDir;
 
   @Override
   public Iterable<Void> call(Iterator<Document> document) throws Exception {
-
     @Cleanup
-    val client = TransportClientFactory.newTransportClient(esUri, true);
-    @Cleanup
-    val documentWriter = new ElasticSearchDocumentWriter(client, indexName, documentType, true);
+    val documentWriter = createFilteringDocumentWriter(createDocumentWriterContext());
 
     while (document.hasNext()) {
       documentWriter.write(document.next());
     }
 
     return Lists.newArrayList();
+  }
+
+  private DocumentWriterContext createDocumentWriterContext() {
+    return DocumentWriterContext.builder()
+        .indexName(indexName)
+        .documentThreshold(documentThreshold)
+        .workingDir(workingDir)
+        .fsSettings(fsSettings)
+        .esUri(esUri)
+        .build();
   }
 
 }
