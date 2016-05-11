@@ -18,7 +18,8 @@
     <!-- DCC -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>dcc-etl-resources</artifactId>
+      <artifactId>dcc-release-resources</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <!-- Search -->

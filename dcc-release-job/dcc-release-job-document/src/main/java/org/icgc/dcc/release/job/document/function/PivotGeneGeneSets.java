@@ -17,11 +17,15 @@
  */
 package org.icgc.dcc.release.job.document.function;
 
+import static org.icgc.dcc.common.core.model.FieldNames.GENE_SETS;
+import static org.icgc.dcc.common.json.Jackson.asArrayNode;
+import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneGeneSetId;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneGeneSetType;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneGeneSets;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.removeGeneGeneSets;
 
+import java.util.List;
 import java.util.Map;
 
 import lombok.NonNull;
@@ -30,7 +34,9 @@ import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
 
 @RequiredArgsConstructor
 public class PivotGeneGeneSets implements Function<ObjectNode, ObjectNode> {
@@ -59,10 +65,35 @@ public class PivotGeneGeneSets implements Function<ObjectNode, ObjectNode> {
       }
     }
 
+    pivotDrugs(gene);
     // TODO: This need to only occur if not the "gene" index
     removeGeneGeneSets(gene);
 
     return gene;
+  }
+
+  // TODO: Drugs are not present in the 'gene-sets' collection. Confirm they should not be there.
+  private static void pivotDrugs(ObjectNode gene) {
+    val geneSets = gene.path(GENE_SETS);
+    // Drugs could be added on line 65
+    if (!geneSets.isMissingNode() && !gene.has("drug")) {
+      val drugIds = filterDrugIds(asArrayNode(geneSets));
+      if (!drugIds.isEmpty()) {
+        val drugs = gene.withArray("drug");
+        drugs.addPOJO(drugIds);
+      }
+    }
+  }
+
+  private static List<String> filterDrugIds(ArrayNode geneSets) {
+    val drugNodes = ImmutableList.<String> builder();
+    for (val element : geneSets) {
+      if (textValue(element, "type").equals("drug")) {
+        drugNodes.add(textValue(element, "id"));
+      }
+    }
+
+    return drugNodes.build();
   }
 
 }

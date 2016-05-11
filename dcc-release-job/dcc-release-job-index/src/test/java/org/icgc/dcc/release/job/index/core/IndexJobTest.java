@@ -23,11 +23,14 @@ import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newT
 
 import java.io.File;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.val;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.job.FileType;
@@ -76,13 +79,36 @@ public class IndexJobTest extends AbstractJobTest {
     job.execute(createJobContext(job.getType(), ImmutableList.of(PROJECT)));
 
     verifyRelease();
-    varifyGeneSets();
-    varifyProjects();
+    verifyGeneSets();
+    verifyProjects();
     verifyDonors();
-    varifyGenes();
-    varifyObservations();
+    verifyGenes();
+    verifyObservations();
     verifyMutations();
     verifyDrugs();
+    verifyDrugSets();
+  }
+
+  private void verifyDrugSets() {
+    verifyDrugSets(DocumentType.GENE_CENTRIC_TYPE, "drug", Optional.empty(), 1);
+    verifyDrugSets(DocumentType.DONOR_CENTRIC_TYPE, "gene.drug", Optional.of("gene"), 1);
+    verifyDrugSets(DocumentType.MUTATION_CENTRIC_TYPE, "transcript.gene.drug", Optional.of("transcript"), 2);
+    verifyDrugSets(DocumentType.OBSERVATION_CENTRIC_TYPE, "ssm.gene.drug", Optional.of("ssm.gene"), 2);
+  }
+
+  private void verifyDrugSets(DocumentType type, String field, Optional<String> path, long expectedDocuments) {
+    val existsFilter = FilterBuilders.existsFilter(field);
+    // Can't use val here. Lombok fails to infer the type correctly
+    QueryBuilder query = path.isPresent() ?
+        QueryBuilders.nestedQuery(path.get(), existsFilter) :
+        QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), existsFilter);
+
+    val hits = esClient.prepareSearch(index)
+        .setTypes(type.getName())
+        .setQuery(query)
+        .execute().actionGet()
+        .getHits().getTotalHits();
+    assertThat(hits).isEqualTo(expectedDocuments);
   }
 
   private void verifyDrugs() {
@@ -97,21 +123,21 @@ public class IndexJobTest extends AbstractJobTest {
     assertThat(hits).isEqualTo(expectedDocuments);
   }
 
-  private void varifyObservations() {
+  private void verifyObservations() {
     verifyType(DocumentType.OBSERVATION_CENTRIC_TYPE, 3);
   }
 
-  private void varifyProjects() {
+  private void verifyProjects() {
     verifyType(DocumentType.PROJECT_TYPE, 2);
     verifyType(DocumentType.PROJECT_TEXT_TYPE, 2);
   }
 
-  private void varifyGeneSets() {
+  private void verifyGeneSets() {
     verifyType(DocumentType.GENE_SET_TYPE, 3);
     verifyType(DocumentType.GENE_SET_TEXT_TYPE, 3);
   }
 
-  private void varifyGenes() {
+  private void verifyGenes() {
     verifyType(DocumentType.GENE_TYPE, 3);
     verifyType(DocumentType.GENE_TEXT_TYPE, 3);
     verifyType(DocumentType.GENE_CENTRIC_TYPE, 3);

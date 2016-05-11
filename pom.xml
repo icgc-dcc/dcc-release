@@ -20,6 +20,7 @@
     <module>dcc-release-job</module>
     <module>dcc-release-test</module>
     <module>dcc-release-client</module>
+    <module>dcc-release-resources</module>
   </modules>
 
   <repositories>
@@ -70,11 +71,6 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>dcc-etl-core</artifactId>
-        <version>${dcc-etl.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>dcc-etl-resources</artifactId>
         <version>${dcc-etl.version}</version>
       </dependency>
 
@@ -285,9 +281,6 @@
   <properties>
     <!-- Versions - DCC -->
     <dcc-common.version>4.0.0</dcc-common.version>
-
-    <!-- Versions - DCC ETL -->
-    <dcc-etl.version>4.1.0</dcc-etl.version>
 
     <!-- Versions - DCC ID -->
     <dcc-id.version>0.0.17</dcc-id.version>

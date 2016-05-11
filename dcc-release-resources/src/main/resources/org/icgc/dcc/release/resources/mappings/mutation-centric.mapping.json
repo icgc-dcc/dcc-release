@@ -21,7 +21,6 @@
     "properties":{
       "transcript":{
         "type":"nested",
-        "include_in_parent":"true",
         "properties":{
           "gene":{
             "properties":{

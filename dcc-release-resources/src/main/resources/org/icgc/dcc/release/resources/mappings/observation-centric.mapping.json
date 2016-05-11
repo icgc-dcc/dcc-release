@@ -1,0 +1,60 @@
+{
+  "observation-centric": {
+    "_source": {
+      "compress": "true",
+      "excludes": [
+        "project.primary_site",
+        "donor.donor_sex",
+        "donor.donor_tumour_stage_at_diagnosis",
+        "donor.donor_vital_status",
+        "donor.disease_status_last_followup",
+        "donor.donor_relapse_type",
+        "donor._summary",
+        "ssm.gene.drug",
+        "ssm.gene.end",
+        "ssm.gene.go_term",
+        "ssm.gene.start",
+        "ssm.mutation_type"
+      ]
+    },
+    "_all": {
+      "enabled": "false"
+    },
+    "dynamic_templates": [
+      {
+        "template_1": {
+          "match": "*",
+          "match_mapping_type": "string",
+          "mapping": {
+            "index": "not_analyzed"
+          }
+        }
+      }
+    ],
+    "date_detection": "false",
+    "properties": {
+      "donor": {
+        "type": "nested"
+      },
+      "project": {
+        "type": "nested"
+      },
+      "ssm": {
+        "type": "nested",
+        "properties": {
+          "observation": {
+            "type": "nested"
+          },
+          "gene": {
+            "type": "nested",
+            "properties": {
+              "consequence": {
+                "type": "nested"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

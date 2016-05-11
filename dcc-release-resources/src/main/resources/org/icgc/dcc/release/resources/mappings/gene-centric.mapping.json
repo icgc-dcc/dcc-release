@@ -1,0 +1,59 @@
+{
+  "gene-centric": {
+    "_all": {
+      "enabled": "false"
+    },
+    "_source": {
+      "compress": "true",
+      "includes": [
+          "_gene_id",
+          "_summary._affected_donor_count",
+          "biotype",
+          "chromosome",
+          "description",
+          "donor.ssm.consequence.transcript_affected",
+          "donor.ssm.consequence._gene_id",
+          "external_db_ids",
+          "end",
+          "name",
+          "start",
+          "strand",
+          "symbol",
+          "transcripts"
+      ]
+    },
+    "date_detection": "false",
+    "dynamic_templates": [
+      {
+        "template_1": {
+          "mapping": {
+            "index": "not_analyzed"
+          },
+          "match": "*",
+          "match_mapping_type": "string"
+        }
+      }
+    ],
+    "properties": {
+      "donor": {
+        "type": "nested",
+        "properties": {
+          "ssm": {
+            "type": "nested",
+            "properties": {
+              "consequence": {
+                "type": "nested"
+              },
+              "observation": {
+                "type": "nested"
+              }
+            }
+          }
+        }
+      },
+      "project": {
+        "type": "nested"
+      }
+    }
+  }
+}

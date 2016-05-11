@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "https://dcc.icgc.org/gene-set-text",
+  "type": "object",
+  "properties": {
+    "altIds": {
+      "id": "https://dcc.icgc.org/gene-set-text/altIds",
+      "type": "array",
+      "items": {
+        "id": "https://dcc.icgc.org/gene-set-text/altIds/0",
+        "type": "string"
+      },
+      "additionalItems": false
+    },
+    "id": {
+      "id": "https://dcc.icgc.org/gene-set-text/id",
+      "type": "string"
+    },
+    "name": {
+      "id": "https://dcc.icgc.org/gene-set-text/name",
+      "type": "string"
+    },
+    "source": {
+      "id": "https://dcc.icgc.org/gene-set-text/source",
+      "type": "string"
+    },
+    "type": {
+      "id": "https://dcc.icgc.org/gene-set-text/type",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}
