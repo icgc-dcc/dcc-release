@@ -100,9 +100,15 @@ public class JoinJob extends GenericJob {
   private static final String VALID_TASKS = Joiners.COMMA.join(ANALYSIS_FILE_TYPES);
 
   /**
-   * A coma-separated list of join tasks(file types) to execute.
+   * A comma-separated list of join tasks(file types) to execute.
    */
   private static final String EXECUTE_TASKS_PROPERTY = "joinjob.tasks";
+
+  /**
+   * If 'big' tasks should be executed sequentially project-by-project. The property is useful for execution on small
+   * clusters that can't process the whole ICGC dataset.
+   */
+  private static final String SEQUENTIAL_PROPERTY = "joinjob.sequential";
 
   /**
    * Helps to define what dependencies the task requires.
@@ -172,10 +178,20 @@ public class JoinJob extends GenericJob {
     for (val task : tasks) {
       Loggers.logWithHeader("[{}/{}] Joining '{}'", currentTaskId, totalTasks, task.getName());
       watches.reset().start();
-      jobContext.execute(task);
+      if (isBigTask(task)) {
+        jobContext.executeSequentially(task);
+      } else {
+        jobContext.execute(task);
+      }
       Loggers.logWithHeader("[{}/{}] Finished executing '{}' in {}", currentTaskId++, totalTasks, task.getName(),
           watches);
     }
+  }
+
+  private static boolean isBigTask(Task task) {
+    val sequential = Boolean.valueOf(getProperty(SEQUENTIAL_PROPERTY, "false"));
+
+    return sequential && (task instanceof ObservationJoinTask || task instanceof SgvJoinTask);
   }
 
   private List<Task> createTasks(JobContext jobContext, List<FileType> executeFileTypes,

@@ -15,52 +15,16 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.export.task;
+package org.icgc.dcc.release.core.util;
 
-import static java.lang.String.format;
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
-import lombok.NonNull;
+public class ReleaseException extends RuntimeException {
 
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.sql.DataFrame;
-import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.SaveMode;
-import org.apache.spark.sql.types.StructType;
-import org.icgc.dcc.release.core.task.Task;
-import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.job.export.model.ExportType;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class ExportProjectTask extends GenericExportTask {
-
-  public ExportProjectTask(@NonNull String exportDirPath, @NonNull ExportType exportType,
-      @NonNull StructType exportTypeSchema, @NonNull SQLContext sqlContext) {
-    super(exportDirPath, exportType, exportTypeSchema, sqlContext);
+  public ReleaseException(String message) {
+    super(message);
   }
 
-  @Override
-  public String getName() {
-    return Task.getName(super.getName(), exportType.getId());
-  }
-
-  @Override
-  protected JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
-    return readInput(taskContext, exportType.getInputFileType());
-  }
-
-  @Override
-  protected void writeOutput(TaskContext taskContext, DataFrame output) {
-    output
-        .write()
-        .mode(SaveMode.Append)
-        .partitionBy(DONOR_ID)
-        .parquet(getOutPath(taskContext));
-  }
-
-  @Override
-  protected String resolveStatsFileName(TaskContext taskContext) {
-    return format("%s_%s.txt.gz", exportType.getId(), taskContext.getProjectName().get());
+  public ReleaseException(String message, Throwable throwable) {
+    super(message, throwable);
   }
 
 }

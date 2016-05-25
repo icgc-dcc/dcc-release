@@ -72,7 +72,9 @@ public class ExportJob extends GenericJob {
 
   @Override
   public void execute(@NonNull JobContext jobContext) {
-    clean(jobContext);
+    if (exportProperties.isClean()) {
+      clean(jobContext);
+    }
     export(jobContext);
   }
 

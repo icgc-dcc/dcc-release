@@ -50,7 +50,7 @@ public class SchemaGenerator {
 
   public StructType createDataType(ExportType exportType) {
     val fileSchemaDef = getFileSchemaDefinitions(exportType);
-    val dataTypes = convertToDataType(fileSchemaDef);
+    val dataTypes = convertToStringDataType(fileSchemaDef);
     val fieldNames = getSortedFieldNames(exportType, fileSchemaDef);
 
     val structFields = fieldNames.stream()
@@ -75,6 +75,14 @@ public class SchemaGenerator {
         .build();
   }
 
+  private static Map<String, DataType> convertToStringDataType(Map<String, String> schemaDef) {
+    return schemaDef.entrySet().stream()
+        .collect(toImmutableMap(e -> e.getKey(), e -> DataTypes.StringType));
+  }
+
+  // Currently the only usage of the export type is static and dynamic downloads. During preparation of the download
+  // files the values are converted to strings, so there's no need to store them in any other type.
+  @SuppressWarnings("unused")
   private static Map<String, DataType> convertToDataType(Map<String, String> schemaDef) {
     return schemaDef.entrySet().stream()
         .collect(toImmutableMap(e -> e.getKey(), e -> parseDataType(e.getValue())));

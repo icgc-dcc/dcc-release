@@ -57,7 +57,7 @@ public enum ExportType implements Identifiable {
   MIRNA_SEQ(FileType.MIRNA_SEQ),
   PEXP(FileType.PEXP),
   SGV_CONSEQUENCE,
-  SGV(FileType.SGV, of("consequence", SGV_CONSEQUENCE), true, 20, 3),
+  SGV(FileType.SGV, of("consequence", SGV_CONSEQUENCE), true, 20, 4),
   SSM_CONSEQUENCE,
   SSM_OBSERVATION,
   SSM(FileType.SSM, of("consequence", SSM_CONSEQUENCE, "observation", SSM_OBSERVATION)),

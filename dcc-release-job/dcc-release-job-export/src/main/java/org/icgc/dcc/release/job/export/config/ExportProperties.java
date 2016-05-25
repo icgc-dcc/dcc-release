@@ -34,5 +34,6 @@ public class ExportProperties implements Serializable {
   String exportDir = "export";
   String compressionCodec = "snappy";
   List<String> exportTypes = Lists.newArrayList();
+  boolean clean = true;
 
 }

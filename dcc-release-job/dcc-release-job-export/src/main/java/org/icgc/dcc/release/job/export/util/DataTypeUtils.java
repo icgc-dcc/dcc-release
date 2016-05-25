@@ -77,7 +77,9 @@ public final class DataTypeUtils {
   }
 
   private static void reportWarn(String fieldName, Object actualType, String expectedType) {
-    log.warn("Field '{}' has incorrect value type '{}'. Expected: '{}'.", fieldName,
+    // TODO: Currently it generates a lot of data. Switch to WARNING level once schemas are generated from the
+    // dictionary
+    log.debug("Field '{}' has incorrect value type '{}'. Expected: '{}'.", fieldName,
         actualType.getClass().getSimpleName(), expectedType);
   }
 

@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.job.export.function;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.lang.String.format;
 import static org.icgc.dcc.release.job.export.util.DataTypeUtils.checkDataType;
 import static org.icgc.dcc.release.job.export.util.DataTypeUtils.convertValue;
 
@@ -37,6 +38,7 @@ import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.types.ArrayType;
 import org.apache.spark.sql.types.StructType;
 import org.icgc.dcc.common.json.Jackson;
+import org.icgc.dcc.release.core.util.ReleaseException;
 import org.icgc.dcc.release.job.export.model.ExportType;
 import org.icgc.dcc.release.job.export.stats.StatsCalculator;
 
@@ -95,8 +97,9 @@ public final class CreateRow implements Function<ObjectNode, Row> {
         try {
           value = convertValue(value, dataType);
         } catch (NumberFormatException e) {
-          log.error("Failed to convert field {} to {}.", fieldName, dataType);
-          throw e;
+          val message = format("Failed to convert field %s to %s.", fieldName, dataType);
+          log.error(message);
+          throw new ReleaseException(message, e);
         }
       }
 

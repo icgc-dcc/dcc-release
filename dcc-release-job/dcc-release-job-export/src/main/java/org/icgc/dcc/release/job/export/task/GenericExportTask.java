@@ -154,7 +154,11 @@ public abstract class GenericExportTask extends GenericTask {
   private Path resolveStatsPath(TaskContext taskContext) {
     val statsDirPath = new Path(resolveExportDirPath(taskContext).getAbsolutePath(), STATS_DIR_NAME);
 
-    return new Path(statsDirPath, exportType.getId() + ".txt.gz");
+    return new Path(statsDirPath, resolveStatsFileName(taskContext));
+  }
+
+  protected String resolveStatsFileName(TaskContext taskContext) {
+    return exportType.getId() + ".txt.gz";
   }
 
   protected Accumulator<Table<String, ExportType, Long>> createStatsAccumulator(TaskContext taskContext) {
