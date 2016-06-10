@@ -100,7 +100,7 @@ public class AnnotateJobTest extends AbstractJobTest {
     result.setMaxFileSizeMb(512);
     result.setReferenceGenomeVersion("GRCh37.75.v1");
     result.setResourceDir(new File("/tmp/dcc-release"));
-    result.setResourceUrl("https://seqwaremaven.oicr.on.ca/artifactory/simple/dcc-dependencies/org/icgc/dcc");
+    result.setResourceUrl("https://artifacts.oicr.on.ca/artifactory/simple/dcc-dependencies/org/icgc/dcc");
     result.setVersion("3.6c");
 
     return result;

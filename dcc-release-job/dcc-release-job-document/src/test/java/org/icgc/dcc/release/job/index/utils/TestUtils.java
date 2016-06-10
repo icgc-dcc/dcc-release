@@ -33,7 +33,7 @@ public final class TestUtils {
     val properties = new SnpEffProperties();
     properties.setReferenceGenomeVersion("GRCh37.75.v1");
     properties.setResourceDir(new File("/tmp/dcc-release"));
-    properties.setResourceUrl("https://seqwaremaven.oicr.on.ca/artifactory/simple/dcc-dependencies/org/icgc/dcc");
+    properties.setResourceUrl("https://artifacts.oicr.on.ca/artifactory/simple/dcc-dependencies/org/icgc/dcc");
 
     return properties;
   }

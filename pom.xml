@@ -26,7 +26,7 @@
   <repositories>
     <repository>
       <id>dcc-releases</id>
-      <url>http://seqwaremaven.oicr.on.ca/artifactory/dcc-release</url>
+      <url>https://artifacts.oicr.on.ca/artifactory/dcc-release</url>
     </repository>
 
     <!-- Spring -->
