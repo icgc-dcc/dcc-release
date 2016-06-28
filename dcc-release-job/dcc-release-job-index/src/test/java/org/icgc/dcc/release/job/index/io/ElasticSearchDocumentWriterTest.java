@@ -28,7 +28,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.transport.ReceiveTimeoutTransportException;
-import org.icgc.dcc.common.json.Jackson;
+import org.icgc.dcc.common.core.json.Jackson;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.document.DocumentWriter;

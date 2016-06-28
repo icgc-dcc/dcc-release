@@ -41,17 +41,19 @@ import com.google.common.collect.Sets;
 
 public class SgvJoinTask extends SecondaryJoinTask {
 
+  public static final FileType PRIMARY_FILE_TYPE = FileType.SGV_P_MASKED;
+
   public SgvJoinTask(
       Broadcast<Map<String, Map<String, DonorSample>>> donorSamplesbyProject,
       Broadcast<Map<String, Map<String, String>>> sampleSurrogateSampleIdsByProject) {
-    super(donorSamplesbyProject, sampleSurrogateSampleIdsByProject, FileType.SGV_P_MASKED);
+    super(donorSamplesbyProject, sampleSurrogateSampleIdsByProject, PRIMARY_FILE_TYPE);
   }
 
   @Override
   public void execute(TaskContext taskContext) {
     val primaryMeta = joinPrimaryMeta(taskContext);
 
-    val keyFunction = new KeyFields(getSecondaryJoinKeys(primaryFileType));
+    val keyFunction = new KeyFields(getSecondaryJoinKeys(PRIMARY_FILE_TYPE));
     val primaryPairs = primaryMeta.mapToPair(keyFunction);
     val primaryPartition = getPartitionsCount(primaryPairs);
 
@@ -68,11 +70,11 @@ public class SgvJoinTask extends SecondaryJoinTask {
         .map(new CreateSgvOccurrence())
         .map(addSurrogateMatchingId(sampleSurrogageSampleIds));
 
-    writeOutput(taskContext, output, resolveOutputFileType(primaryFileType));
+    writeOutput(taskContext, output, resolveOutputFileType(PRIMARY_FILE_TYPE));
   }
 
   private JavaRDD<SgvConsequence> readConsequeces(TaskContext taskContext) {
-    val secondaryFileType = resolveSecondaryFileType(primaryFileType);
+    val secondaryFileType = resolveSecondaryFileType(PRIMARY_FILE_TYPE);
     val jobConfig = createJobConf(taskContext);
 
     return readInput(taskContext, jobConfig, secondaryFileType, SgvConsequence.class);

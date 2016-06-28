@@ -17,16 +17,19 @@
  */
 package org.icgc.dcc.release.job.export.core;
 
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static java.util.Collections.singleton;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableMap;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.checkExistence;
 import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.mkdirs;
 import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.rmr;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -38,17 +41,30 @@ import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.types.StructType;
+import org.icgc.dcc.common.core.model.DownloadDataType;
+import org.icgc.dcc.common.core.model.Marking;
+import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
 import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.job.export.config.ExportProperties;
+import org.icgc.dcc.release.job.export.function.gzip.ClinicalRecordConverter;
+import org.icgc.dcc.release.job.export.function.gzip.DefaultRecordConverter;
+import org.icgc.dcc.release.job.export.function.gzip.RecordConverter;
+import org.icgc.dcc.release.job.export.function.gzip.SecondaryRecordConverter;
+import org.icgc.dcc.release.job.export.function.gzip.SsmRecordConverter;
+import org.icgc.dcc.release.job.export.io.GzipRowWriter;
+import org.icgc.dcc.release.job.export.io.RowWriter;
 import org.icgc.dcc.release.job.export.model.ExportType;
 import org.icgc.dcc.release.job.export.task.ExportProjectTask;
 import org.icgc.dcc.release.job.export.task.ExportTask;
+import org.icgc.dcc.release.job.export.task.WriteHeadersTask;
 import org.icgc.dcc.release.job.export.util.SchemaGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.google.common.collect.ImmutableSet;
 
 @Slf4j
 @Component
@@ -75,6 +91,7 @@ public class ExportJob extends GenericJob {
     if (exportProperties.isClean()) {
       clean(jobContext);
     }
+
     export(jobContext);
   }
 
@@ -91,10 +108,93 @@ public class ExportJob extends GenericJob {
   }
 
   private void export(JobContext jobContext) {
-    val generator = new SchemaGenerator();
-    val dataTypes = initDataTypes(generator);
+    val tasks = createTasks();
+    if (exportProperties.isSequential()) {
+      executeTasksSequentially(jobContext, tasks);
+    } else {
+      executeTasksParallel(jobContext, tasks);
+    }
 
-    for (val task : createTasks(dataTypes)) {
+    // Write header files
+    val task = new WriteHeadersTask(exportProperties.getExportDir());
+    jobContext.execute(task);
+  }
+
+  private Iterable<Task> createTasks() {
+    val runExportTypes = exportProperties.getExportTypes();
+
+    return stream(DownloadDataType.values())
+        .filter(filterExportDataTypes(runExportTypes))
+        .map(createTask())
+        .collect(toImmutableSet());
+  }
+
+  private Function<DownloadDataType, ? extends Task> createTask() {
+    val sqlContext = exportProperties.isExportParquet() ?
+        Optional.of(createSqlContext()) :
+        Optional.<SQLContext> empty();
+
+    return dataType -> {
+      return sqlContext.isPresent() ?
+          createTaskWithParquet(dataType, sqlContext.get()) :
+          createGzipTask(dataType);
+    };
+  }
+
+  private Task createGzipTask(DownloadDataType dataType) {
+    log.debug("Creating task for data type: {}", dataType);
+
+    return new ExportTask(resolveFileType(dataType), createOutputWriter(dataType));
+  }
+
+  private Iterable<RowWriter> createOutputWriter(DownloadDataType dataType) {
+    return singleton(new GzipRowWriter(
+        exportProperties.getExportDir(),
+        resolveRecordConverter(dataType, exportProperties.getMaxPartitions())));
+  }
+
+  private Path getOutputDir(JobContext jobContext) {
+    return new Path(new Path(jobContext.getWorkingDir()), exportProperties.getExportDir());
+  }
+
+  private SQLContext createSqlContext() {
+    val sqlContext = new SQLContext(sparkContext);
+    sqlContext.setConf("spark.sql.parquet.compression.codec", exportProperties.getSqlCompressionCodec());
+
+    return sqlContext;
+  }
+
+  private static RecordConverter resolveRecordConverter(DownloadDataType dataType, int maxPartitions) {
+    if (dataType == DownloadDataType.DONOR) {
+      return new ClinicalRecordConverter();
+    }
+
+    if (dataType == DownloadDataType.SSM_OPEN) {
+      return new SsmRecordConverter(dataType, maxPartitions, ImmutableSet.of(Marking.OPEN, Marking.MASKED));
+    }
+
+    if (dataType == DownloadDataType.SSM_CONTROLLED) {
+      return new SsmRecordConverter(dataType, maxPartitions, ImmutableSet.of(Marking.OPEN, Marking.CONTROLLED));
+    }
+
+    if (dataType.isSecondaryDataType()) {
+      return new SecondaryRecordConverter(dataType, maxPartitions);
+    }
+
+    return new DefaultRecordConverter(dataType, maxPartitions);
+  }
+
+  private static FileType resolveFileType(DownloadDataType dataType) {
+    switch (dataType) {
+    case DONOR:
+      return FileType.CLINICAL;
+    default:
+      return FileType.getFileType(dataType.getCanonicalName());
+    }
+  }
+
+  private static void executeTasksParallel(JobContext jobContext, Iterable<Task> tasks) {
+    for (val task : tasks) {
       if (task instanceof ExportProjectTask) {
         jobContext.executeSequentially(task);
       } else {
@@ -103,35 +203,19 @@ public class ExportJob extends GenericJob {
     }
   }
 
-  private List<Task> createTasks(Map<ExportType, StructType> dataTypes) {
-    val sqlContext = createSqlContext();
-    val runExportTypes = exportProperties.getExportTypes();
+  private static Task createTaskWithParquet(DownloadDataType dataType, SQLContext sqlContext) {
+    val generator = new SchemaGenerator();
+    @SuppressWarnings("unused")
+    val dataTypes = initDataTypes(generator);
+    // The tasks just need to be properly created.
 
-    return dataTypes.entrySet().stream()
-        .filter(dt -> {
-          if (runExportTypes.isEmpty()) {
-            return true;
-          } else {
-            return runExportTypes.contains(dt.getKey().getId());
-          }
-        })
-        .map(createTask(sqlContext))
-        .collect(toImmutableList());
+    throw new UnsupportedOperationException();
   }
 
-  private Function<Entry<ExportType, StructType>, ? extends Task> createTask(SQLContext sqlContext) {
-    return e -> {
-      ExportType type = e.getKey();
-      if (type.isSplitByProject()) {
-        return new ExportProjectTask(exportProperties.getExportDir(), type, e.getValue(), sqlContext);
-      } else {
-        return new ExportTask(exportProperties.getExportDir(), type, e.getValue(), sqlContext);
-      }
-    };
-  }
-
-  private Path getOutputDir(JobContext jobContext) {
-    return new Path(new Path(jobContext.getWorkingDir()), exportProperties.getExportDir());
+  private static void executeTasksSequentially(JobContext jobContext, Iterable<Task> tasks) {
+    for (val task : tasks) {
+      jobContext.executeSequentially(task);
+    }
   }
 
   private static Map<ExportType, StructType> initDataTypes(SchemaGenerator generator) {
@@ -139,11 +223,19 @@ public class ExportJob extends GenericJob {
         .collect(toImmutableMap(et -> et, et -> generator.createDataType(et)));
   }
 
-  private SQLContext createSqlContext() {
-    val sqlContext = new SQLContext(sparkContext);
-    sqlContext.setConf("spark.sql.parquet.compression.codec", exportProperties.getCompressionCodec());
+  private static Predicate<DownloadDataType> filterExportDataTypes(List<String> runExportTypes) {
+    return dt -> {
+      // Don't create tasks for DONOR_EXPOSURE etc. as all the DONOR sub-types will be exported in the export DONOR job
+      if (dt.isClinicalSubtype()) {
+        return false;
+      }
 
-    return sqlContext;
+      if (runExportTypes.isEmpty()) {
+        return true;
+      }
+
+      return runExportTypes.contains(dt.getCanonicalName());
+    };
   }
 
 }

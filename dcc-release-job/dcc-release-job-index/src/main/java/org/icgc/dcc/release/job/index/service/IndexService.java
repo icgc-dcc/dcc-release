@@ -30,9 +30,9 @@ import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static lombok.AccessLevel.PRIVATE;
 import static org.elasticsearch.client.Requests.deleteMappingRequest;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
-import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
+import static org.icgc.dcc.common.core.dcc.Versions.getScmInfo;
+import static org.icgc.dcc.common.core.util.Formats.formatBytes;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.release.core.util.JacksonFactory.MAPPER;
 

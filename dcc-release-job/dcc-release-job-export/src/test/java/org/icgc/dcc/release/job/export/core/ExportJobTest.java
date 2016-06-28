@@ -18,14 +18,18 @@
 package org.icgc.dcc.release.job.export.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.common.core.util.Joiners.PATH;
+import static org.icgc.dcc.release.job.export.io.GzipRowWriter.GZIP_FILES_DIR;
 
 import java.io.File;
 
 import lombok.val;
 
+import org.icgc.dcc.common.test.file.FileTests;
 import org.icgc.dcc.release.job.export.config.ExportProperties;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -39,17 +43,21 @@ public class ExportJobTest extends AbstractJobTest {
    * Class under test.
    */
   ExportJob job;
+  ExportProperties exportProperties;
 
   @Override
   @Before
   public void setUp() {
     super.setUp();
-    val exportProperties = new ExportProperties().setCompressionCodec("gzip");
+    exportProperties = new ExportProperties()
+        .setSqlCompressionCodec("gzip");
     this.job = new ExportJob(exportProperties, fileSystem, sparkContext);
   }
 
   @Test
-  public void testExecute() {
+  @Ignore("Finish ExportJob#createTaskWithParquet() to run this test")
+  public void testExecute_parquet() {
+    exportProperties.setExportParquet(true);
     given(new File(INPUT_TEST_FIXTURES_DIR));
 
     val jobContext = createJobContext(job.getType(), ImmutableList.of(PROJECT1, PROJECT2));
@@ -63,6 +71,18 @@ public class ExportJobTest extends AbstractJobTest {
 
     assertThat(input.count()).isEqualTo(4L);
     assertThat(input.groupBy("_donor_id").count().count()).isEqualTo(4L);
+  }
+
+  @Test
+  public void testExecute_gzip() {
+    given(new File(INPUT_TEST_FIXTURES_DIR));
+
+    val jobContext = createJobContext(job.getType(), ImmutableList.of(PROJECT1, PROJECT2));
+    job.execute(jobContext);
+
+    val expectedDir = new File(OUTPUT_TEST_FIXTURES_DIR, GZIP_FILES_DIR);
+    val actualDir = new File(PATH.join(workingDir.getAbsolutePath(), "export", GZIP_FILES_DIR));
+    FileTests.compareDirectories(expectedDir, actualDir);
   }
 
 }

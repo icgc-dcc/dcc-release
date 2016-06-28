@@ -18,8 +18,8 @@
 package org.icgc.dcc.release.job.stage.util;
 
 import static com.google.common.base.Stopwatch.createStarted;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatPercent;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
+import static org.icgc.dcc.common.core.util.Formats.formatPercent;
 
 import java.util.Iterator;
 import java.util.List;

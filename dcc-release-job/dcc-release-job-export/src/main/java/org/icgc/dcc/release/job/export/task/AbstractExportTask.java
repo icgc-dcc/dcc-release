@@ -15,59 +15,63 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.export.stats;
+package org.icgc.dcc.release.job.export.task;
 
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
-
-import java.util.Map;
-
+import static com.google.common.collect.Iterables.size;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import lombok.NonNull;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-import org.apache.spark.Accumulator;
-import org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames;
-import org.icgc.dcc.release.job.export.model.ExportType;
+import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.task.GenericTask;
+import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.job.export.io.RowWriter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
 
-public class DonorStatsCalculator extends StatsCalculator {
+@Slf4j
+public abstract class AbstractExportTask extends GenericTask {
 
-  public DonorStatsCalculator(Accumulator<Table<String, ExportType, Long>> accumulator) {
-    super(ExportType.DONOR, accumulator);
+  /**
+   * Dependencies.
+   */
+  protected final FileType exportType;
+  private final Iterable<RowWriter> outputWriters;
+
+  protected AbstractExportTask(
+      @NonNull FileType exportType,
+      @NonNull Iterable<RowWriter> outputWriters) {
+    this.exportType = exportType;
+    this.outputWriters = outputWriters;
+    log.debug("Created Export task for file type '{}'", exportType);
   }
 
   @Override
-  public void calculate(@NonNull ObjectNode row) {
-    Table<String, ExportType, Long> stats = HashBasedTable.create();
-    val donorId = getDonorId(row);
-    val donorStats = stats.row(donorId);
-    increment(donorStats, ExportType.DONOR, Long.valueOf(1L));
+  public void execute(TaskContext taskContext) {
+    log.info("Executing export task for '{}'...", exportType.getId());
+    // ReadInput
+    val input = readInput(taskContext);
 
-    incrementTypeStats(row, donorStats, ExportType.DONOR_THERAPY, JoinFieldNames.THERAPY);
-    incrementTypeStats(row, donorStats, ExportType.DONOR_FAMILY, JoinFieldNames.FAMILY);
-    incrementTypeStats(row, donorStats, ExportType.DONOR_EXPOSURE, JoinFieldNames.EXPOSURE);
-    incrementTypeStats(row, donorStats, ExportType.SPECIMEN, DONOR_SPECIMEN);
-
-    incrementSample(row, donorStats);
-
-    accumulator.add(stats);
+    // Save
+    writeOutput(taskContext, input);
   }
 
-  private void incrementSample(ObjectNode row, Map<ExportType, Long> donorStats) {
-    if (row.has(DONOR_SPECIMEN) == false) {
-      return;
+  protected abstract JavaRDD<ObjectNode> readInput(TaskContext taskContext);
+
+  private void writeOutput(TaskContext taskContext, JavaRDD<ObjectNode> rows) {
+    val cache = size(outputWriters) > 1;
+    if (cache) {
+      rows.cache();
     }
 
-    long totalSamples = 0L;
-    for (val specimen : row.get(DONOR_SPECIMEN)) {
-      val samples = specimen.get(DONOR_SAMPLE);
-      totalSamples += samples.size();
-    }
+    stream(outputWriters)
+        .forEach(writer -> writer.write(taskContext, rows));
 
-    increment(donorStats, ExportType.SAMPLE, totalSamples);
+    if (cache) {
+      rows.unpersist();
+    }
   }
 
 }

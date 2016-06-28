@@ -17,11 +17,11 @@
  */
 package org.icgc.dcc.release.test.function;
 
+import static org.icgc.dcc.common.core.json.Jackson.asArrayNode;
+import static org.icgc.dcc.common.core.json.Jackson.asObjectNode;
 import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_LIBRARY_STRATEGY;
 import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_REPOSITORY;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_RAW_DATA_ACCESSION;
-import static org.icgc.dcc.common.json.Jackson.asArrayNode;
-import static org.icgc.dcc.common.json.Jackson.asObjectNode;
 
 import java.util.Collections;
 

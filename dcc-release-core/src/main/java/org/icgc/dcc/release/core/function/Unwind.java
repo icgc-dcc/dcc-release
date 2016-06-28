@@ -22,9 +22,9 @@ import static java.util.Collections.disjoint;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.json.Jackson.asArrayNode;
+import static org.icgc.dcc.common.core.json.Jackson.asObjectNode;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.common.json.Jackson.asArrayNode;
-import static org.icgc.dcc.common.json.Jackson.asObjectNode;
 import static org.icgc.dcc.release.core.util.Collections.isLast;
 import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 import static org.icgc.dcc.release.core.util.ObjectNodes.isEmptyArray;
@@ -150,9 +150,8 @@ public class Unwind implements FlatMapFunction<ObjectNode, ObjectNode> {
 
   private static void checkDuplicateFields(ObjectNode row, ObjectNode element) {
     checkArgument(!hasDuplicateFields(row, element), "Failed to unwind element[%s]. "
-        + "Parent object contains duplicate fields. Parent object fields: %s",
-        joinFields(element),
-        joinFields(row));
+        + "Parent object contains duplicate fields. Parent object fields: %s\nRow: %s",
+        joinFields(element), joinFields(row), row);
   }
 
   private static String resolveTopLevelFieldName(String unwindPath) {

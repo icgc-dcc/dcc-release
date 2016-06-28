@@ -21,8 +21,6 @@ import static com.google.common.collect.ImmutableList.copyOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
-import static org.icgc.dcc.release.test.util.TestJsonNodes.getElements;
 
 import java.io.File;
 import java.util.List;
@@ -76,7 +74,7 @@ public class JoinJobTest extends AbstractJobTest {
     validatePrimaryMeta(produces(PROJECT_NAME, FileType.METH_ARRAY), 21);
 
     verifyResult(PROJECT_NAME, FileType.CNSM);
-    validateStsm(produces(PROJECT_NAME, FileType.STSM), 46);
+    verifyResult(PROJECT_NAME, FileType.STSM);
 
     verifyResult(PROJECT_NAME, FileType.SSM);
     verifyResult(PROJECT_NAME, FileType.SGV);
@@ -84,12 +82,6 @@ public class JoinJobTest extends AbstractJobTest {
 
   private void validateOccurrences() {
     verifyResult(PROJECT_NAME, FileType.OBSERVATION);
-  }
-
-  private static void validateStsm(List<ObjectNode> produces, int fieldsCount) {
-    validatePrimaryMeta(produces, fieldsCount);
-    val occurrence = produces.get(0);
-    assertThat(getElements(occurrence.get(CONSEQUENCE_ARRAY_NAME))).isEmpty();
   }
 
   private static void validatePrimaryMeta(List<ObjectNode> results, int expectedFieldsCount) {

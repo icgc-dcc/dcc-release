@@ -20,11 +20,16 @@ package org.icgc.dcc.release.core.util;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
+
+import java.util.Collection;
+
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.val;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 // TODO: This class should be removed and replaced with ProjectFields
@@ -37,7 +42,11 @@ public final class Keys {
   private static final Joiner KEY_JOINER = Joiner.on(KEY_SEPARATOR);
 
   public static String getKey(ObjectNode row, String... fieldNames) {
-    val values = Lists.<String> newArrayListWithCapacity(fieldNames.length);
+    return getKey(row, ImmutableList.copyOf(fieldNames));
+  }
+
+  public static String getKey(@NonNull ObjectNode row, @NonNull Collection<String> fieldNames) {
+    val values = Lists.<String> newArrayListWithCapacity(fieldNames.size());
     for (val fieldName : fieldNames) {
       val value = textValue(row, fieldName);
       // Null keys might come for the 'surgery' and 'biomarker' datatype.

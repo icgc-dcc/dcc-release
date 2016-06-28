@@ -36,6 +36,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 
 import com.google.common.collect.ImmutableMap;
@@ -61,6 +62,10 @@ public final class Configurations {
   }
 
   public static JobConf createJobConf(@NonNull JavaRDD<?> rdd) {
+    return new JobConf(rdd.context().hadoopConfiguration());
+  }
+
+  public static JobConf createJobConf(@NonNull JavaPairRDD<?, ?> rdd) {
     return new JobConf(rdd.context().hadoopConfiguration());
   }
 

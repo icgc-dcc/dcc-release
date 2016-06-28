@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.release.core.util;
 
-import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
+import static org.icgc.dcc.common.core.util.Formats.formatBytes;
 
 import java.util.List;
 

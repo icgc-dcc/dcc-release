@@ -24,7 +24,7 @@ import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static java.util.Collections.emptySet;
 import static java.util.concurrent.Executors.newFixedThreadPool;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -224,6 +224,7 @@ public class SpecimenImageResolver {
   }
 
   private static Document readDocument(URL url) throws JDOMException, IOException {
+    log.debug("Reading document '{}'", url);
     val connection = url.openConnection();
     connection.setConnectTimeout(URL_TIMEOUT_VALUE);
     connection.setReadTimeout(URL_TIMEOUT_VALUE);

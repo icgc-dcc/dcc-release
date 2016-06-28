@@ -19,7 +19,7 @@ package org.icgc.dcc.release.job.fathmm.core;
 
 import static com.google.common.base.Stopwatch.createStarted;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 
 import java.util.List;

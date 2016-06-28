@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.release.core.task;
 
-import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
+import static org.icgc.dcc.common.core.util.Formats.formatBytes;
 import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.checkExistence;
 import static org.icgc.dcc.release.core.util.JavaRDDs.exists;
 

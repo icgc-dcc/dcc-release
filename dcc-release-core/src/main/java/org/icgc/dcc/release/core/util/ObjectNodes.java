@@ -20,8 +20,8 @@ package org.icgc.dcc.release.core.util;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.json.Jackson.asObjectNode;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.common.json.Jackson.asObjectNode;
 
 import java.util.Set;
 import java.util.stream.Collectors;

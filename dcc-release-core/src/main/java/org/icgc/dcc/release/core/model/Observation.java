@@ -17,11 +17,16 @@
  */
 package org.icgc.dcc.release.core.model;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import java.io.Serializable;
 
 import lombok.Data;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 @Data
+@JsonInclude(NON_NULL)
 public class Observation implements Serializable {
 
   protected String _matched_sample_id;

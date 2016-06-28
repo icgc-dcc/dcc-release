@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.release.job.document.function;
 
+import static org.icgc.dcc.common.core.json.Jackson.asArrayNode;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SETS;
-import static org.icgc.dcc.common.json.Jackson.asArrayNode;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneGeneSetId;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneGeneSetType;

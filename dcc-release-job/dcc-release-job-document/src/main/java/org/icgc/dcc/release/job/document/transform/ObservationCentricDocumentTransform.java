@@ -18,12 +18,12 @@
 package org.icgc.dcc.release.job.document.transform;
 
 import static com.google.common.base.Objects.firstNonNull;
+import static org.icgc.dcc.common.core.json.Jackson.asObjectNode;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_GENE;
-import static org.icgc.dcc.common.json.Jackson.asObjectNode;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorProjectId;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequenceGeneId;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequences;

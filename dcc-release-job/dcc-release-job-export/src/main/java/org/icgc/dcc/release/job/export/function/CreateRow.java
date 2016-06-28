@@ -37,10 +37,9 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.types.ArrayType;
 import org.apache.spark.sql.types.StructType;
-import org.icgc.dcc.common.json.Jackson;
+import org.icgc.dcc.common.core.json.Jackson;
 import org.icgc.dcc.release.core.util.ReleaseException;
 import org.icgc.dcc.release.job.export.model.ExportType;
-import org.icgc.dcc.release.job.export.stats.StatsCalculator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -58,12 +57,9 @@ public final class CreateRow implements Function<ObjectNode, Row> {
   private final ExportType exportType;
   @NonNull
   private final StructType exportTypeSchema;
-  @NonNull
-  private final StatsCalculator statsCalculator;
 
   @Override
   public Row call(ObjectNode json) {
-    statsCalculator.calculate(json);
     val map = convert(json);
     Row row = null;
     try {

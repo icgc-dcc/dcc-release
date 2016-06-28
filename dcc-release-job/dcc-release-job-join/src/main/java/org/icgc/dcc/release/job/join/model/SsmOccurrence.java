@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.release.job.join.model;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +28,10 @@ import lombok.EqualsAndHashCode;
 
 import org.icgc.dcc.release.core.model.Observation;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 @Data
+@JsonInclude(NON_NULL)
 public class SsmOccurrence implements Serializable {
 
   private String _donor_id;
@@ -48,6 +53,7 @@ public class SsmOccurrence implements Serializable {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @JsonInclude(NON_NULL)
   public static class Consequence extends SsmSecondaryFeatureType {
 
     private String _gene_id;

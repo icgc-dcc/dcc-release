@@ -18,12 +18,16 @@
 package org.icgc.dcc.release.job.join.task;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.of;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.SURROGATE_MATCHED_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MATCHED_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID;
+import static org.icgc.dcc.release.core.job.FileType.CNSM_P;
+import static org.icgc.dcc.release.core.job.FileType.SGV_P_MASKED;
+import static org.icgc.dcc.release.core.job.FileType.STSM_P;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.MUTATION_ID;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.PLACEMENT;
 import static org.icgc.dcc.release.core.util.FieldNames.JoinFieldNames.SV_ID;
@@ -39,6 +43,7 @@ import lombok.val;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.broadcast.Broadcast;
+import org.icgc.dcc.common.core.json.Jackson;
 import org.icgc.dcc.release.core.function.KeyFields;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.TaskContext;
@@ -48,6 +53,7 @@ import org.icgc.dcc.release.job.join.model.DonorSample;
 
 import scala.Tuple2;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -59,12 +65,7 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
    * Constants.
    */
   private static final String SECONDARY_FILE_TYPE_SUFFIX = "_S";
-  private static final Map<FileType, String[]> SECONDARY_JOIN_FIELDS = ImmutableMap.of(
-      FileType.CNSM_P, new String[] { SUBMISSION_OBSERVATION_ANALYSIS_ID, SUBMISSION_ANALYZED_SAMPLE_ID, MUTATION_ID },
-      FileType.SGV_P_MASKED, new String[] { NORMALIZER_OBSERVATION_ID },
-      FileType.STSM_P, new String[] { SUBMISSION_OBSERVATION_ANALYSIS_ID, SUBMISSION_ANALYZED_SAMPLE_ID, SV_ID,
-          PLACEMENT }
-      );
+  private static final Map<FileType, Collection<String>> SECONDARY_JOIN_FIELDS = defineSecondaryJoinFields();
 
   /**
    * Dependencies.
@@ -122,7 +123,8 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
 
     return occurrencePairs
         .leftOuterJoin(consequences)
-        .map(SecondaryJoinTask::joinConsequences);
+        .map(SecondaryJoinTask::joinConsequences)
+        .map(cleanConsequences(primaryFileType, secondaryFileType));
   }
 
   private static ObjectNode joinConsequences(Tuple2<String, Tuple2<ObjectNode, Optional<Collection<ObjectNode>>>> tuple) {
@@ -136,15 +138,40 @@ public class SecondaryJoinTask extends PrimaryMetaJoinTask {
     return primary;
   }
 
+  private static Function<ObjectNode, ObjectNode> cleanConsequences(FileType primaryFileType, FileType secondaryFileType) {
+    return occurrence -> {
+      for (JsonNode node : occurrence.withArray(CONSEQUENCE_ARRAY_NAME)) {
+        ObjectNode consequence = Jackson.asObjectNode(node);
+        removeJoinFields(primaryFileType, consequence);
+      }
+
+      return occurrence;
+    };
+  }
+
+  private static void removeJoinFields(FileType primaryFileType, ObjectNode consequence) {
+    val joinKeys = getSecondaryJoinKeys(primaryFileType);
+    consequence.remove(joinKeys);
+  }
+
   private JavaRDD<ObjectNode> parseSecondary(FileType secondaryFileType, TaskContext taskContext) {
     return readInput(taskContext, secondaryFileType);
   }
 
-  protected static String[] getSecondaryJoinKeys(FileType fileType) {
-    String[] joinKeys = SECONDARY_JOIN_FIELDS.get(fileType);
-    checkState(joinKeys != null, "Failed to resolve secondary join keys for type %s", fileType.getId());
+  public static Collection<String> getSecondaryJoinKeys(FileType fileType) {
+    val joinKeys = SECONDARY_JOIN_FIELDS.get(fileType);
+    checkState(joinKeys != null && !joinKeys.isEmpty(), "Failed to resolve secondary join keys for type %s",
+        fileType.getId());
 
     return joinKeys;
+  }
+
+  private static Map<FileType, Collection<String>> defineSecondaryJoinFields() {
+    return ImmutableMap.<FileType, Collection<String>> builder()
+        .put(CNSM_P, of(SUBMISSION_OBSERVATION_ANALYSIS_ID, SUBMISSION_ANALYZED_SAMPLE_ID, MUTATION_ID))
+        .put(SGV_P_MASKED, of(NORMALIZER_OBSERVATION_ID))
+        .put(STSM_P, of(SUBMISSION_OBSERVATION_ANALYSIS_ID, SUBMISSION_ANALYZED_SAMPLE_ID, SV_ID, PLACEMENT))
+        .build();
   }
 
 }

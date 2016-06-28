@@ -21,7 +21,7 @@ import static com.google.common.base.Throwables.propagate;
 import static org.elasticsearch.client.Requests.indexRequest;
 import static org.elasticsearch.common.unit.ByteSizeUnit.MB;
 import static org.elasticsearch.common.xcontent.XContentType.SMILE;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 
 import java.io.IOException;
 

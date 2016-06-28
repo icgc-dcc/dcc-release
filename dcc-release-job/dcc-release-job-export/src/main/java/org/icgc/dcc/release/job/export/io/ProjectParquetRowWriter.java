@@ -15,63 +15,33 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.export.stats;
+package org.icgc.dcc.release.job.export.io;
 
-import static com.google.common.base.Objects.firstNonNull;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
-import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
-
-import java.io.Serializable;
-import java.util.Map;
-
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
 
-import org.apache.spark.Accumulator;
+import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.types.StructType;
+import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.job.export.model.ExportType;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
+public class ProjectParquetRowWriter extends ParquetRowWriter {
 
-@RequiredArgsConstructor
-public class StatsCalculator implements Serializable {
-
-  @NonNull
-  protected final ExportType type;
-  @NonNull
-  protected final Accumulator<Table<String, ExportType, Long>> accumulator;
-
-  public void calculate(@NonNull ObjectNode row) {
-    Table<String, ExportType, Long> stats = HashBasedTable.create();
-    val donorId = getDonorId(row);
-    val donorStats = stats.row(donorId);
-    increment(donorStats, type, Long.valueOf(1L));
-
-    accumulator.add(stats);
+  public ProjectParquetRowWriter(String exportDirPath, ExportType exportType,
+      @NonNull StructType exportTypeSchema,
+      @NonNull SQLContext sqlContext) {
+    super(exportDirPath, exportType, exportTypeSchema, sqlContext);
   }
 
-  protected void increment(Map<ExportType, Long> donorStats, ExportType type, long value) {
-    val currentValue = firstNonNull(donorStats.get(type), Long.valueOf(0L));
-    donorStats.put(type, currentValue + value);
-  }
-
-  protected long getFieldCount(ObjectNode row, String fieldName) {
-    return row.has(fieldName) ? row.get(fieldName).size() : 0L;
-  }
-
-  protected void incrementTypeStats(ObjectNode row, Map<ExportType, Long> donorStats, ExportType type, String fieldName) {
-    val fieldCount = getFieldCount(row, fieldName);
-    if (fieldCount > 0L) {
-      increment(donorStats, type, fieldCount);
-    }
-  }
-
-  protected String getDonorId(ObjectNode row) {
-    val donorId = textValue(row, DONOR_ID);
-
-    return donorId;
+  @Override
+  protected void writeDFOutput(TaskContext taskContext, DataFrame output) {
+    output
+        .write()
+        .mode(SaveMode.Append)
+        .partitionBy(DONOR_ID)
+        .parquet(getOutPath(taskContext));
   }
 
 }

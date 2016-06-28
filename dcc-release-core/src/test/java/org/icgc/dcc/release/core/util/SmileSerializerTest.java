@@ -1,7 +1,7 @@
 package org.icgc.dcc.release.core.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.common.json.Jackson.toObjectNode;
+import static org.icgc.dcc.common.core.json.Jackson.toObjectNode;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

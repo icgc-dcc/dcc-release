@@ -18,14 +18,14 @@
 package org.icgc.dcc.release.job.summarize.task;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static org.icgc.dcc.common.core.json.Jackson.asArrayNode;
+import static org.icgc.dcc.common.core.json.Jackson.from;
+import static org.icgc.dcc.common.core.json.Jackson.to;
 import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_DATA_TYPES;
 import static org.icgc.dcc.common.core.model.FieldNames.AVAILABLE_EXPERIMENTAL_ANALYSIS_PERFORMED;
 import static org.icgc.dcc.common.core.model.FieldNames.EXPERIMENTAL_ANALYSIS_PERFORMED_DONOR_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.EXPERIMENTAL_ANALYSIS_PERFORMED_SAMPLE_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.getTestedTypeCountFieldName;
-import static org.icgc.dcc.common.json.Jackson.asArrayNode;
-import static org.icgc.dcc.common.json.Jackson.from;
-import static org.icgc.dcc.common.json.Jackson.to;
 import static org.icgc.dcc.release.core.util.FeatureTypes.getFeatureTypes;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;

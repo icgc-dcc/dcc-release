@@ -17,11 +17,17 @@
  */
 package org.icgc.dcc.release.core.function;
 
+import java.util.Collection;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class KeyFields extends KeyFieldsFunction<ObjectNode> {
 
   public KeyFields(String... fieldNames) {
+    super(o -> o, fieldNames);
+  }
+
+  public KeyFields(Collection<String> fieldNames) {
     super(o -> o, fieldNames);
   }
 

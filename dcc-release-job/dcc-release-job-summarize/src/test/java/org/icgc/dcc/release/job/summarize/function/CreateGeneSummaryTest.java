@@ -2,6 +2,8 @@ package org.icgc.dcc.release.job.summarize.function;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.common.core.json.Jackson.asArrayNode;
+import static org.icgc.dcc.common.core.json.Jackson.asObjectNode;
 import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SGV_TYPE;
 import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.AFFECTED_DONOR_COUNT;
@@ -10,8 +12,6 @@ import static org.icgc.dcc.common.core.model.FieldNames.GENE_DONORS;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_DONOR_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECTS;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_PROJECT_SUMMARY;
-import static org.icgc.dcc.common.json.Jackson.asArrayNode;
-import static org.icgc.dcc.common.json.Jackson.asObjectNode;
 import static org.icgc.dcc.release.core.util.FeatureTypes.createFeatureTypeSummaryValue;
 import static org.icgc.dcc.release.test.util.TestJsonNodes.$;
 import static org.icgc.dcc.release.test.util.TestJsonNodes.getElements;

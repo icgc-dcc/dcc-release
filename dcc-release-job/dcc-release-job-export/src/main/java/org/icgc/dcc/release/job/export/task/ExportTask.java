@@ -17,30 +17,20 @@
  */
 package org.icgc.dcc.release.job.export.task;
 
-import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
 import lombok.NonNull;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.sql.DataFrame;
-import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.types.StructType;
+import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.core.task.TaskType;
-import org.icgc.dcc.release.job.export.model.ExportType;
+import org.icgc.dcc.release.job.export.io.RowWriter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ExportTask extends GenericExportTask {
+public class ExportTask extends AbstractExportTask {
 
-  public ExportTask(@NonNull String exportDirPath, @NonNull ExportType exportType,
-      @NonNull StructType exportTypeSchema, @NonNull SQLContext sqlContext) {
-    super(exportDirPath, exportType, exportTypeSchema, sqlContext);
-  }
-
-  @Override
-  public TaskType getType() {
-    return TaskType.FILE_TYPE;
+  public ExportTask(@NonNull FileType exportType, @NonNull Iterable<RowWriter> outputWriters) {
+    super(exportType, outputWriters);
   }
 
   @Override
@@ -50,15 +40,7 @@ public class ExportTask extends GenericExportTask {
 
   @Override
   protected JavaRDD<ObjectNode> readInput(TaskContext taskContext) {
-    return readUnpartitionedInput(taskContext, exportType.getInputFileType());
-  }
-
-  @Override
-  protected void writeOutput(TaskContext taskContext, DataFrame output) {
-    output
-        .write()
-        .partitionBy(DONOR_ID)
-        .parquet(getOutPath(taskContext));
+    return readInput(taskContext, exportType);
   }
 
 }

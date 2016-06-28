@@ -30,26 +30,18 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.icgc.dcc.release.job.export.model.ExportType;
-import org.icgc.dcc.release.job.export.stats.StatsCalculator;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
 
 import com.clearspring.analytics.util.Lists;
 
 @Slf4j
-@RunWith(MockitoJUnitRunner.class)
 public class CreateRowTest {
-
-  @Mock
-  StatsCalculator statsCalculator;
 
   CreateRow function;
 
   @Test
   public void callTest() {
-    function = new CreateRow(ExportType.SAMPLE, createStructType(), statsCalculator);
+    function = new CreateRow(ExportType.SAMPLE, createStructType());
     val sourceNode = $("{_project_id:'BRCA-UK',_sample_id:'SA000002',available_raw_sequence_data:["
         + "{raw_data_accession:'123',repository:'EGA',library_strategy:'WGS'}]}");
 
@@ -63,7 +55,7 @@ public class CreateRowTest {
 
   @Test
   public void callTest_wrongDataType() {
-    function = new CreateRow(ExportType.SAMPLE, createStructType(), statsCalculator);
+    function = new CreateRow(ExportType.SAMPLE, createStructType());
     val sourceNode = $("{_project_id:1,_sample_id:'SA000002',available_raw_sequence_data:["
         + "{raw_data_accession:'123',repository:'EGA',library_strategy:'WGS'}]}");
 

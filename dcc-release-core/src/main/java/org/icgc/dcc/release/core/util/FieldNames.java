@@ -74,4 +74,11 @@ public class FieldNames {
 
   }
 
+  public static class ExportFieldNames {
+
+    public static final String STUDY_SPECIMEN_INVOLVED_IN = "study_specimen_involved_in";
+    public static final String STUDY_DONOR_INVOLVED_IN = "study_donor_involved_in";
+
+  }
+
 }

@@ -15,47 +15,17 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.export.stats;
+package org.icgc.dcc.release.job.export.function.gzip;
 
-import static com.google.common.base.Objects.firstNonNull;
-import static java.lang.Long.valueOf;
-import lombok.NonNull;
-import lombok.val;
+import java.io.Serializable;
 
-import org.apache.spark.AccumulatorParam;
-import org.icgc.dcc.release.job.export.model.ExportType;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class StatsAccumulator implements AccumulatorParam<Table<String, ExportType, Long>> {
+public interface RecordConverter extends Serializable {
 
-  @Override
-  public Table<String, ExportType, Long> addInPlace(Table<String, ExportType, Long> left,
-      Table<String, ExportType, Long> right) {
-    for (val rightCell : right.cellSet()) {
-      val rowKey = rightCell.getRowKey();
-      val columnKey = rightCell.getColumnKey();
-
-      val currentValue = firstNonNull(left.get(rowKey, columnKey), valueOf(0L));
-      val mergedValue = currentValue + rightCell.getValue();
-      left.put(rowKey, columnKey, mergedValue);
-    }
-
-    return left;
-  }
-
-  @Override
-  public Table<String, ExportType, Long> zero(@NonNull Table<String, ExportType, Long> table) {
-    Table<String, ExportType, Long> zeroAccumulator = HashBasedTable.create();
-
-    return zeroAccumulator;
-  }
-
-  @Override
-  public Table<String, ExportType, Long> addAccumulator(Table<String, ExportType, Long> left,
-      Table<String, ExportType, Long> right) {
-    return addInPlace(left, right);
-  }
+  JavaPairRDD<String, String> convert(JavaRDD<ObjectNode> input);
 
 }

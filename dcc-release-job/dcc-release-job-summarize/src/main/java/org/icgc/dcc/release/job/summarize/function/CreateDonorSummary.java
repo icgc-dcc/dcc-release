@@ -19,6 +19,7 @@ package org.icgc.dcc.release.job.summarize.function;
 
 import static com.google.common.primitives.Ints.tryParse;
 import static java.lang.String.format;
+import static org.icgc.dcc.common.core.json.Jackson.to;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_AGE_AT_DIAGNOSIS;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE_SEQUENCE_DATA;
@@ -32,7 +33,6 @@ import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_REPOSITORY
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SUMMARY_STUDIES;
 import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_LIBRARY_STRATEGY;
 import static org.icgc.dcc.common.core.model.FieldNames.SEQUENCE_DATA_REPOSITORY;
-import static org.icgc.dcc.common.json.Jackson.to;
 import static org.icgc.dcc.release.core.function.Unwind.unwind;
 import static org.icgc.dcc.release.core.util.ObjectNodes.createObject;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;

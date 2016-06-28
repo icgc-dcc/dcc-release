@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.job.join.core;
 
 import static com.google.common.base.Stopwatch.createStarted;
+import static java.lang.Boolean.parseBoolean;
 import static java.lang.System.getProperty;
 import static java.util.Collections.emptyList;
 import static org.icgc.dcc.common.core.util.Splitters.COMMA;
@@ -109,6 +110,7 @@ public class JoinJob extends GenericJob {
    * clusters that can't process the whole ICGC dataset.
    */
   private static final String SEQUENTIAL_PROPERTY = "joinjob.sequential";
+  private static final String CLEAN_PROPERTY = "joinjob.clean";
 
   /**
    * Helps to define what dependencies the task requires.
@@ -145,7 +147,9 @@ public class JoinJob extends GenericJob {
   }
 
   private void clean(JobContext jobContext) {
-    delete(jobContext, getDeleteFileTypes());
+    if (isClean()) {
+      delete(jobContext, getDeleteFileTypes());
+    }
   }
 
   private void join(JobContext jobContext) {
@@ -305,4 +309,14 @@ public class JoinJob extends GenericJob {
     return sparkContext.broadcast(value);
   }
 
+  private static boolean isClean() {
+    val cleanProperty = getProperty(CLEAN_PROPERTY, "true");
+    boolean clean = true;
+    try {
+      clean = parseBoolean(cleanProperty);
+    } catch (Exception e) {
+    }
+
+    return clean;
+  }
 }

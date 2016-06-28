@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.release.job.index.io;
 
-import static org.icgc.dcc.common.core.util.FormatUtils.formatBytes;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.Formats.formatBytes;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

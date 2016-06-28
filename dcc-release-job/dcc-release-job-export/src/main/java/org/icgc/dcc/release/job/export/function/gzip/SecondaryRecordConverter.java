@@ -15,30 +15,25 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.export.util;
+package org.icgc.dcc.release.job.export.function.gzip;
 
-import static lombok.AccessLevel.PRIVATE;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import static org.icgc.dcc.release.core.function.Unwind.unwindToParent;
 
-import org.apache.spark.Accumulator;
-import org.icgc.dcc.release.job.export.model.ExportType;
-import org.icgc.dcc.release.job.export.stats.DonorStatsCalculator;
-import org.icgc.dcc.release.job.export.stats.StatsCalculator;
+import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.common.core.model.DownloadDataType;
+import org.icgc.dcc.common.core.model.FieldNames;
 
-import com.google.common.collect.Table;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@NoArgsConstructor(access = PRIVATE)
-public final class StatsCalculators {
+public class SecondaryRecordConverter extends DefaultRecordConverter {
 
-  public static StatsCalculator getStatsCalculator(@NonNull ExportType type,
-      @NonNull Accumulator<Table<String, ExportType, Long>> accumulator) {
-    switch (type) {
-    case DONOR:
-      return new DonorStatsCalculator(accumulator);
-    default:
-      return new StatsCalculator(type, accumulator);
-    }
+  public SecondaryRecordConverter(DownloadDataType dataType, int maxPartitions) {
+    super(dataType, maxPartitions);
+  }
+
+  @Override
+  protected JavaRDD<ObjectNode> preprocess(JavaRDD<ObjectNode> input) {
+    return input.flatMap(unwindToParent(FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME));
   }
 
 }

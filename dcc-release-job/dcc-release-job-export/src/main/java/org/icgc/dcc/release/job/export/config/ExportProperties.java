@@ -32,8 +32,11 @@ import com.google.common.collect.Lists;
 public class ExportProperties implements Serializable {
 
   String exportDir = "export";
-  String compressionCodec = "snappy";
+  String sqlCompressionCodec = "snappy";
   List<String> exportTypes = Lists.newArrayList();
   boolean clean = true;
+  boolean exportParquet = false;
+  boolean sequential = false;
+  int maxPartitions = 50;
 
 }

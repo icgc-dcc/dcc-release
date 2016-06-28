@@ -19,6 +19,8 @@ package org.icgc.dcc.release.job.join.function;
 
 import static org.icgc.dcc.common.core.model.FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME;
 import static org.icgc.dcc.release.job.join.task.CreateSgvObservation.convertConsequences;
+import static org.icgc.dcc.release.job.join.task.SecondaryJoinTask.getSecondaryJoinKeys;
+import static org.icgc.dcc.release.job.join.task.SgvJoinTask.PRIMARY_FILE_TYPE;
 
 import java.util.Collection;
 
@@ -42,12 +44,23 @@ public final class CreateSgvOccurrence implements
     val row = tuple._2._1;
 
     val consequenceArray = row.withArray(CONSEQUENCE_ARRAY_NAME);
-    val consequences = convertConsequences(tuple._2._2);
+    val consequencesOpt = convertConsequences(tuple._2._2);
 
-    if (consequences.isPresent()) {
-      consequenceArray.addAll(consequences.get());
+    if (consequencesOpt.isPresent()) {
+      val consequences = consequencesOpt.get();
+      usetJoinKeys(consequences);
+
+      consequenceArray.addAll(consequences);
     }
 
     return row;
   }
+
+  private static void usetJoinKeys(Collection<ObjectNode> consequences) {
+    val joinKeys = getSecondaryJoinKeys(PRIMARY_FILE_TYPE);
+    for (val consequence : consequences) {
+      consequence.remove(joinKeys);
+    }
+  }
+
 }

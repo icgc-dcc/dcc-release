@@ -15,37 +15,48 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.export.stats;
+package org.icgc.dcc.release.job.export.io;
 
-import static org.icgc.dcc.release.test.util.TestJsonNodes.$;
+import static com.google.common.base.Preconditions.checkState;
+import static org.icgc.dcc.common.core.util.Joiners.PATH;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-import org.apache.spark.Accumulator;
-import org.icgc.dcc.release.job.export.model.ExportType;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.compress.GzipCodec;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.job.export.function.gzip.RecordConverter;
 
-import com.google.common.collect.Table;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DonorStatsCalculatorTest {
+@RequiredArgsConstructor
+public class GzipRowWriter implements RowWriter {
 
-  @Mock
-  Accumulator<Table<String, ExportType, Long>> accumulator;
-  DonorStatsCalculator statusCalculator;
+  public static final String GZIP_FILES_DIR = "data";
 
-  @Before
-  public void setUp() {
-    statusCalculator = new DonorStatsCalculator(accumulator);
+  @NonNull
+  private final String exportDir;
+  @NonNull
+  private final RecordConverter recordsConverter;
+
+  @Override
+  public void write(TaskContext taskContext, JavaRDD<ObjectNode> output) {
+    val records = recordsConverter.convert(output);
+    write(taskContext, records);
   }
 
-  @Test
-  public void testEmptyDonorCalculate() throws Exception {
-    val json = $("{'_donor_id': 'DO1'}");
-    statusCalculator.calculate(json);
+  private void write(TaskContext taskContext, JavaPairRDD<String, String> output) {
+    val workingDir = taskContext.getJobContext().getWorkingDir();
+    checkState(taskContext.getProjectName().isPresent(), "Failed to resolve project. Incorrect task setup?");
+    val projectId = taskContext.getProjectName().get();
+    val outputPath = PATH.join(workingDir, exportDir, GZIP_FILES_DIR, projectId);
+
+    output.saveAsHadoopFile(outputPath, NullWritable.class, BytesWritable.class,
+        ProjectDonorMultipleGzipOutputFormat.class, GzipCodec.class);
   }
 
 }
