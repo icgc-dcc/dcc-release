@@ -19,12 +19,13 @@ package org.icgc.dcc.release.job.document.model;
 
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.release.job.document.model.CollectionFields.DEFAULT_COLLECTION_FIELDS;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 import org.icgc.dcc.common.core.model.ReleaseCollection;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;
+
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Metadata container for describing which collection fields to include and exclude as inputs to
@@ -75,9 +76,9 @@ public class DocumentFields {
       return drugFields;
     case DIAGRAM_COLLECTION:
       return diagramFields;
+    default:
+      throw new IllegalArgumentException("Unexpected release collection: " + collection);
     }
-
-    throw new IllegalArgumentException("Unexpected release collection: " + collection);
   }
 
   public static Builder documentFields() {
