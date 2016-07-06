@@ -58,6 +58,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
@@ -162,7 +163,7 @@ public class ClinicalRecordConverter implements RecordConverter, PairFlatMapFunc
 
   private static void addDonorStudyInvolvedIn(ObjectNode row, Multimap<String, String> study) {
     if (!study.isEmpty()) {
-      val values = formatStudyValues(study.values());
+      val values = formatStudyValues(ImmutableSet.copyOf(study.values()));
       row.put(STUDY_DONOR_INVOLVED_IN, values);
     }
   }
@@ -170,7 +171,7 @@ public class ClinicalRecordConverter implements RecordConverter, PairFlatMapFunc
   private static void addSpecimenStudyInvolvedIn(ObjectNode row, Multimap<String, String> study) {
     if (!study.isEmpty()) {
       val specimenId = getSpecimenId(row);
-      val specimenStudy = study.get(specimenId);
+      val specimenStudy = ImmutableSet.copyOf(study.get(specimenId));
 
       if (!specimenStudy.isEmpty()) {
         val values = formatStudyValues(specimenStudy);
