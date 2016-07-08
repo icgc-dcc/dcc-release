@@ -35,6 +35,7 @@ import org.icgc.dcc.release.job.index.factory.TransportClientFactory;
 @NoArgsConstructor(access = PRIVATE)
 public final class DocumentWriterFactory {
 
+  private static final Random RANDOM_GENERATOR = new Random();
   private static final int BULK_ACTIONS = -1; // Unlimited
 
   public static DocumentWriter createDocumentWriter(@NonNull String esUri, @NonNull String indexName,
@@ -91,7 +92,7 @@ public final class DocumentWriterFactory {
   }
 
   private static String createWriterId() {
-    val id = new Random().nextInt();
+    val id = RANDOM_GENERATOR.nextInt(Integer.MAX_VALUE);
 
     return String.valueOf(Math.abs(id));
   }

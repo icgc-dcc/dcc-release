@@ -39,8 +39,7 @@ public enum JobType {
   JOIN,
   MASK,
   STAGE,
-  SUMMARIZE,
-  LEGACY_EXPORT;
+  SUMMARIZE;
 
   public static Collection<JobType> getTopologicalSortOrder() {
     val order = ImmutableList.of(
@@ -56,7 +55,6 @@ public enum JobType {
         JobType.SUMMARIZE,
         JobType.DOCUMENT,
         JobType.INDEX,
-        JobType.LEGACY_EXPORT,
         JobType.EXPORT
         );
 

@@ -1,5 +1,4 @@
 /*
-
  * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
@@ -25,6 +24,9 @@ import static org.icgc.dcc.release.client.util.Names.APPLICATION_BASE_NAME;
 
 import java.util.concurrent.TimeUnit;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.release.client.cli.Options;
 import org.icgc.dcc.release.client.core.Workflow;
 import org.icgc.dcc.release.client.core.WorkflowContext;
@@ -35,9 +37,6 @@ import org.springframework.context.annotation.Configuration;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Configuration

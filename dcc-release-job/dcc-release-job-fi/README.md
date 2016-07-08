@@ -1,7 +1,7 @@
 ICGC DCC - Release FI Job
 ===
 
-Functional Impact module
+Functional Impact analysis module.
 
 Build
 ---

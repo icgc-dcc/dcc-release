@@ -17,14 +17,16 @@
  */
 package org.icgc.dcc.release.core.util;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 
 import lombok.Cleanup;
 import lombok.SneakyThrows;
@@ -66,7 +68,7 @@ public class SmileSequenceFileDecompressor {
   }
 
   private static BufferedWriter getOutWriter(File outFile) throws IOException {
-    return new BufferedWriter(new FileWriter(outFile));
+    return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile), UTF_8));
   }
 
   @SneakyThrows

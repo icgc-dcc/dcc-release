@@ -1,7 +1,7 @@
 ICGC DCC - Release Index Job
 ===
 
-Index module
+Index module loads [documents](../../SCHEMAS.md) into an ElasticSearch cluster.
 
 Build
 ---

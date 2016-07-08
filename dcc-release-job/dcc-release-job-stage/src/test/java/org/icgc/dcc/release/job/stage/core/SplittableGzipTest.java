@@ -71,7 +71,7 @@ public class SplittableGzipTest {
     return new SparkConf()
         .setAppName(SplittableGzipTest.class.getSimpleName())
         .setMaster("local")
-        .set("spark.hadoop.fs.defaultFS", "***REMOVED***");
+        .set("spark.hadoop.fs.defaultFS", "hdfs://localhost");
   }
 
 }

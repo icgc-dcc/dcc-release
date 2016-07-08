@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.export.util;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
@@ -130,7 +131,7 @@ public class SchemaGenerator {
     val in = getClass().getResourceAsStream(schemaPath);
     checkNotNull(in, "Failed to read schema definition %s", schemaPath);
 
-    return new BufferedReader(new InputStreamReader(in));
+    return new BufferedReader(new InputStreamReader(in, UTF_8));
   }
 
   private static Entry<String, String> parseSchemaDefinition(String schemaDefinition) {

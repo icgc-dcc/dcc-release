@@ -1,4 +1,20 @@
 ---
+# Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+#
+# This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+# SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 #
 # DCC Release Workflow - Configuration
 #
@@ -10,7 +26,7 @@
 # DCC
 dcc:
   submission:
-    url: http://***REMOVED***/ws
+    url: http://localhost:5380/ws
     dictionaryVersion: 0.11c
   id:
     url: https://id.icgc.org
@@ -30,12 +46,12 @@ snpeff:
 # Hadoop
 hadoop:
   properties:
-    fs.defaultFS: ***REMOVED***
+    fs.defaultFS: hdfs://localhost
 
 # HBase
 hbase:
   properties:
-    hbase.zookeeper.quorum: ***REMOVED***
+    hbase.zookeeper.quorum: localhost
     hbase.zookeeper.property.clientPort: 2181
 
 # Spark
@@ -50,20 +66,20 @@ postgres:
   user: dcc
   password: <fill in>
   database: fathmm
-  server: ***REMOVED***
+  server: localhost
   url: jdbc:postgresql://${postgres.server}/${postgres.database}?user=${postgres.user}&password=${postgres.password}
 
 mail:
-  recipients: ***REMOVED***
+  recipients: nobody@example.com
   properties:
-    mail.smtp.host: ***REMOVED***
+    mail.smtp.host: localhost
     mail.smtp.from: no-reply@oicr.on.ca
 
 document:
   exportVCF: false
   
 index:
-  esUri: "es://***REMOVED***:9300"
+  esUri: "es://localhost:9300"
 
 ---
 
@@ -81,7 +97,7 @@ spring:
    
 # Spark
 spark:
-  master: "spark://***REMOVED***:7077"
+  master: "spark://localhost:7077"
   properties:
     spark.executor.memory: 10g
     spark.cores.max: 100
