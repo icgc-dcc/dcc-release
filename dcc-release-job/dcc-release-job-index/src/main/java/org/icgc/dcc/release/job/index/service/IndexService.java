@@ -58,7 +58,6 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -269,8 +268,7 @@ public class IndexService implements Closeable {
     String resourceName = format("%s/%s.mapping.json", ES_CONFIG_BASE_PATH, typeName);
     URL mappingFileUrl = getResource(resourceName);
 
-    ObjectMapper mapper = new ObjectMapper();
-    JsonNode typeMapping = mapper.readTree(mappingFileUrl);
+    JsonNode typeMapping = MAPPER.readTree(mappingFileUrl);
 
     // Add meta data for index-to-indexer traceability
     ObjectNode metaTypeMapping = (ObjectNode) typeMapping.get(typeName).with("_meta");

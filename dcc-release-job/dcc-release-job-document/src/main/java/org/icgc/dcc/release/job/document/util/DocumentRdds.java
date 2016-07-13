@@ -24,6 +24,7 @@ import lombok.val;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.util.Configurations;
@@ -47,6 +48,17 @@ public class DocumentRdds {
         );
 
     JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, BytesWritable.class, path, conf);
+  }
+
+  public static void saveAsSequenceIdObjectNodeFile(@NonNull JavaRDD<Document> rdd, @NonNull String path) {
+    val conf = Configurations.createJobConf(rdd);
+    val pairRdd = rdd
+        .mapToPair(row -> new Tuple2<Text, BytesWritable>(
+            new Text(row.getId()),
+            new BytesWritable(SMILE_WRITER.writeValueAsBytes(row.getSource())))
+        );
+
+    JavaRDDs.saveAsSequenceFile(pairRdd, Text.class, BytesWritable.class, path, conf);
   }
 
 }
