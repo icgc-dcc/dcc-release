@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.release.job.export.function.gzip;
 
-import static org.icgc.dcc.release.core.function.Unwind.unwindToParent;
+import static org.icgc.dcc.release.core.function.Unwind.unwindToParentWithEmpty;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.common.core.model.DownloadDataType;
@@ -33,7 +33,7 @@ public class SecondaryRecordConverter extends DefaultRecordConverter {
 
   @Override
   protected JavaRDD<ObjectNode> preprocess(JavaRDD<ObjectNode> input) {
-    return input.flatMap(unwindToParent(FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME));
+    return input.flatMap(unwindToParentWithEmpty(FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME));
   }
 
 }

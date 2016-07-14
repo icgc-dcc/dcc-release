@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.release.core.function.JsonNodes.$;
 import static org.icgc.dcc.release.core.function.Unwind.unwind;
 import static org.icgc.dcc.release.core.function.Unwind.unwindToParent;
+import static org.icgc.dcc.release.core.function.Unwind.unwindToParentWithEmpty;
 import lombok.val;
 
 import org.junit.Test;
@@ -74,6 +75,17 @@ public class UnwindTest {
 
     val result = unwindFunction.call(sourceNode);
     assertThat(result).isEmpty();
+  }
+
+  @Test
+  public void unwindMissingToParentWithEmptyTest() throws Exception {
+    val sourceNode = $("{id:'1', nested:[] }");
+    unwindFunction = unwindToParentWithEmpty("nested");
+
+    val result = unwindFunction.call(sourceNode);
+    assertThat(result).hasSize(1);
+    val element = result.iterator().next();
+    assertThat(element).isEqualTo($("{ id:'1' }"));
   }
 
   @Test
