@@ -29,6 +29,7 @@ import static org.icgc.dcc.release.core.util.Collections.isLast;
 import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 import static org.icgc.dcc.release.core.util.ObjectNodes.isEmptyArray;
 
+import java.util.Collections;
 import java.util.List;
 
 import lombok.NonNull;
@@ -54,22 +55,48 @@ import com.google.common.collect.ImmutableSet;
 @RequiredArgsConstructor(access = PRIVATE)
 public class Unwind implements FlatMapFunction<ObjectNode, ObjectNode> {
 
+  /**
+   * Path to a collection which has to be unwinded.
+   */
   @NonNull
   private final String unwindPath;
+
+  /**
+   * Whether the parent fields should be included to the result object.
+   */
   private final boolean includeParent;
 
+  /**
+   * Defines how the {@code includeParent} works when the {@code unwindPath} is missing or empty.<br>
+   * <br>
+   * If set to <b>true</b> then parent will be included in the result set. Basically, the input will be returned back
+   * with the {@code unwindPath} removed.<br>
+   * If set to <b>false</b> then empty Iterable will be produced.
+   */
+  private final boolean includeEmpty;
+
   public static Unwind unwind(@NonNull String unwindPath) {
-    return new Unwind(unwindPath, false);
+    return new Unwind(unwindPath, false, false);
   }
 
   public static Unwind unwindToParent(@NonNull String unwindPath) {
-    return new Unwind(unwindPath, true);
+    return new Unwind(unwindPath, true, false);
+  }
+
+  public static Unwind unwindToParentWithEmpty(@NonNull String unwindPath) {
+    return new Unwind(unwindPath, true, true);
   }
 
   @Override
   public Iterable<ObjectNode> call(@NonNull ObjectNode row) throws Exception {
     val elements = unwindPath(unwindPath, row);
     if (isMissingElements(elements)) {
+      if (includeEmpty) {
+        row.remove(resolveTopLevelFieldName(unwindPath));
+
+        return Collections.singletonList(row);
+      }
+
       return createMissingElementsObject(row);
     }
     checkArgument(elements.isArray(), "'%s' is not an array on object %s", unwindPath, row);

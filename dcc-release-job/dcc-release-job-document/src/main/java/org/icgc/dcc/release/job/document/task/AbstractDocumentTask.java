@@ -103,7 +103,7 @@ public abstract class AbstractDocumentTask extends GenericTask {
   protected void writeDocOutput(TaskContext taskContext, JavaRDD<Document> processed) {
     val outputPath = taskContext.getPath(type.getOutputFileType());
     if (taskContext.isCompressOutput()) {
-      DocumentRdds.saveAsSequenceObjectNodeFile(processed, outputPath);
+      DocumentRdds.saveAsSequenceIdObjectNodeFile(processed, outputPath);
     } else {
       DocumentRdds.saveAsTextObjectNodeFile(processed, outputPath);
     }
