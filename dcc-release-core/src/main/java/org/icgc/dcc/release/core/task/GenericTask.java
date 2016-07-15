@@ -17,9 +17,12 @@
  */
 package org.icgc.dcc.release.core.task;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.icgc.dcc.common.core.util.Formats.formatBytes;
+import static org.icgc.dcc.common.core.util.Separators.EMPTY_STRING;
 import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.checkExistence;
 import static org.icgc.dcc.release.core.util.JavaRDDs.exists;
+import static org.icgc.dcc.release.core.util.Tuples.tuple;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -29,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
 import org.icgc.dcc.release.core.job.FileType;
@@ -141,6 +145,22 @@ public abstract class GenericTask implements Task {
     return readAllInput(taskContext, conf, inputFileType, ObjectNode.class);
   }
 
+  protected JavaPairRDD<String, ObjectNode> readUnpartitionedSequenceFileInput(TaskContext taskContext,
+      FileType inputFileType) {
+    val filePath = taskContext.getPath(inputFileType);
+    val sparkContext = taskContext.getSparkContext();
+    if (!exists(sparkContext, filePath)) {
+      log.debug("{} does not exist. Skipping...", filePath);
+      JavaRDD<ObjectNode> emptyRDD = sparkContext.emptyRDD();
+
+      return emptyRDD.mapToPair(objectNode -> tuple(EMPTY_STRING, objectNode));
+    }
+
+    val conf = createJobConf(taskContext);
+
+    return readAllSequenceFileInput(taskContext, conf, inputFileType, ObjectNode.class);
+  }
+
   private static <T> JavaRDD<T> readAllInput(TaskContext taskContext, JobConf conf, FileType inputFileType,
       Class<T> clazz) {
     val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
@@ -155,6 +175,24 @@ public abstract class GenericTask implements Task {
       // If RDD calculation is not forced the result RDD uses only the latest path as source.
       input.isEmpty();
       result = result.union(input);
+    }
+
+    return result;
+  }
+
+  private static <T> JavaPairRDD<String, T> readAllSequenceFileInput(TaskContext taskContext, JobConf conf,
+      FileType inputFileType, Class<T> clazz) {
+    val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
+    val inputPaths = resolveInputPaths(taskContext, fileTypePath);
+    JavaPairRDD<String, T> result = null;
+
+    for (val inputPath : inputPaths) {
+      log.debug("Reading {} ...", inputPath);
+      val sequenceInput = readSequenceFileInput(taskContext, inputPath.toString(), conf, clazz);
+      // TODO: Report to Spark.
+      // If RDD calculation is not forced the result RDD uses only the latest path as source.
+      sequenceInput.isEmpty();
+      result = result == null ? sequenceInput : result.union(sequenceInput);
     }
 
     return result;
@@ -201,6 +239,14 @@ public abstract class GenericTask implements Task {
     } else {
       return HadoopFiles.textFile(sparkContext, path, conf, clazz);
     }
+  }
+
+  private static <T> JavaPairRDD<String, T> readSequenceFileInput(TaskContext taskContext, String path, JobConf conf,
+      Class<T> clazz) {
+    val sparkContext = taskContext.getSparkContext();
+    checkArgument(taskContext.isCompressOutput(), "Method doesn't support reading uncompressed input.");
+
+    return HadoopFiles.sequenceFileWithKey(sparkContext, path, conf, clazz);
   }
 
   private static boolean isReadAll(TaskContext taskContext, FileType inputFileType) {

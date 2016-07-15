@@ -249,6 +249,17 @@ public enum DocumentType {
         + "' found");
   }
 
+  public static DocumentType byFileType(@NonNull FileType fileType) {
+    for (val value : values()) {
+      if (fileType == value.outputFileType) {
+        return value;
+      }
+    }
+
+    throw new IllegalArgumentException("No '" + DocumentType.class.getName() + "' value with file type '" + fileType
+        + "' found");
+  }
+
   @Override
   public String toString() {
     return name;

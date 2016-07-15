@@ -24,6 +24,8 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.release.core.document.DocumentType.DONOR_CENTRIC_TYPE;
 import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newTransportClient;
+import static org.icgc.dcc.release.job.index.utils.IndexTasks.getBigFilesPath;
+import static org.icgc.dcc.release.job.index.utils.IndexTasks.getEsExportPath;
 import static org.icgc.dcc.release.job.index.utils.IndexTasks.getIndexName;
 
 import java.util.Collection;
@@ -48,11 +50,12 @@ import org.icgc.dcc.release.job.index.service.IndexService;
 import org.icgc.dcc.release.job.index.service.IndexVerificationService;
 import org.icgc.dcc.release.job.index.task.IndexBigFilesTask;
 import org.icgc.dcc.release.job.index.task.IndexTask;
-import org.icgc.dcc.release.job.index.utils.IndexTasks;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 @Slf4j
 @Component
@@ -72,11 +75,7 @@ public class IndexJob extends GenericJob {
 
   @Override
   public void execute(JobContext jobContext) {
-    if (properties.isBigDocumentsOnly() == false) {
-      clean(jobContext);
-    } else {
-      log.info("Indexing big documents only. Skipping the cleanup task...");
-    }
+    clean(jobContext);
 
     // TODO: Fix this to be tied to a run id:
     val indexName = getIndexName(jobContext.getReleaseName());
@@ -106,10 +105,11 @@ public class IndexJob extends GenericJob {
     }
     indexService.optimizeForIndexing(indexName);
 
-    // Populate
-    log.info("Populating index...");
-    if (properties.isBigDocumentsOnly() == false) {
-      index(jobContext, indexName, indexTypes);
+    // Populate and export
+    val tasks = createTasks(indexName, indexTypes);
+    if (!tasks.isEmpty()) {
+      log.info("Populating index...");
+      jobContext.execute(tasks);
     } else {
       log.info("Indexing big documents only. Skipping the other types...");
     }
@@ -136,17 +136,47 @@ public class IndexJob extends GenericJob {
   }
 
   private void clean(JobContext jobContext) {
-    val bigDocsPath = IndexTasks.getBigFilesPath(jobContext.getWorkingDir());
-    jobContext.execute(new DeleteFileTask(bigDocsPath));
+    val workingDir = jobContext.getWorkingDir();
+    val cleanupTasks = Lists.<Task> newArrayList();
+
+    if (!properties.isBigDocumentsOnly()) {
+      val bigDocsPath = getBigFilesPath(workingDir);
+      cleanupTasks.add(new DeleteFileTask(bigDocsPath));
+      log.info("Prepared clean big documents directory task.");
+    }
+
+    if (properties.isExportEsIndex()) {
+      val esExportPath = getEsExportPath(workingDir);
+      cleanupTasks.add(new DeleteFileTask(esExportPath));
+      log.info("Prepared clean Elasticsearch export directory task.");
+    }
+
+    if (!cleanupTasks.isEmpty()) {
+      jobContext.execute(cleanupTasks);
+    }
   }
 
   private boolean isIndexAll() {
     return properties.isBigDocumentsOnly() == false;
   }
 
-  private void index(JobContext jobContext, String indexName, Set<DocumentType> indexTypes) {
-    // TODO: https://github.com/icgc-dcc/dcc-release/pull/47#discussion_r61414413
-    jobContext.execute(createIndexTasks(indexName, indexTypes));
+  private Collection<Task> createTasks(String indexName, Set<DocumentType> indexTypes) {
+    val tasks = ImmutableList.<Task> builder();
+
+    if (properties.isBigDocumentsOnly() == false) {
+      tasks.addAll(createIndexTasks(indexName, indexTypes));
+    }
+
+    if (properties.isExportEsIndex()) {
+      tasks.addAll(createEsExportTasks(indexName));
+    }
+
+    return tasks.build();
+  }
+
+  private Iterable<? extends Task> createEsExportTasks(String indexName) {
+    // TODO Auto-generated method stub
+    return Collections.emptyList();
   }
 
   private void indexBigFiles(JobContext jobContext) {

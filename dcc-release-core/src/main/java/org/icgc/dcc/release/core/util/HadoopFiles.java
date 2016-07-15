@@ -22,13 +22,22 @@ import lombok.NoArgsConstructor;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.release.core.function.ParseObjectNode;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class HadoopFiles {
+
+  public static <T> JavaPairRDD<String, T> sequenceFileWithKey(JavaSparkContext sparkContext, String path,
+      JobConf conf, Class<T> clazz) {
+    return JavaRDDs.sequenceFile(sparkContext, path, Text.class, BytesWritable.class)
+        .mapToPair(new ReadKeySequenceFile<T>(clazz));
+
+  }
 
   public static <T> JavaRDD<T> sequenceFile(JavaSparkContext sparkContext, String path, JobConf conf, Class<T> clazz) {
     return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, BytesWritable.class)

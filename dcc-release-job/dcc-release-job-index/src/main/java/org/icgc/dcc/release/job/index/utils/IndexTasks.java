@@ -38,13 +38,22 @@ public final class IndexTasks {
 
   public static final String GZIP_EXTENSION = ".gz";
   private static final String BIG_FILES_DIR = "big_files";
+  private static final String ES_EXPORT_DIR = "es_export";
 
   public static String getBigFilesDir(@NonNull String workingDir) {
     return workingDir + SEPARATOR + BIG_FILES_DIR;
   }
 
+  public static String getEsExportDir(@NonNull String workingDir) {
+    return workingDir + SEPARATOR + ES_EXPORT_DIR;
+  }
+
   public static Path getBigFilesPath(@NonNull String workingDir) {
     return new Path(getBigFilesDir(workingDir));
+  }
+
+  public static Path getEsExportPath(@NonNull String workingDir) {
+    return new Path(getEsExportDir(workingDir));
   }
 
   public static String getBigFileName(@NonNull DocumentType documentType, @NonNull String id) {

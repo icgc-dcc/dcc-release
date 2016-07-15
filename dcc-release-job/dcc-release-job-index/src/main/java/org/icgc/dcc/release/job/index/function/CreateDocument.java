@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,37 +15,28 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.hadoop;
+package org.icgc.dcc.release.job.index.function;
 
-import java.io.IOException;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.RecordReader;
-import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.SequenceFileInputFormat;
-import org.apache.hadoop.mapred.lib.CombineFileInputFormat;
-import org.apache.hadoop.mapred.lib.CombineFileRecordReader;
-import org.apache.hadoop.mapred.lib.CombineFileSplit;
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 
-public class CombineSequenceInputFormat<K> extends CombineFileInputFormat<K, BytesWritable> {
+import scala.Tuple2;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+@RequiredArgsConstructor
+public final class CreateDocument implements Function<Tuple2<String, ObjectNode>, Document> {
+
+  @NonNull
+  private final DocumentType documentType;
 
   @Override
-  @SuppressWarnings({ "rawtypes", "unchecked" })
-  public RecordReader<K, BytesWritable> getRecordReader(InputSplit split, JobConf conf, Reporter reporter)
-      throws IOException {
-    return new CombineFileRecordReader(conf, (CombineFileSplit) split, reporter, BiteRecordReaderWrapper.class);
-  }
-
-  public static class BiteRecordReaderWrapper<K> extends CombineFileRecordReaderWrapper<K, BytesWritable> {
-
-    public BiteRecordReaderWrapper(CombineFileSplit split, Configuration conf, Reporter reporter, Integer index)
-        throws IOException {
-      super(new SequenceFileInputFormat<K, BytesWritable>(), split, conf, reporter, index);
-    }
-
+  public Document call(Tuple2<String, ObjectNode> tuple) throws Exception {
+    return new Document(documentType, tuple._1, tuple._2);
   }
 
 }

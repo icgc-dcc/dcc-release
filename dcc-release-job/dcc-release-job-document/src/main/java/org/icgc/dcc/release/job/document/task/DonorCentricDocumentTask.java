@@ -26,14 +26,18 @@ import java.util.Collection;
 import lombok.NonNull;
 import lombok.val;
 
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.PairFunction;
 import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.util.AggregateFunctions;
 import org.icgc.dcc.release.core.util.CombineFunctions;
+import org.icgc.dcc.release.core.util.Configurations;
+import org.icgc.dcc.release.core.util.JavaRDDs;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
+import org.icgc.dcc.release.job.document.function.PairDonor;
 import org.icgc.dcc.release.job.document.model.Donor;
 import org.icgc.dcc.release.job.document.model.Occurrence;
 import org.icgc.dcc.release.job.document.transform.DonorCentricDocumentTransform;
@@ -76,7 +80,11 @@ public class DonorCentricDocumentTask extends AbstractDocumentTask {
   }
 
   private void writeDonors(TaskContext taskContext, JavaRDD<Donor> output) {
-    writeOutput(taskContext, output, FileType.DONOR_CENTRIC_DOCUMENT, Donor.class);
+    val sequenceOutput = output.mapToPair(new PairDonor());
+    val outputPath = taskContext.getPath(type.getOutputFileType());
+    val conf = Configurations.createJobConf(sequenceOutput);
+
+    JavaRDDs.saveAsSequenceFile(sequenceOutput, Text.class, BytesWritable.class, outputPath, conf);
   }
 
 }

@@ -20,8 +20,10 @@ package org.icgc.dcc.release.job.index.core;
 import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newTransportClient;
+import static org.mockito.Mockito.mock;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,8 +35,10 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.job.DefaultJobContext;
 import org.icgc.dcc.release.core.job.Job;
+import org.icgc.dcc.release.core.job.JobContext;
+import org.icgc.dcc.release.core.job.JobType;
 import org.icgc.dcc.release.job.index.config.IndexProperties;
 import org.icgc.dcc.release.job.index.utils.IndexTasks;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
@@ -43,6 +47,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Table;
 
 public class IndexJobTest extends AbstractJobTest {
 
@@ -75,8 +80,7 @@ public class IndexJobTest extends AbstractJobTest {
 
   @Test
   public void testExecute() {
-    given(new File(INPUT_TEST_FIXTURES_DIR));
-    job.execute(createJobContext(job.getType(), ImmutableList.of(PROJECT)));
+    job.execute(createIndexJobContext(job.getType(), ImmutableList.of(PROJECT)));
 
     verifyRelease();
     verifyGeneSets();
@@ -144,7 +148,6 @@ public class IndexJobTest extends AbstractJobTest {
   }
 
   private void verifyMutations() {
-    verifyMutationsOutput();
     val hits = esClient.prepareSearch(index)
         // .setTypes(DocumentType.MUTATION_CENTRIC_TYPE.getName())
         .setTypes("mutation-centric").execute().actionGet();
@@ -154,11 +157,6 @@ public class IndexJobTest extends AbstractJobTest {
     }
 
     verifyType(DocumentType.MUTATION_TEXT_TYPE, 2);
-  }
-
-  private void verifyMutationsOutput() {
-    val mutationCentric = produces(FileType.MUTATION_CENTRIC_DOCUMENT);
-    assertThat(mutationCentric).hasSize(2);
   }
 
   private static void verifyMutationCentric(Map<String, Object> source) {
@@ -179,22 +177,11 @@ public class IndexJobTest extends AbstractJobTest {
   }
 
   private void verifyDonorCentric() {
-    verifyType(DocumentType.DONOR_CENTRIC_TYPE, 2);
-
-    val donors = produces(PROJECT, FileType.DONOR_CENTRIC_DOCUMENT);
-    val sgvDonor = donors.get(0);
-    val sgvGeneDonorId = sgvDonor.get(FieldNames.DONOR_GENES).get(0)
-        .get("sgv").get(0).path(FieldNames.DONOR_ID);
-    assertThat(sgvGeneDonorId.isMissingNode()).isTrue();
-
-    val ssmDonor = donors.get(1);
-    val ssmGeneDonorId = ssmDonor.get(FieldNames.DONOR_GENES).get(0)
-        .get("ssm").get(0).path(FieldNames.DONOR_ID);
-    assertThat(ssmGeneDonorId.isMissingNode()).isTrue();
+    verifyType(DocumentType.DONOR_CENTRIC_TYPE, 3);
   }
 
   private void verifyDonorText() {
-    verifyType(DocumentType.DONOR_TEXT_TYPE, 2);
+    verifyType(DocumentType.DONOR_TEXT_TYPE, 3);
   }
 
   private void verifyDonor() {
@@ -204,7 +191,7 @@ public class IndexJobTest extends AbstractJobTest {
         .setTypes("donor")
         .setPostFilter(FilterBuilders.existsFilter("project"))
         .execute().actionGet().getHits().getTotalHits();
-    assertThat(donorsWithProjectCount).isEqualTo(2L);
+    assertThat(donorsWithProjectCount).isEqualTo(3L);
   }
 
   private static void cleanUpIndex(Client esClient, String index) {
@@ -221,6 +208,12 @@ public class IndexJobTest extends AbstractJobTest {
           .isAcknowledged(),
           "Index '%s' deletion was not acknowledged", index);
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  private JobContext createIndexJobContext(JobType type, List<String> projectNames) {
+    return new DefaultJobContext(type, RELEASE_VERSION, projectNames, "/dev/null",
+        new File(INPUT_TEST_FIXTURES_DIR).getAbsolutePath(), mock(Table.class), taskExecutor, true);
   }
 
 }
