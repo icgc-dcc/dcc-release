@@ -20,6 +20,7 @@ package org.icgc.dcc.release.job.index.core;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.copyOf;
 import static com.google.common.collect.Sets.difference;
+import static java.util.Arrays.stream;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.release.core.document.DocumentType.DONOR_CENTRIC_TYPE;
@@ -48,6 +49,7 @@ import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.job.index.config.IndexProperties;
 import org.icgc.dcc.release.job.index.service.IndexService;
 import org.icgc.dcc.release.job.index.service.IndexVerificationService;
+import org.icgc.dcc.release.job.index.task.EsExportTask;
 import org.icgc.dcc.release.job.index.task.IndexBigFilesTask;
 import org.icgc.dcc.release.job.index.task.IndexTask;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,45 +79,42 @@ public class IndexJob extends GenericJob {
   public void execute(JobContext jobContext) {
     clean(jobContext);
 
-    // TODO: Fix this to be tied to a run id:
     val indexName = getIndexName(jobContext.getReleaseName());
+    val indexTypes = getIndexTypes();
+    val allTasks = createTasks(indexName, indexTypes);
+    log.info("Created {} tasks.", allTasks.size());
 
-    //
-    // TODO: Need to use spark.dynamicAllocation.enabled to dynamically
-    // increase memory for this job
-    //
-    // -
-    // http://spark.apache.org/docs/1.2.0/job-scheduling.html#dynamic-resource-allocation
-    // - https://issues.apache.org/jira/browse/SPARK-4751
-    //
+    if (allTasks.isEmpty()) {
+      log.info("No tasks to execute. Finishing IndexJob...");
+      return;
+    }
+
+    if (!hasIndexTasks(allTasks)) {
+      log.info("IndexJob doesn't have indexing tasks. Creating Elasticsearch archives only...");
+      jobContext.execute(allTasks);
+      return;
+    }
 
     @Cleanup
     val client = newTransportClient(properties.getEsUri());
     @Cleanup
     val indexService = new IndexService(client);
-    val indexTypes = getIndexTypes();
 
-    // Prepare
-    log.info("Initializing index...");
-    if (isIndexAll()) {
-      indexService.initializeIndex(indexName, indexTypes);
-    } else {
-      log.info("Unfreezing index because of indexing of big documents only...");
-      indexService.unfreezeIndex(indexName);
-    }
-    indexService.optimizeForIndexing(indexName);
-
-    // Populate and export
-    val tasks = createTasks(indexName, indexTypes);
-    if (!tasks.isEmpty()) {
-      log.info("Populating index...");
-      jobContext.execute(tasks);
-    } else {
-      log.info("Indexing big documents only. Skipping the other types...");
+    prepareIndex(indexName, indexService, indexTypes);
+    val noBigFilesTasks = allTasks.stream()
+        .filter(task -> !(task instanceof IndexBigFilesTask))
+        .collect(toImmutableList());
+    if (!noBigFilesTasks.isEmpty()) {
+      jobContext.execute(noBigFilesTasks);
     }
 
-    log.info("Indexing big files...");
-    indexBigFiles(jobContext);
+    val bigFilesTask = allTasks.stream()
+        .filter(task -> task instanceof IndexBigFilesTask)
+        .findFirst();
+    if (bigFilesTask.isPresent()) {
+      log.info("Indexing big files...");
+      jobContext.execute(bigFilesTask.get());
+    }
 
     // Report
     log.info("Reporting index...");
@@ -135,11 +134,37 @@ public class IndexJob extends GenericJob {
     verificationService.verify();
   }
 
+  Collection<Task> createTasks(String indexName, Set<DocumentType> indexTypes) {
+    val tasks = ImmutableList.<Task> builder();
+    if (properties.isIndexDocuments()) {
+      log.info("Creating index tasks for index types: {}", indexTypes);
+      tasks.addAll(createIndexTasks(indexName, indexTypes));
+    }
+
+    if (properties.isExportEsIndex()) {
+      log.info("Creating export Elasticsearch index tasks...");
+      tasks.addAll(createEsExportTasks(indexName));
+    }
+
+    return tasks.build();
+  }
+
+  private void prepareIndex(String indexName, IndexService indexService, Set<DocumentType> indexTypes) {
+    log.info("Initializing index...");
+    if (isIndexAll()) {
+      indexService.initializeIndex(indexName, indexTypes);
+    } else {
+      log.info("Unfreezing index because of indexing of big documents only...");
+      indexService.unfreezeIndex(indexName);
+    }
+    indexService.optimizeForIndexing(indexName);
+  }
+
   private void clean(JobContext jobContext) {
     val workingDir = jobContext.getWorkingDir();
     val cleanupTasks = Lists.<Task> newArrayList();
 
-    if (!properties.isBigDocumentsOnly()) {
+    if (properties.isIndexDocuments() && !properties.isBigDocumentsOnly()) {
       val bigDocsPath = getBigFilesPath(workingDir);
       cleanupTasks.add(new DeleteFileTask(bigDocsPath));
       log.info("Prepared clean big documents directory task.");
@@ -160,34 +185,25 @@ public class IndexJob extends GenericJob {
     return properties.isBigDocumentsOnly() == false;
   }
 
-  private Collection<Task> createTasks(String indexName, Set<DocumentType> indexTypes) {
-    val tasks = ImmutableList.<Task> builder();
-
-    if (properties.isBigDocumentsOnly() == false) {
-      tasks.addAll(createIndexTasks(indexName, indexTypes));
-    }
-
-    if (properties.isExportEsIndex()) {
-      tasks.addAll(createEsExportTasks(indexName));
-    }
-
-    return tasks.build();
-  }
-
-  private Iterable<? extends Task> createEsExportTasks(String indexName) {
-    // TODO Auto-generated method stub
-    return Collections.emptyList();
-  }
-
-  private void indexBigFiles(JobContext jobContext) {
-    jobContext.execute(new IndexBigFilesTask(properties.getEsUri()));
+  private Collection<? extends Task> createEsExportTasks(String indexName) {
+    return stream(DocumentType.values())
+        .map(dt -> new EsExportTask(indexName, dt))
+        .collect(toImmutableList());
   }
 
   @SneakyThrows
-  private Collection<? extends Task> createIndexTasks(final String indexName, Set<DocumentType> indexTypes) {
-    return indexTypes.stream()
-        .map(dt -> createIndexTask(indexName, dt))
-        .collect(toImmutableList());
+  private Collection<Task> createIndexTasks(final String indexName, Set<DocumentType> indexTypes) {
+    val indexTasks = ImmutableList.<Task> builder();
+    indexTasks.add(new IndexBigFilesTask(properties.getEsUri()));
+
+    if (!properties.isBigDocumentsOnly()) {
+      log.info("Big indexing documents only. Skip the rest index tasks creation...");
+      for (val indexType : indexTypes) {
+        indexTasks.add(createIndexTask(indexName, indexType));
+      }
+    }
+
+    return indexTasks.build();
   }
 
   private IndexTask createIndexTask(String indexName, DocumentType documentType) {
@@ -195,6 +211,11 @@ public class IndexJob extends GenericJob {
   }
 
   private Set<DocumentType> getIndexTypes() {
+    if (!properties.isIndexDocuments()) {
+      log.info("Documents indexing is disabled. Do not resolve index types.");
+      return Collections.emptySet();
+    }
+
     if (properties.isBigDocumentsOnly()) {
       log.info("Indexing big documents only. Setting index types to {}...", DONOR_CENTRIC_TYPE);
       return Collections.singleton(DONOR_CENTRIC_TYPE);
@@ -222,6 +243,11 @@ public class IndexJob extends GenericJob {
         .collect(toImmutableSet());
 
     return difference(copyOf(DocumentType.values()), excludeDocumentTypes);
+  }
+
+  private static boolean hasIndexTasks(Collection<Task> tasks) {
+    return tasks.stream()
+        .anyMatch(task -> task instanceof IndexTask || task instanceof IndexBigFilesTask);
   }
 
 }

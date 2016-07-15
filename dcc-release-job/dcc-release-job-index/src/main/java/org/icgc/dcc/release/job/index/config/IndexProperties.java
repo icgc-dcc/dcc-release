@@ -57,4 +57,14 @@ public class IndexProperties {
    */
   boolean bigDocumentsOnly = false;
 
+  /**
+   * Whether to create Elasticsearch index tarballs.
+   */
+  boolean exportEsIndex = true;
+
+  /**
+   * Whether to index document to Elasticsearch cluster;
+   */
+  boolean indexDocuments = true;
+
 }
