@@ -19,6 +19,7 @@ package org.icgc.dcc.release.job.export.function.gzip;
 
 import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.release.core.function.Unwind.unwindToParent;
+import static org.icgc.dcc.release.core.function.Unwind.unwindToParentWithEmpty;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 
 import java.util.Collection;
@@ -46,7 +47,7 @@ public class SsmRecordConverter extends DefaultRecordConverter {
     return input
         .flatMap(unwindToParent(FieldNames.LoaderFieldNames.OBSERVATION_ARRAY_NAME))
         .filter(filterSsm(access))
-        .flatMap(unwindToParent(FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME));
+        .flatMap(unwindToParentWithEmpty(FieldNames.LoaderFieldNames.CONSEQUENCE_ARRAY_NAME));
   }
 
   private static Function<ObjectNode, Boolean> filterSsm(Collection<Marking> access) {
