@@ -17,20 +17,27 @@
  */
 package org.icgc.dcc.release.job.index.task;
 
+import java.util.Map;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
+import org.icgc.dcc.release.core.util.Configurations;
 import org.icgc.dcc.release.job.index.function.CreateDocument;
 import org.icgc.dcc.release.job.index.function.CreateEsExportTar;
 
 @RequiredArgsConstructor
 public class EsExportTask extends GenericIndexTask {
+
+  public static final String ES_EXPORT_DIR = "es_export";
 
   @NonNull
   private final String indexName;
@@ -44,15 +51,36 @@ public class EsExportTask extends GenericIndexTask {
 
   @Override
   public void execute(TaskContext taskContext) {
+    prepareDirs(taskContext);
+
     val input = readDocuments(taskContext);
-    input.mapPartitions(new CreateEsExportTar(indexName, taskContext.getJobContext().getWorkingDir()))
+    input.mapPartitions(createExportTarFucntion(taskContext))
         // Force calculation of the partition
         .count();
+  }
+
+  private CreateEsExportTar createExportTarFucntion(TaskContext taskContext) {
+    return new CreateEsExportTar(
+        indexName,
+        taskContext.getJobContext().getWorkingDir(),
+        documentType.getName(),
+        getFileSystemSettings(taskContext));
+  }
+
+  private void prepareDirs(TaskContext taskContext) {
+    val fileSystem = taskContext.getFileSystem();
+    val workingDir = taskContext.getJobContext().getWorkingDir();
+    val esExportsDir = new Path(workingDir, ES_EXPORT_DIR);
+    HadoopUtils.mkdirs(fileSystem, esExportsDir);
   }
 
   private JavaRDD<Document> readDocuments(TaskContext taskContext) {
     return readUnpartitionedSequenceFileInput(taskContext, documentType.getOutputFileType())
         .map(new CreateDocument(documentType));
+  }
+
+  private static Map<String, String> getFileSystemSettings(TaskContext taskContext) {
+    return Configurations.getSettings(taskContext.getFileSystem().getConf());
   }
 
 }

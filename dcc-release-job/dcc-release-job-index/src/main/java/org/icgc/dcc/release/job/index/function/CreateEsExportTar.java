@@ -17,33 +17,53 @@
  */
 package org.icgc.dcc.release.job.index.function;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
+import static org.icgc.dcc.common.core.util.Joiners.PATH;
 
+import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
+import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.icgc.dcc.common.core.util.Separators;
+import org.icgc.dcc.common.hadoop.fs.Configurations;
+import org.icgc.dcc.common.hadoop.fs.FileSystems;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.util.JacksonFactory;
+import org.icgc.dcc.release.job.index.service.IndexService;
+import org.icgc.dcc.release.job.index.task.EsExportTask;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Slf4j
 @RequiredArgsConstructor
 public final class CreateEsExportTar implements FlatMapFunction<Iterator<Document>, Void> {
 
-  private static final String ES_EXPORT_DIR = "es_export";
+  private static final ObjectMapper MAPPER = JacksonFactory.MAPPER;
 
   @NonNull
   private final String indexName;
   @NonNull
   private final String workingDir;
+  @NonNull
+  private final String documentType;
+  @NonNull
+  private final Map<String, String> fileSystemSettings;
 
   @Override
   public Iterable<Void> call(Iterator<Document> documents) throws Exception {
@@ -53,22 +73,81 @@ public final class CreateEsExportTar implements FlatMapFunction<Iterator<Documen
       return Collections.emptyList();
     }
 
-    val firstDoc = documents.next();
-    val archivePath = getOutputPath(getArchiveName(firstDoc));
-    // FIXME: finish
+    val archivePath = getOutputPath(getArchiveName());
+    @Cleanup
+    val tarOutputStream = getOutputStream(archivePath);
+    addMeta(tarOutputStream);
 
-    // Insert settings
-    // Insert mappings
+    while (documents.hasNext()) {
+      val document = documents.next();
+      writeDocument(tarOutputStream, document);
+    }
+    tarOutputStream.finish();
 
     return Collections.emptyList();
   }
 
-  private String getArchiveName(Document doc) {
-    return format("%s_%s.tar.gz", indexName.toLowerCase(), doc.getType().getName());
+  private void writeDocument(TarArchiveOutputStream tarOutputStream, Document document) throws Exception {
+    val documentId = document.getId();
+    checkState(document.getType().getName().equals(documentType),
+        "Document '%s' doesn't belong to archive with document type '%s'", documentId, documentType);
+    val source = document.getSource();
+    val fileName = getDocumentFileName(documentId);
+    writeEntry(tarOutputStream, source, fileName);
+  }
+
+  private void addMeta(TarArchiveOutputStream tarOutputStream) throws Exception {
+    addSettings(tarOutputStream);
+    addMappings(tarOutputStream);
+  }
+
+  private void addMappings(TarArchiveOutputStream tarOutputStream) throws Exception {
+    val mapping = IndexService.getTypeMapping(documentType);
+    val fileName = getDocumentFileName("_mapping");
+    writeEntry(tarOutputStream, mapping, fileName);
+  }
+
+  private void addSettings(TarArchiveOutputStream tarOutputStream) throws Exception {
+    val settings = IndexService.getSettings();
+    val fileName = PATH.join(indexName, "_settings");
+    writeEntry(tarOutputStream, settings, fileName);
+  }
+
+  private String getDocumentFileName(String documentId) {
+    return PATH.join(indexName, documentType, documentId);
+  }
+
+  private String getArchiveName() {
+    return format("%s_%s.tar.gz", indexName.toLowerCase(), documentType);
   }
 
   private Path getOutputPath(String fileName) {
-    return new Path(workingDir + Separators.PATH + ES_EXPORT_DIR + Separators.PATH + fileName);
+    return new Path(workingDir + Separators.PATH + EsExportTask.ES_EXPORT_DIR + Separators.PATH + fileName);
+  }
+
+  private TarArchiveOutputStream getOutputStream(Path archivePath) throws IOException {
+    val configuration = Configurations.fromMap(fileSystemSettings);
+    val fileSystem = FileSystems.getFileSystem(configuration);
+    val archiveOutputStream = new GZIPOutputStream(new BufferedOutputStream(fileSystem.create(archivePath)));
+    log.info("Creating tar archive writer for archive file '{}'...", archivePath);
+
+    return createTarOutputStream(archiveOutputStream);
+  }
+
+  private static void writeEntry(TarArchiveOutputStream tarOutputStream, ObjectNode source, String fileName)
+      throws Exception {
+    byte[] sourceBytes = MAPPER.writeValueAsBytes(source);
+    val entry = createTarEntry(fileName, sourceBytes.length);
+    tarOutputStream.putArchiveEntry(entry);
+    tarOutputStream.write(sourceBytes);
+    tarOutputStream.closeArchiveEntry();
+  }
+
+  private static TarArchiveEntry createTarEntry(String file, long size) {
+    val entry = new TarArchiveEntry(file);
+    entry.setSize(size);
+
+    return entry;
   }
 
   private static TarArchiveOutputStream createTarOutputStream(@NonNull OutputStream outputStream) {
