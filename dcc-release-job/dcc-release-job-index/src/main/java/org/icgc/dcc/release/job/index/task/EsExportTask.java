@@ -50,11 +50,16 @@ public class EsExportTask extends GenericIndexTask {
   }
 
   @Override
+  public String getName() {
+    return super.getName() + documentType.getName();
+  }
+
+  @Override
   public void execute(TaskContext taskContext) {
     prepareDirs(taskContext);
-
-    val input = readDocuments(taskContext);
-    input.mapPartitions(createExportTarFucntion(taskContext))
+    readDocuments(taskContext)
+        .coalesce(1)
+        .mapPartitions(createExportTarFucntion(taskContext))
         // Force calculation of the partition
         .count();
   }

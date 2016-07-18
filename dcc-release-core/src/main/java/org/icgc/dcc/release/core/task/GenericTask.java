@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.core.task;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Collections.singleton;
 import static org.icgc.dcc.common.core.util.Formats.formatBytes;
 import static org.icgc.dcc.common.core.util.Separators.EMPTY_STRING;
 import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.checkExistence;
@@ -183,7 +184,9 @@ public abstract class GenericTask implements Task {
   private static <T> JavaPairRDD<String, T> readAllSequenceFileInput(TaskContext taskContext, JobConf conf,
       FileType inputFileType, Class<T> clazz) {
     val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
-    val inputPaths = resolveInputPaths(taskContext, fileTypePath);
+    val inputPaths = inputFileType.isPartitioned() ?
+        resolveInputPaths(taskContext, fileTypePath) :
+        singleton(fileTypePath);
     JavaPairRDD<String, T> result = null;
 
     for (val inputPath : inputPaths) {

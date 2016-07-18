@@ -73,14 +73,20 @@ public final class CreateEsExportTar implements FlatMapFunction<Iterator<Documen
       return Collections.emptyList();
     }
 
+    log.info("Started processing '{}' file type...", documentType);
     val archivePath = getOutputPath(getArchiveName());
     @Cleanup
     val tarOutputStream = getOutputStream(archivePath);
     addMeta(tarOutputStream);
 
+    int docs = 0;
     while (documents.hasNext()) {
       val document = documents.next();
       writeDocument(tarOutputStream, document);
+      docs++;
+      if (docs % 10_000 == 0) {
+        log.info("Processed {} documents", docs);
+      }
     }
     tarOutputStream.finish();
 
