@@ -27,7 +27,7 @@ import lombok.val;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Reader;
 import org.icgc.dcc.release.core.util.JacksonFactory;
@@ -60,12 +60,13 @@ public class SmileSequenceFileInputStream extends InputStream {
 
   @SneakyThrows
   private boolean readBytes() {
-    val writable = new BytesWritable();
-    val read = reader.next(NullWritable.get(), writable);
-    if (!read) {
+    // Key of the record is ignored as it's not used.
+    if (reader.nextRawKey(new DataOutputBuffer()) == -1) {
       return false;
     }
 
+    val writable = new BytesWritable();
+    reader.getCurrentValue(writable);
     buffer = new Buffer(getBytes(writable));
 
     return true;
