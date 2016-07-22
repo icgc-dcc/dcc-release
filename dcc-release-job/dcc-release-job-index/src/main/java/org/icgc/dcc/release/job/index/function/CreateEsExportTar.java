@@ -18,8 +18,10 @@
 package org.icgc.dcc.release.job.index.function;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
 import static org.icgc.dcc.common.core.util.Joiners.PATH;
+import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -61,7 +63,7 @@ public final class CreateEsExportTar implements FlatMapFunction<Iterator<Documen
   @NonNull
   private final String workingDir;
   @NonNull
-  private final String documentType;
+  private final String documentTypeName;
   @NonNull
   private final Map<String, String> fileSystemSettings;
 
@@ -73,7 +75,7 @@ public final class CreateEsExportTar implements FlatMapFunction<Iterator<Documen
       return Collections.emptyList();
     }
 
-    log.info("Started processing '{}' file type...", documentType);
+    log.info("Started processing '{}' file type...", documentTypeName);
     val archivePath = getOutputPath(getArchiveName());
     @Cleanup
     val tarOutputStream = getOutputStream(archivePath);
@@ -95,9 +97,16 @@ public final class CreateEsExportTar implements FlatMapFunction<Iterator<Documen
 
   private void writeDocument(TarArchiveOutputStream tarOutputStream, Document document) throws Exception {
     val documentId = document.getId();
-    checkState(document.getType().getName().equals(documentType),
+    val documentType = document.getType();
+    checkState(documentType.getName().equals(documentTypeName),
         "Document '%s' doesn't belong to archive with document type '%s'", documentId, documentType);
     val source = document.getSource();
+    val sourceDocumentId = textValue(source, documentType.getPrimaryKey());
+    if (!isNullOrEmpty(sourceDocumentId)) {
+      checkState(sourceDocumentId.equals(documentId), "Document IDs from key and document don't match. Key document "
+          + "ID: '%s'. Source document ID: '%s'", documentId, sourceDocumentId);
+    }
+
     val fileName = getDocumentFileName(documentId);
     writeEntry(tarOutputStream, source, fileName);
   }
@@ -108,7 +117,7 @@ public final class CreateEsExportTar implements FlatMapFunction<Iterator<Documen
   }
 
   private void addMappings(TarArchiveOutputStream tarOutputStream) throws Exception {
-    val mapping = IndexService.getTypeMapping(documentType);
+    val mapping = IndexService.getTypeMapping(documentTypeName);
     val fileName = getDocumentFileName("_mapping");
     writeEntry(tarOutputStream, mapping, fileName);
   }
@@ -120,11 +129,11 @@ public final class CreateEsExportTar implements FlatMapFunction<Iterator<Documen
   }
 
   private String getDocumentFileName(String documentId) {
-    return PATH.join(indexName, documentType, documentId);
+    return PATH.join(indexName, documentTypeName, documentId);
   }
 
   private String getArchiveName() {
-    return format("%s_%s.tar.gz", indexName.toLowerCase(), documentType);
+    return format("%s_%s.tar.gz", indexName.toLowerCase(), documentTypeName);
   }
 
   private Path getOutputPath(String fileName) {

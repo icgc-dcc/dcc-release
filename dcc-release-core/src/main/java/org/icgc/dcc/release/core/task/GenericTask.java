@@ -192,9 +192,6 @@ public abstract class GenericTask implements Task {
     for (val inputPath : inputPaths) {
       log.debug("Reading {} ...", inputPath);
       val sequenceInput = readSequenceFileInput(taskContext, inputPath.toString(), conf, clazz);
-      // TODO: Report to Spark.
-      // If RDD calculation is not forced the result RDD uses only the latest path as source.
-      sequenceInput.isEmpty();
       result = result == null ? sequenceInput : result.union(sequenceInput);
     }
 

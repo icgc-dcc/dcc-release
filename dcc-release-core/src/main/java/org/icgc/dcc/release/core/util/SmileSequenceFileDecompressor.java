@@ -19,7 +19,9 @@ package org.icgc.dcc.release.core.util;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
+import static org.icgc.dcc.common.core.util.Separators.TAB;
+import static org.icgc.dcc.release.core.hadoop.SmileSequenceFileInputStream.getBytes;
+import static org.icgc.dcc.release.core.util.JacksonFactory.SMILE_READER;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -34,9 +36,12 @@ import lombok.val;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.Reader;
+import org.apache.hadoop.io.Text;
 import org.icgc.dcc.release.core.hadoop.SmileSequenceFileInputStream;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class SmileSequenceFileDecompressor {
 
@@ -46,23 +51,47 @@ public class SmileSequenceFileDecompressor {
     val outFile = new File(args[1]);
     checkArgument(inFile.canRead(), "Can't read file %s", inFile);
 
-    new SmileSequenceFileDecompressor().execute(inFile, outFile);
+    execute(inFile, outFile);
   }
 
   @SneakyThrows
-  public void execute(File inFile, File outFile) {
+  public static void execute(File inFile, File outFile) {
     @Cleanup
     val in = getInputStream(inFile);
     @Cleanup
     val out = getOutWriter(outFile);
-    decompress(in, out);
+
+    val reader = getReader(inFile);
+    if (hasKey(reader)) {
+      decompressWithKey(reader, out);
+    } else {
+      decompress(reader, out);
+    }
   }
 
-  public static void decompress(InputStream in, BufferedWriter out) throws IOException {
-    val iterator = READER.<ObjectNode> readValues(in);
-    while (iterator.hasNext()) {
-      val value = iterator.next();
-      out.write(value.toString());
+  private static boolean hasKey(Reader reader) {
+    return reader.getKeyClass().isAssignableFrom(Text.class);
+  }
+
+  @SneakyThrows
+  private static void decompressWithKey(Reader reader, BufferedWriter out) {
+    val key = new Text();
+    val value = new BytesWritable();
+    while (reader.next(key, value)) {
+      out.write(key.toString());
+      out.write(TAB);
+      val node = SMILE_READER.readValue(getBytes(value));
+      out.write(node.toString());
+      out.newLine();
+    }
+  }
+
+  public static void decompress(Reader reader, BufferedWriter out) throws IOException {
+    val key = NullWritable.get();
+    val value = new BytesWritable();
+    while (reader.next(key, value)) {
+      val node = SMILE_READER.readValue(getBytes(value));
+      out.write(node.toString());
       out.newLine();
     }
   }
@@ -72,8 +101,15 @@ public class SmileSequenceFileDecompressor {
   }
 
   @SneakyThrows
-  private InputStream getInputStream(File inFile) {
+  private static InputStream getInputStream(File inFile) {
     return new SmileSequenceFileInputStream(new Configuration(), new Path(inFile.getAbsolutePath()));
+  }
+
+  @SneakyThrows
+  private static SequenceFile.Reader getReader(File inFile) {
+    val path = new Path(inFile.getAbsolutePath());
+
+    return new SequenceFile.Reader(new Configuration(), Reader.file(path));
   }
 
 }

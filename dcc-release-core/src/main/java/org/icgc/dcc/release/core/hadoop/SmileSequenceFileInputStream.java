@@ -72,7 +72,8 @@ public class SmileSequenceFileInputStream extends InputStream {
     return true;
   }
 
-  private static byte[] getBytes(BytesWritable bw) {
+  // TODO: Move to commons
+  public static byte[] getBytes(BytesWritable bw) {
     byte[] padded = bw.getBytes();
     byte[] bytes = new byte[bw.getLength()];
     System.arraycopy(padded, 0, bytes, 0, bytes.length);

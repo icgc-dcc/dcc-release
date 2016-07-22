@@ -20,7 +20,6 @@ package org.icgc.dcc.release.job.index.core;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.copyOf;
 import static com.google.common.collect.Sets.difference;
-import static java.util.Arrays.stream;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.release.core.document.DocumentType.DONOR_CENTRIC_TYPE;
@@ -143,7 +142,7 @@ public class IndexJob extends GenericJob {
 
     if (properties.isExportEsIndex()) {
       log.info("Creating export Elasticsearch index tasks...");
-      tasks.addAll(createEsExportTasks(indexName));
+      tasks.addAll(createEsExportTasks(indexName, indexTypes));
     }
 
     return tasks.build();
@@ -185,8 +184,8 @@ public class IndexJob extends GenericJob {
     return properties.isBigDocumentsOnly() == false;
   }
 
-  private Collection<? extends Task> createEsExportTasks(String indexName) {
-    return stream(DocumentType.values())
+  private Collection<? extends Task> createEsExportTasks(String indexName, Set<DocumentType> indexTypes) {
+    return indexTypes.stream()
         .map(dt -> new EsExportTask(indexName, dt))
         .collect(toImmutableList());
   }
@@ -211,11 +210,6 @@ public class IndexJob extends GenericJob {
   }
 
   private Set<DocumentType> getIndexTypes() {
-    if (!properties.isIndexDocuments()) {
-      log.info("Documents indexing is disabled. Do not resolve index types.");
-      return Collections.emptySet();
-    }
-
     if (properties.isBigDocumentsOnly()) {
       log.info("Indexing big documents only. Setting index types to {}...", DONOR_CENTRIC_TYPE);
       return Collections.singleton(DONOR_CENTRIC_TYPE);

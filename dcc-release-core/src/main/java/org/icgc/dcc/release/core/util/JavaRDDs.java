@@ -78,6 +78,7 @@ public final class JavaRDDs {
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <K, V> JavaHadoopRDD<K, V> sequenceFile(JavaSparkContext sparkContext, String paths, Class<K> keyClass,
       Class<V> valueClass, JobConf conf) {
+    log.debug("Reading '{}' ...", paths);
     SequenceFileInputFormat.setInputPaths(conf, paths);
 
     val hadoopRDD = sparkContext.hadoopRDD(conf, SequenceFileInputFormat.class, keyClass, valueClass,

@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.release.core.util;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static org.icgc.dcc.release.core.util.JacksonFactory.createSmileObjectReader;
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import lombok.NonNull;
@@ -45,7 +44,7 @@ public final class ReadKeySequenceFile<T> implements
   public Tuple2<String, T> call(Tuple2<Text, BytesWritable> tuple) throws Exception {
     checkReader();
 
-    val key = new String(tuple._1.getBytes(), UTF_8);
+    val key = tuple._1.toString();
     T value = reader.readValue(tuple._2.getBytes());
 
     return tuple(key, value);
