@@ -42,7 +42,7 @@ public class IndexJobCreateTasksTest {
 
   private static final String ES_URI = "es://localhost:9300";
   private static final Set<DocumentType> DOCUMENT_TYPES = ImmutableSet.of(DONOR_TYPE, GENE_TYPE);
-  private static final int DOCUMENT_TYPE_COUNT = DocumentType.values().length;
+  private static final int DOCUMENT_TYPE_COUNT = DOCUMENT_TYPES.size();
 
   /**
    * Class under test.
