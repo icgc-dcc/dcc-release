@@ -15,37 +15,59 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.hadoop;
+package org.icgc.dcc.release.job.index.function;
 
-import java.io.IOException;
+import static org.icgc.dcc.release.job.index.io.DocumentWriterFactory.createFilteringDocumentWriter;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.RecordReader;
-import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.SequenceFileInputFormat;
-import org.apache.hadoop.mapred.lib.CombineFileInputFormat;
-import org.apache.hadoop.mapred.lib.CombineFileRecordReader;
-import org.apache.hadoop.mapred.lib.CombineFileSplit;
+import java.util.Iterator;
+import java.util.Map;
 
-public class CombineSequenceInputFormat<K> extends CombineFileInputFormat<K, BytesWritable> {
+import lombok.Cleanup;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+
+import org.apache.spark.api.java.function.FlatMapFunction;
+import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.job.index.io.DocumentWriterContext;
+
+import com.google.common.collect.Lists;
+
+@RequiredArgsConstructor
+public final class DocumentIndexer implements FlatMapFunction<Iterator<Document>, Void> {
+
+  private static final long serialVersionUID = 3834434199819463998L;
+
+  @NonNull
+  private final String esUri;
+  @NonNull
+  private final String indexName;
+  @NonNull
+  private final Map<String, String> fsSettings;
+  private final int documentThreshold;
+  @NonNull
+  private final String workingDir;
 
   @Override
-  @SuppressWarnings({ "rawtypes", "unchecked" })
-  public RecordReader<K, BytesWritable> getRecordReader(InputSplit split, JobConf conf, Reporter reporter)
-      throws IOException {
-    return new CombineFileRecordReader(conf, (CombineFileSplit) split, reporter, BiteRecordReaderWrapper.class);
-  }
+  public Iterable<Void> call(Iterator<Document> document) throws Exception {
+    @Cleanup
+    val documentWriter = createFilteringDocumentWriter(createDocumentWriterContext());
 
-  public static class BiteRecordReaderWrapper<K> extends CombineFileRecordReaderWrapper<K, BytesWritable> {
-
-    public BiteRecordReaderWrapper(CombineFileSplit split, Configuration conf, Reporter reporter, Integer index)
-        throws IOException {
-      super(new SequenceFileInputFormat<K, BytesWritable>(), split, conf, reporter, index);
+    while (document.hasNext()) {
+      documentWriter.write(document.next());
     }
 
+    return Lists.newArrayList();
+  }
+
+  private DocumentWriterContext createDocumentWriterContext() {
+    return DocumentWriterContext.builder()
+        .indexName(indexName)
+        .documentThreshold(documentThreshold)
+        .workingDir(workingDir)
+        .fsSettings(fsSettings)
+        .esUri(esUri)
+        .build();
   }
 
 }

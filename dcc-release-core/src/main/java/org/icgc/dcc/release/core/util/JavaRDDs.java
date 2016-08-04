@@ -78,6 +78,7 @@ public final class JavaRDDs {
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <K, V> JavaHadoopRDD<K, V> sequenceFile(JavaSparkContext sparkContext, String paths, Class<K> keyClass,
       Class<V> valueClass, JobConf conf) {
+    log.debug("Reading '{}' ...", paths);
     SequenceFileInputFormat.setInputPaths(conf, paths);
 
     val hadoopRDD = sparkContext.hadoopRDD(conf, SequenceFileInputFormat.class, keyClass, valueClass,
@@ -104,10 +105,23 @@ public final class JavaRDDs {
   public static JavaHadoopRDD<NullWritable, BytesWritable> combineSequenceFile(@NonNull JavaSparkContext sparkContext,
       @NonNull String paths, @NonNull JobConf conf) {
     CombineSequenceInputFormat.setInputPaths(conf, paths);
-    val hadoopRDD = sparkContext.hadoopRDD(conf, CombineSequenceInputFormat.class, NullWritable.class,
-        BytesWritable.class, sparkContext.defaultMinPartitions());
+    val formatClazz = Classes.<CombineSequenceInputFormat<NullWritable>> castClass(CombineSequenceInputFormat.class);
+    val hadoopRDD = sparkContext.hadoopRDD(conf, formatClazz, NullWritable.class, BytesWritable.class,
+        sparkContext.defaultMinPartitions());
 
     return (JavaHadoopRDD<NullWritable, BytesWritable>) hadoopRDD;
+  }
+
+  public static JavaHadoopRDD<Text, BytesWritable> combineTextKeySequenceFile(
+      @NonNull JavaSparkContext sparkContext,
+      @NonNull String paths,
+      @NonNull JobConf conf) {
+    CombineSequenceInputFormat.setInputPaths(conf, paths);
+    val formatClazz = Classes.<CombineSequenceInputFormat<Text>> castClass(CombineSequenceInputFormat.class);
+    val hadoopRDD = sparkContext.hadoopRDD(conf, formatClazz, Text.class, BytesWritable.class,
+        sparkContext.defaultMinPartitions());
+
+    return (JavaHadoopRDD<Text, BytesWritable>) hadoopRDD;
   }
 
   @NonNull

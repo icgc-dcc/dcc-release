@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,59 +15,37 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.index.task;
+package org.icgc.dcc.release.job.document.function;
 
-import static org.icgc.dcc.release.job.index.io.DocumentWriterFactory.createFilteringDocumentWriter;
-
-import java.util.Iterator;
-import java.util.Map;
-
-import lombok.Cleanup;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-import org.apache.spark.api.java.function.FlatMapFunction;
-import org.icgc.dcc.release.core.document.Document;
-import org.icgc.dcc.release.job.index.io.DocumentWriterContext;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.spark.api.java.function.PairFunction;
+import org.icgc.dcc.release.core.util.JacksonFactory;
+import org.icgc.dcc.release.core.util.Tuples;
+import org.icgc.dcc.release.job.document.model.Donor;
 
-import com.google.common.collect.Lists;
+import scala.Tuple2;
 
-@RequiredArgsConstructor
-public final class DocumentIndexer implements FlatMapFunction<Iterator<Document>, Void> {
+import com.fasterxml.jackson.databind.ObjectWriter;
 
-  private static final long serialVersionUID = 3834434199819463998L;
+public final class PairDonor implements PairFunction<Donor, Text, BytesWritable> {
 
-  @NonNull
-  private final String esUri;
-  @NonNull
-  private final String indexName;
-  @NonNull
-  private final Map<String, String> fsSettings;
-  private final int documentThreshold;
-  @NonNull
-  private final String workingDir;
+  private transient ObjectWriter writer;
 
   @Override
-  public Iterable<Void> call(Iterator<Document> document) throws Exception {
-    @Cleanup
-    val documentWriter = createFilteringDocumentWriter(createDocumentWriterContext());
+  public Tuple2<Text, BytesWritable> call(Donor donor) throws Exception {
+    checkWriter();
+    val key = new Text(donor.get_donor_id());
 
-    while (document.hasNext()) {
-      documentWriter.write(document.next());
-    }
-
-    return Lists.newArrayList();
+    return Tuples.tuple(key, new BytesWritable(writer.writeValueAsBytes(donor)));
   }
 
-  private DocumentWriterContext createDocumentWriterContext() {
-    return DocumentWriterContext.builder()
-        .indexName(indexName)
-        .documentThreshold(documentThreshold)
-        .workingDir(workingDir)
-        .fsSettings(fsSettings)
-        .esUri(esUri)
-        .build();
+  private void checkWriter() {
+    if (writer == null) {
+      writer = JacksonFactory.createSmileObjectWriter(Donor.class);
+    }
   }
 
 }

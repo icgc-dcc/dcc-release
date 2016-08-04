@@ -21,78 +21,70 @@ import java.util.Map;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
-import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.core.task.TaskContext;
-import org.icgc.dcc.release.core.task.TaskPriority;
 import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.core.util.Configurations;
 import org.icgc.dcc.release.job.index.function.CreateDocument;
-import org.icgc.dcc.release.job.index.function.DocumentIndexer;
+import org.icgc.dcc.release.job.index.function.CreateEsExportTar;
 
 @RequiredArgsConstructor
-public class IndexTask extends GenericIndexTask {
+public class EsExportTask extends GenericIndexTask {
 
-  private static final int PARTITION_SIZE_MB = 256;
+  public static final String ES_EXPORT_DIR = "es_export";
 
-  @NonNull
-  private final String esUri;
   @NonNull
   private final String indexName;
   @NonNull
   private final DocumentType documentType;
-  private final int bigDocumentThresholdMb;
 
   @Override
   public TaskType getType() {
-    if (documentType.hasDefaultParallelism()) {
-      return documentType.getOutputFileType().isPartitioned() ? TaskType.FILE_TYPE_PROJECT : TaskType.FILE_TYPE;
-    }
-
     return TaskType.FILE_TYPE;
   }
 
   @Override
-  public TaskPriority getPriority() {
-    return documentType.getPriority();
-  }
-
-  @Override
   public String getName() {
-    return Task.getName(super.getName(), documentType.getName());
+    return super.getName() + documentType.getName();
   }
 
   @Override
   public void execute(TaskContext taskContext) {
-    JavaRDD<Document> documents = readDocuments(taskContext);
-    // If the documentType has parallelism set coalesce the number of mappers to that number.
-    if (!documentType.hasDefaultParallelism()) {
-      documents = documents.coalesce(documentType.getParallelism());
-    }
-
-    documents.mapPartitions(new DocumentIndexer(
-        esUri,
-        indexName,
-        getFileSystemConfig(taskContext),
-        bigDocumentThresholdMb,
-        taskContext.getJobContext().getWorkingDir()))
-
-        // Calling count() to trigger calculation of the RDD. Using the count() action to iterate over the whole
-        // partition. first(), for example, will stop after processing of the first element.
+    prepareDirs(taskContext);
+    readDocuments(taskContext)
+        .coalesce(1)
+        .mapPartitions(createExportTarFucntion(taskContext))
+        // Force calculation of the partition
         .count();
   }
 
-  private JavaRDD<Document> readDocuments(TaskContext taskContext) {
-    return documentType.hasDefaultParallelism() ?
-        readDocumnetInput(taskContext, documentType.getOutputFileType(), PARTITION_SIZE_MB) :
-        readUnpartitionedSequenceFileInput(taskContext, documentType.getOutputFileType())
-            .map(new CreateDocument(documentType));
+  private CreateEsExportTar createExportTarFucntion(TaskContext taskContext) {
+    return new CreateEsExportTar(
+        indexName,
+        taskContext.getJobContext().getWorkingDir(),
+        documentType.getName(),
+        getFileSystemSettings(taskContext));
   }
 
-  private static Map<String, String> getFileSystemConfig(TaskContext taskContext) {
+  private void prepareDirs(TaskContext taskContext) {
+    val fileSystem = taskContext.getFileSystem();
+    val workingDir = taskContext.getJobContext().getWorkingDir();
+    val esExportsDir = new Path(workingDir, ES_EXPORT_DIR);
+    HadoopUtils.mkdirs(fileSystem, esExportsDir);
+  }
+
+  private JavaRDD<Document> readDocuments(TaskContext taskContext) {
+    return readUnpartitionedSequenceFileInput(taskContext, documentType.getOutputFileType())
+        .map(new CreateDocument(documentType));
+  }
+
+  private static Map<String, String> getFileSystemSettings(TaskContext taskContext) {
     return Configurations.getSettings(taskContext.getFileSystem().getConf());
   }
 

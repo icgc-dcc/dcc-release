@@ -22,7 +22,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   <parent>
     <groupId>org.icgc.dcc</groupId>
     <artifactId>dcc-parent</artifactId>
-    <version>31</version>
+    <version>32</version>
   </parent>
 
   <artifactId>dcc-release</artifactId>
@@ -213,6 +213,11 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
         <artifactId>externalsortinginjava</artifactId>
         <version>${externalsort.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-compress</artifactId>
+        <version>${apache-commons.version}</version>
+      </dependency>
       
       <!-- Required for Spring -->
       <dependency>
@@ -327,6 +332,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
     <!-- Versions - Utils -->
     <externalsort.version>0.1.9</externalsort.version>
+    <apache-commons.version>1.4.1</apache-commons.version>
     
     <!-- Required for Spark -->
     <jackson.version>2.4.4</jackson.version>
