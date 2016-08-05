@@ -70,7 +70,7 @@ public class CreateVCFFileTask extends GenericTask {
 
     val input = readDocInput(taskContext, FileType.MUTATION_CENTRIC_DOCUMENT);
     val partitionsCount = getPartitionsCount(input);
-    val records = input.mapPartitions(new MutationVCFConverter(testedDonorCount, releaseName, fastaFile.toString()))
+    val records = input.mapPartitions(new MutationVCFConverter(testedDonorCount, releaseName, properties))
         .sortBy(key -> key, true, partitionsCount);
 
     val output = header.union(records);

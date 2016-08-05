@@ -31,6 +31,8 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.icgc.dcc.release.core.config.SnpEffProperties;
+import org.icgc.dcc.release.core.resolver.ReferenceGenomeResolver;
 import org.icgc.dcc.release.job.document.io.MutationVCFDocumentWriter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -43,7 +45,7 @@ public final class MutationVCFConverter implements FlatMapFunction<Iterator<Obje
   @NonNull
   private final String releaseName;
   @NonNull
-  private final String fastaFile;
+  private final SnpEffProperties properties;
 
   private ByteArrayOutputStream buffer;
   private MutationVCFDocumentWriter mutationWriter;
@@ -68,8 +70,18 @@ public final class MutationVCFConverter implements FlatMapFunction<Iterator<Obje
   @SneakyThrows
   private void initDependencies() {
     buffer = new ByteArrayOutputStream();
-    mutationWriter = new MutationVCFDocumentWriter(releaseName, new File(fastaFile), buffer, testedDonorCount);
+    val fastaFile = resolveFastaFile();
+    mutationWriter = new MutationVCFDocumentWriter(releaseName, fastaFile, buffer, testedDonorCount);
     buffer.reset();
+  }
+
+  private File resolveFastaFile() {
+    val resolver = new ReferenceGenomeResolver(
+        properties.getResourceDir(),
+        properties.getResourceUrl(),
+        properties.getReferenceGenomeVersion());
+
+    return resolver.resolve();
   }
 
 }
