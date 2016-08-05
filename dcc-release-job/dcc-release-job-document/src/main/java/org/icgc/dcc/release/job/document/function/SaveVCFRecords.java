@@ -58,7 +58,6 @@ public final class SaveVCFRecords implements FlatMapFunction<Iterator<String>, V
     val writer = getWriter(vcfFilePath, fileSystem);
     while (rows.hasNext()) {
       writer.write(rows.next());
-      writer.newLine();
     }
 
     return Collections.emptyList();
