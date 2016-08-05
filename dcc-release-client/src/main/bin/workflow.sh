@@ -346,7 +346,7 @@ run() {
 
 run_jobs() {
   if [[ ! -f $JOBS_CONF ]] || [[ -n $CORES ]]; then
-    echo Running jobs...
+    run
   else
     echo "Running jobs according to the jobs configuration..."
     # Associative arrays work with Bash version > 3
