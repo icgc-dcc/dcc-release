@@ -25,6 +25,8 @@ import java.util.Map;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
+import org.icgc.dcc.common.core.json.Jackson;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +34,7 @@ import com.google.common.collect.ImmutableList;
 @NoArgsConstructor(access = PRIVATE)
 public final class FeatureUtils {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = Jackson.DEFAULT;
 
   public static List<String> getPropertyNames(Class<?> type) {
     return ImmutableList.copyOf(asMap(create(type)).keySet());

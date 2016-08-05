@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,11 +15,14 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.io;
+package org.icgc.dcc.release.job.document.function;
 
-import static org.icgc.dcc.release.core.util.JacksonFactory.READER;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
 
-import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.util.Collections;
 import java.util.Iterator;
 
 import lombok.NonNull;
@@ -27,32 +30,46 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.icgc.dcc.release.core.hadoop.FileGlobInputStream;
-import org.icgc.dcc.release.core.job.FileType;
+import org.apache.spark.api.java.function.FlatMapFunction;
+import org.icgc.dcc.release.job.document.io.MutationVCFDocumentWriter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 
 @RequiredArgsConstructor
-public class HDFSMutationsReader {
+public final class MutationVCFConverter implements FlatMapFunction<Iterator<ObjectNode>, String> {
 
+  private final int testedDonorCount;
   @NonNull
-  private final String workingDir;
+  private final String releaseName;
   @NonNull
-  private final FileSystem fileSystem;
-  private final boolean compressed;
+  private final String fastaFile;
 
-  public Iterator<ObjectNode> createMutationsIterator() {
-    val inputPath = new Path(workingDir, FileType.MUTATION_CENTRIC_DOCUMENT.getDirName());
-    val inputStream = new FileGlobInputStream(fileSystem, inputPath, compressed);
+  private ByteArrayOutputStream buffer;
+  private MutationVCFDocumentWriter mutationWriter;
 
-    return readInput(inputStream);
+  @Override
+  public Iterable<String> call(Iterator<ObjectNode> iterator) throws Exception {
+    initDependencies();
+
+    val vcfRecords = Lists.<String> newArrayList();
+    while (iterator.hasNext()) {
+      mutationWriter.write(iterator.next());
+      val record = buffer.toString();
+      buffer.reset();
+      checkState(!isNullOrEmpty(record), "A VCF record can't be empty");
+      vcfRecords.add(record);
+    }
+    Collections.sort(vcfRecords);
+
+    return vcfRecords;
   }
 
   @SneakyThrows
-  private static Iterator<ObjectNode> readInput(InputStream inputStream) {
-    return READER.<ObjectNode> readValues(inputStream);
+  private void initDependencies() {
+    buffer = new ByteArrayOutputStream();
+    mutationWriter = new MutationVCFDocumentWriter(releaseName, new File(fastaFile), buffer, testedDonorCount);
+    buffer.reset();
   }
 
 }

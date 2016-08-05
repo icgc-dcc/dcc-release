@@ -15,29 +15,57 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.vcf.util;
+package org.icgc.dcc.release.job.document.function;
 
-import static lombok.AccessLevel.PRIVATE;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
-import java.io.File;
-
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.Cleanup;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-@NoArgsConstructor(access = PRIVATE)
-public final class TempFiles {
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.spark.api.java.function.FlatMapFunction;
+import org.icgc.dcc.common.hadoop.fs.FileSystems;
 
-  private static final File TEMP_DIR = new File("/data1/spark");
+@RequiredArgsConstructor
+public final class SaveVCFRecords implements FlatMapFunction<Iterator<String>, Void> {
 
-  @SneakyThrows
-  public static File createTempFile() {
-    val file = TEMP_DIR.exists() ?
-        File.createTempFile("dcc-release-", "-tmp", TEMP_DIR) :
-        File.createTempFile("dcc-release-", "-tmp");
-    file.deleteOnExit();
+  @NonNull
+  private final String workingDir;
+  @NonNull
+  private final Map<String, String> fileSystemSettings;
 
-    return file;
+  /**
+   * See
+   * https://wiki.oicr.on.ca/display/DCCSOFT/Aggregated+Data+Download+Specification?focusedCommentId=57774680#comment
+   * -57774680
+   */
+  public static final String VCF_FILE_NAME = "simple_somatic_mutation.aggregated.vcf.gz";
+
+  @Override
+  public Iterable<Void> call(Iterator<String> rows) throws Exception {
+    val vcfFilePath = new Path(workingDir, SaveVCFRecords.VCF_FILE_NAME);
+    val fileSystem = FileSystems.getFileSystem(fileSystemSettings);
+    @Cleanup
+    val writer = getWriter(vcfFilePath, fileSystem);
+    while (rows.hasNext()) {
+      writer.write(rows.next());
+      writer.newLine();
+    }
+
+    return Collections.emptyList();
+  }
+
+  private static BufferedWriter getWriter(Path vcfFilePath, FileSystem fileSystem) throws IOException {
+    return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(fileSystem.create(vcfFilePath))));
   }
 
 }
