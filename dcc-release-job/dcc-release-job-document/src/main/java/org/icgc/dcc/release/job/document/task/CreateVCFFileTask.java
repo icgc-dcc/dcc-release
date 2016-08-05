@@ -86,7 +86,6 @@ public class CreateVCFFileTask extends GenericTask {
   }
 
   private void createVcfFiles(TaskContext taskContext) throws IOException {
-    resolveTotalSsmTestedDonorCount(taskContext);
     val mutationsReader = createMutationsReader(taskContext);
     @Cleanup
     val outputStream = createOutputStream();

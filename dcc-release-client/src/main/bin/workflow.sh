@@ -14,9 +14,16 @@ LOG_DIR=$BASE_DIR/logs
 JAR=$BASE_DIR/lib/dcc-release-client.jar
 CONF_FILE=$CONF_DIR/application.yml
 
+# File which stores information about release name of the last run
+LASTRUN=$CONF_DIR/.lastrun
+
+# Jobs configuration 
+JOBS_CONF=$CONF_DIR/jobs.properties
+
 DRIVER_LIB="/usr/lib/hadoop/lib/native"
 DRIVER_MEM=30g
 
+# Read projects
 . $CONF_DIR/workflow_settings.sh
 
 #
@@ -292,7 +299,7 @@ get_minor_version() {
 
 resolve_release_name() {
   last_release=
-  [[ -e $CONF_DIR/.lastrun ]] && last_release=$(head $CONF_DIR/.lastrun)
+  [[ -e $LASTRUN ]] && last_release=$(head $LASTRUN)
   if [[ -z $last_release ]]; then
     RELEASE_NAME=${RELEASE_NAME}-0
   else 
@@ -307,7 +314,7 @@ resolve_release_name() {
       RELEASE_NAME=${RELEASE_NAME}-0
     fi
   fi
-  echo $RELEASE_NAME > $CONF_DIR/.lastrun
+  echo $RELEASE_NAME > $LASTRUN
 }
 
 run() {
@@ -337,6 +344,58 @@ run() {
     $args
 }
 
+run_jobs() {
+  if [[ ! -f $JOBS_CONF ]] || [[ -n $CORES ]]; then
+    echo Running jobs...
+  else
+    echo "Running jobs according to the jobs configuration..."
+    # Associative arrays work with Bash version > 3
+    declare -A jobs_conf
+    # Read jobs configuration in map
+    while IFS='=' read -r key value; do
+      jobs_conf[$key]=$value
+    done < $JOBS_CONF
+
+    all_jobs=$(echo $RUN_JOBS | tr , ' ')
+    current_cores=
+    prev_cores=-1
+    jobs_to_run=""
+    for j in $all_jobs; do
+      current_cores=${jobs_conf[$j]}
+
+      # Very first job
+      if [[ $prev_cores -eq -1 ]]; then
+        prev_cores=$current_cores
+        jobs_to_run=$(append_jobs $jobs_to_run $j)
+      elif [[ $current_cores -eq $prev_cores ]]; then
+        jobs_to_run=$(append_jobs $jobs_to_run $j)
+      else
+        # Need to run the jobs as jobs configuration changed
+        if [[ -z $prev_cores ]]; then
+          unset CORES
+        else
+          CORES=$prev_cores
+        fi
+        echo "Running jobs $jobs_to_run on '$CORES' cores"
+        RUN_JOBS=$jobs_to_run
+        run
+        jobs_to_run=$j
+        prev_cores=$current_cores
+      fi
+    done
+
+    # Run the jobs left after iterating over the configuration file
+    if [[ -z $prev_cores ]]; then
+      unset CORES
+    else
+      CORES=$prev_cores
+    fi
+    echo "Running jobs $jobs_to_run on '$CORES' cores"
+    RUN_JOBS=$jobs_to_run
+    run
+  fi
+}
+
 #
 # Main
 #
@@ -350,8 +409,7 @@ resolve_data_dir
 resolve_work_dir
 resolve_jobs
 resolve_release_name
-run
-
+run_jobs
 
 # Useful settings
 #    -Djoinjob.tasks=sgv \
