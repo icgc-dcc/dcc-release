@@ -230,16 +230,12 @@ public abstract class GenericTask implements Task {
       Class<T> clazz) {
     val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
     val inputPaths = resolveInputPaths(taskContext, fileTypePath);
-    val sparkContext = taskContext.getSparkContext();
-    JavaRDD<T> result = sparkContext.emptyRDD();
+    JavaRDD<T> result = null;
 
     for (val inputPath : inputPaths) {
       log.debug("Reading {} ...", inputPath);
       val input = readInput(taskContext, inputPath.toString(), conf, clazz);
-      // TODO: Report to Spark.
-      // If RDD calculation is not forced the result RDD uses only the latest path as source.
-      input.isEmpty();
-      result = result.union(input);
+      result = result == null ? input : result.union(input);
     }
 
     return result;
