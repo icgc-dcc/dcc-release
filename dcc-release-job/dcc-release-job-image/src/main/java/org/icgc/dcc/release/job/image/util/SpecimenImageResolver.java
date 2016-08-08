@@ -29,6 +29,7 @@ import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -224,13 +225,25 @@ public class SpecimenImageResolver {
   }
 
   private static Document readDocument(URL url) throws JDOMException, IOException {
-    log.debug("Reading document '{}'", url);
-    val connection = url.openConnection();
-    connection.setConnectTimeout(URL_TIMEOUT_VALUE);
-    connection.setReadTimeout(URL_TIMEOUT_VALUE);
-    connection.connect();
-
+    // There's an issue when this method throws UnknownHostException which is difficult to reproduce. Will just retry to
+    // re-connect.
+    connectWithRetry(url, 3);
     return new SAXBuilder().build(url);
+  }
+
+  private static void connectWithRetry(URL url, int retriesLeft) throws IOException {
+    log.debug("Reading document '{}'", url);
+    while (retriesLeft-- > 0) {
+      try {
+        val connection = url.openConnection();
+        connection.setConnectTimeout(URL_TIMEOUT_VALUE);
+        connection.setReadTimeout(URL_TIMEOUT_VALUE);
+        connection.connect();
+      } catch (UnknownHostException e) {
+        log.warn("Got UnknownHostException. Re-connecting. {} retries left", retriesLeft);
+        connectWithRetry(url, retriesLeft - 1);
+      }
+    }
   }
 
   private static String parseSpecimenId(String specimenSampleId) {
