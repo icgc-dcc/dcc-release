@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 
 @NoArgsConstructor(access = PRIVATE)
-public final class FeatureUtils {
+public final class Features {
 
   private static final ObjectMapper MAPPER = Jackson.DEFAULT;
 

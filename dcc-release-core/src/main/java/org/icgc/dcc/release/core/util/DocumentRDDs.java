@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.core.util;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static lombok.AccessLevel.PRIVATE;
@@ -62,9 +63,7 @@ public final class DocumentRDDs {
   public static void saveAsSequenceObjectNodeFile(@NonNull JavaRDD<Document> rdd, @NonNull String path) {
     val conf = Configurations.createJobConf(rdd);
     val pairRdd = rdd
-        .mapToPair(row -> new Tuple2<NullWritable, BytesWritable>(
-            NullWritable.get(),
-            createByteWritable(row.getSource()))
+        .mapToPair(row -> tuple(NullWritable.get(), createByteWritable(row.getSource()))
         );
 
     JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, BytesWritable.class, path, conf);
@@ -79,7 +78,7 @@ public final class DocumentRDDs {
 
   private static PairFunction<Tuple2<Text, BytesWritable>, String, ObjectNode> convertToIdAndSource() {
     return tuple -> {
-      String documentId = new String(tuple._1.getBytes());
+      String documentId = new String(tuple._1.getBytes(), UTF_8);
       ObjectNode value = (ObjectNode) SMILE_READER.readValue(tuple._2.getBytes());
 
       return tuple(documentId, value);

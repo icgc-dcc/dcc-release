@@ -57,7 +57,7 @@ public final class MutationVCFConverter implements FlatMapFunction<Iterator<Obje
     val vcfRecords = Lists.<String> newArrayList();
     while (iterator.hasNext()) {
       mutationWriter.write(iterator.next());
-      val record = buffer.toString();
+      val record = buffer.toString("UTF-8");
       buffer.reset();
       checkState(!isNullOrEmpty(record), "A VCF record can't be empty");
       vcfRecords.add(record);
@@ -72,6 +72,8 @@ public final class MutationVCFConverter implements FlatMapFunction<Iterator<Obje
     buffer = new ByteArrayOutputStream();
     val fastaFile = resolveFastaFile();
     mutationWriter = new MutationVCFDocumentWriter(releaseName, fastaFile, buffer, testedDonorCount);
+    // Resetting buffer, because when MutationVCFDocumentWriter it writes a VCF header to the output stream(buffer)
+    // which is not required here and will be created separately.
     buffer.reset();
   }
 

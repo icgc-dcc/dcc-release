@@ -43,7 +43,7 @@ import org.icgc.dcc.release.core.task.TaskType;
 import org.icgc.dcc.release.core.util.Configurations;
 import org.icgc.dcc.release.job.document.function.MutationVCFConverter;
 import org.icgc.dcc.release.job.document.function.SaveVCFRecords;
-import org.icgc.dcc.release.job.document.io.MutationVCFDocumentWriter;
+import org.icgc.dcc.release.job.document.vcf.MutationVCFWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -81,6 +81,8 @@ public class CreateVCFFileTask extends GenericTask {
     val workingDir = taskContext.getJobContext().getWorkingDir();
     val fileSystemSettings = Configurations.getSettings(taskContext.getFileSystem().getConf());
 
+    // Coalescing to 1 partition so only 1 instance of SaveVCFRecords function will be created and it will get the whole
+    // input
     output.coalesce(1)
         .mapPartitions(new SaveVCFRecords(workingDir, fileSystemSettings))
         .count();
@@ -111,8 +113,9 @@ public class CreateVCFFileTask extends GenericTask {
   private static JavaRDD<String> getVCFHeaderRDD(int testedDonorCount, String releaseName, File fastaFile,
       TaskContext taskContext) {
     val buffer = new ByteArrayOutputStream();
-    new MutationVCFDocumentWriter(releaseName, fastaFile, buffer, testedDonorCount);
-    val header = buffer.toString();
+    val writer = new MutationVCFWriter(releaseName, fastaFile, buffer, true, testedDonorCount);
+    writer.writeHeader();
+    val header = buffer.toString("UTF-8");
     checkState(!isNullOrEmpty(header), "Expected non-empty VCF header");
     val sparkContext = taskContext.getSparkContext();
 

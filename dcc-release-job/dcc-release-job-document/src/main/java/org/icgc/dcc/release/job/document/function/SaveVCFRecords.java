@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.release.job.document.function;
 
+import static com.google.common.base.Charsets.UTF_8;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -64,7 +66,7 @@ public final class SaveVCFRecords implements FlatMapFunction<Iterator<String>, V
   }
 
   private static BufferedWriter getWriter(Path vcfFilePath, FileSystem fileSystem) throws IOException {
-    return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(fileSystem.create(vcfFilePath))));
+    return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(fileSystem.create(vcfFilePath)), UTF_8));
   }
 
 }

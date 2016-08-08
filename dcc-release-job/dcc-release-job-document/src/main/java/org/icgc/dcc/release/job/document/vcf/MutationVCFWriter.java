@@ -20,8 +20,8 @@ package org.icgc.dcc.release.job.document.vcf;
 import static com.google.common.base.Throwables.propagate;
 import static org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory.create;
 import static org.broadinstitute.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
-import static org.icgc.dcc.release.job.document.vcf.util.FeatureUtils.asMap;
-import static org.icgc.dcc.release.job.document.vcf.util.FeatureUtils.getPropertyNames;
+import static org.icgc.dcc.release.job.document.vcf.util.Features.asMap;
+import static org.icgc.dcc.release.job.document.vcf.util.Features.getPropertyNames;
 
 import java.io.Closeable;
 import java.io.File;
