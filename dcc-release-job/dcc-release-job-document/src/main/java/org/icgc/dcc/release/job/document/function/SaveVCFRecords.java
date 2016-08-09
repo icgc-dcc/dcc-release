@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.release.job.document.function;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.release.job.export.task;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.icgc.dcc.common.core.util.Joiners.TAB;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;

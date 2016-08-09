@@ -19,6 +19,7 @@ package org.icgc.dcc.release.job.document.function;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -57,7 +58,7 @@ public final class MutationVCFConverter implements FlatMapFunction<Iterator<Obje
     val vcfRecords = Lists.<String> newArrayList();
     while (iterator.hasNext()) {
       mutationWriter.write(iterator.next());
-      val record = buffer.toString("UTF-8");
+      val record = buffer.toString(UTF_8.toString());
       buffer.reset();
       checkState(!isNullOrEmpty(record), "A VCF record can't be empty");
       vcfRecords.add(record);

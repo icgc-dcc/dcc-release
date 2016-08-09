@@ -17,10 +17,10 @@
  */
 package org.icgc.dcc.release.job.export.util;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableMap;
 

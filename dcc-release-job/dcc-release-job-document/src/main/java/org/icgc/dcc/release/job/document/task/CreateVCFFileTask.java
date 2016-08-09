@@ -19,6 +19,7 @@ package org.icgc.dcc.release.job.document.task;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.icgc.dcc.common.core.model.FeatureTypes.FeatureType.SSM_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.getTestedTypeCountFieldName;
@@ -115,7 +116,7 @@ public class CreateVCFFileTask extends GenericTask {
     val buffer = new ByteArrayOutputStream();
     val writer = new MutationVCFWriter(releaseName, fastaFile, buffer, true, testedDonorCount);
     writer.writeHeader();
-    val header = buffer.toString("UTF-8");
+    val header = buffer.toString(UTF_8.toString());
     checkState(!isNullOrEmpty(header), "Expected non-empty VCF header");
     val sparkContext = taskContext.getSparkContext();
 

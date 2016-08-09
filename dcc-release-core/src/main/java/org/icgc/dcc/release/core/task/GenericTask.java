@@ -49,6 +49,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @Slf4j
 public abstract class GenericTask implements Task {
 
+  private static final Pattern PARTITION_NAME_PATTERN = Pattern.compile(Partitions.PARTITION_NAME + ".*");
+
   private final String name;
 
   public GenericTask(String name) {
@@ -230,15 +232,11 @@ public abstract class GenericTask implements Task {
       Class<T> clazz) {
     val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
     val inputPaths = resolveInputPaths(taskContext, fileTypePath);
-    JavaRDD<T> result = null;
 
-    for (val inputPath : inputPaths) {
-      log.debug("Reading {} ...", inputPath);
-      val input = readInput(taskContext, inputPath.toString(), conf, clazz);
-      result = result == null ? input : result.union(input);
-    }
-
-    return result;
+    return inputPaths.stream()
+        .peek(inputPath -> log.debug("Reading {} ...", inputPath)) // Optional
+        .map(inputPath -> readInput(taskContext, inputPath.toString(), conf, clazz))
+        .reduce((x, y) -> x.union(y)).get();
   }
 
   private static <T> JavaRDD<T> readInput(TaskContext taskContext, String path, JobConf conf, Class<T> clazz) {
@@ -256,15 +254,11 @@ public abstract class GenericTask implements Task {
     val inputPaths = inputFileType.isPartitioned() ?
         resolveInputPaths(taskContext, fileTypePath) :
         singleton(fileTypePath);
-    JavaPairRDD<String, T> result = null;
 
-    for (val inputPath : inputPaths) {
-      log.debug("Reading {} ...", inputPath);
-      val sequenceInput = readSequenceFileInput(taskContext, inputPath.toString(), conf, clazz);
-      result = result == null ? sequenceInput : result.union(sequenceInput);
-    }
-
-    return result;
+    return inputPaths.stream()
+        .peek(inputPath -> log.debug("Reading {} ...", inputPath)) // Optional
+        .map(inputPath -> readSequenceFileInput(taskContext, inputPath.toString(), conf, clazz))
+        .reduce((x, y) -> x.union(y)).get();
   }
 
   private static <T> JavaPairRDD<String, T> readSequenceFileInput(TaskContext taskContext, String path, JobConf conf,
@@ -276,8 +270,7 @@ public abstract class GenericTask implements Task {
   }
 
   private static List<Path> resolveInputPaths(TaskContext taskContext, Path fileTypePath) {
-    return HadoopUtils.lsDir(taskContext.getFileSystem(), fileTypePath,
-        Pattern.compile(Partitions.PARTITION_NAME + ".*"));
+    return HadoopUtils.lsDir(taskContext.getFileSystem(), fileTypePath, PARTITION_NAME_PATTERN);
   }
 
   private static boolean isReadAll(TaskContext taskContext, FileType inputFileType) {

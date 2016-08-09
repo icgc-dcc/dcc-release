@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.release.core.util;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.icgc.dcc.common.core.util.Separators.TAB;
 import static org.icgc.dcc.release.core.hadoop.SmileSequenceFileInputStream.getBytes;
 import static org.icgc.dcc.release.core.util.JacksonFactory.SMILE_READER;
