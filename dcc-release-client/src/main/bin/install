@@ -27,7 +27,7 @@ from xml.dom.minidom import parseString
 from datetime import datetime
 
 # Maven artifact location
-name = 'dcc-import-client'
+name = 'dcc-release-client'
 server = 'https://artifacts.oicr.on.ca/artifactory'
 artifact = 'org/icgc/dcc/' + name
 api_path = 'https://artifacts.oicr.on.ca/artifactory/api/storage'
