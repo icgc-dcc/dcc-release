@@ -119,7 +119,7 @@ public class SnpEffResultHandler implements Runnable {
 
   @SneakyThrows
   private PrintWriter openOutFile(String fileName) {
-    return new PrintWriter(fileName, "UTF-8");
+    return new PrintWriter(fileName, UTF_8.toString());
   }
 
 }

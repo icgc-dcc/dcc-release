@@ -32,7 +32,6 @@ import org.icgc.dcc.release.core.util.JacksonFactory;
 import org.icgc.dcc.release.job.document.model.CollectionFields;
 import org.icgc.dcc.release.job.document.model.Occurrence;
 import org.icgc.dcc.release.job.document.util.CollectionFieldsFilterAdapter;
-import org.icgc.dcc.release.job.document.util.DocumentRdds;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -102,11 +101,7 @@ public abstract class AbstractDocumentTask extends GenericTask {
 
   protected void writeDocOutput(TaskContext taskContext, JavaRDD<Document> processed) {
     val outputPath = taskContext.getPath(type.getOutputFileType());
-    if (taskContext.isCompressOutput()) {
-      DocumentRdds.saveAsSequenceIdObjectNodeFile(processed, outputPath);
-    } else {
-      DocumentRdds.saveAsTextObjectNodeFile(processed, outputPath);
-    }
+    super.writeDocOutput(taskContext, processed, outputPath);
   }
 
   protected JavaRDD<Occurrence> readOccurrences(TaskContext taskContext) {

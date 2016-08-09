@@ -17,13 +17,22 @@
  */
 package org.icgc.dcc.release.core.util;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.release.core.util.JacksonFactory.SMILE_READER;
+import static org.icgc.dcc.release.core.util.JacksonFactory.SMILE_WRITER;
+import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
+import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
 
 import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
@@ -46,13 +55,52 @@ public final class DocumentRDDs {
         .map(tuple -> new Document(type, tuple._1, tuple._2));
   }
 
+  public static void saveAsTextObjectNodeFile(@NonNull JavaRDD<Document> rdd, @NonNull String path) {
+    val output = rdd.map(row -> MAPPER.writeValueAsString(row.getSource()));
+    JavaRDDs.saveAsTextFile(output, path);
+  }
+
+  public static void saveAsSequenceObjectNodeFile(@NonNull JavaRDD<Document> rdd, @NonNull String path) {
+    val conf = Configurations.createJobConf(rdd);
+    val pairRdd = rdd
+        .mapToPair(row -> tuple(NullWritable.get(), createByteWritable(row.getSource()))
+        );
+
+    JavaRDDs.saveAsSequenceFile(pairRdd, NullWritable.class, BytesWritable.class, path, conf);
+  }
+
+  public static void saveAsSequenceIdObjectNodeFile(@NonNull JavaRDD<Document> rdd, @NonNull String path) {
+    val conf = Configurations.createJobConf(rdd);
+    val pairRdd = rdd.mapToPair(DocumentRDDs::pairByDocumentId);
+
+    JavaRDDs.saveAsSequenceFile(pairRdd, Text.class, BytesWritable.class, path, conf);
+  }
+
   private static PairFunction<Tuple2<Text, BytesWritable>, String, ObjectNode> convertToIdAndSource() {
     return tuple -> {
-      String documentId = new String(tuple._1.getBytes());
+      String documentId = new String(tuple._1.getBytes(), UTF_8);
       ObjectNode value = (ObjectNode) SMILE_READER.readValue(tuple._2.getBytes());
 
       return tuple(documentId, value);
     };
+  }
+
+  private static Tuple2<Text, BytesWritable> pairByDocumentId(Document document) {
+    val documentId = document.getId();
+    val documentType = document.getType();
+    val source = document.getSource();
+    val sourceDocumentId = textValue(source, documentType.getPrimaryKey());
+    if (!isNullOrEmpty(sourceDocumentId)) {
+      checkState(sourceDocumentId.equals(documentId), "Document IDs from key and document don't match. Key document "
+          + "ID: '%s'. Source document ID: '%s'", documentId, sourceDocumentId);
+    }
+
+    return tuple(new Text(documentId), createByteWritable(source));
+  }
+
+  @SneakyThrows
+  private static BytesWritable createByteWritable(ObjectNode source) {
+    return new BytesWritable(SMILE_WRITER.writeValueAsBytes(source));
   }
 
 }

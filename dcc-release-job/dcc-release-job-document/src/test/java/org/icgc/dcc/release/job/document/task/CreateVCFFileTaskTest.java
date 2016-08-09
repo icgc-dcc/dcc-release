@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.icgc.dcc.common.core.io.Files2;
 import org.icgc.dcc.release.core.job.JobType;
 import org.icgc.dcc.release.core.task.Task;
+import org.icgc.dcc.release.job.document.function.SaveVCFRecords;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,7 +78,7 @@ public class CreateVCFFileTaskTest extends AbstractJobTest {
   }
 
   private File resolveVcfFile() {
-    return new File(workingDir, CreateVCFFileTask.VCF_FILE_NAME);
+    return new File(workingDir, SaveVCFRecords.VCF_FILE_NAME);
   }
 
 }

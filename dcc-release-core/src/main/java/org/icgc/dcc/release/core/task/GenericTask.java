@@ -36,7 +36,9 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
+import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.util.DocumentRDDs;
 import org.icgc.dcc.release.core.util.HadoopFiles;
 import org.icgc.dcc.release.core.util.JavaRDDs;
 import org.icgc.dcc.release.core.util.ObjectNodeRDDs;
@@ -46,6 +48,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Slf4j
 public abstract class GenericTask implements Task {
+
+  private static final Pattern PARTITION_NAME_PATTERN = Pattern.compile(Partitions.PARTITION_NAME + ".*");
 
   private final String name;
 
@@ -146,6 +150,14 @@ public abstract class GenericTask implements Task {
     return readAllInput(taskContext, conf, inputFileType, ObjectNode.class);
   }
 
+  protected JavaRDD<ObjectNode> readDocInput(TaskContext taskContext, FileType inputFileType) {
+    if (taskContext.isCompressOutput()) {
+      return readSequenceFileInput(taskContext, inputFileType);
+    } else {
+      return readInput(taskContext, inputFileType);
+    }
+  }
+
   protected JavaPairRDD<String, ObjectNode> readUnpartitionedSequenceFileInput(TaskContext taskContext,
       FileType inputFileType) {
     val filePath = taskContext.getPath(inputFileType);
@@ -160,47 +172,6 @@ public abstract class GenericTask implements Task {
     val conf = createJobConf(taskContext);
 
     return readAllSequenceFileInput(taskContext, conf, inputFileType, ObjectNode.class);
-  }
-
-  private static <T> JavaRDD<T> readAllInput(TaskContext taskContext, JobConf conf, FileType inputFileType,
-      Class<T> clazz) {
-    val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
-    val inputPaths = resolveInputPaths(taskContext, fileTypePath);
-    val sparkContext = taskContext.getSparkContext();
-    JavaRDD<T> result = sparkContext.emptyRDD();
-
-    for (val inputPath : inputPaths) {
-      log.debug("Reading {} ...", inputPath);
-      val input = readInput(taskContext, inputPath.toString(), conf, clazz);
-      // TODO: Report to Spark.
-      // If RDD calculation is not forced the result RDD uses only the latest path as source.
-      input.isEmpty();
-      result = result.union(input);
-    }
-
-    return result;
-  }
-
-  private static <T> JavaPairRDD<String, T> readAllSequenceFileInput(TaskContext taskContext, JobConf conf,
-      FileType inputFileType, Class<T> clazz) {
-    val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
-    val inputPaths = inputFileType.isPartitioned() ?
-        resolveInputPaths(taskContext, fileTypePath) :
-        singleton(fileTypePath);
-    JavaPairRDD<String, T> result = null;
-
-    for (val inputPath : inputPaths) {
-      log.debug("Reading {} ...", inputPath);
-      val sequenceInput = readSequenceFileInput(taskContext, inputPath.toString(), conf, clazz);
-      result = result == null ? sequenceInput : result.union(sequenceInput);
-    }
-
-    return result;
-  }
-
-  private static List<Path> resolveInputPaths(TaskContext taskContext, Path fileTypePath) {
-    return HadoopUtils.lsDir(taskContext.getFileSystem(), fileTypePath,
-        Pattern.compile(Partitions.PARTITION_NAME + ".*"));
   }
 
   protected void writeOutput(TaskContext taskContext, JavaRDD<ObjectNode> processed, FileType outputFileType) {
@@ -232,6 +203,42 @@ public abstract class GenericTask implements Task {
     }
   }
 
+  protected void writeDocOutput(TaskContext taskContext, JavaRDD<Document> processed, String outputPath) {
+    if (taskContext.isCompressOutput()) {
+      DocumentRDDs.saveAsSequenceIdObjectNodeFile(processed, outputPath);
+    } else {
+      DocumentRDDs.saveAsTextObjectNodeFile(processed, outputPath);
+    }
+  }
+
+  private JavaRDD<ObjectNode> readSequenceFileInput(TaskContext taskContext, FileType inputFileType) {
+    val conf = createJobConf(taskContext);
+    if (isReadAll(taskContext, inputFileType)) {
+      return readAllSequenceFileInput(taskContext, conf, inputFileType, ObjectNode.class).values();
+    }
+
+    val sparkContext = taskContext.getSparkContext();
+    val filePath = taskContext.getPath(inputFileType);
+    if (!exists(sparkContext, filePath)) {
+      log.debug("{} does not exist. Skipping...", filePath);
+
+      return sparkContext.emptyRDD();
+    }
+
+    return readSequenceFileInput(taskContext, taskContext.getPath(inputFileType), conf, ObjectNode.class).values();
+  }
+
+  private static <T> JavaRDD<T> readAllInput(TaskContext taskContext, JobConf conf, FileType inputFileType,
+      Class<T> clazz) {
+    val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
+    val inputPaths = resolveInputPaths(taskContext, fileTypePath);
+
+    return inputPaths.stream()
+        .peek(inputPath -> log.debug("Reading {} ...", inputPath)) // Optional
+        .map(inputPath -> readInput(taskContext, inputPath.toString(), conf, clazz))
+        .reduce((x, y) -> x.union(y)).get();
+  }
+
   private static <T> JavaRDD<T> readInput(TaskContext taskContext, String path, JobConf conf, Class<T> clazz) {
     val sparkContext = taskContext.getSparkContext();
     if (taskContext.isCompressOutput()) {
@@ -241,12 +248,29 @@ public abstract class GenericTask implements Task {
     }
   }
 
+  private static <T> JavaPairRDD<String, T> readAllSequenceFileInput(TaskContext taskContext, JobConf conf,
+      FileType inputFileType, Class<T> clazz) {
+    val fileTypePath = new Path(taskContext.getJobContext().getWorkingDir(), inputFileType.getDirName());
+    val inputPaths = inputFileType.isPartitioned() ?
+        resolveInputPaths(taskContext, fileTypePath) :
+        singleton(fileTypePath);
+
+    return inputPaths.stream()
+        .peek(inputPath -> log.debug("Reading {} ...", inputPath)) // Optional
+        .map(inputPath -> readSequenceFileInput(taskContext, inputPath.toString(), conf, clazz))
+        .reduce((x, y) -> x.union(y)).get();
+  }
+
   private static <T> JavaPairRDD<String, T> readSequenceFileInput(TaskContext taskContext, String path, JobConf conf,
       Class<T> clazz) {
     val sparkContext = taskContext.getSparkContext();
     checkArgument(taskContext.isCompressOutput(), "Method doesn't support reading uncompressed input.");
 
     return HadoopFiles.sequenceFileWithKey(sparkContext, path, conf, clazz);
+  }
+
+  private static List<Path> resolveInputPaths(TaskContext taskContext, Path fileTypePath) {
+    return HadoopUtils.lsDir(taskContext.getFileSystem(), fileTypePath, PARTITION_NAME_PATTERN);
   }
 
   private static boolean isReadAll(TaskContext taskContext, FileType inputFileType) {

@@ -26,9 +26,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <fileSet>
       <directory>src/main/bin</directory>
       <outputDirectory>bin</outputDirectory>
-      <includes>
-        <include>annotator.sh</include>
-      </includes>
       <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>

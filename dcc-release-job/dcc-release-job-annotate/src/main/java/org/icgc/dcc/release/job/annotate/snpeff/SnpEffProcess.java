@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.release.job.annotate.snpeff;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.io.Resources.getResource;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.File;
 

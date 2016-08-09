@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -19,25 +19,35 @@ package org.icgc.dcc.release.job.document.vcf.util;
 
 import static lombok.AccessLevel.PRIVATE;
 
-import java.io.File;
+import java.util.List;
+import java.util.Map;
 
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.val;
+
+import org.icgc.dcc.common.core.json.Jackson;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 
 @NoArgsConstructor(access = PRIVATE)
-public final class TempFiles {
+public final class Features {
 
-  private static final File TEMP_DIR = new File("/data1/spark");
+  private static final ObjectMapper MAPPER = Jackson.DEFAULT;
+
+  public static List<String> getPropertyNames(Class<?> type) {
+    return ImmutableList.copyOf(asMap(create(type)).keySet());
+  }
 
   @SneakyThrows
-  public static File createTempFile() {
-    val file = TEMP_DIR.exists() ?
-        File.createTempFile("dcc-release-", "-tmp", TEMP_DIR) :
-        File.createTempFile("dcc-release-", "-tmp");
-    file.deleteOnExit();
+  private static Object create(Class<?> type) {
+    return type.newInstance();
+  }
 
-    return file;
+  @SneakyThrows
+  public static Map<String, Object> asMap(Object value) {
+    return MAPPER.convertValue(value, new TypeReference<Map<String, Object>>() {});
   }
 
 }
