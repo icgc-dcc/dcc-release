@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.annotate.snpeff;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
@@ -24,18 +25,10 @@ import java.io.File;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-import net.sf.picard.reference.IndexedFastaSequenceFile;
 
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.VariantContextBuilder;
@@ -57,12 +50,24 @@ import org.icgc.dcc.release.job.annotate.resolver.SnpEffJarResolver;
 import org.icgc.dcc.release.job.annotate.util.Alleles;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+import net.sf.picard.reference.IndexedFastaSequenceFile;
 
 @Slf4j
 @RequiredArgsConstructor
 public class SnpEffPredictor {
+
+  /**
+   * Constants
+   */
+  private static final int PREDICTION_TIMEOUT_MINUTES = 5;
 
   /**
    * Configuration.
@@ -101,31 +106,6 @@ public class SnpEffPredictor {
   }
 
   @SneakyThrows
-  private void initializeSnpEff() {
-    log.warn("Initializing SnpEff...");
-    // VariantContextWriterFactory requires a non-null FILE. Create any and delete it on exit
-    val prefix = "zzz";
-    val file = File.createTempFile(prefix, null);
-    file.deleteOnExit();
-    val writer = VariantContextWriterFactory.create(file, stream, null);
-    writer.writeHeader(createAnnotatedVCFHeader());
-    stream.flush();
-    deleteTempFile(file);
-  }
-
-  private void deleteTempFile(File orifinalFile) {
-    val tmpFile = new File(orifinalFile.getAbsolutePath() + ".idx");
-    tmpFile.deleteOnExit();
-  }
-
-  private static VCFHeader createAnnotatedVCFHeader() {
-    Set<VCFHeaderLine> set = Sets.newHashSet();
-    set.add(new VCFHeaderLine("PEDIGREE", "<Derived=Patient_01_Somatic,Original=Patient_01_Germline>"));
-
-    return new VCFHeader(set, ImmutableList.of("Patient_01_Germline", "Patient_01_Somatic"));
-  }
-
-  @SneakyThrows
   public List<SecondaryEntity> predict(String chromosome, long start, long end, String mutation, MutationType type,
       String reference, String id) {
 
@@ -134,7 +114,17 @@ public class SnpEffPredictor {
     stream.println(line);
     stream.flush();
 
-    return queue.take();
+    // Temporary fix for DCC-4663 to allow the calling task to fail if the timeout is exceeded
+    val predictions = queue.poll(PREDICTION_TIMEOUT_MINUTES, MINUTES);
+    val timeout = predictions == null; // Will always be non-null under normal circumstances
+    if (timeout) {
+      checkState(false,
+          "Timeout after waiting %s min for next prediction from SnpEff process. Exit code = %s",
+          PREDICTION_TIMEOUT_MINUTES,
+          process.isAlive() ? process.exitValue() : "<still running!>");
+    }
+
+    return predictions;
   }
 
   public void stop() throws InterruptedException {
@@ -143,6 +133,27 @@ public class SnpEffPredictor {
 
     executor.shutdownNow();
     executor.awaitTermination(1, MINUTES);
+  }
+
+  @SneakyThrows
+  private void initializeSnpEff() {
+    log.warn("Initializing SnpEff...");
+
+    // VariantContextWriterFactory requires a non-null FILE. Create any and delete it on exit
+    val prefix = SnpEffPredictor.class.getName();
+    val file = File.createTempFile(prefix, null);
+    file.deleteOnExit();
+
+    val writer = VariantContextWriterFactory.create(file, stream, null);
+    writer.writeHeader(createAnnotatedVCFHeader());
+    stream.flush();
+
+    deleteTempFile(file);
+  }
+
+  private void deleteTempFile(File orifinalFile) {
+    val tmpFile = new File(orifinalFile.getAbsolutePath() + ".idx");
+    tmpFile.deleteOnExit();
   }
 
   private File resolveJava() {
@@ -181,7 +192,8 @@ public class SnpEffPredictor {
   private VariantContext createVariant(String chromosome, long start, long end, String mutation, MutationType type,
       String reference, String id) {
     val converted = converter.convert(chromosome, start, end, mutation, type, reference);
-    val variant = new VariantContextBuilder()
+
+    return new VariantContextBuilder()
         .chr(chromosome)
         .start(converted.pos)
         .stop(converted.pos + converted.ref.length() - 1)
@@ -189,25 +201,27 @@ public class SnpEffPredictor {
         .alleles(Alleles.createAlleles(converted.ref, converted.alt))
         .genotypes(converted.genotype)
         .make();
-
-    return variant;
   }
 
   private static VCFHeader createVCFHeader() {
-    Set<VCFHeaderLine> set = Sets.newHashSet();
-    val line =
-        new VCFFormatHeaderLine("<ID=GT,Number=1,Type=String,Description=\"Genotype\">", VCFHeaderVersion.VCF4_1);
-    set.add(line);
+    return new VCFHeader(
+        ImmutableSet.of(
+            new VCFFormatHeaderLine("<ID=GT,Number=1,Type=String,Description=\"Genotype\">", VCFHeaderVersion.VCF4_1)),
+        ImmutableList.of("Patient_01_Germline", "Patient_01_Somatic"));
+  }
 
-    return new VCFHeader(set, ImmutableList.of("Patient_01_Germline", "Patient_01_Somatic"));
+  private static VCFHeader createAnnotatedVCFHeader() {
+    return new VCFHeader(
+        ImmutableSet.of(new VCFHeaderLine("PEDIGREE", "<Derived=Patient_01_Somatic,Original=Patient_01_Germline>")),
+        ImmutableList.of("Patient_01_Germline", "Patient_01_Somatic"));
   }
 
   private static Map<String, Object> createAttribute(String key, Object value) {
     // VariantContextBuilder requires it to be mutable
-    Map<String, Object> result = Maps.newHashMap();
-    result.put(key, value);
+    val attributes = Maps.<String, Object> newHashMap();
+    attributes.put(key, value);
 
-    return result;
+    return attributes;
   }
 
 }

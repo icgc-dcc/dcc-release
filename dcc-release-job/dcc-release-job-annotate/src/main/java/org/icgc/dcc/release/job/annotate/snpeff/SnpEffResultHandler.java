@@ -25,18 +25,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.regex.Pattern;
-
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
 
 import org.broadinstitute.variant.vcf.VCFCodec;
 import org.broadinstitute.variant.vcf.VCFFormatHeaderLine;
 import org.broadinstitute.variant.vcf.VCFHeader;
-import org.broadinstitute.variant.vcf.VCFHeaderLine;
 import org.broadinstitute.variant.vcf.VCFHeaderVersion;
 import org.broadinstitute.variant.vcf.VCFInfoHeaderLine;
 import org.icgc.dcc.release.job.annotate.converter.SnpEffVCFToICGCConverter;
@@ -44,7 +38,11 @@ import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
 import org.icgc.dcc.release.job.annotate.model.SecondaryEntity;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
+
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
 
 public class SnpEffResultHandler implements Runnable {
 
@@ -88,7 +86,6 @@ public class SnpEffResultHandler implements Runnable {
       val secondaryEntities = converter.convert(variant, fileType);
       queue.put(secondaryEntities);
     }
-
   }
 
   private static boolean isSkipLine(String line) {
@@ -106,15 +103,16 @@ public class SnpEffResultHandler implements Runnable {
   }
 
   private static VCFHeader createVCFHeader() {
-    Set<VCFHeaderLine> set = Sets.newHashSet();
-    val line =
-        new VCFFormatHeaderLine("<ID=GT,Number=1,Type=String,Description=\"Genotype\">", VCFHeaderVersion.VCF4_1);
-    set.add(new VCFInfoHeaderLine(
-        "<ID=EFF,Number=.,Type=String,Description=\"Predicted effects for this variant.Format: 'Effect ( Effect_Impact | Functional_Class | Codon_Change | Amino_Acid_Change| Amino_Acid_length | Gene_Name | Transcript_BioType | Gene_Coding | Transcript_ID | Exon_Rank  | Genotype_Number [ | ERRORS | WARNINGS ] )' \">",
-        VCFHeaderVersion.VCF4_1));
-    set.add(line);
-
-    return new VCFHeader(set, ImmutableList.of("Patient_01_Germline", "Patient_01_Somatic"));
+    return new VCFHeader(
+        ImmutableSet.of(
+            new VCFInfoHeaderLine(
+                "<ID=EFF,Number=.,Type=String,Description=\"Predicted effects for this variant.Format: 'Effect ( Effect_Impact | Functional_Class | Codon_Change | Amino_Acid_Change| Amino_Acid_length | Gene_Name | Transcript_BioType | Gene_Coding | Transcript_ID | Exon_Rank  | Genotype_Number [ | ERRORS | WARNINGS ] )' \">",
+                VCFHeaderVersion.VCF4_1),
+            new VCFFormatHeaderLine(
+                "<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
+                VCFHeaderVersion.VCF4_1)),
+        ImmutableList.of(
+            "Patient_01_Germline", "Patient_01_Somatic"));
   }
 
   @SneakyThrows

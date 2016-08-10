@@ -22,14 +22,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.File;
 
+import com.google.common.io.Files;
+import com.google.common.io.Resources;
+
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
-
-import com.google.common.io.Files;
-import com.google.common.io.Resources;
 
 /**
  * Abstraction that manages the creating of the forked SnpEff process.
@@ -101,8 +101,6 @@ public class SnpEffProcess extends Process {
   }
 
   private String getMainClass() {
-    // This cannot use SnpEff.class.getName() since we are not running Java 7 yet.
-    // TODO: Use SnpEff.class.getName()
     return "ca.mcgill.mcb.pcingola.snpEffect.commandLine.SnpEff";
   }
 
