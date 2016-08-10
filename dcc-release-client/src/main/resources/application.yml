@@ -80,6 +80,9 @@ document:
   
 index:
   esUri: "es://localhost:9300"
+  
+# Banner
+spring.main.banner-mode: log
 
 ---
 
