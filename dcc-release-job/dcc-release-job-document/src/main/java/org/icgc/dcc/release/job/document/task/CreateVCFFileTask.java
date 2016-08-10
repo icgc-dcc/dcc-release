@@ -29,11 +29,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Collections;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.core.job.FileType;
@@ -48,6 +43,12 @@ import org.icgc.dcc.release.job.document.vcf.MutationVCFWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import lombok.Cleanup;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
 
 @RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class CreateVCFFileTask extends GenericTask {
@@ -113,9 +114,14 @@ public class CreateVCFFileTask extends GenericTask {
   @SneakyThrows
   private static JavaRDD<String> getVCFHeaderRDD(int testedDonorCount, String releaseName, File fastaFile,
       TaskContext taskContext) {
+    // Write header to buffer, flush and close within following block
     val buffer = new ByteArrayOutputStream();
-    val writer = new MutationVCFWriter(releaseName, fastaFile, buffer, true, testedDonorCount);
-    writer.writeHeader();
+    {
+      @Cleanup
+      val writer = new MutationVCFWriter(releaseName, fastaFile, buffer, true, testedDonorCount);
+      writer.writeHeader();
+    }
+
     val header = buffer.toString(UTF_8.toString());
     checkState(!isNullOrEmpty(header), "Expected non-empty VCF header");
     val sparkContext = taskContext.getSparkContext();
