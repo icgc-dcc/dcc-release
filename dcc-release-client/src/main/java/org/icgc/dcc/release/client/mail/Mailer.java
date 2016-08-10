@@ -28,6 +28,12 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.release.client.config.WorkflowProperties.MailProperties;
 import org.icgc.dcc.release.core.job.JobSummary;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +44,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * See http://www.thymeleaf.org/doc/articles/springmail.html
@@ -56,7 +56,7 @@ public class Mailer {
   /**
    * Constants.
    */
-  private static final String SUBJECT_PREFIX = "DCC Workflow - ";
+  private static final String SUBJECT_PREFIX = "DCC Release - ";
   private static final String JOB_SUMMARY_TEMPLATE_NAME = "job-summary";
   private static final String FAILED_JOB_SUMMARY_TEMPLATE_NAME = "failed-job-summary";
   private static final Resource ICGC_LOGO = new ClassPathResource("/templates/icgc-logo-no-text.png");
