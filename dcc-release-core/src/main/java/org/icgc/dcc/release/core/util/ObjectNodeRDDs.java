@@ -64,7 +64,7 @@ public final class ObjectNodeRDDs {
   @NonNull
   public static JavaRDD<ObjectNode> sequenceObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf) {
     return JavaRDDs.sequenceFile(sparkContext, path, NullWritable.class, BytesWritable.class)
-        .map(tuple -> SMILE_READER.readValue(tuple._2.getBytes()));
+        .map(tuple -> SMILE_READER.readValue(tuple._2.copyBytes()));
   }
 
   public static <T> JavaRDD<T> sequenceObjectNodeFile(JavaSparkContext sparkContext, String path, JobConf conf,
@@ -74,7 +74,7 @@ public final class ObjectNodeRDDs {
         .map(tuple -> {
           ObjectReader reader = JacksonFactory.SMILE_MAPPER.reader(clazz);
 
-          return reader.readValue(tuple._2.getBytes());
+          return reader.readValue(tuple._2.copyBytes());
         });
   }
 
@@ -93,7 +93,7 @@ public final class ObjectNodeRDDs {
   public static JavaRDD<ObjectNode> combineObjectNodeSequenceFile(@NonNull JavaSparkContext sparkContext,
       @NonNull String paths, @NonNull JobConf conf) {
     return JavaRDDs.combineSequenceFile(sparkContext, paths, conf)
-        .map(tuple -> SMILE_READER.readValue(tuple._2.getBytes()));
+        .map(tuple -> SMILE_READER.readValue(tuple._2.copyBytes()));
   }
 
   public static void saveAsTextObjectNodeFile(@NonNull JavaRDD<ObjectNode> rdd, @NonNull String path) {

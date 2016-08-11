@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.job.document.core;
 
 import static java.lang.String.format;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.release.job.document.util.DocumentTypes.getBroadcastDependencies;
 import static org.icgc.dcc.release.job.document.util.DocumentTypes.getDocumentClassName;
 
@@ -49,6 +50,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 @Component
@@ -90,7 +92,7 @@ public class DocumentJob extends GenericJob {
   }
 
   private void write(JobContext jobContext) {
-    for (val documentType : DocumentType.values()) {
+    for (val documentType : getDocumentTypes()) {
       val documentJobContext = createDocumentJobContext(jobContext, documentType);
       jobContext.execute(createStreamingTask(jobContext, documentType, documentJobContext));
       destroyBroadcasts(documentJobContext);
@@ -100,6 +102,16 @@ public class DocumentJob extends GenericJob {
     if (properties.isExportVCF()) {
       jobContext.execute(new CreateVCFFileTask(snpEffProperties));
     }
+  }
+
+  private Iterable<DocumentType> getDocumentTypes() {
+    val includeTypes = properties.getIncludeTypes();
+
+    return includeTypes.isEmpty() ?
+        ImmutableSet.copyOf(DocumentType.values()) :
+        includeTypes.stream()
+            .map(type -> DocumentType.valueOf(type.toUpperCase()))
+            .collect(toImmutableSet());
   }
 
   @SneakyThrows

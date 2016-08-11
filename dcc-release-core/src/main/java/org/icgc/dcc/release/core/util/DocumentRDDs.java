@@ -78,8 +78,8 @@ public final class DocumentRDDs {
 
   private static PairFunction<Tuple2<Text, BytesWritable>, String, ObjectNode> convertToIdAndSource() {
     return tuple -> {
-      String documentId = new String(tuple._1.getBytes(), UTF_8);
-      ObjectNode value = (ObjectNode) SMILE_READER.readValue(tuple._2.getBytes());
+      String documentId = new String(tuple._1.copyBytes(), UTF_8);
+      ObjectNode value = (ObjectNode) SMILE_READER.readValue(tuple._2.copyBytes());
 
       return tuple(documentId, value);
     };

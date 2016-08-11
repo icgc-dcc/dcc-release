@@ -45,7 +45,7 @@ public final class ReadKeySequenceFile<T> implements
     checkReader();
 
     val key = tuple._1.toString();
-    T value = reader.readValue(tuple._2.getBytes());
+    T value = reader.readValue(tuple._2.copyBytes());
 
     return tuple(key, value);
   }

@@ -20,7 +20,6 @@ package org.icgc.dcc.release.core.util;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.icgc.dcc.common.core.util.Separators.TAB;
-import static org.icgc.dcc.release.core.hadoop.SmileSequenceFileInputStream.getBytes;
 import static org.icgc.dcc.release.core.util.JacksonFactory.SMILE_READER;
 
 import java.io.BufferedWriter;
@@ -80,7 +79,7 @@ public class SmileSequenceFileDecompressor {
     while (reader.next(key, value)) {
       out.write(key.toString());
       out.write(TAB);
-      val node = SMILE_READER.readValue(getBytes(value));
+      val node = SMILE_READER.readValue(value.copyBytes());
       out.write(node.toString());
       out.newLine();
     }
@@ -90,7 +89,7 @@ public class SmileSequenceFileDecompressor {
     val key = NullWritable.get();
     val value = new BytesWritable();
     while (reader.next(key, value)) {
-      val node = SMILE_READER.readValue(getBytes(value));
+      val node = SMILE_READER.readValue(value.copyBytes());
       out.write(node.toString());
       out.newLine();
     }

@@ -41,7 +41,7 @@ public final class ReadSequenceFile<T> implements Function<Tuple2<NullWritable, 
   public T call(Tuple2<NullWritable, BytesWritable> tuple) throws Exception {
     checkReader();
 
-    return reader.readValue(tuple._2.getBytes());
+    return reader.readValue(tuple._2.copyBytes());
   }
 
   private void checkReader() {

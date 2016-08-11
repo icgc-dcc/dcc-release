@@ -17,7 +17,10 @@
  */
 package org.icgc.dcc.release.job.document.config;
 
+import static com.google.common.collect.Lists.newArrayList;
+
 import java.io.Serializable;
+import java.util.List;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,5 +35,10 @@ public class DocumentProperties implements Serializable {
    * Whether to export mutation VCF file.
    */
   boolean exportVCF;
+
+  /**
+   * DocumentTypes to process.
+   */
+  List<String> includeTypes = newArrayList();
 
 }

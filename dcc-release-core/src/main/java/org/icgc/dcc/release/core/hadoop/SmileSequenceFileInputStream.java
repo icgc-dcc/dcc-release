@@ -67,18 +67,9 @@ public class SmileSequenceFileInputStream extends InputStream {
 
     val writable = new BytesWritable();
     reader.getCurrentValue(writable);
-    buffer = new Buffer(getBytes(writable));
+    buffer = new Buffer(writable.copyBytes());
 
     return true;
-  }
-
-  // TODO: Move to commons
-  public static byte[] getBytes(BytesWritable bw) {
-    byte[] padded = bw.getBytes();
-    byte[] bytes = new byte[bw.getLength()];
-    System.arraycopy(padded, 0, bytes, 0, bytes.length);
-
-    return bytes;
   }
 
   private static boolean isEmpty(Buffer buffer) {
