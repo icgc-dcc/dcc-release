@@ -44,10 +44,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       <artifactId>commons-math3</artifactId>
       <version>3.3</version>
     </dependency>
-    <dependency>
-      <groupId>com.google.code.externalsortinginjava</groupId>
-      <artifactId>externalsortinginjava</artifactId>
-    </dependency>
 
     <!-- Genomics -->
     <dependency>

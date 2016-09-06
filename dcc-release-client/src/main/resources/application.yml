@@ -48,12 +48,6 @@ hadoop:
   properties:
     fs.defaultFS: hdfs://localhost
 
-# HBase
-hbase:
-  properties:
-    hbase.zookeeper.quorum: localhost
-    hbase.zookeeper.property.clientPort: 2181
-
 # Spark
 spark:
   properties:

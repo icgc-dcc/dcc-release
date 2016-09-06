@@ -208,11 +208,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
       <!-- Utilities -->
       <dependency>
-        <groupId>com.google.code.externalsortinginjava</groupId>
-        <artifactId>externalsortinginjava</artifactId>
-        <version>${externalsort.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
         <version>${apache-commons.version}</version>
@@ -322,9 +317,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
     <!-- Versions- Spark -->
     <spark.version>1.6.1</spark.version>
-
-    <!-- Versions - HBase -->
-    <hbase-cdh.version>0.98.6-${cdh.version}</hbase-cdh.version>
 
     <!-- Versions - DB -->
     <jdbi.version>2.53</jdbi.version>
