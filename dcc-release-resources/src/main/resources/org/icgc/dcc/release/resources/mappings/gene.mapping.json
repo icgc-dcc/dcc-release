@@ -2,7 +2,6 @@
   "gene":{
     "enabled":"false",
     "_source":{
-      "compress":"true"
     },
     "_all":{
       "enabled":"false"
