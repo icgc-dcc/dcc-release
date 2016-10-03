@@ -4,7 +4,6 @@
       "enabled": "false"
     },
     "_source": {
-      "compress": "true"
     },
     "date_detection": "false",
     "dynamic_templates": [
@@ -31,6 +30,7 @@
             "index": "analyzed",
             "index_analyzer": "id_index",
             "search_analyzer": "id_search",
+            "analyzer": "id_search",
             "type": "string"
           },
           "search": {
@@ -52,6 +52,7 @@
             "index": "analyzed",
             "index_analyzer": "id_index",
             "search_analyzer": "id_search",
+            "analyzer": "id_search",
             "type": "string"
           },
           "search": {
@@ -73,6 +74,7 @@
             "index": "analyzed",
             "index_analyzer": "id_index",
             "search_analyzer": "id_search",
+            "analyzer": "id_search",
             "type": "string"
           },
           "search": {

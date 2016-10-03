@@ -17,36 +17,22 @@
  */
 package org.icgc.dcc.release.job.index.service;
 
-import static java.lang.String.format;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableMap;
-import static org.icgc.dcc.release.core.document.DocumentType.DONOR_CENTRIC_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.DONOR_TEXT_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.DONOR_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.DRUG_CENTRIC_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.DRUG_TEXT_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.GENE_CENTRIC_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.GENE_SET_TEXT_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.GENE_SET_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.GENE_TEXT_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.GENE_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.MUTATION_CENTRIC_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.MUTATION_TEXT_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.PROJECT_TEXT_TYPE;
-import static org.icgc.dcc.release.core.document.DocumentType.PROJECT_TYPE;
+import com.google.common.collect.ImmutableSet;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.elasticsearch.client.Client;
+import org.icgc.dcc.common.core.util.Joiners;
+import org.icgc.dcc.release.core.document.DocumentType;
 
 import java.util.Map;
 import java.util.Set;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import org.elasticsearch.client.Client;
-import org.elasticsearch.common.collect.ImmutableSet;
-import org.icgc.dcc.common.core.util.Joiners;
-import org.icgc.dcc.release.core.document.DocumentType;
+import static java.lang.String.format;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableMap;
+import static org.icgc.dcc.release.core.document.DocumentType.*;
 
 @Slf4j
 @RequiredArgsConstructor

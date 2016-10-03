@@ -17,24 +17,18 @@
  */
 package org.icgc.dcc.release.job.index.service;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.nullToEmpty;
-import static com.google.common.base.Strings.repeat;
-import static com.google.common.base.Throwables.propagate;
-import static com.google.common.collect.ImmutableList.copyOf;
-import static com.google.common.collect.ImmutableMap.of;
-import static com.google.common.collect.Iterables.toArray;
-import static com.google.common.io.Resources.getResource;
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
-import static java.lang.String.format;
-import static lombok.AccessLevel.PRIVATE;
-import static org.elasticsearch.client.Requests.deleteMappingRequest;
-import static org.icgc.dcc.common.core.dcc.Versions.getScmInfo;
-import static org.icgc.dcc.common.core.util.Formats.formatBytes;
-import static org.icgc.dcc.common.core.util.Formats.formatCount;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-import static org.icgc.dcc.release.core.util.JacksonFactory.MAPPER;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.client.ClusterAdminClient;
+import org.elasticsearch.client.IndicesAdminClient;
+import org.icgc.dcc.release.core.document.DocumentType;
+import org.joda.time.DateTime;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -43,24 +37,21 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.ClusterAdminClient;
-import org.elasticsearch.client.IndicesAdminClient;
-import org.icgc.dcc.release.core.document.DocumentType;
-import org.joda.time.DateTime;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.nullToEmpty;
+import static com.google.common.base.Strings.repeat;
+import static com.google.common.base.Throwables.propagate;
+import static com.google.common.collect.ImmutableList.copyOf;
+import static com.google.common.collect.ImmutableMap.of;
+import static com.google.common.io.Resources.getResource;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.lang.String.format;
+import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.dcc.Versions.getScmInfo;
+import static org.icgc.dcc.common.core.util.Formats.formatBytes;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
+import static org.icgc.dcc.release.core.util.JacksonFactory.MAPPER;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -90,26 +81,12 @@ public class IndexService implements Closeable {
         .isExists();
 
     if (exists) {
-      if (isLoadAll(types)) {
-        log.info("Deleting index '{}'...", indexName);
-        checkState(client.prepareDelete(indexName)
-            .execute()
-            .actionGet()
-            .isAcknowledged(),
-            "Index '%s' deletion was not acknowledged", indexName);
-
-        // Partial load
-      } else {
-        log.info("Unfreezing index...");
-        unfreezeIndex(indexName);
-
-        log.info("Deleting types {}...", types);
-        deleteTypes(indexName, types);
-
-        log.info("Initializing types {}...", types);
-        initializeTypeMappings(indexName, types);
-        return;
-      }
+      log.info("Deleting index '{}'...", indexName);
+      checkState(client.prepareDelete(indexName)
+          .execute()
+          .actionGet()
+          .isAcknowledged(),
+          "Index '%s' deletion was not acknowledged", indexName);
     }
 
     try {
@@ -126,19 +103,6 @@ public class IndexService implements Closeable {
     } catch (Throwable t) {
       propagate(t);
     }
-  }
-
-  private void deleteTypes(String indexName, Set<DocumentType> types) {
-    val typeNames = types.stream()
-        .map(type -> type.getName())
-        .collect(toImmutableList());
-
-    val request = deleteMappingRequest(indexName).types(toArray(typeNames, String.class));
-    val deleted = getIndexClient()
-        .deleteMapping(request)
-        .actionGet()
-        .isAcknowledged();
-    checkState(deleted, "Types deletion was not acknowledged!");
   }
 
   @SneakyThrows
@@ -198,7 +162,7 @@ public class IndexService implements Closeable {
   public void optimizeIndex(@NonNull String indexName) {
     // Optimize the the index for faster search operations by reducing the number of segments by merging
     getIndexClient()
-        .prepareOptimize(indexName)
+        .prepareForceMerge(indexName)
         .setMaxNumSegments(1)
         .execute()
         .actionGet();
@@ -296,8 +260,8 @@ public class IndexService implements Closeable {
         .getState();
 
     val result = new ImmutableSet.Builder<String>();
-    for (val key : state.getMetaData().aliases().keys()) {
-      result.add(key.value);
+    for (val key : state.getMetaData().getAliasAndIndexLookup().keySet()) {
+      result.add(key);
     }
 
     return result.build();
