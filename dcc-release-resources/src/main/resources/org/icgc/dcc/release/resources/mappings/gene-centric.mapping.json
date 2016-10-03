@@ -4,7 +4,6 @@
       "enabled": "false"
     },
     "_source": {
-      "compress": "true",
       "includes": [
           "_gene_id",
           "_summary._affected_donor_count",

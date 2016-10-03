@@ -1,7 +1,6 @@
 {
   "donor-centric":{
     "_source":{
-      "compress":"true",
       "excludes": ["gene.*"]
     },
     "_all":{
