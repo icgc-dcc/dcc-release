@@ -17,21 +17,13 @@
  */
 package org.icgc.dcc.release.core.util;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.io.Files.copy;
-import static com.google.common.io.Resources.asByteSource;
-import static com.google.common.io.Resources.getResource;
-import static lombok.AccessLevel.PRIVATE;
-
-import java.io.File;
-import java.util.Map;
-
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
-
+import lombok.val;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.JobConf;
@@ -39,7 +31,13 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 
-import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.util.Map;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.io.Resources.asByteSource;
+import static com.google.common.io.Resources.getResource;
+import static lombok.AccessLevel.PRIVATE;
 
 @Slf4j
 @NoArgsConstructor(access = PRIVATE)
@@ -97,7 +95,7 @@ public final class Configurations {
   private static void copyConfig(File configFile) {
     val configLocation = getResource(SCHEDULER_CONFIG);
     log.debug("Config location: {}", configLocation);
-    copy(asByteSource(configLocation), configFile);
+    asByteSource(configLocation).copyTo(Files.asByteSink(configFile));
   }
 
 }

@@ -4,7 +4,6 @@
       "enabled": "false"
     },
     "_source": {
-      "compress": "true",
       "includes": [
           "_gene_id",
           "_summary._affected_donor_count",
@@ -51,7 +50,7 @@
           }
         }
       },
-      "project": {
+      "gc_project": {
         "type": "nested"
       }
     }

@@ -1,7 +1,6 @@
 {
   "observation-centric": {
     "_source": {
-      "compress": "true",
       "excludes": [
         "project.primary_site",
         "donor.donor_sex",
@@ -36,7 +35,7 @@
       "donor": {
         "type": "nested"
       },
-      "project": {
+      "oc_project": {
         "type": "nested"
       },
       "ssm": {

@@ -17,22 +17,21 @@
  */
 package org.icgc.dcc.release.job.index.factory;
 
-import static lombok.AccessLevel.PRIVATE;
-
-import java.net.URI;
-
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.elasticsearch.common.logging.slf4j.Slf4jESLoggerFactory;
-import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.settings.ImmutableSettings.Builder;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
-
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.logging.slf4j.Slf4jESLoggerFactory;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+
+import java.net.InetAddress;
+import java.net.URI;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @Slf4j
 @NoArgsConstructor(access = PRIVATE)
@@ -57,13 +56,14 @@ public final class TransportClientFactory {
   }
 
   @SuppressWarnings("resource")
+  @SneakyThrows
   public static TransportClient newTransportClient(@NonNull String esUri, boolean sniff) {
-    val host = getHost(esUri);
+    val host = InetAddress.getByName(getHost(esUri));
     val port = getPort(esUri);
     val address = new InetSocketTransportAddress(host, port);
 
     log.info("Creating ES transport client from URI '{}': host = '{}', port = {}", new Object[] { esUri, host, port });
-    return new TransportClient(createSettings(sniff)).addTransportAddress(address);
+    return TransportClient.builder().settings(createSettings(sniff)).build().addTransportAddress(address);
   }
 
   @SneakyThrows
@@ -79,10 +79,10 @@ public final class TransportClientFactory {
   /**
    * Creates the client settings.
    * <p>
-   * @see http://www.elasticsearch.org/guide/en/elasticsearch/client/java-api/current/client.htmls
+   * @see `http://www.elasticsearch.org/guide/en/elasticsearch/client/java-api/current/client.htmls`
    */
-  private static Builder createSettings(boolean sniff) {
-    return ImmutableSettings.settingsBuilder()
+  private static Settings.Builder createSettings(boolean sniff) {
+    return Settings.settingsBuilder()
 
     // Increase the ping timeout from the 5s (default) to something larger to prevent transient
     // NoNodeAvailableExceptions
