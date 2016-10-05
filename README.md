@@ -1,10 +1,8 @@
-ICGC DCC - Release
-===
+# ICGC DCC - Release
 
 Second generation of the ICGC DCC ETL build on Spark. For the first generation ETL project, please see the [dcc-etl](https://github.com/icgc-dcc/dcc-etl) repository.
 
-Build
----
+## Build
 
 From the command line:
 
@@ -12,8 +10,7 @@ From the command line:
 mvn clean package
 ```
 
-Modules
----
+## Modules
 Sub-system modules:
 
 - [Stage Job](dcc-release-job/dcc-release-job-stage/README.md)
@@ -30,8 +27,7 @@ Sub-system modules:
 - [Index Job](dcc-release-job/dcc-release-job-index/README.md)
 - [Export Job](dcc-release-job/dcc-release-job-export/README.md)
 
-Spark
----
+## Spark
 
 ### Build
 
@@ -116,3 +112,7 @@ export SPARK_WORKER_INSTANCES=4
 #### `conf/slaves`
 
 Add all slaves hostnames to this file
+
+## FATHMM
+
+For information on FATHMM, please see [](FATHMM.md).
