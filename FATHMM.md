@@ -18,23 +18,23 @@ FATHMM is used to do functional impact prediction for mutations of missense_vari
 
 Data Import
 ---
-Import the dataset into Postgresql database
+Import the [dataset](https://artifacts.oicr.on.ca/artifactory/dcc-binaries/fathmm-db/2.3/fathmm.v2.3.postgres.tar.gz) into Postgresql database
 - Extract the database dump files from the gz archive
 - Copy the appropriate dump files to the database server
-- Run `psql fathmm < fathmm.v2.3.pSQL`, the dump file will be around 20GB uncompressed, expect the import to take 3-4 hours.
+- Run `psql fathmm < fathmm.v2.3.postgres.sql`, the dump file will be around 20GB uncompressed, expect the import to take 3-4 hours.
 - The SQL dump may have a few issues, we need to manually patch some of the tables and sequences before we can use FATHMM, see Patch section below.
 
 If within OICR, A backup of FATHMM dump files and the patch can be found under
-- /nfs/backups/workspace/fathmm
+- `/nfs/backups/workspace/fathmm`
 
 DCC_CACHE
 ---
-DCC Cache is a cache table that stores {translation_id, aa_change} -> prediction key value pairs. Before we run the actual prediction lookup, we will check if the result already exist in DCC_CACHE first. Please note that when updating to another version of FATHMM dataset, DCC_CACHE needs to be cleared to ensure data correctness.
+`DCC_CACHE` is a cache table that stores {translation_id, aa_change} -> prediction key value pairs. Before we run the actual prediction lookup, we will check if the result already exist in `DCC_CACHE` first. Please note that when updating to another version of FATHMM dataset, `DCC_CACHE` needs to be cleared to ensure data correctness.
 
 
 ICGC Patch
 ---
-The patch creates a DCC_CACHE table and make sure the permissions are correct.
+The patch (also in the tarball) creates a `DCC_CACHE` table and make sure the permissions are correct.
 
 ```
 create index i1 on "DOMAINS" (id);
