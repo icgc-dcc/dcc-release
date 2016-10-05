@@ -115,4 +115,4 @@ Add all slaves hostnames to this file
 
 ## FATHMM
 
-For information on FATHMM, please see [FATHMM.md)]().
+For information on FATHMM, please see [FATHMM.md]().
