@@ -2,29 +2,29 @@ FATHMM
 ===
 Functional Analysis through Hidden Markov Models (FATHMM) is a precomputed dataset used by ICGC to do functional impact prediction on mutations.
 
-
-
-FATHMM
+Overview
 ---
 FATHMM is a project with its own website which can be found here: http://fathmm.biocompute.org.uk/
 
-The dataset is a database dump and is available here: http://fathmm.biocompute.org.uk/database/fathmm.v2.3.SQL.gz
+The dataset is a MySQL database dump and is available here: http://fathmm.biocompute.org.uk/database/fathmm.v2.3.SQL.gz
 
+However, since the DCC uses Postgres for relational storage, we have needed to convert the dump into PSQL compatabile format. This can be found here:
+
+https://artifacts.oicr.on.ca/artifactory/dcc-binaries/fathmm-db/2.3/fathmm.v2.3.postgres.tar.gz
 
 Purpose
 ---
 FATHMM is used to do functional impact prediction for mutations of missense_variant consequences. We feed the predictor a translation_id and mutation aa_change, and we get a result that is one of {TOLERATED, HIGH, UNKNOWN} as the output.
-
 
 Data Import
 ---
 Import the dataset into Postgresql database
 - Extract the database dump files from the gz archive
 - Copy the appropriate dump files to the database server
-- Run `psql fathmm < fathmm.v2.3.pSQL`, the dump file will be around 20GB, expect the import to take 3-4 hours.
+- Run `psql fathmm < fathmm.v2.3.pSQL`, the dump file will be around 20GB uncompressed, expect the import to take 3-4 hours.
 - The SQL dump may have a few issues, we need to manually patch some of the tables and sequences before we can use FATHMM, see Patch section below.
 
-A backup of FATHMM dump files and the patch can be found under
+If within OICR, A backup of FATHMM dump files and the patch can be found under
 - /nfs/backups/workspace/fathmm
 
 DCC_CACHE
