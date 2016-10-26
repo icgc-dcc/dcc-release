@@ -6,28 +6,17 @@ A snpEff database upgrade is required when:
 - reference genome is upgraded
 - gene annotations are upgraded
 
-## Overview
-
-http://snpeff.sourceforge.net/SnpEff_manual.html#databases
-https://wiki.oicr.on.ca/display/DCCSOFT/Unify+genome+assembly+build+throughout+the+system
-
-
-There are 2 dependencies required to build a snpEff db:
-
-- Reference genome sequence. E.g. `GRCh37.82`
-- Genome annotations (GTF) files.
-
-## Reference genome sequence
-
-## Genome annotations
-
 ## Building a SnpEff prediction database
-In this example we will use the latest(4.2) version of SnpEff and will build a prediction database using the method which uses GTF file. GTF files version used is 85
+These instructions will illustrate a process of building a SnpEff prediction database on a Mac computer for the latest(4.2 at the moment of writing this documentation) version of `SnpEff`.  The database will be built using `GTF` files which is the easiest way according [to the documentation](http://snpeff.sourceforge.net/SnpEff_manual.html#databases).
+
+`GRCh-37.75` reference genome `FASTA` file and `release-85` `Ensembl` gene annotation files will be used.
+
+
 
 1. Create working directory
 
 	```
-	mkdir snpeff-test
+	mkdir snpeff-4.2 && cd snpeff-4.2
 	```
 
 2. Download snpEff from [Sourceforge](http://snpeff.sourceforge.net/download.html)
@@ -37,7 +26,7 @@ In this example we will use the latest(4.2) version of SnpEff and will build a p
 	unzip snpEff_latest_core.zip
 	```
 	
-4. Add information about we are going to build to `snpEff/snpEff.config` file.
+4. Add information about the database we are going to build to the `snpEff/snpEff.config` file.
 
 	```
 	# DCC
@@ -52,7 +41,7 @@ In this example we will use the latest(4.2) version of SnpEff and will build a p
 	mkdir -p snpEff/data/4.2-GRCh37.85 && cd snpEff/data/4.2-GRCh37.85
 	```
 	
-6. Download reference genome FASTA file and name it `sequences.fa` snpEff requirement)
+6. Download reference genome FASTA file and name it `sequences.fa` (snpEff requirement)
 
 	```
 	wget https://artifacts.oicr.on.ca/artifactory/dcc-dependencies/org/icgc/dcc/dcc-reference-genome/GRCh37.75.v1/dcc-reference-genome-GRCh37.75.v1.tar.gz

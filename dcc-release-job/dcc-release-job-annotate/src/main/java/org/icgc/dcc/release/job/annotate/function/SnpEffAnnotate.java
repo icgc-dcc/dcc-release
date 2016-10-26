@@ -17,10 +17,7 @@
  */
 package org.icgc.dcc.release.job.annotate.function;
 
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MUTATION;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_VARIANT_ALLELE;
-import static org.icgc.dcc.release.core.util.Mutations.createMutation;
-import static org.icgc.dcc.release.job.annotate.model.AnnotatedFileType.SSM;
+import static org.icgc.dcc.release.job.annotate.util.VCFRecords.getVCFRecordContext;
 
 import java.util.Iterator;
 import java.util.List;
@@ -34,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.icgc.dcc.common.core.json.Jackson;
 import org.icgc.dcc.release.core.config.SnpEffProperties;
-import org.icgc.dcc.release.job.annotate.converter.ICGCToVCFConverter.MutationType;
 import org.icgc.dcc.release.job.annotate.converter.SecondaryObjectNodeConverter;
 import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
 import org.icgc.dcc.release.job.annotate.model.SecondaryEntity;
@@ -51,8 +47,6 @@ public class SnpEffAnnotate implements FlatMapFunction<Iterator<ObjectNode>, Obj
    * Returned instead of empty result produced by the Annotator.
    */
   public static final ObjectNode SENTINEL_VALUE = Jackson.DEFAULT.createObjectNode();
-
-  private static final String MISSING_ALLELE = "-";
 
   /**
    * Configuration.
@@ -147,28 +141,16 @@ public class SnpEffAnnotate implements FlatMapFunction<Iterator<ObjectNode>, Obj
     }
 
     private List<SecondaryEntity> predict(ObjectNode row, SnpEffPredictor predictor) {
-      // Extract row values
-      val chromosome = row.get(fileType.getChromosomeFieldName()).textValue();
-      val start = row.get(fileType.getChromosomeStartFieldName()).asLong();
-      val end = row.get(fileType.getChromosomeEndFieldName()).asLong();
-      val mutation = getMutation(row, fileType);
-      val type = MutationType.fromId(row.get(fileType.getMutationTypeFieldName()).textValue());
-      val ref = row.get(fileType.getReferenceAlleleFieldName()).textValue();
-      val reference = (ref.equals(MISSING_ALLELE)) ? "" : ref;
-      val id = row.get(fileType.getObservationIdFieldName()).textValue();
+      val recordContext = getVCFRecordContext(row, fileType);
 
-      return predictor.predict(chromosome, start, end, mutation, type, reference, id);
-    }
-
-    private static String getMutation(ObjectNode row, AnnotatedFileType fileType) {
-      if (fileType == SSM) {
-        return row.get(SUBMISSION_MUTATION).textValue();
-      }
-
-      val mutatedFrom = row.get(fileType.getReferenceAlleleFieldName()).textValue();
-      val mutatedTo = row.get(SUBMISSION_OBSERVATION_VARIANT_ALLELE).textValue();
-
-      return createMutation(mutatedFrom, mutatedTo);
+      return predictor.predict(
+          recordContext.getChromosome(),
+          recordContext.getStart(),
+          recordContext.getEnd(),
+          recordContext.getMutation(),
+          recordContext.getType(),
+          recordContext.getReference(),
+          recordContext.getId());
     }
 
   }
