@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.release.job.annotate.util;
 
+import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MUTATION;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_VARIANT_ALLELE;
 import static org.icgc.dcc.release.core.util.Mutations.createMutation;
@@ -41,7 +42,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-@NoArgsConstructor
+@NoArgsConstructor(access = PRIVATE)
 public final class VCFRecords {
 
   private static final String TEMP_FILE_PREFIX = VCFRecords.class.getName() + "-";

@@ -15,82 +15,60 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.annotate.snpeff;
+package org.icgc.dcc.release.job.annotate.converter;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.regex.Pattern.compile;
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.common.core.util.Joiners.TAB;
 import static org.icgc.dcc.release.job.annotate.util.VCFCodecs.createDecoder;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.regex.Pattern;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.broadinstitute.variant.vcf.VCFCodec;
-import org.icgc.dcc.release.job.annotate.converter.SnpEffVCFToICGCConverter;
 import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
 import org.icgc.dcc.release.job.annotate.model.SecondaryEntity;
+import org.junit.Test;
 
-public class SnpEffResultHandler implements Runnable {
+@Slf4j
+public class SnpEffVCFToICGCConverterTest {
 
-  private static final Pattern SKIP_ANNOTATION_PATTERN = compile("^#|Reading cancer samples pedigree from VCF header");
-
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final InputStream input;
+  private static final String GENE_BUILD_VERSION = "75";
   private static final VCFCodec DECODER = createDecoder();
+  private static final AnnotatedFileType FILE_TYPE = AnnotatedFileType.SSM;
+  private static final String HEADER = TAB.join("11", "32413565", ".", "C", "G", ".", ".", "");
+  private static final String TAIL = TAB.join("GT", "0/0", "1/1");
 
-  /**
-   * State.
-   */
-  @NonNull
-  private final BlockingQueue<List<SecondaryEntity>> queue;
-  @NonNull
-  private final AnnotatedFileType fileType;
-  private final SnpEffVCFToICGCConverter converter;
+  private static final String NO_ANNOTATION = "PRIM=123";
+  private static final String NO_ID = "INFO=zzz";
 
-  public SnpEffResultHandler(@NonNull InputStream input, @NonNull BlockingQueue<List<SecondaryEntity>> queue,
-      @NonNull AnnotatedFileType fileType, @NonNull String geneBuildVersion) {
-    this.input = input;
-    this.queue = queue;
-    this.fileType = fileType;
-    this.converter = new SnpEffVCFToICGCConverter(geneBuildVersion);
+  private SnpEffVCFToICGCConverter converter = new SnpEffVCFToICGCConverter(GENE_BUILD_VERSION);
+
+  @Test
+  public void testConvert_noId() throws Exception {
+    val result = convert(NO_ID);
+    assertThat(result).isEmpty();
   }
 
-  @Override
-  @SneakyThrows
-  public void run() {
-    val reader = new BufferedReader(new InputStreamReader(input, UTF_8));
-    String line = null;
-    while ((line = reader.readLine()) != null) {
-      if (isSkipLine(line)) {
-        continue;
-      }
-
-      val variant = DECODER.decode(line);
-      val secondaryEntities = converter.convert(variant, fileType);
-      queue.put(secondaryEntities);
-    }
+  @Test
+  public void testConvert_noAnnotation() throws Exception {
+    val result = convert(NO_ANNOTATION);
+    assertThat(result).isEmpty();
   }
 
-  private static boolean isSkipLine(String line) {
-    val matcher = SKIP_ANNOTATION_PATTERN.matcher(line);
+  private List<SecondaryEntity> convert(String annotation) {
+    val line = createVCFRecord(annotation);
+    val variant = DECODER.decode(line);
+    val result = converter.convert(variant, FILE_TYPE);
+    log.info("{}", result);
 
-    return matcher.find();
+    return result;
   }
 
-  @SneakyThrows
-  private PrintWriter openOutFile(String fileName) {
-    return new PrintWriter(fileName, UTF_8.toString());
+  private static String createVCFRecord(String annotation) {
+    return format("%s%s\t%s", HEADER, annotation, TAIL);
   }
 
 }
