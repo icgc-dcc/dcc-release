@@ -118,10 +118,6 @@ public class FathmmPredictor implements Closeable {
     int substitution = parseSubstitution(aaChange);
     val facade = new ArrayList<Map<String, Object>>();
 
-    // TODO: Cache this!!!
-    val weightQuery =
-        handle.createQuery("select * from \"WEIGHTS\" where id=:wid  and type='" + weights + "'");
-
     Map<String, Object> sequence = getFirst(sequenceQuery.bind("translationId", translationId).list(), null);
 
     // Check null
@@ -182,6 +178,9 @@ public class FathmmPredictor implements Closeable {
     if (facade.size() > 1) {
       Collections.sort(facade, INFORMATION_COMPARATOR);
     }
+
+    // TODO: Cache this!!!
+    val weightQuery = handle.createQuery("select * from \"WEIGHTS\" where id=:wid  and type='" + weights + "'");
 
     // Phenotypes????
 
