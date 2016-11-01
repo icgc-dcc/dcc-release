@@ -97,14 +97,13 @@ public class FathmmRepository implements Closeable {
     return domainQuery.bind("sequenceId", sequenceId).bind("substitution", substitution).list();
   }
 
-  private Query<Map<String, Object>> createWeightQuery(String weights) {
-    return handle.createQuery("select disease, other from \"WEIGHTS\" where id=:wid and type=:type\\:\\:weights_type")
-        .bind("type",
-            weights);
-  }
-
   public Map<String, Object> getProbability(@NonNull String hmm, @NonNull Integer residue) {
     return probabilityQuery.bind("hmm", hmm).bind("residue", residue).first();
+  }
+
+  private Query<Map<String, Object>> createWeightQuery(String weights) {
+    return handle.createQuery("select disease, other from \"WEIGHTS\" where id=:wid and type=:type\\:\\:weights_type")
+        .bind("type", weights);
   }
 
 }

@@ -23,101 +23,94 @@
 --
 
 DROP TABLE IF EXISTS `DOMAINS`;
-CREATE TABLE `DOMAINS` (
-  `id` int(11) NOT NULL,
-  `hmm` char(15) NOT NULL,
-  `score` double NOT NULL,
-  `seq_begin` int(11) NOT NULL,
-  `seq_end` int(11) NOT NULL,
-  `hmm_begin` int(11) NOT NULL,
-  `align` varchar(500) NOT NULL,
-  KEY `id` (`id`),
-  KEY `hmm` (`hmm`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE "DOMAINS" (
+    "id" integer NOT NULL,
+    "hmm" char(15) NOT NULL,
+    "score" double precision NOT NULL,
+    "seq_begin" integer NOT NULL,
+    "seq_end" integer NOT NULL,
+    "hmm_begin" integer NOT NULL,
+    "align" text NOT NULL
+);
 
 --
 -- Table structure for table `LIBRARY`
 --
 
 DROP TABLE IF EXISTS `LIBRARY`;
-CREATE TABLE `LIBRARY` (
-  `id` char(15) NOT NULL,
-  `accession` char(30) NOT NULL,
-  `description` varchar(200),
-  PRIMARY KEY (`id`),
-  KEY `accession` (`accession`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE "LIBRARY" (
+    "id" char(15) NOT NULL,
+    "accession" char(30) NOT NULL,
+    "description" text ,
+    PRIMARY KEY ("id")
+);
 
 --
 -- Table structure for table `ONTOLOGIES`
 --
 
 DROP TABLE IF EXISTS `ONTOLOGIES`;
-CREATE TABLE `ONTOLOGIES` (
-  `id` char(2) NOT NULL,
-  `description` varchar(200) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE "ONTOLOGIES" (
+    "id" char(2) NOT NULL,
+    "description" text NOT NULL,
+    PRIMARY KEY ("id")
+);
 
 --
 -- Table structure for table `PHENOTYPES`
 --
 
 DROP TABLE IF EXISTS `PHENOTYPES`;
-CREATE TABLE `PHENOTYPES` (
-  `id` char(30) NOT NULL,
-  `type` char(2) NOT NULL,
-  `accession` char(30) NOT NULL,
-  `description` char(150) NOT NULL,
-  `score` double NOT NULL,
-  `origin` char(1) NOT NULL,
-  KEY `accession2` (`accession`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE "PHENOTYPES" (
+    "id" char(30) NOT NULL,
+    "type" char(2) NOT NULL,
+    "accession" char(30) NOT NULL,
+    "description" char(150) NOT NULL,
+    "score" double precision NOT NULL
+);
 
 --
 -- Table structure for table `PROBABILITIES`
 --
 
 DROP TABLE IF EXISTS `PROBABILITIES`;
-CREATE TABLE `PROBABILITIES` (
-  `id` char(15) NOT NULL,
-  `position` int(11) NOT NULL,
-  `A` double NOT NULL,
-  `C` double NOT NULL,
-  `D` double NOT NULL,
-  `E` double NOT NULL,
-  `F` double NOT NULL,
-  `G` double NOT NULL,
-  `H` double NOT NULL,
-  `I` double NOT NULL,
-  `K` double NOT NULL,
-  `L` double NOT NULL,
-  `M` double NOT NULL,
-  `N` double NOT NULL,
-  `P` double NOT NULL,
-  `Q` double NOT NULL,
-  `R` double NOT NULL,
-  `S` double NOT NULL,
-  `T` double NOT NULL,
-  `V` double NOT NULL,
-  `W` double NOT NULL,
-  `Y` double NOT NULL,
-  `information` double NOT NULL,
-  PRIMARY KEY (`id`,`position`),
-  KEY `id2` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE "PROBABILITIES" (
+    "id" char(15) NOT NULL,
+    "position" integer NOT NULL,
+    "A" double precision NOT NULL,
+    "C" double precision NOT NULL,
+    "D" double precision NOT NULL,
+    "E" double precision NOT NULL,
+    "F" double precision NOT NULL,
+    "G" double precision NOT NULL,
+    "H" double precision NOT NULL,
+    "I" double precision NOT NULL,
+    "K" double precision NOT NULL,
+    "L" double precision NOT NULL,
+    "M" double precision NOT NULL,
+    "N" double precision NOT NULL,
+    "P" double precision NOT NULL,
+    "Q" double precision NOT NULL,
+    "R" double precision NOT NULL,
+    "S" double precision NOT NULL,
+    "T" double precision NOT NULL,
+    "V" double precision NOT NULL,
+    "W" double precision NOT NULL,
+    "Y" double precision NOT NULL,
+    "information" double precision NOT NULL,
+    PRIMARY KEY ("id","position")
+);
 
 --
 -- Table structure for table `PROTEIN`
 --
 
 DROP TABLE IF EXISTS `PROTEIN`;
-CREATE TABLE `PROTEIN` (
-  `id` int(11) NOT NULL,
-  `name` char(100) NOT NULL,
-  PRIMARY KEY (`name`),
-  KEY `id3` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE "PROTEIN" (
+  "id" int(11) NOT NULL,
+  "name" char(100) NOT NULL,
+  PRIMARY KEY ("name")
+);
 
 --
 -- Table structure for table `SEQUENCE`
@@ -128,7 +121,7 @@ CREATE TABLE `SEQUENCE` (
   `id` int(11) NOT NULL,
   `sequence` varchar(6000) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+);
 
 --
 -- Table structure for table `VARIANTS`
@@ -138,24 +131,23 @@ DROP TABLE IF EXISTS `VARIANTS`;
 CREATE TABLE `VARIANTS` (
   `id` char(25) NOT NULL,
   `protein` char(100) NOT NULL,
-  `substitution` char(10) NOT NULL,
-  KEY `id4` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `substitution` char(10) NOT NULL
+);
 
 --
 -- Table structure for table `WEIGHTS`
 --
 
+CREATE TYPE weights_type AS ENUM('INHERITED');
+
 DROP TABLE IF EXISTS `WEIGHTS`;
 CREATE TABLE `WEIGHTS` (
   `id` char(15) NOT NULL,
-  `type` char(60) NOT NULL,
+  `type` weights_type NOT NULL,
   `disease` double NOT NULL,
   `other` double NOT NULL,
-  PRIMARY KEY (`id`,`type`),
-  KEY `id5` (`id`),
-  KEY `type` (`type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`,`type`)
+);
 
 --
 -- Table structure for table `DCC_CACHE`
@@ -167,7 +159,7 @@ CREATE TABLE `DCC_CACHE` (
    `aa_mutation` varchar(64) NOT NULL,
    `score` varchar(16),
    `prediction` varchar(16)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+);
 
 --
 -- Dumping data.

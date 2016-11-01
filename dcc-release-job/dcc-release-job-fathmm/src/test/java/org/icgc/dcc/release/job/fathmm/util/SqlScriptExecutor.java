@@ -15,46 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.fathmm.core;
+package org.icgc.dcc.release.job.fathmm.util;
 
-import static org.icgc.dcc.release.job.fathmm.util.JdbcUrls.FATHMM_JDBC_URL;
+import javax.sql.DataSource;
 
-import java.io.File;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-import lombok.val;
+import com.google.common.io.CharSource;
 
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.test.job.AbstractJobTest;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+@RequiredArgsConstructor
+public class SqlScriptExecutor {
 
-import com.google.common.collect.ImmutableList;
+  @NonNull
+  private final DataSource dataSource;
 
-public class FathmmJobTest extends AbstractJobTest {
-
-  private static final String PROJECT_NAME = "TEST-DCC";
-
-  /**
-   * Class under test.
-   */
-  FathmmJob job;
-
-  @Override
-  @Before
-  public void setUp() {
-    super.setUp();
-    this.job = new FathmmJob();
-    ReflectionTestUtils.setField(job, "jdbcUrl", FATHMM_JDBC_URL);
-  }
-
-  @Test
-  public void executeTest() {
-    given(new File(TEST_FIXTURES_DIR));
-    val jobContext = createJobContext(job.getType(), ImmutableList.of(PROJECT_NAME));
-    job.execute(jobContext);
-
-    verifyResult(PROJECT_NAME, FileType.OBSERVATION_FATHMM);
+  public void test(CharSource testSource) {
   }
 
 }

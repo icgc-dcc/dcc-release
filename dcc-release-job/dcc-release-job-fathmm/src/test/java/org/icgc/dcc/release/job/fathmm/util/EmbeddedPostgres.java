@@ -15,46 +15,58 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.fathmm.core;
-
-import static org.icgc.dcc.release.job.fathmm.util.JdbcUrls.FATHMM_JDBC_URL;
-
-import java.io.File;
+package org.icgc.dcc.release.job.fathmm.util;
 
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.test.job.AbstractJobTest;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
-import com.google.common.collect.ImmutableList;
+import ru.yandex.qatools.embed.postgresql.PostgresProcess;
+import ru.yandex.qatools.embed.postgresql.PostgresStarter;
+import ru.yandex.qatools.embed.postgresql.config.PostgresConfig;
 
-public class FathmmJobTest extends AbstractJobTest {
+@Slf4j
+public class EmbeddedPostgres implements TestRule {
 
-  private static final String PROJECT_NAME = "TEST-DCC";
+  private PostgresConfig config;
+  private PostgresProcess process;
 
-  /**
-   * Class under test.
-   */
-  FathmmJob job;
-
-  @Override
-  @Before
-  public void setUp() {
-    super.setUp();
-    this.job = new FathmmJob();
-    ReflectionTestUtils.setField(job, "jdbcUrl", FATHMM_JDBC_URL);
+  public EmbeddedPostgres(PostgresConfig config) {
+    this.config = config;
   }
 
-  @Test
-  public void executeTest() {
-    given(new File(TEST_FIXTURES_DIR));
-    val jobContext = createJobContext(job.getType(), ImmutableList.of(PROJECT_NAME));
-    job.execute(jobContext);
+  @Override
+  public Statement apply(Statement base, Description description) {
+    return new Statement() {
 
-    verifyResult(PROJECT_NAME, FileType.OBSERVATION_FATHMM);
+      @Override
+      public void evaluate() throws Throwable {
+        log.info("Starting embedded Postgres...");
+        log.info("Host: {}, port: {}", config.net().host(), config.net().port());
+        start();
+        log.info("Embedded Postgres started");
+        try {
+          base.evaluate();
+        } catch (Throwable t) {
+          log.error("Error evaluating: ", t);
+
+          throw t;
+        } finally {
+          log.info("Stopping embedded Postgres...");
+          process.stop();
+          log.info("Embedded Postgres stopped");
+        }
+      }
+    };
+  }
+
+  private void start() throws Exception {
+    val runtime = PostgresStarter.getDefaultInstance();
+    val exec = runtime.prepare(config);
+    this.process = exec.start();
   }
 
 }

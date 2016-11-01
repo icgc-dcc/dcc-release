@@ -15,46 +15,16 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.fathmm.core;
+package org.icgc.dcc.release.job.fathmm.util;
 
-import static org.icgc.dcc.release.job.fathmm.util.JdbcUrls.FATHMM_JDBC_URL;
+import static java.lang.String.format;
+import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
 
-import java.io.File;
+@NoArgsConstructor(access = PRIVATE)
+public final class JdbcUrls {
 
-import lombok.val;
-
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.test.job.AbstractJobTest;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import com.google.common.collect.ImmutableList;
-
-public class FathmmJobTest extends AbstractJobTest {
-
-  private static final String PROJECT_NAME = "TEST-DCC";
-
-  /**
-   * Class under test.
-   */
-  FathmmJob job;
-
-  @Override
-  @Before
-  public void setUp() {
-    super.setUp();
-    this.job = new FathmmJob();
-    ReflectionTestUtils.setField(job, "jdbcUrl", FATHMM_JDBC_URL);
-  }
-
-  @Test
-  public void executeTest() {
-    given(new File(TEST_FIXTURES_DIR));
-    val jobContext = createJobContext(job.getType(), ImmutableList.of(PROJECT_NAME));
-    job.execute(jobContext);
-
-    verifyResult(PROJECT_NAME, FileType.OBSERVATION_FATHMM);
-  }
+  public static final String FATHMM_JDBC_URL = format("jdbc:h2:mem;MODE=PostgreSQL;INIT=runscript from '%s'",
+      "src/test/resources/sql/fathmm.sql");
 
 }

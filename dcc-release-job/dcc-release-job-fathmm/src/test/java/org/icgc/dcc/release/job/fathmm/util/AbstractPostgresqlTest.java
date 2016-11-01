@@ -15,46 +15,42 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.fathmm.core;
+package org.icgc.dcc.release.job.fathmm.util;
 
-import static org.icgc.dcc.release.job.fathmm.util.JdbcUrls.FATHMM_JDBC_URL;
+import javax.sql.DataSource;
 
-import java.io.File;
-
+import lombok.SneakyThrows;
 import lombok.val;
 
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
-import org.junit.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.junit.Rule;
+import org.postgresql.ds.PGSimpleDataSource;
 
-import com.google.common.collect.ImmutableList;
+import ru.yandex.qatools.embed.postgresql.config.PostgresConfig;
 
-public class FathmmJobTest extends AbstractJobTest {
+public abstract class AbstractPostgresqlTest {
 
-  private static final String PROJECT_NAME = "TEST-DCC";
+  protected DataSource dataSource;
+  protected PostgresConfig config = initPostgresConfig();
 
-  /**
-   * Class under test.
-   */
-  FathmmJob job;
+  @Rule
+  public final EmbeddedPostgres embeddedPostgres = new EmbeddedPostgres(config);
 
-  @Override
-  @Before
-  public void setUp() {
-    super.setUp();
-    this.job = new FathmmJob();
-    ReflectionTestUtils.setField(job, "jdbcUrl", FATHMM_JDBC_URL);
+  @SneakyThrows
+  private PostgresConfig initPostgresConfig() {
+    return PostgresConfig.defaultWithDbName("test", "test", "test");
   }
 
-  @Test
-  public void executeTest() {
-    given(new File(TEST_FIXTURES_DIR));
-    val jobContext = createJobContext(job.getType(), ImmutableList.of(PROJECT_NAME));
-    job.execute(jobContext);
+  @Before
+  public void setUp() throws Exception {
+    val dataSource = new PGSimpleDataSource();
+    dataSource.setServerName(config.net().host());
+    dataSource.setPortNumber(config.net().port());
+    dataSource.setDatabaseName(config.storage().dbName());
+    dataSource.setUser(config.credentials().username());
+    dataSource.setPassword(config.credentials().password());
 
-    verifyResult(PROJECT_NAME, FileType.OBSERVATION_FATHMM);
+    this.dataSource = dataSource;
   }
 
 }
