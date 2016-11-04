@@ -20,7 +20,9 @@ package org.icgc.dcc.release.job.annotate.resolver;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Long.MAX_VALUE;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,7 +36,11 @@ import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.icgc.dcc.release.core.resolver.DirectoryResourceResolver;
+
+import com.google.common.io.ByteStreams;
 
 @Slf4j
 public class SnpEffDatabaseResolver extends DirectoryResourceResolver<File> {
@@ -59,7 +65,7 @@ public class SnpEffDatabaseResolver extends DirectoryResourceResolver<File> {
 
     val dataDir = new File(getResourceDir(), "snpeff");
     val versionDir = new File(dataDir, version);
-    val databaseFile = new File(versionDir, "snpEffectPredictor.bin");
+    val databaseFile = new File(versionDir, artifactId + "-" + version + ".tar");
     if (databaseFile.exists()) {
       return dataDir;
     }
@@ -69,9 +75,35 @@ public class SnpEffDatabaseResolver extends DirectoryResourceResolver<File> {
     log.info("Resolving SnpEff database version '{}' from '{}' to '{}'...",
         new Object[] { version, url, databaseFile });
     download(url, databaseFile);
+    log.info("Uncompressing {}...", databaseFile);
+    uncompress(databaseFile);
     log.info("Finished resolving SnfEff database");
 
     return dataDir;
+  }
+
+  @SneakyThrows
+  private void uncompress(File databaseFile) {
+    val inputStream = new FileInputStream(databaseFile);
+    @Cleanup
+    val archiveStream = new TarArchiveInputStream(inputStream);
+    val dbDir = databaseFile.getParentFile();
+
+    TarArchiveEntry entry;
+    while ((entry = archiveStream.getNextTarEntry()) != null) {
+      untarEntry(entry, dbDir, archiveStream);
+    }
+  }
+
+  @SneakyThrows
+  private void untarEntry(TarArchiveEntry entry, File databaseDir, TarArchiveInputStream archiveStream) {
+    val entryName = entry.getName();
+    log.debug("Processing entry: {}", entryName);
+
+    val outputFile = new File(databaseDir, entryName);
+    @Cleanup
+    val outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
+    ByteStreams.copy(archiveStream, outputStream);
   }
 
   private void download(URL url, File databaseFile) throws IOException, FileNotFoundException {
@@ -83,7 +115,7 @@ public class SnpEffDatabaseResolver extends DirectoryResourceResolver<File> {
   }
 
   private URL getUrl(String artifactId, String version) throws MalformedURLException {
-    val url = new URL(resourceUrl + "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + ".bin");
+    val url = new URL(resourceUrl + "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + ".tar");
 
     return url;
   }
