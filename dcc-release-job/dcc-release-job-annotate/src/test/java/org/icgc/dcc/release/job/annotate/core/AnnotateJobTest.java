@@ -95,13 +95,13 @@ public class AnnotateJobTest extends AbstractJobTest {
 
   private static SnpEffProperties createSnpEffProperties() {
     val result = new SnpEffProperties();
-    result.setDatabaseVersion("3.6c-GRCh37.75");
+    result.setDatabaseVersion("4.2-GRCh37.85");
     result.setGeneBuildVersion("75");
     result.setMaxFileSizeMb(512);
     result.setReferenceGenomeVersion("GRCh37.75.v1");
     result.setResourceDir(new File("/tmp/dcc-release"));
     result.setResourceUrl("https://artifacts.oicr.on.ca/artifactory/simple/dcc-dependencies/org/icgc/dcc");
-    result.setVersion("3.6c");
+    result.setVersion("4.2");
 
     return result;
   }

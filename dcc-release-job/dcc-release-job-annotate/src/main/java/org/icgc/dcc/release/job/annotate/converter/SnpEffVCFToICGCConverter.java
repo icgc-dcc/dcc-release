@@ -20,6 +20,8 @@ package org.icgc.dcc.release.job.annotate.converter;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.model.SpecialValue.NO_VALUE;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.release.job.annotate.converter.SignificantEffectsResolver.getSignificantGenotype;
 import static org.icgc.dcc.release.job.annotate.model.ParseNotification.WARNING_REF_DOES_NOT_MATCH_GENOME;
 
 import java.util.Arrays;
@@ -34,7 +36,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.broadinstitute.variant.variantcontext.Genotype;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
 import org.icgc.dcc.release.job.annotate.model.SecondaryEntity;
@@ -42,8 +43,6 @@ import org.icgc.dcc.release.job.annotate.model.SnpEffect;
 import org.icgc.dcc.release.job.annotate.parser.SnpEffectParser;
 
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -57,7 +56,7 @@ import com.google.common.collect.Multimaps;
 @RequiredArgsConstructor
 public class SnpEffVCFToICGCConverter {
 
-  public static final String INFO_EFF_FIELD = "EFF";
+  public static final String INFO_ANN_FIELD = "ANN";
   private static final String INFO_PRIM_FIELD = "PRIM";
 
   /**
@@ -108,7 +107,7 @@ public class SnpEffVCFToICGCConverter {
         .aaMutation(getValue(effect.getAminoAcidChange()))
         .cdsMutation(getValue(effect.getCodonChange()))
         .proteinDomainAffected(getValue(PROTEIN_AFFECTED_DOMAIN_VALUE))
-        .geneAffected(getValue(effect.getGeneName()))
+        .geneAffected(getValue(effect.getGeneID()))
         .transcriptAffected(getValue(effect.getTranscriptID()))
         .geneBuildVersion(genBuildVersion)
         .note(SSM_NOTE)
@@ -126,20 +125,20 @@ public class SnpEffVCFToICGCConverter {
    */
   private static Collection<SnpEffect> retrieveUniqueCancerEffects(VariantContext variant) {
     log.debug("Processing variant: {}", variant);
-    if (!variant.hasAttribute(INFO_EFF_FIELD)) {
+    if (!variant.hasAttribute(INFO_ANN_FIELD)) {
       log.warn("No snpEff annotation found in variant. Skipping. Variant: {}", variant);
 
       return Collections.emptyList();
     }
 
-    val effects = extractEffects(variant);
-    val result = new ImmutableList.Builder<SnpEffect>();
+    val unparsedEffects = extractEffects(variant);
+    val result = ImmutableList.<SnpEffect> builder();
 
-    for (val effectAnnotation : effects) {
-      result.addAll(filterMalformedEffects(SnpEffectParser.parse(effectAnnotation), variant));
+    for (val unparsedEffect : unparsedEffects) {
+      result.addAll(filterMalformedEffects(SnpEffectParser.parse(unparsedEffect), variant));
     }
 
-    return filterEffects(variant, result.build());
+    return filterSignificantEffects(variant, result.build());
   }
 
   /**
@@ -148,26 +147,18 @@ public class SnpEffVCFToICGCConverter {
    * @return a list of valid effects
    */
   private static List<SnpEffect> filterMalformedEffects(List<SnpEffect> effects, VariantContext variant) {
-    val result = new ImmutableList.Builder<SnpEffect>();
-
-    for (val effect : effects) {
-      if (isValidEffect(effect, variant)) {
-        result.add(effect);
-      }
-    }
-
-    return result.build();
+    return effects.stream()
+        .filter(effect -> isValidEffect(effect, variant))
+        .collect(toImmutableList());
   }
 
   private static boolean isValidEffect(SnpEffect effect, VariantContext variant) {
     if (effect.hasError()) {
-      // FIXME: [DCC-2578] Confirm with Junjun when a malformed effect can be still added to a ssm_s.txt.
       if (effect.containsAnyError(WARNING_REF_DOES_NOT_MATCH_GENOME)) {
         log.error("Skipping malformed effect: '{}'", effect);
 
         return false;
       }
-      // TODO: Change to other level once this information is required for data mining etc.
       log.debug("Adding effect with warning or error: '{}'", effect);
     }
 
@@ -180,7 +171,7 @@ public class SnpEffVCFToICGCConverter {
    */
   @SuppressWarnings("unchecked")
   private static List<String> extractEffects(VariantContext variant) {
-    val allEffects = variant.getAttribute(INFO_EFF_FIELD);
+    val allEffects = variant.getAttribute(INFO_ANN_FIELD);
 
     return (allEffects instanceof List) ? (List<String>) allEffects : Arrays.asList((String) allEffects);
   }
@@ -196,20 +187,18 @@ public class SnpEffVCFToICGCConverter {
    * @return effects sorted by priority and limited by the most important
    * @see <a href="https://wiki.oicr.on.ca/x/sg6RAw">Effect selection criterias</a>
    */
-  private static Collection<SnpEffect> filterEffects(VariantContext variant, List<SnpEffect> individualEffects) {
-    val controlGenotype = parseGenotype(variant, SampleType.CONTROL_SAMPLE.getName());
-    val tumourGenotype = parseGenotype(variant, SampleType.DONOR_SAMPLE.getName());
-
-    if (!isMutation(controlGenotype, tumourGenotype)) {
-      log.warn("No mutations found based on the genotype info. Variant: {}", variant);
+  private static Collection<SnpEffect> filterSignificantEffects(VariantContext variant,
+      List<SnpEffect> individualEffects) {
+    val significantGenotype = getSignificantGenotype(variant);
+    if (!significantGenotype.isPresent()) {
+      log.debug("No mutations found based on the genotype info. Variant: {}", variant);
 
       return Collections.emptyList();
     }
 
-    val predictedGenotypeNumber = predictGenotypeNumber(controlGenotype, tumourGenotype);
-    val uniqueEffects = filterMatchingEffects(individualEffects, predictedGenotypeNumber);
-    val transcriptIdMap = groupEffects(uniqueEffects);
-    val result = getFilteredEffects(transcriptIdMap);
+    val significantEffects = filterMatchingSignificantEffects(individualEffects, significantGenotype.get());
+    val transcriptIdMap = groupEffects(significantEffects);
+    val result = getFilteredByPriorityEffects(transcriptIdMap);
 
     if (result.isEmpty()) {
       log.warn("No effect found for this mutation. Skipping. Variant: {}", variant);
@@ -219,56 +208,10 @@ public class SnpEffVCFToICGCConverter {
   }
 
   /**
-   * Checks if {@code mutationFrom} and {@code mutationTo} represent a mutation.<br>
-   * <br>
-   * It is not a mutation if both arguments the same. There is no mutation in representation A>A. Must be something like
-   * A>G. What means allele A mutated to allele G.
-   */
-  // TODO: move this to ssm_s to vcf generation class. It's more efficient to check this before the annotation step.
-  private static boolean isMutation(String mutationFrom, String mutationTo) {
-    return !mutationFrom.equals(mutationTo);
-  }
-
-  /**
-   * Gets genotype (control or sample) from {@code variant} by {@code genotypeName}. Transforms its name to numeric
-   * format which is generated by snpEff. The genotype number corresponds to the allele position in REF or ALT fields in
-   * the VCF file. The method returns a single position number of this genotype.
-   * 
-   * We know that left and right sides of a genotype are always equal, because this is enforced by the submission
-   * validator and it looks like "0/0  1/1". So, the method will return either "0" or "1" depending on the
-   * {@code genotypeName}
-   */
-  private static String parseGenotype(VariantContext variant, String genotypeName) {
-    val genotype = variant.getGenotype(genotypeName);
-    checkPhasing(genotype);
-
-    return transformGenotypeNotion(variant, genotype).get(0);
-  }
-
-  /**
-   * Converts {@code genotype}, which looks like [T/T] to VCF format. E.g. 1/1
-   */
-  private static List<String> transformGenotypeNotion(VariantContext variant, Genotype genotype) {
-    val result = new ImmutableList.Builder<String>();
-    val leftAlleleIndex = 0;
-    val rightAlleleIndex = 1;
-    result.add(String.valueOf(variant.getAlleleIndex(genotype.getAllele(leftAlleleIndex))));
-    result.add(String.valueOf(variant.getAlleleIndex(genotype.getAllele(rightAlleleIndex))));
-
-    return result.build();
-  }
-
-  private static void checkPhasing(Genotype genotype) {
-    if (genotype.isPhased()) {
-      throw new UnsupportedOperationException("Phased genotype is not currently supported. Genotype: " + genotype);
-    }
-  }
-
-  /**
    * Returns a set of effects sorted by priority and limited by 1
    */
-  private static Set<SnpEffect> getFilteredEffects(Multimap<String, SnpEffect> transcriptIdMap) {
-    val result = new ImmutableSet.Builder<SnpEffect>();
+  private static Set<SnpEffect> getFilteredByPriorityEffects(Multimap<String, SnpEffect> transcriptIdMap) {
+    val result = ImmutableSet.<SnpEffect> builder();
     for (val transcriptId : transcriptIdMap.keySet()) {
       val effectGroup = Lists.newArrayList(transcriptIdMap.get(transcriptId));
       // order by importance
@@ -289,7 +232,7 @@ public class SnpEffVCFToICGCConverter {
 
           @Override
           public String apply(@NonNull SnpEffect item) {
-            return !item.getTranscriptID().isEmpty() ? item.getTranscriptID() : item.getGeneName();
+            return !item.getTranscriptID().isEmpty() ? item.getTranscriptID() : item.getGeneID();
           }
 
         });
@@ -298,37 +241,13 @@ public class SnpEffVCFToICGCConverter {
   }
 
   /**
-   * Filters {@code individualEffects}. Returns only those that whose {@code cancerID} matches {@code mutationSet}
+   * Filters {@code individualEffects}. Returns only those that whose {@code allele} matches {@code significantGenotype}
    */
-  private static Collection<SnpEffect> filterMatchingEffects(List<SnpEffect> individualEffects, final String mutationSet) {
-    Collection<SnpEffect> uniqueEffects = Collections2.filter(
-        individualEffects, new Predicate<SnpEffect>() {
-
-          @Override
-          public boolean apply(SnpEffect effect) {
-            if (effect != null && mutationSet.equals(effect.getCancerID())) {
-              return true;
-            }
-
-            return false;
-          }
-
-        });
-    return uniqueEffects;
-  }
-
-  /**
-   * Predicts what Genotype_Number should be valid for the {@code control} / {@code tumour} combination
-   */
-  private static String predictGenotypeNumber(String control, String tumour) {
-    val separator = "-";
-    val referenceAllele = "0";
-
-    if (control.equals(referenceAllele)) {
-      return tumour;
-    } else {
-      return tumour + separator + control;
-    }
+  private static Collection<SnpEffect> filterMatchingSignificantEffects(List<SnpEffect> individualEffects,
+      final String significantGenotype) {
+    return individualEffects.stream()
+        .filter(effect -> significantGenotype.equals(effect.getAllele()))
+        .collect(toImmutableList());
   }
 
   @Getter

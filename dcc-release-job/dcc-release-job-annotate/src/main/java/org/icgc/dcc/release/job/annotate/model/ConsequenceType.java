@@ -103,4 +103,9 @@ public enum ConsequenceType implements Identifiable {
     return name().toLowerCase();
   }
 
+  public static boolean ignore(@NonNull String consequenceName) {
+    // https://docs.google.com/spreadsheets/d/15zeME1_igkVOl2euFDXS6pk6kuC_GCiX6HKb7mhXFmE/edit#gid=0
+    return consequenceName.equals(UNKNOWN_CONSEQUENCE.consequenceName);
+  }
+
 }

@@ -24,23 +24,17 @@ import lombok.RequiredArgsConstructor;
 /**
  * Header names of annotations produced by snpEff. Found in the INFO column of a VCF file.
  */
-@RequiredArgsConstructor(access = PRIVATE)
 @Getter
+@RequiredArgsConstructor(access = PRIVATE)
 public enum InfoHeaderField {
 
-  EFFECT_KEY(-1),
-  CONSEQUENCE_TYPE_KEY(0),
-  FUNCTIONAL_CLASS_KEY(1),
-  CODON_CHANGE_KEY(2),
-  AMINO_ACID_CHANGE_KEY(3),
-  AMINO_ACID_LENGTH_KEY(4),
-  GENE_NAME_KEY(5),
-  GENE_BIOTYPE_KEY(6),
-  CODING_KEY(7),
-  TRANSCRIPT_ID_KEY(8),
-  EXON_ID_KEY(9),
-  CANCER_ID_KEY(10),
-  PROTEIN_DOMAIN_KEY(-2);
+  ALLELE(0),
+  CONSEQUENCE_TYPE_INDEX(1),
+  GENE_ID_INDEX(4),
+  FEATURE_ID_INDEX(6),
+  HGVS_C_INDEX(9),
+  HGVS_P_INDEX(10),
+  ERRORS_INDEX(15);
 
   // Index within the effect metadata subfields from the SnpEff EFF annotation where each key's associated value can
   // be found during parsing.

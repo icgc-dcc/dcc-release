@@ -22,14 +22,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.File;
 
-import com.google.common.io.Files;
-import com.google.common.io.Resources;
-
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
+
+import com.google.common.io.Files;
+import com.google.common.io.Resources;
 
 /**
  * Abstraction that manages the creating of the forked SnpEff process.
@@ -64,9 +64,8 @@ public class SnpEffProcess extends Process {
     val builder = new ProcessBuilder(
         getJavaPath(),
         "-Xmx4g",
-        "-cp",
+        "-jar",
         getClassPath(),
-        getMainClass(),
         "eff",
         "-cancer",
         "-v",
@@ -98,10 +97,6 @@ public class SnpEffProcess extends Process {
 
   private String getJavaPath() {
     return java.getAbsolutePath();
-  }
-
-  private String getMainClass() {
-    return "ca.mcgill.mcb.pcingola.snpEffect.commandLine.SnpEff";
   }
 
   private String getClassPath() {

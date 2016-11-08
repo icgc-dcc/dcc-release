@@ -39,8 +39,8 @@ public final class ConsequenceTypeParser {
   /**
    * Multiple consequences are separated by '+'
    */
-  private static final Pattern MULTI_CONSEQUENCE_PATTERN = Pattern.compile("(\\w+)\\+(\\w+)");
-  private static final Splitter SPLITTER = Splitter.on('+');
+  private static final Pattern MULTI_CONSEQUENCE_PATTERN = Pattern.compile("(\\w+)\\&(\\w+)");
+  private static final Splitter SPLITTER = Splitter.on('&');
   private static final int EFFECTS_QUANTITY = 2;
   private static final int EFFECT_LAST_INDEX = 1;
   private static final String EXON_LOSS_CONSEQUENCE_NAME = "exon_loss";

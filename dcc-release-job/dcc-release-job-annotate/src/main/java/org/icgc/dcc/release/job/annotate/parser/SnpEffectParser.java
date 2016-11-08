@@ -17,44 +17,37 @@
  */
 package org.icgc.dcc.release.job.annotate.parser;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.util.regex.Pattern.quote;
+import static java.lang.String.format;
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.release.job.annotate.model.ConsequenceType.FRAMESHIFT_VARIANT;
+import static org.icgc.dcc.common.core.util.Separators.DASH;
+import static org.icgc.dcc.common.core.util.Separators.DOT;
+import static org.icgc.dcc.common.core.util.Separators.EMPTY_STRING;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.release.job.annotate.model.ConsequenceType.UNKNOWN_CONSEQUENCE;
 import static org.icgc.dcc.release.job.annotate.model.ConsequenceType.byId;
-import static org.icgc.dcc.release.job.annotate.model.EffectFunctionalClass.NONE;
-import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.AMINO_ACID_LENGTH_KEY;
-import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.CANCER_ID_KEY;
-import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.CODING_KEY;
-import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.CONSEQUENCE_TYPE_KEY;
-import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.EXON_ID_KEY;
-import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.FUNCTIONAL_CLASS_KEY;
-import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.GENE_BIOTYPE_KEY;
-import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.GENE_NAME_KEY;
-import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.TRANSCRIPT_ID_KEY;
-import static org.icgc.dcc.release.job.annotate.model.ParseNotification.CDS_MUTATION_FAILURE;
-import static org.icgc.dcc.release.job.annotate.model.ParseNotification.MISSING_CONSEQUENCE_TYPE;
-import static org.icgc.dcc.release.job.annotate.model.ParseNotification.UNKNOWN_FUNCTIONAL_CLASS;
-import static org.icgc.dcc.release.job.annotate.parser.AminoAcidChangeParser.convertToFrameshiftVariant;
-import static org.icgc.dcc.release.job.annotate.parser.AminoAcidChangeParser.getAminoAcidChange;
-import static org.icgc.dcc.release.job.annotate.parser.AminoAcidChangeParser.standardize;
-import static org.icgc.dcc.release.job.annotate.parser.CodonChangeParser.getCodonChange;
-import static org.icgc.dcc.release.job.annotate.parser.CodonChangeParser.parseCodonChange;
+import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.ALLELE;
+import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.FEATURE_ID_INDEX;
+import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.GENE_ID_INDEX;
+import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.HGVS_C_INDEX;
+import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.HGVS_P_INDEX;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import lombok.NoArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.icgc.dcc.release.job.annotate.model.EffectFunctionalClass;
-import org.icgc.dcc.release.job.annotate.model.EffectImpact;
+import org.icgc.dcc.common.core.util.Splitters;
+import org.icgc.dcc.release.job.annotate.converter.AminoAcidConverter;
+import org.icgc.dcc.release.job.annotate.model.ConsequenceType;
+import org.icgc.dcc.release.job.annotate.model.InfoHeaderField;
 import org.icgc.dcc.release.job.annotate.model.ParseNotification;
 import org.icgc.dcc.release.job.annotate.model.ParseState;
 import org.icgc.dcc.release.job.annotate.model.SnpEffect;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -63,6 +56,16 @@ import com.google.common.collect.ImmutableList;
 @Slf4j
 @NoArgsConstructor(access = PRIVATE)
 public final class SnpEffectParser {
+
+  private static final Pattern AMINO_ACID_CHANGE_PATTERN = Pattern.compile("p.(\\w{3})(\\d+)(\\w{3})");
+  private static final Pattern FRAMESHIFT_AMINO_ACID_CHANGE_PATTERN = Pattern.compile("p.(\\w{3})(\\d+)fs");
+  private static final Pattern CODON_CHANGE_PATTERN = Pattern.compile("c\\.(\\d+\\w>\\w)");
+
+  /**
+   * An annotation has this number of fields.
+   */
+  private static final int ANNOTATION_FIELDS_COUNT = 16;
+  private static final Splitter ANNOTATION_SPLITTER = Splitters.PIPE;
 
   /**
    * Number of expected metadata fields annotated by snpEff
@@ -80,184 +83,133 @@ public final class SnpEffectParser {
   public static final int WARNING_AND_ERROR_MEDATA_FIELDS_COUNT = 13;
   public static final SnpEffect MALFORMED_SNP_EFFECT = SnpEffect.builder().consequenceType(UNKNOWN_CONSEQUENCE).build();
 
-  private static final String METADATA_DELIMITER = "[()]";
-  private static final String METADATA_SUBFIELD_DELIMITER = "|";
-  private static final int EFFECT_NAME_INDEX = 0;
-  private static final int EFFECT_METADATA_INDEX = 1;
-  private static final String EMPTY_VALUE = "";
-
-  // If there is either a warning OR an error, it will be in the last field. If there is both a warning AND an error,
-  // the warning will be in the second-to-last field, and the error will be in the last field.
-  private static final int SNPEFF_WARNING_OR_ERROR_FIELD_UPON_SINGLE_ERROR = WARNING_OR_ERROR_METADATA_FIELDS_COUNT - 1;
-  private static final int SNPEFF_WARNING_FIELD_UPON_BOTH_WARNING_AND_ERROR = WARNING_AND_ERROR_MEDATA_FIELDS_COUNT - 2;
-  private static final int SNPEFF_ERROR_FIELD_UPON_BOTH_WARNING_AND_ERROR = WARNING_AND_ERROR_MEDATA_FIELDS_COUNT - 1;
-
-  /**
-   * Check that {@code metadata} array contains is not null and have correct number of fields.
-   * 
-   * @throws IllegalStateException if {@code metadata} is null or malformed.
-   */
-  public static void checkMetadataFormat(String[] metadata) {
-    checkState(metadata != null, "Metadata array is null");
-    checkState(metadata.length >= METADATA_FIELDS_COUNT && metadata.length <= WARNING_AND_ERROR_MEDATA_FIELDS_COUNT,
-        "Incorrect size of metadata array: %s", metadata.length);
-  }
-
   /**
    * Parses an annotated by snpEff effect.
    * 
    * @param effectAnnotation - complete effect annotation with name. E.g.
-   * {@code exon_variant(MODIFIER|||||ENSG00000000005|processed_transcript|CODING|ENST00000485971|2|1)}
+   * {@code "T|intergenic_region|MODIFIER|KSR1P1-IGKV1OR10-1|ENSG00000229485-ENSG00000237592|intergenic_region|ENSG00000229485-ENSG00000237592|||n.42652889G>T||||||"}
    */
   public static List<SnpEffect> parse(String effectAnnotation) {
+    log.info("Parsing effect annotation: {}", effectAnnotation);
     if (isNullOrEmpty(effectAnnotation)) {
       return ImmutableList.of(MALFORMED_SNP_EFFECT);
     }
 
-    val effectNameAndMetadata = effectAnnotation.split(METADATA_DELIMITER);
-    val fieldsCount = 2;
-    if (effectNameAndMetadata.length != fieldsCount) {
+    val metadata = ANNOTATION_SPLITTER.splitToList(effectAnnotation);
+    if (metadata.size() != ANNOTATION_FIELDS_COUNT) {
       log.warn("Malformed SnpEff effect: {}", effectAnnotation);
 
       return ImmutableList.of(MALFORMED_SNP_EFFECT);
     }
 
-    val effectMetadata = effectNameAndMetadata[EFFECT_METADATA_INDEX].split(quote(METADATA_SUBFIELD_DELIMITER), -1);
-    try {
-      checkMetadataFormat(effectMetadata);
-    } catch (IllegalStateException e) {
-      log.warn(e.getMessage());
-
-      return ImmutableList.of(MALFORMED_SNP_EFFECT);
-    }
-
-    val effectName = effectNameAndMetadata[EFFECT_NAME_INDEX];
+    val effectName = metadata.get(InfoHeaderField.CONSEQUENCE_TYPE_INDEX.getFieldIndex());
     val result = new ImmutableList.Builder<SnpEffect>();
     for (val consequenceType : ConsequenceTypeParser.parse(effectName)) {
-      result.add(parseIndividualEffect(consequenceType, effectMetadata));
+      if (!ConsequenceType.ignore(consequenceType)) {
+        result.add(parseIndividualEffect(consequenceType, metadata));
+      }
     }
 
     return result.build();
   }
 
-  private static SnpEffect parseIndividualEffect(String effectName, String[] effectMetadata) {
+  private static SnpEffect parseIndividualEffect(String consequenceType, List<String> metadata) {
     val result = SnpEffect.builder();
     val parseState = new ParseState();
 
-    result.consequenceType(byId(effectName));
-    parseWarningsAndErrors(parseState, effectMetadata);
-    result.impact(parseImpactField(parseState, effectMetadata));
-    result.functionalClass(parseFunctionalClass(parseState, effectMetadata));
+    result.consequenceType(byId(consequenceType));
+    parseWarningsAndErrors(parseState, metadata.get(InfoHeaderField.ERRORS_INDEX.getFieldIndex()));
+    val geneID = metadata.get(GENE_ID_INDEX.getFieldIndex());
+    if (!isSkipGene(geneID)) {
+      result.geneID(geneID);
+    }
 
-    val codonAndAminoAcid = parseCodonChangeAndAminoAcidChange(parseState, effectMetadata, effectName);
-    result.codonChange(codonAndAminoAcid.get(0));
-    result.aminoAcidChange(codonAndAminoAcid.get(1));
+    val transcriptID = metadata.get(FEATURE_ID_INDEX.getFieldIndex());
+    if (!isSkipGene(transcriptID)) {
+      result.transcriptID(parseTranscriptId(transcriptID));
+    }
 
-    result.aminoAcidLength(effectMetadata[AMINO_ACID_LENGTH_KEY.getFieldIndex()]);
-    result.geneName(effectMetadata[GENE_NAME_KEY.getFieldIndex()]);
-    result.geneBiotype(effectMetadata[GENE_BIOTYPE_KEY.getFieldIndex()]);
-    result.coding(effectMetadata[CODING_KEY.getFieldIndex()]);
-    result.transcriptID(effectMetadata[TRANSCRIPT_ID_KEY.getFieldIndex()]);
-    result.exonID(effectMetadata[EXON_ID_KEY.getFieldIndex()]);
-    result.cancerID(effectMetadata[CANCER_ID_KEY.getFieldIndex()]);
+    result.codonChange(parseCodonChange(metadata.get(HGVS_C_INDEX.getFieldIndex())));
+    result.aminoAcidChange(parseAminoAcidChange(metadata.get(HGVS_P_INDEX.getFieldIndex())));
+
+    result.allele(metadata.get(ALLELE.getFieldIndex()));
     result.parseState(parseState);
 
     return result.build();
   }
 
-  private static List<String> parseCodonChangeAndAminoAcidChange(ParseState error, String[] effectMetadata,
-      String effectName) {
+  /**
+   * Removes version from the transcript ID if it has it.
+   */
+  static String parseTranscriptId(String transcriptID) {
+    val transcriptEnd = transcriptID.indexOf(DOT);
 
-    // No need to check if metadata is malformed. That was done in the parent method.
-    String codonChange = getCodonChange(effectMetadata);
-    String aminoAcidChange = getAminoAcidChange(effectMetadata);
-
-    // Special treatment for frame shift
-    if (FRAMESHIFT_VARIANT.getConsequenceName().equals(effectName)) {
-      aminoAcidChange = convertToFrameshiftVariant(aminoAcidChange);
-    }
-
-    codonChange = parseCodonChange(codonChange, aminoAcidChange);
-
-    if (codonChange == null) {
-      error.addErrorAndMessage(CDS_MUTATION_FAILURE, "cds_mutation generation fail");
-      codonChange = EMPTY_VALUE;
-    }
-
-    // TODO: Why it's not standardized when codonChange is empty?
-    if (!codonChange.isEmpty()) {
-      aminoAcidChange = standardize(aminoAcidChange);
-    }
-
-    return ImmutableList.of(codonChange, aminoAcidChange);
+    return transcriptEnd == -1 ? transcriptID : transcriptID.substring(0, transcriptEnd);
   }
 
-  /**
-   * The impact field will never be empty, and should always contain one of the enumerated values
-   */
-  // Create a ParseResult container which would contain: value, status, errorCode, errorMessage and return it
-  // as a result of parsing. This would avoid passing SnpEffect as the method argument
-  private static EffectImpact parseImpactField(ParseState error, String[] effectMetadata) {
-    try {
-      return EffectImpact.valueOf(effectMetadata[CONSEQUENCE_TYPE_KEY.getFieldIndex()]);
-    } catch (IllegalArgumentException e) {
-      error.addErrorAndMessage(MISSING_CONSEQUENCE_TYPE, "Unrecognized value for effect impact: '%s'",
-          effectMetadata[CONSEQUENCE_TYPE_KEY.getFieldIndex()]);
-
-      return EffectImpact.MODIFIER;
-    }
+  private static boolean isSkipGene(String geneID) {
+    // Ranges of genes occur for intergenic_region consequence types. They should be skipped.
+    return geneID == null || geneID.contains(DASH);
   }
 
-  /**
-   * The functional class field will be empty when the effect has no functional class associated with it
-   */
-  private static EffectFunctionalClass parseFunctionalClass(ParseState error, String[] effectMetadata) {
-    val functionalClass = effectMetadata[FUNCTIONAL_CLASS_KEY.getFieldIndex()];
-
-    if (!isNullOrEmpty(functionalClass)) {
-      try {
-        return EffectFunctionalClass.valueOf(functionalClass);
-      } catch (IllegalArgumentException e) {
-        error.addErrorAndMessage(UNKNOWN_FUNCTIONAL_CLASS, "Unrecognized value for effect functional class: '%s'",
-            functionalClass);
-
-        return NONE;
-      }
+  static String parseAminoAcidChange(String aaChange) {
+    if (isNullOrEmpty(aaChange)) {
+      return null;
     }
 
-    return NONE;
+    String from = null;
+    String to = null;
+    String position = null;
+
+    val frameshiftMatcher = FRAMESHIFT_AMINO_ACID_CHANGE_PATTERN.matcher(aaChange);
+    val matcher = AMINO_ACID_CHANGE_PATTERN.matcher(aaChange);
+    if (frameshiftMatcher.matches()) {
+      from = AminoAcidConverter.convert(frameshiftMatcher.group(1));
+      to = EMPTY_STRING;
+      position = frameshiftMatcher.group(2);
+    } else if (matcher.matches()) {
+      from = AminoAcidConverter.convert(matcher.group(1));
+      to = AminoAcidConverter.convert(matcher.group(3));
+      position = matcher.group(2);
+    } else {
+      return null;
+    }
+
+    if (from == null || to == null) {
+      throw new IllegalArgumentException(format("Failed to convert AA change: '%s'", aaChange));
+    }
+
+    return from + position + to;
+  }
+
+  static String parseCodonChange(String codonChange) {
+    if (isNullOrEmpty(codonChange)) {
+      return null;
+    }
+
+    val matcher = CODON_CHANGE_PATTERN.matcher(codonChange);
+    if (matcher.matches()) {
+      return matcher.group(1);
+    }
+
+    return null;
   }
 
   /**
    * Checks if the annotation does not contain warnings and errors. If so, update {@code parseError} and
    * {@code errorCode} accordingly.
    */
-  private static void parseWarningsAndErrors(ParseState error, String[] effectMetadata) {
-    if (effectMetadata.length != METADATA_FIELDS_COUNT) {
-
-      switch (effectMetadata.length) {
-      case WARNING_OR_ERROR_METADATA_FIELDS_COUNT:
-        List<ParseNotification> parseError =
-            ParseNotification.parse(effectMetadata[SNPEFF_WARNING_OR_ERROR_FIELD_UPON_SINGLE_ERROR]);
-        error.addAllErrors(parseError);
-
-        break;
-
-      case WARNING_AND_ERROR_MEDATA_FIELDS_COUNT:
-        parseError = ParseNotification.parse(effectMetadata[SNPEFF_WARNING_FIELD_UPON_BOTH_WARNING_AND_ERROR]);
-        error.addAllErrors(parseError);
-
-        parseError = ParseNotification.parse(effectMetadata[SNPEFF_ERROR_FIELD_UPON_BOTH_WARNING_AND_ERROR]);
-        error.addAllErrors(parseError);
-
-        break;
-      default:
-        log.warn("Wrong number of effect metadata fields. Expected {} but found {}",
-            METADATA_FIELDS_COUNT, effectMetadata.length);
-        error.addErrorCode(ParseNotification.PARSING_EXCEPTION);
-      }
-
+  private static void parseWarningsAndErrors(ParseState error, String warningsAndErrors) {
+    if (isNullOrEmpty(warningsAndErrors)) {
+      return;
     }
+
+    val errorsList = Splitters.SLASH.splitToList(warningsAndErrors);
+    val parseNotifications = errorsList.stream()
+        .map(ParseNotification::getById)
+        .collect(toImmutableList());
+
+    error.addAllErrors(parseNotifications);
   }
 
 }

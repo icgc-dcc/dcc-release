@@ -18,9 +18,9 @@
 package org.icgc.dcc.release.job.annotate.model;
 
 import static com.google.common.base.Preconditions.checkState;
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
-import lombok.Builder;
 
 /**
  * A snpEff 3.6 representation.
@@ -29,24 +29,13 @@ import lombok.Builder;
 @Builder
 public final class SnpEffect implements Comparable<SnpEffect> {
 
-  /**
-   * It's set when an snpEff annotation is missing effect importance or cds_mutation generation failed.
-   */
-  public static final String METADATA_DELIMITER = "[()]";
-  public static final String METADATA_SUBFIELD_DELIMITER = "|";
-
   ConsequenceType consequenceType;
-  EffectImpact impact;
-  EffectFunctionalClass functionalClass;
   String codonChange;
   String aminoAcidChange;
-  String aminoAcidLength;
-  String geneName;
-  String geneBiotype;
-  String coding;
+  String geneID;
   String transcriptID;
-  String exonID;
   String cancerID;
+  String allele;
   ParseState parseState;
 
   @Override

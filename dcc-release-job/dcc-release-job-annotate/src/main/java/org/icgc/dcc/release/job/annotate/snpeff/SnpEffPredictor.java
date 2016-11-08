@@ -80,7 +80,7 @@ public class SnpEffPredictor {
     this.process = new SnpEffProcess(resolveJar(), resolveJava(), resolveDataDir(), properties.getDatabaseVersion());
     this.stream = new PrintStream(process.getOutputStream(), false, UTF_8.name());
     this.vcfRecordConverter = new VCFRecordConverter(properties.getResourceDir(), properties.getResourceUrl(),
-        properties.getDatabaseVersion());
+        properties.getReferenceGenomeVersion());
 
     // Start handler threads
     executor.execute(new SnpEffResultHandler(process.getInputStream(), queue, fileType, properties
