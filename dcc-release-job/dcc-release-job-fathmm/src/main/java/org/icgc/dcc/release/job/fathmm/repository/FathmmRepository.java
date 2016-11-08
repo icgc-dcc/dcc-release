@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.fathmm.model;
+package org.icgc.dcc.release.job.fathmm.repository;
 
 import static org.icgc.dcc.release.job.fathmm.model.FathmmConstants.AA_MUTATION;
 import static org.icgc.dcc.release.job.fathmm.model.FathmmConstants.TRANSLATION_ID;
@@ -23,6 +23,8 @@ import static org.icgc.dcc.release.job.fathmm.model.FathmmConstants.TRANSLATION_
 import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
+
+import javax.sql.DataSource;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -35,7 +37,6 @@ import org.skife.jdbi.v2.Query;
 /**
  * This is a Data Access Object for FatHMM on postgresql database
  */
-// TODO: remove? it was used in the refactored version of Fathmm predictor
 public class FathmmRepository implements Closeable {
 
   @NonNull
@@ -47,17 +48,23 @@ public class FathmmRepository implements Closeable {
   private final Query<Map<String, Object>> sequenceQuery;
   private final Query<Map<String, Object>> domainQuery;
   private final Query<Map<String, Object>> probabilityQuery;
-  private final Query<Map<String, Object>> unweightedProbabilityQuery;
 
   public FathmmRepository(@NonNull String fathmmPostgresqlUri) {
-    this.handle = new DBI(fathmmPostgresqlUri).open();
+    this(new DBI(fathmmPostgresqlUri).open());
+  }
+
+  public FathmmRepository(@NonNull DataSource dataSource) {
+    this(DBI.open(dataSource));
+  }
+
+  private FathmmRepository(@NonNull Handle handle) {
+    this.handle = handle;
 
     // @formatter:off
     this.cacheQuery                 = handle.createQuery("select * from \"DCC_CACHE\" where translation_id = :translationId and aa_mutation = :aaMutation");
     this.sequenceQuery              = handle.createQuery("select a.* from \"SEQUENCE\" a, \"PROTEIN\" b where a.id = b.id and b.name = :translationId");
     this.domainQuery                = handle.createQuery("select * from \"DOMAINS\" where id=:sequenceId and :substitution between seq_begin and seq_end order by score");
-    this.probabilityQuery           = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:hmm and a.position=:residue");
-    this.unweightedProbabilityQuery = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:sequenceId and a.position=:substitution");
+    this.probabilityQuery           = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:probId and a.position=:probPosition");
     // @formatter:on
   }
 
@@ -90,7 +97,7 @@ public class FathmmRepository implements Closeable {
   }
 
   public Map<String, Object> getUnweightedProbability(String sequenceId, int substitution) {
-    return unweightedProbabilityQuery.bind("sequenceId", sequenceId).bind("substitution", substitution).first();
+    return probabilityQuery.bind("probId", sequenceId).bind("probPosition", substitution).first();
   }
 
   public List<Map<String, Object>> getDomains(int sequenceId, int substitution) {
@@ -98,7 +105,7 @@ public class FathmmRepository implements Closeable {
   }
 
   public Map<String, Object> getProbability(@NonNull String hmm, @NonNull Integer residue) {
-    return probabilityQuery.bind("hmm", hmm).bind("residue", residue).first();
+    return probabilityQuery.bind("probId", hmm).bind("probPosition", residue).first();
   }
 
   private Query<Map<String, Object>> createWeightQuery(String weights) {

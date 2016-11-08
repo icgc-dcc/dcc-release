@@ -267,15 +267,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
         <artifactId>json-unit</artifactId>
         <version>${json-unit.version}</version>
       </dependency>
-
-      <!-- Testing - Postgresql -->
-      <dependency>
-        <groupId>ru.yandex.qatools.embed</groupId>
-        <artifactId>postgresql-embedded</artifactId>
-        <scope>test</scope>
-        <version>${embedded-postgres.version}</version>
-      </dependency>
-
     </dependencies>
   </dependencyManagement>
 
@@ -345,7 +336,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <json-unit.version>1.9.0</json-unit.version>
     
     <!-- Embedded Postgresql -->
-    <embedded-postgres.version>1.16</embedded-postgres.version>
   </properties>
 
 </project>

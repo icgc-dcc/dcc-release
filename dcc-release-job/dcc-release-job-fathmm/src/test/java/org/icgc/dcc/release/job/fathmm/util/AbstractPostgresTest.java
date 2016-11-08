@@ -17,56 +17,36 @@
  */
 package org.icgc.dcc.release.job.fathmm.util;
 
+import static org.icgc.dcc.release.job.fathmm.util.PostgresTests.initDb;
+
+import javax.sql.DataSource;
+
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
 
-import ru.yandex.qatools.embed.postgresql.PostgresProcess;
-import ru.yandex.qatools.embed.postgresql.PostgresStarter;
-import ru.yandex.qatools.embed.postgresql.config.PostgresConfig;
+import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
+import com.opentable.db.postgres.junit.SingleInstancePostgresRule;
 
-@Slf4j
-public class EmbeddedPostgres implements TestRule {
+public class AbstractPostgresTest {
 
-  private PostgresConfig config;
-  private PostgresProcess process;
+  @Rule
+  public SingleInstancePostgresRule pg = EmbeddedPostgresRules.singleInstance();
 
-  public EmbeddedPostgres(PostgresConfig config) {
-    this.config = config;
+  protected DataSource dataSource;
+
+  @Before
+  public void setUpAbstractPostgresTest() throws Exception {
+    val embeddedPostgres = pg.getEmbeddedPostgres();
+    dataSource = embeddedPostgres.getPostgresDatabase();
+    initDb(dataSource);
   }
 
-  @Override
-  public Statement apply(Statement base, Description description) {
-    return new Statement() {
-
-      @Override
-      public void evaluate() throws Throwable {
-        log.info("Starting embedded Postgres...");
-        log.info("Host: {}, port: {}", config.net().host(), config.net().port());
-        start();
-        log.info("Embedded Postgres started");
-        try {
-          base.evaluate();
-        } catch (Throwable t) {
-          log.error("Error evaluating: ", t);
-
-          throw t;
-        } finally {
-          log.info("Stopping embedded Postgres...");
-          process.stop();
-          log.info("Embedded Postgres stopped");
-        }
-      }
-    };
-  }
-
-  private void start() throws Exception {
-    val runtime = PostgresStarter.getDefaultInstance();
-    val exec = runtime.prepare(config);
-    this.process = exec.start();
+  @After
+  public void tearDown() throws Exception {
+    pg.getEmbeddedPostgres().close();
   }
 
 }

@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.release.job.fathmm.core;
 
-import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.primitives.Ints.tryParse;
 import static java.util.regex.Pattern.compile;
@@ -37,12 +36,9 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.StringUtils;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.Query;
+import org.icgc.dcc.release.job.fathmm.repository.FathmmRepository;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
 
 /**
  * This is a java port for FatHMM using postgresql database
@@ -64,38 +60,21 @@ public class FathmmPredictor implements Closeable {
     }
   };
 
-  @NonNull
-  private DBI dbi;
-  @NonNull
-  private final Handle handle;
+  private final FathmmRepository fathmmRepository;
 
-  private final Query<Map<String, Object>> cacheQuery;
-  private final Query<Map<String, Object>> sequenceQuery;
-  private final Query<Map<String, Object>> domainQuery;
-  private final Query<Map<String, Object>> probabilityQuery;
-  private final Query<Map<String, Object>> unweightedProbabilityQuery;
-
-  public FathmmPredictor(@NonNull String fathmmPostgresqlUri) {
-    this.handle = new DBI(fathmmPostgresqlUri).open();
-
-    // @formatter:off
-    this.cacheQuery                 = handle.createQuery("select * from \"DCC_CACHE\" where translation_id = :translationId and aa_mutation = :aaMutation");
-    this.sequenceQuery              = handle.createQuery("select a.* from \"SEQUENCE\" a, \"PROTEIN\" b where a.id = b.id and b.name = :translationId");
-    this.domainQuery                = handle.createQuery("select * from \"DOMAINS\" where id=:sequenceId and :substitution between seq_begin and seq_end order by score");
-    this.probabilityQuery           = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:hmm and a.position=:residue");
-    this.unweightedProbabilityQuery = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:sequenceId and a.position=:substitution");
-    // @formatter:on
+  public FathmmPredictor(@NonNull FathmmRepository fathmmRepository) {
+    this.fathmmRepository = fathmmRepository;
   }
 
   @Override
   public void close() throws IOException {
-    handle.close();
   }
 
   public Map<String, String> predict(String translationId, String aaChange) {
     Map<String, String> result = null;
-    Map<String, Object> cache =
-        Iterables.getFirst(cacheQuery.bind("translationId", translationId).bind("aaMutation", aaChange).list(), null);
+    fathmmRepository.getFromCache(translationId, aaChange);
+
+    Map<String, Object> cache = fathmmRepository.getFromCache(translationId, aaChange);
 
     if (cache != null) {
       result = newHashMap();
@@ -105,8 +84,7 @@ public class FathmmPredictor implements Closeable {
       }
     } else {
       result = calculateFATHMM(translationId, aaChange, "INHERITED");
-      handle.execute("insert into \"DCC_CACHE\" (translation_id,  aa_mutation, score, prediction) values (?,?,?,?)",
-          translationId, aaChange, result.get("Score"), result.get("Prediction"));
+      fathmmRepository.updateCache(translationId, aaChange, result.get("Score"), result.get("Prediction"));
     }
 
     return result;
@@ -118,7 +96,7 @@ public class FathmmPredictor implements Closeable {
     int substitution = parseSubstitution(aaChange);
     val facade = new ArrayList<Map<String, Object>>();
 
-    Map<String, Object> sequence = getFirst(sequenceQuery.bind("translationId", translationId).list(), null);
+    Map<String, Object> sequence = fathmmRepository.getSequence(translationId);
 
     // Check null
     if (null == sequence) {
@@ -154,7 +132,8 @@ public class FathmmPredictor implements Closeable {
       return result;
     }
 
-    val domainList = domainQuery.bind("sequenceId", sequence.get("id")).bind("substitution", substitution).list();
+    val sequenceId = (Integer) sequence.get("id");
+    val domainList = fathmmRepository.getDomains(sequenceId, substitution);
 
     for (val domain : domainList) {
       int start = Integer.parseInt(domain.get("seq_begin").toString());
@@ -164,10 +143,8 @@ public class FathmmPredictor implements Closeable {
 
       String residue = mapPosition(start, end, hmmBegin, align, substitution);
       if (null != residue) {
-        Map<String, Object> probability =
-            Iterables
-                .getFirst(probabilityQuery.bind("hmm", domain.get("hmm")).bind("residue", Integer.parseInt(residue))
-                    .list(), null);
+
+        val probability = fathmmRepository.getProbability((String) domain.get("hmm"), Integer.parseInt(residue));
         if (null != probability) {
           facade.add(probability);
         }
@@ -179,9 +156,6 @@ public class FathmmPredictor implements Closeable {
       Collections.sort(facade, INFORMATION_COMPARATOR);
     }
 
-    // TODO: Cache this!!!
-    val weightQuery = handle.createQuery("select * from \"WEIGHTS\" where id=:wid  and type='" + weights + "'");
-
     // Phenotypes????
 
     // //////////////////////////////////////////////////////////////////////////////
@@ -189,7 +163,8 @@ public class FathmmPredictor implements Closeable {
     // //////////////////////////////////////////////////////////////////////////////
     for (Map<String, Object> x : facade) {
       String id = (String) (x.get("id"));
-      Map<String, Object> probability = Iterables.getFirst(weightQuery.bind("wid", id).list(), null);
+
+      Map<String, Object> probability = fathmmRepository.getWeight(id, weights);
 
       if (null != probability) {
         return result(x, probability, aaChange, weights);
@@ -199,13 +174,10 @@ public class FathmmPredictor implements Closeable {
     // //////////////////////////////////////////////////////////////////////////////
     // Unweighted non-domain based prediction
     // //////////////////////////////////////////////////////////////////////////////
-    Map<String, Object> facade2 = Iterables.getFirst(
-        unweightedProbabilityQuery
-            .bind("sequenceId", sequence.get("id").toString())
-            .bind("substitution", substitution).list(), null);
+    Map<String, Object> facade2 = fathmmRepository.getUnweightedProbability(sequenceId.toString(), substitution);
 
     if (null != facade2) {
-      Map<String, Object> probability = Iterables.getFirst(weightQuery.bind("wid", facade2.get("id")).list(), null);
+      Map<String, Object> probability = fathmmRepository.getWeight((String) facade2.get("id"), weights);
 
       if (null != probability) {
         return result(facade2, probability, aaChange, weights);

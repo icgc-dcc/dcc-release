@@ -15,21 +15,28 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.fathmm.model;
+package org.icgc.dcc.release.job.fathmm.repository;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.release.job.fathmm.util.JdbcUrls.FATHMM_JDBC_URL;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.icgc.dcc.release.job.fathmm.util.AbstractPostgresTest;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
 @Slf4j
-public class FathmmRepositoryTest {
+public class FathmmRepositoryTest extends AbstractPostgresTest {
 
-  FathmmRepository repository = new FathmmRepository(FATHMM_JDBC_URL);
+  FathmmRepository repository;
+
+  @Before
+  public void setUp() throws Exception {
+    repository = new FathmmRepository(dataSource);
+  }
 
   @Test
   public void testGetProbability() throws Exception {
@@ -79,8 +86,63 @@ public class FathmmRepositoryTest {
   @Test
   public void testGetWeight() throws Exception {
     val weight = repository.getWeight("PEHE", "INHERITED");
-    log.info("{}", weight);
-    assertThat(weight).isNotNull();
+    assertThat(weight).hasSize(2);
+    assertThat(weight.get("disease")).isEqualTo(0.0);
+    assertThat(weight.get("other")).isEqualTo(1.0);
   }
 
+  @Test
+  public void testGetSequence() throws Exception {
+    val sequence = repository.getSequence("testProtein");
+    log.info("{}", sequence);
+    assertThat(sequence).hasSize(2);
+    assertThat(sequence.get("sequence")).isEqualTo("abcd");
+    assertThat(sequence.get("id")).isEqualTo(-123);
+  }
+
+  @Test
+  public void testUpdateCache() throws Exception {
+    val translationId = "ENSP1";
+    val aaChange = "T123";
+    val score = "666";
+    val prediction = "zzz123";
+
+    val result = repository.getFromCache(translationId, aaChange);
+    assertThat(result).isNull();
+    repository.updateCache(translationId, aaChange, score, prediction);
+
+    val connection = dataSource.getConnection();
+    val rs = connection.prepareStatement("select * from \"DCC_CACHE\"").executeQuery();
+
+    int recordsCount = 0;
+    while (rs.next()) {
+      assertThat(rs.getString("translation_id")).isEqualTo(translationId);
+      assertThat(rs.getString("aa_mutation")).isEqualTo(aaChange);
+      assertThat(rs.getString("score")).isEqualTo(score);
+      assertThat(rs.getString("prediction")).isEqualTo(prediction);
+      recordsCount++;
+    }
+
+    assertThat(recordsCount).isEqualTo(1);
+  }
+
+  @Test
+  public void testGetFromCache() throws Exception {
+    val connection = dataSource.getConnection();
+    checkState(connection.prepareStatement(
+        "insert into \"DCC_CACHE\" (translation_id,  aa_mutation, score, prediction) "
+            + "values ('ENSP1','T123','123','234')")
+        .executeUpdate() == 1,
+        "Failed to insert record");
+
+    val result = repository.getFromCache("ENSP1", "T123");
+    assertThat(result).isEqualTo(ImmutableMap.<String, Object> builder()
+        .put("translation_id", "ENSP1")
+        .put("aa_mutation", "T123")
+        .put("score", "123")
+        .put("prediction", "234")
+        .build());
+
+    assertThat(repository.getFromCache("ENSP1", "fake")).isNull();
+  }
 }

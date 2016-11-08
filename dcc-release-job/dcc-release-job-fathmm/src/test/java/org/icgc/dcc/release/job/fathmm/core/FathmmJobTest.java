@@ -17,19 +17,24 @@
  */
 package org.icgc.dcc.release.job.fathmm.core;
 
-import static org.icgc.dcc.release.job.fathmm.util.JdbcUrls.FATHMM_JDBC_URL;
+import static org.icgc.dcc.release.job.fathmm.util.PostgresTests.initDb;
 
 import java.io.File;
 
 import lombok.val;
 
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.job.fathmm.util.PostgresTests;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
+import com.opentable.db.postgres.junit.SingleInstancePostgresRule;
 
 public class FathmmJobTest extends AbstractJobTest {
 
@@ -40,12 +45,23 @@ public class FathmmJobTest extends AbstractJobTest {
    */
   FathmmJob job;
 
-  @Override
+  @Rule
+  public SingleInstancePostgresRule pg = EmbeddedPostgresRules.singleInstance();
+
   @Before
-  public void setUp() {
-    super.setUp();
+  public void setUpFathmmJobTest() throws Exception {
+    val embeddedPostgres = pg.getEmbeddedPostgres();
+    val dataSource = embeddedPostgres.getPostgresDatabase();
+    initDb(dataSource);
+
     this.job = new FathmmJob();
-    ReflectionTestUtils.setField(job, "jdbcUrl", FATHMM_JDBC_URL);
+    val jdbcUrl = PostgresTests.getJdbcUrl(embeddedPostgres);
+    ReflectionTestUtils.setField(job, "jdbcUrl", jdbcUrl);
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    pg.getEmbeddedPostgres().close();
   }
 
   @Test

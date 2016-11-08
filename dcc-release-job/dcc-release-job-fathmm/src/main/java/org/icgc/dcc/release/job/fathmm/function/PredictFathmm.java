@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.ConsequenceType;
 import org.icgc.dcc.release.job.fathmm.core.FathmmPredictor;
+import org.icgc.dcc.release.job.fathmm.repository.FathmmRepository;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -132,7 +133,8 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeabl
 
   private Map<String, String> predict(String translationIdStr, String aaMutationStr) {
     if (predictor == null) {
-      predictor = new FathmmPredictor(fathmmRepositoryUrl);
+      val repository = new FathmmRepository(fathmmRepositoryUrl);
+      predictor = new FathmmPredictor(repository);
     }
 
     return predictor.predict(translationIdStr, aaMutationStr);

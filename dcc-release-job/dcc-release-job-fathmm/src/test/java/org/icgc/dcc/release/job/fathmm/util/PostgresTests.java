@@ -17,20 +17,44 @@
  */
 package org.icgc.dcc.release.job.fathmm.util;
 
+import static com.google.common.base.Preconditions.checkState;
+import static lombok.AccessLevel.PRIVATE;
+
+import java.io.File;
+import java.io.FileReader;
+
 import javax.sql.DataSource;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.Cleanup;
+import lombok.NoArgsConstructor;
+import lombok.val;
 
-import com.google.common.io.CharSource;
+import org.apache.ibatis.jdbc.ScriptRunner;
 
-@RequiredArgsConstructor
-public class SqlScriptExecutor {
+import com.opentable.db.postgres.embedded.EmbeddedPostgres;
 
-  @NonNull
-  private final DataSource dataSource;
+@NoArgsConstructor(access = PRIVATE)
+public final class PostgresTests {
 
-  public void test(CharSource testSource) {
+  public static final String SQL_FILE = "src/test/resources/sql/fathmm.sql";
+  public static final String USER_PASSWD = "postgres";
+
+  public static String getJdbcUrl(EmbeddedPostgres postgres) {
+    return postgres.getJdbcUrl(USER_PASSWD, USER_PASSWD);
+  }
+
+  public static void initDb(DataSource dataSource) throws Exception {
+    initDb(dataSource, SQL_FILE);
+  }
+
+  public static void initDb(DataSource dataSource, String sqlFile) throws Exception {
+    val scriptRunner = new ScriptRunner(dataSource.getConnection());
+    val dbFile = new File(sqlFile);
+    checkState(dbFile.exists(), "%s doesn't exist", dbFile.getAbsolutePath());
+    @Cleanup
+    val reader = new FileReader(dbFile);
+    scriptRunner.runScript(reader);
+    scriptRunner.closeConnection();
   }
 
 }
