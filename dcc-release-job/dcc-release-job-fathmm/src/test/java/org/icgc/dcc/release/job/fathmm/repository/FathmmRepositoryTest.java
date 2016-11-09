@@ -145,4 +145,5 @@ public class FathmmRepositoryTest extends AbstractPostgresTest {
 
     assertThat(repository.getFromCache("ENSP1", "fake")).isNull();
   }
+
 }

@@ -61,6 +61,7 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeabl
    * State.
    */
   private transient FathmmPredictor predictor;
+  private transient FathmmRepository repository;
 
   @Override
   public ObjectNode call(ObjectNode observation) throws Exception {
@@ -113,8 +114,8 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeabl
 
   @Override
   public void close() throws IOException {
-    if (predictor != null) {
-      predictor.close();
+    if (repository != null) {
+      repository.close();
     }
   }
 
@@ -133,7 +134,7 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeabl
 
   private Map<String, String> predict(String translationIdStr, String aaMutationStr) {
     if (predictor == null) {
-      val repository = new FathmmRepository(fathmmRepositoryUrl);
+      repository = new FathmmRepository(fathmmRepositoryUrl);
       predictor = new FathmmPredictor(repository);
     }
 
