@@ -15,62 +15,38 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.fathmm.core;
+package org.icgc.dcc.release.job.fathmm.util;
 
 import static org.icgc.dcc.release.job.fathmm.util.PostgresTests.initDb;
 
-import java.io.File;
+import javax.sql.DataSource;
 
 import lombok.val;
 
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.job.fathmm.util.PostgresTests;
-import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
-import com.google.common.collect.ImmutableList;
 import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
 import com.opentable.db.postgres.junit.SingleInstancePostgresRule;
 
-public class FathmmJobTest extends AbstractJobTest {
-
-  private static final String PROJECT_NAME = "TEST-DCC";
-
-  /**
-   * Class under test.
-   */
-  FathmmJob job;
+public class AbstractPostgresTest {
 
   @Rule
   public SingleInstancePostgresRule pg = EmbeddedPostgresRules.singleInstance();
 
-  @Before
-  public void setUpFathmmJobTest() throws Exception {
-    val embeddedPostgres = pg.getEmbeddedPostgres();
-    val dataSource = embeddedPostgres.getPostgresDatabase();
-    initDb(dataSource);
+  protected DataSource dataSource;
 
-    this.job = new FathmmJob();
-    val jdbcUrl = PostgresTests.getJdbcUrl(embeddedPostgres);
-    ReflectionTestUtils.setField(job, "jdbcUrl", jdbcUrl);
+  @Before
+  public void setUpAbstractPostgresTest() throws Exception {
+    val embeddedPostgres = pg.getEmbeddedPostgres();
+    dataSource = embeddedPostgres.getPostgresDatabase();
+    initDb(dataSource);
   }
 
   @After
   public void tearDown() throws Exception {
     pg.getEmbeddedPostgres().close();
-  }
-
-  @Test
-  public void executeTest() {
-    given(new File(TEST_FIXTURES_DIR));
-    val jobContext = createJobContext(job.getType(), ImmutableList.of(PROJECT_NAME));
-    job.execute(jobContext);
-
-    verifyResult(PROJECT_NAME, FileType.OBSERVATION_FATHMM);
   }
 
 }

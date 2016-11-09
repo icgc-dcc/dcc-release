@@ -15,14 +15,18 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.fathmm.model;
+package org.icgc.dcc.release.job.fathmm.repository;
 
+import static com.google.common.base.Preconditions.checkState;
+import static java.lang.String.format;
 import static org.icgc.dcc.release.job.fathmm.model.FathmmConstants.AA_MUTATION;
 import static org.icgc.dcc.release.job.fathmm.model.FathmmConstants.TRANSLATION_ID;
 
 import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
+
+import javax.sql.DataSource;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -31,33 +35,45 @@ import lombok.val;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.Query;
+import org.skife.jdbi.v2.Update;
 
 /**
  * This is a Data Access Object for FatHMM on postgresql database
  */
-// TODO: remove? it was used in the refactored version of Fathmm predictor
 public class FathmmRepository implements Closeable {
 
-  @NonNull
-  private DBI dbi;
-  @NonNull
+  /**
+   * Constants.
+   */
+  private static final String WEIGHT_TYPE = "INHERITED";
+
   private final Handle handle;
 
   private final Query<Map<String, Object>> cacheQuery;
   private final Query<Map<String, Object>> sequenceQuery;
   private final Query<Map<String, Object>> domainQuery;
   private final Query<Map<String, Object>> probabilityQuery;
-  private final Query<Map<String, Object>> unweightedProbabilityQuery;
+  private final Query<Map<String, Object>> weightQuery;
+  private final Update updateCache;
 
   public FathmmRepository(@NonNull String fathmmPostgresqlUri) {
-    this.handle = new DBI(fathmmPostgresqlUri).open();
+    this(new DBI(fathmmPostgresqlUri).open());
+  }
+
+  public FathmmRepository(@NonNull DataSource dataSource) {
+    this(DBI.open(dataSource));
+  }
+
+  private FathmmRepository(@NonNull Handle handle) {
+    this.handle = handle;
 
     // @formatter:off
-    this.cacheQuery                 = handle.createQuery("select * from \"DCC_CACHE\" where translation_id = :translationId and aa_mutation = :aaMutation");
-    this.sequenceQuery              = handle.createQuery("select a.* from \"SEQUENCE\" a, \"PROTEIN\" b where a.id = b.id and b.name = :translationId");
-    this.domainQuery                = handle.createQuery("select * from \"DOMAINS\" where id=:sequenceId and :substitution between seq_begin and seq_end order by score");
-    this.probabilityQuery           = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:hmm and a.position=:residue");
-    this.unweightedProbabilityQuery = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:sequenceId and a.position=:substitution");
+    this.cacheQuery       = handle.createQuery("select * from \"DCC_CACHE\" where translation_id = :translationId and aa_mutation = :aaMutation");
+    this.sequenceQuery    = handle.createQuery("select a.* from \"SEQUENCE\" a, \"PROTEIN\" b where a.id = b.id and b.name = :translationId");
+    this.domainQuery      = handle.createQuery("select * from \"DOMAINS\" where id=:sequenceId and :substitution between seq_begin and seq_end order by score");
+    this.probabilityQuery = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:probId and a.position=:probPosition");
+    this.weightQuery      = handle.createQuery(format("select disease, other from \"WEIGHTS\" where id=:wid and type='%s'\\:\\:weights_type", WEIGHT_TYPE));
+    this.updateCache      = handle.createStatement("insert into \"DCC_CACHE\" (translation_id,  aa_mutation, score, prediction) values (:translationId, :aaChange, :score, :prediction)");
     // @formatter:on
   }
 
@@ -74,37 +90,34 @@ public class FathmmRepository implements Closeable {
 
   public void updateCache(@NonNull String translationId, @NonNull String aaChange, @NonNull String score,
       @NonNull String prediction) {
-    handle.execute("insert into \"DCC_CACHE\" (translation_id,  aa_mutation, score, prediction) values (?,?,?,?)",
-        translationId, aaChange, score, prediction);
+    val rowsAffected = updateCache
+        .bind("translationId", translationId)
+        .bind("aaChange", aaChange)
+        .bind("score", score)
+        .bind("prediction", prediction)
+        .execute();
+
+    checkState(rowsAffected == 1, "Failed to update cache");
   }
 
   public Map<String, Object> getSequence(@NonNull String translationId) {
-    val sequence = sequenceQuery.bind(TRANSLATION_ID, translationId).first();
-    return sequence;
+    return sequenceQuery.bind(TRANSLATION_ID, translationId).first();
   }
 
   public Map<String, Object> getWeight(@NonNull String weightId, @NonNull String weights) {
-    val weightQuery = createWeightQuery(weights);
-    val probability = weightQuery.bind("wid", weightId).first();
-    return probability;
+    return weightQuery.bind("wid", weightId).first();
   }
 
   public Map<String, Object> getUnweightedProbability(String sequenceId, int substitution) {
-    return unweightedProbabilityQuery.bind("sequenceId", sequenceId).bind("substitution", substitution).first();
+    return probabilityQuery.bind("probId", sequenceId).bind("probPosition", substitution).first();
   }
 
   public List<Map<String, Object>> getDomains(int sequenceId, int substitution) {
     return domainQuery.bind("sequenceId", sequenceId).bind("substitution", substitution).list();
   }
 
-  private Query<Map<String, Object>> createWeightQuery(String weights) {
-    return handle.createQuery("select disease, other from \"WEIGHTS\" where id=:wid and type=:type\\:\\:weights_type")
-        .bind("type",
-            weights);
-  }
-
   public Map<String, Object> getProbability(@NonNull String hmm, @NonNull Integer residue) {
-    return probabilityQuery.bind("hmm", hmm).bind("residue", residue).first();
+    return probabilityQuery.bind("probId", hmm).bind("probPosition", residue).first();
   }
 
 }

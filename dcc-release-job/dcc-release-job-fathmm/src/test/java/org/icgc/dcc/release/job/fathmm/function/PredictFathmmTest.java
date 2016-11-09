@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.release.job.fathmm.function;
 
-import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.release.job.fathmm.model.FathmmConstants.AA_MUTATION;
 import static org.icgc.dcc.release.job.fathmm.model.FathmmConstants.PREDICTION;
@@ -31,22 +30,23 @@ import java.util.Map;
 import lombok.val;
 
 import org.icgc.dcc.release.job.fathmm.core.FathmmPredictor;
+import org.icgc.dcc.release.job.fathmm.repository.FathmmRepository;
+import org.icgc.dcc.release.job.fathmm.util.AbstractPostgresTest;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
-public class PredictFathmmTest {
+public class PredictFathmmTest extends AbstractPostgresTest {
 
   private static final double TOLERANCE = 0.1;
-  private static final String JDBC_URL = format("jdbc:h2:mem;MODE=MySQL;INIT=runscript from '%s'",
-      "src/test/resources/sql/fathmm.sql");
 
   private FathmmPredictor predictor;
 
   @Before
   public void setUp() {
-    predictor = new FathmmPredictor(JDBC_URL);
+    val repository = new FathmmRepository(dataSource);
+    predictor = new FathmmPredictor(repository);
   }
 
   @Test

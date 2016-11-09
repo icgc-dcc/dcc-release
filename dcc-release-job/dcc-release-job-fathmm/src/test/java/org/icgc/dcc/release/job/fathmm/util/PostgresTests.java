@@ -15,62 +15,46 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.fathmm.core;
+package org.icgc.dcc.release.job.fathmm.util;
 
-import static org.icgc.dcc.release.job.fathmm.util.PostgresTests.initDb;
+import static com.google.common.base.Preconditions.checkState;
+import static lombok.AccessLevel.PRIVATE;
 
 import java.io.File;
+import java.io.FileReader;
 
+import javax.sql.DataSource;
+
+import lombok.Cleanup;
+import lombok.NoArgsConstructor;
 import lombok.val;
 
-import org.icgc.dcc.release.core.job.FileType;
-import org.icgc.dcc.release.job.fathmm.util.PostgresTests;
-import org.icgc.dcc.release.test.job.AbstractJobTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.apache.ibatis.jdbc.ScriptRunner;
 
-import com.google.common.collect.ImmutableList;
-import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
-import com.opentable.db.postgres.junit.SingleInstancePostgresRule;
+import com.opentable.db.postgres.embedded.EmbeddedPostgres;
 
-public class FathmmJobTest extends AbstractJobTest {
+@NoArgsConstructor(access = PRIVATE)
+public final class PostgresTests {
 
-  private static final String PROJECT_NAME = "TEST-DCC";
+  public static final String SQL_FILE = "src/test/resources/sql/fathmm.sql";
+  public static final String USER_PASSWD = "postgres";
 
-  /**
-   * Class under test.
-   */
-  FathmmJob job;
-
-  @Rule
-  public SingleInstancePostgresRule pg = EmbeddedPostgresRules.singleInstance();
-
-  @Before
-  public void setUpFathmmJobTest() throws Exception {
-    val embeddedPostgres = pg.getEmbeddedPostgres();
-    val dataSource = embeddedPostgres.getPostgresDatabase();
-    initDb(dataSource);
-
-    this.job = new FathmmJob();
-    val jdbcUrl = PostgresTests.getJdbcUrl(embeddedPostgres);
-    ReflectionTestUtils.setField(job, "jdbcUrl", jdbcUrl);
+  public static String getJdbcUrl(EmbeddedPostgres postgres) {
+    return postgres.getJdbcUrl(USER_PASSWD, USER_PASSWD);
   }
 
-  @After
-  public void tearDown() throws Exception {
-    pg.getEmbeddedPostgres().close();
+  public static void initDb(DataSource dataSource) throws Exception {
+    initDb(dataSource, SQL_FILE);
   }
 
-  @Test
-  public void executeTest() {
-    given(new File(TEST_FIXTURES_DIR));
-    val jobContext = createJobContext(job.getType(), ImmutableList.of(PROJECT_NAME));
-    job.execute(jobContext);
-
-    verifyResult(PROJECT_NAME, FileType.OBSERVATION_FATHMM);
+  public static void initDb(DataSource dataSource, String sqlFile) throws Exception {
+    val scriptRunner = new ScriptRunner(dataSource.getConnection());
+    val dbFile = new File(sqlFile);
+    checkState(dbFile.exists(), "%s doesn't exist", dbFile.getAbsolutePath());
+    @Cleanup
+    val reader = new FileReader(dbFile);
+    scriptRunner.runScript(reader);
+    scriptRunner.closeConnection();
   }
 
 }
