@@ -128,28 +128,29 @@ public class FathmmPredictor {
     }
 
     val sequenceId = (Integer) sequence.get("id");
-    val facade = getResidueProbabilities(sequenceId, substitutionPosition);
+    val probabilities = getResidueProbabilities(sequenceId, substitutionPosition);
 
     // //////////////////////////////////////////////////////////////////////////////
     // Unweighted domain based prediction
     // //////////////////////////////////////////////////////////////////////////////
-    for (Map<String, Object> x : facade) {
-      val id = (String) x.get("id");
-      val probability = fathmmRepository.getWeight(id, WEIGHT_TYPE);
+    for (val probability : probabilities) {
+      val id = (String) probability.get("id");
+      val weight = fathmmRepository.getWeight(id, WEIGHT_TYPE);
 
-      if (probability != null) {
-        return result(x, probability, aaChange);
+      if (weight != null) {
+        return result(probability, weight, aaChange);
       }
     }
 
     // //////////////////////////////////////////////////////////////////////////////
     // Unweighted non-domain based prediction
     // //////////////////////////////////////////////////////////////////////////////
-    val facade2 = fathmmRepository.getUnweightedProbability(sequenceId.toString(), substitutionPosition);
-    if (facade2 != null) {
-      val probability = fathmmRepository.getWeight((String) facade2.get("id"), WEIGHT_TYPE);
-      if (null != probability) {
-        return result(facade2, probability, aaChange);
+    val unweightedProbabilities = fathmmRepository
+        .getUnweightedProbability(sequenceId.toString(), substitutionPosition);
+    if (unweightedProbabilities != null) {
+      val weight = fathmmRepository.getWeight((String) unweightedProbabilities.get("id"), WEIGHT_TYPE);
+      if (null != weight) {
+        return result(unweightedProbabilities, weight, aaChange);
       }
     }
 

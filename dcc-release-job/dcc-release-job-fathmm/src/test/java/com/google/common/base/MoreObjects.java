@@ -22,6 +22,9 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.GwtCompatible;
 
+// This Embedded Postgres (otj-pg-embedded artifact) depends on Guava >= 18, which has this object.
+// We can't upgrade Guava yet. However, adding this class to the test code base seems to resolve the dependency.
+
 /**
  * Helper functions that operate on any {@code Object}, and are not already provided in {@link java.util.Objects}.
  *
