@@ -1,11 +1,9 @@
 {
   "drug-text": {
     "_all": {
-      "enabled": "false"
+      "enabled": false
     },
-    "_source": {
-    },
-    "date_detection": "false",
+    "date_detection": false,
     "dynamic_templates": [
       {
         "template_1": {
@@ -14,13 +12,13 @@
             "fields": {
               "raw": {
                 "index": "not_analyzed",
-                "store": "yes",
-                "type": "string"
+                "store": true,
+                "type": "keyword"
               },
               "search": {
                 "index": "analyzed",
                 "analyzer": "id_search",
-                "type": "string"
+                "type": "text"
               }
             }
           },
@@ -32,26 +30,26 @@
     "properties": {
       "drug_class": {
         "index": "not_analyzed",
-        "type": "string"
+        "type": "keyword"
       },
       "name": {
         "type": "multi_field",
         "fields": {
           "raw": {
             "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
+            "store": true,
+            "type": "keyword"
           },
           "analyzed": {
             "index": "analyzed",
             "index_analyzer": "id_index",
             "search_analyzer": "id_search",
-            "type": "string"
+            "type": "text"
           },
           "search": {
             "index": "analyzed",
             "analyzer": "id_search",
-            "type": "string"
+            "type": "text"
           }
         }
       },
@@ -60,19 +58,19 @@
         "fields": {
           "raw": {
             "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
+            "store": true,
+            "type": "keyword"
           },
           "analyzed": {
             "index": "analyzed",
             "index_analyzer": "id_index",
             "search_analyzer": "id_search",
-            "type": "string"
+            "type": "text"
           },
           "search": {
             "index": "analyzed",
             "analyzer": "id_search",
-            "type": "string"
+            "type": "text"
           }
         }
       },
@@ -81,19 +79,19 @@
         "fields": {
           "raw": {
             "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
+            "store": true,
+            "type": "keyword"
           },
           "analyzed": {
             "index": "analyzed",
             "index_analyzer": "id_index",
             "search_analyzer": "id_search",
-            "type": "string"
+            "type": "text"
           },
           "search": {
             "index": "analyzed",
             "analyzer": "id_search",
-            "type": "string"
+            "type": "text"
           }
         }
       },
@@ -102,19 +100,19 @@
         "fields": {
           "raw": {
             "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
+            "store": true,
+            "type": "keyword"
           },
           "analyzed": {
             "index": "analyzed",
             "index_analyzer": "id_index",
             "search_analyzer": "id_search",
-            "type": "string"
+            "type": "text"
           },
           "search": {
             "index": "analyzed",
             "analyzer": "id_search",
-            "type": "string"
+            "type": "text"
           }
         }
       },
@@ -123,19 +121,19 @@
         "fields": {
           "raw": {
             "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
+            "store": true,
+            "type": "keyword"
           },
           "analyzed": {
             "index": "analyzed",
             "index_analyzer": "id_index",
             "search_analyzer": "id_search",
-            "type": "string"
+            "type": "text"
           },
           "search": {
             "index": "analyzed",
             "analyzer": "id_search",
-            "type": "string"
+            "type": "text"
           }
         }
       }

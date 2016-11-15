@@ -1,7 +1,7 @@
 {
   "gene-centric": {
     "_all": {
-      "enabled": "false"
+      "enabled": false
     },
     "_source": {
       "includes": [
@@ -21,12 +21,12 @@
           "transcripts"
       ]
     },
-    "date_detection": "false",
+    "date_detection": false,
     "dynamic_templates": [
       {
         "template_1": {
           "mapping": {
-            "index": "not_analyzed"
+            "type": "keyword"
           },
           "match": "*",
           "match_mapping_type": "string"

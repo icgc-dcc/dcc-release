@@ -1,56 +1,40 @@
 {
-  "mutation-centric":{
-    "_source":{
+  "mutation-centric": {
+    "_all": {
+      "enabled": false
     },
-    "_all":{
-      "enabled":"false"
-    },
-    "dynamic_templates":[
+    "dynamic_templates": [
       {
-        "template_1":{
-          "match":"*",
-          "match_mapping_type":"string",
-          "mapping":{
-            "index":"not_analyzed"
+        "template_1": {
+          "match_mapping_type": "string",
+          "mapping": {
+            "type": "keyword"
           }
         }
       }
     ],
-    "date_detection":"false",
-    "properties":{
-      "transcript":{
-        "type":"nested",
-        "properties":{
-          "gene":{
-            "properties":{
-              "_gene_id":{
-                "type":"string",
-                "store":"yes",
-                "index":"not_analyzed"
-              }
-            }
-          },
-          "consequence":{
-            "properties":{
-            }
-          },
-          "functional_impact_prediction":{
-          	"type":"nested"
+    "date_detection": false,
+    "properties": {
+      "transcript": {
+        "type": "nested",
+        "properties": {
+          "functional_impact_prediction": {
+            "type": "nested"
           }
         }
       },
-      "ssm_occurrence":{
-        "type":"nested",
-        "properties":{
+      "ssm_occurrence": {
+        "type": "nested",
+        "properties": {
           "observation": {
-            "type":"nested"
+            "type": "nested"
           }
         }
       },
-      "chromosome_end":{
-        "type":"long",
-        "store":"yes",
-        "index":"not_analyzed"
+      "chromosome_end": {
+        "type": "long",
+        "store": true,
+        "index": "not_analyzed"
       }
     }
   }
