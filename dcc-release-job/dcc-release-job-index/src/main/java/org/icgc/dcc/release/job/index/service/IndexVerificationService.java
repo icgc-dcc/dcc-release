@@ -38,16 +38,16 @@ import static org.icgc.dcc.release.core.document.DocumentType.PROJECT_TYPE;
 import java.util.Map;
 import java.util.Set;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.elasticsearch.client.Client;
 import org.icgc.dcc.common.core.util.Joiners;
 import org.icgc.dcc.release.core.document.DocumentType;
 
 import com.google.common.collect.ImmutableSet;
-
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -89,11 +89,12 @@ public class IndexVerificationService {
   }
 
   private long getTypeCount(DocumentType type) {
-    return client.prepareCount(indexName)
+    return client.prepareSearch(indexName)
         .setTypes(type.getName())
         .execute()
         .actionGet()
-        .getCount();
+        .getHits()
+        .getTotalHits();
   }
 
   private static String getTypes(Set<DocumentType> types) {

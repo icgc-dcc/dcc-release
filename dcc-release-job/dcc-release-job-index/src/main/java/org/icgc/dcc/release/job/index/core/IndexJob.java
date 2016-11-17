@@ -22,8 +22,8 @@ import static com.google.common.collect.ImmutableSet.copyOf;
 import static com.google.common.collect.Sets.difference;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
+import static org.icgc.dcc.dcc.common.es.TransportClientFactory.createClient;
 import static org.icgc.dcc.release.core.document.DocumentType.DONOR_CENTRIC_TYPE;
-import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newTransportClient;
 import static org.icgc.dcc.release.job.index.utils.IndexTasks.getBigFilesPath;
 import static org.icgc.dcc.release.job.index.utils.IndexTasks.getEsExportPath;
 import static org.icgc.dcc.release.job.index.utils.IndexTasks.getIndexName;
@@ -95,7 +95,7 @@ public class IndexJob extends GenericJob {
     }
 
     @Cleanup
-    val client = newTransportClient(properties.getEsUri());
+    val client = createClient(properties.getEsUri(), false);
     @Cleanup
     val indexService = new IndexService(client);
 

@@ -7,136 +7,29 @@
     "dynamic_templates": [
       {
         "template_1": {
+          "match_mapping_type":"string",
           "mapping": {
-            "type": "multi_field",
             "fields": {
+              "analyzed": {
+                "analyzer": "id_index",
+                "search_analyzer": "id_search",
+                "type": "text"
+              },
               "raw": {
-                "index": "not_analyzed",
                 "store": true,
                 "type": "keyword"
               },
               "search": {
-                "index": "analyzed",
                 "analyzer": "id_search",
                 "type": "text"
               }
-            }
-          },
-          "match": "*",
-          "match_mapping_type": "string"
-        }
-      }
-    ],
-    "properties": {
-      "drug_class": {
-        "index": "not_analyzed",
-        "type": "keyword"
-      },
-      "name": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": true,
+            },
+            "index": false,
+            "store": false,
             "type": "keyword"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "text"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "text"
-          }
-        }
-      },
-      "synonyms": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": true,
-            "type": "keyword"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "text"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "text"
-          }
-        }
-      },
-      "atc_codes_description": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": true,
-            "type": "keyword"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "text"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "text"
-          }
-        }
-      },
-      "trials_description": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": true,
-            "type": "keyword"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "text"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "text"
-          }
-        }
-      },
-      "trials_conditions_name": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": true,
-            "type": "keyword"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "text"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "text"
           }
         }
       }
-    }
+    ]
   }
 }

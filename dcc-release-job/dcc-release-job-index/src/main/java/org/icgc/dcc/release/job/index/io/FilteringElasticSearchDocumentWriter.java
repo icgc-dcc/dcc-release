@@ -26,24 +26,25 @@ import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 import lombok.Cleanup;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.elasticsearch.action.bulk.BulkProcessor;
-import org.elasticsearch.client.Client;
 import org.icgc.dcc.common.hadoop.fs.FileSystems;
 import org.icgc.dcc.common.hadoop.fs.HadoopUtils;
-import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.dcc.common.es.impl.DefaultDocumentWriter;
+import org.icgc.dcc.dcc.common.es.impl.DocumentWriterContext;
+import org.icgc.dcc.dcc.common.es.model.IndexDocument;
 import org.icgc.dcc.release.core.util.JacksonFactory;
 
 /**
  * Filters out big documents and writes them to file system.
  */
 @Slf4j
-public class FilteringElasticSearchDocumentWriter extends ElasticSearchDocumentWriter {
+public class FilteringElasticSearchDocumentWriter extends DefaultDocumentWriter {
 
   /**
    * Configuration.
@@ -58,23 +59,18 @@ public class FilteringElasticSearchDocumentWriter extends ElasticSearchDocumentW
   private FileSystem fileSystem;
 
   public FilteringElasticSearchDocumentWriter(
-      Client client,
-      String indexName,
-      IndexingState indexingState,
-      ClusterStateVerifier clusterStateVerifier,
-      BulkProcessor bulkProcessor,
-      String writerId,
+      @NonNull DocumentWriterContext context,
       int threshold,
-      String workingDir,
-      Map<String, String> fsSettings) {
-    super(client, indexName, indexingState, bulkProcessor, writerId);
+      @NonNull String workingDir,
+      @NonNull Map<String, String> fsSettings) {
+    super(context);
     this.threshold = threshold * 1024 * 1024;
     this.workingDir = getBigFilesDir(workingDir);
     this.fsSettings = fsSettings;
   }
 
   @Override
-  public void write(Document document) throws IOException {
+  public void write(IndexDocument document) throws IOException {
     byte[] source = createSource(document.getSource());
     if (isBigDocument(source.length)) {
       writeToFileSystem(document);
@@ -97,7 +93,7 @@ public class FilteringElasticSearchDocumentWriter extends ElasticSearchDocumentW
   }
 
   @SneakyThrows
-  private void writeToFileSystem(Document document) {
+  private void writeToFileSystem(IndexDocument document) {
     val path = getPath(document);
     log.info("Saving big file to {}", path);
     @Cleanup
@@ -109,7 +105,7 @@ public class FilteringElasticSearchDocumentWriter extends ElasticSearchDocumentW
     return new GZIPOutputStream(getFileSystem().create(path));
   }
 
-  private Path getPath(Document document) {
+  private Path getPath(IndexDocument document) {
     ensurePath(workingDir);
 
     return new Path(workingDir, getName(document));
@@ -121,11 +117,10 @@ public class FilteringElasticSearchDocumentWriter extends ElasticSearchDocumentW
     }
   }
 
-  private static String getName(Document document) {
+  private static String getName(IndexDocument document) {
     val id = document.getId();
-    val type = document.getType();
 
-    return getBigFileName(type, id);
+    return getBigFileName(document.getType().getIndexType(), id);
   }
 
   private FileSystem getFileSystem() {

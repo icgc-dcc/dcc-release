@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.job.index.function;
 
 import static org.icgc.dcc.release.job.index.io.DocumentWriterFactory.createFilteringDocumentWriter;
+import static org.icgc.dcc.release.job.index.utils.Documents.convertDocument;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -54,7 +55,7 @@ public final class DocumentIndexer implements FlatMapFunction<Iterator<Document>
     val documentWriter = createFilteringDocumentWriter(createDocumentWriterContext());
 
     while (document.hasNext()) {
-      documentWriter.write(document.next());
+      documentWriter.write(convertDocument(document.next()));
     }
 
     return Lists.newArrayList();

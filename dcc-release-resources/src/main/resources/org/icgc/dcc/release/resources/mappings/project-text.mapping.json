@@ -7,119 +7,33 @@
     "dynamic_templates": [
       {
         "template_1": {
+          "match_mapping_type": "string",
           "mapping": {
+            "fields": {
+              "analyzed": {
+                "analyzer": "id_index",
+                "search_analyzer": "id_search",
+                "type": "text"
+              },
+              "raw": {
+                "store": true,
+                "type": "keyword"
+              },
+              "search": {
+                "analyzer": "id_search",
+                "type": "text"
+              }
+            },
+            "index": false,
+            "store": false,
             "type": "keyword"
-          },
-          "match": "*",
-          "match_mapping_type": "string"
+          }
         }
       }
     ],
     "properties": {
-      "id": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": true,
-            "type": "keyword"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "text"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "text"
-          }
-        }
-      },
-      "name": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": true,
-            "type": "keyword"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "text"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "text"
-          }
-        }
-      },
-      "primarySite": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": true,
-            "type": "keyword"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "text"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "text"
-          }
-        }
-      },
-      "tumourType": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": true,
-            "type": "keyword"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "text"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "text"
-          }
-        }
-      },
-      "tumourSubtype": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": true,
-            "type": "keyword"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "text"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "text"
-          }
-        }
+      "type": {
+        "type": "keyword"
       }
     }
   }
