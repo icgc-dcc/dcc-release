@@ -313,7 +313,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
   <properties>
     <!-- Versions - DCC -->
-    <dcc-common.version>4.3.5-20161121.172308-1</dcc-common.version>
+    <dcc-common.version>4.3.5-20161121.215423-2</dcc-common.version>
 
     <!-- Versions - DCC ID -->
     <dcc-id.version>0.0.17</dcc-id.version>
