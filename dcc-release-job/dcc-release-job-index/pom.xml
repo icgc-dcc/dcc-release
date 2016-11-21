@@ -43,34 +43,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       <groupId>org.icgc.dcc</groupId>
       <artifactId>dcc-common-es</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.elasticsearch.client</groupId>
-      <artifactId>transport</artifactId>
-      <version>${elasticsearch.version}</version>
-    </dependency>
-
-    <!-- Search -->
-    <dependency>
-      <groupId>org.elasticsearch</groupId>
-      <artifactId>elasticsearch</artifactId>
-    </dependency>
-    <!-- Logging required for Elasticsearch -->
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-api</artifactId>
-      <version>${log4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <version>${log4j.version}</version>
-    </dependency>
-
-    <!-- JSON -->
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-smile</artifactId>
-    </dependency>
 
     <!-- Utilities -->
     <dependency>
@@ -80,12 +52,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   </dependencies>
 
   <properties>
-    <log4j.version>2.6.2</log4j.version>
     <elasticsearch.version>5.0.0</elasticsearch.version>
-    <jackson.version>2.8.1</jackson.version>
-    <jackson-smile.version>2.8.1</jackson-smile.version>
-    <jackson-yaml.version>2.8.1</jackson-yaml.version>
-    <jackson-csv.version>2.8.1</jackson-csv.version>
   </properties>
 
 </project>

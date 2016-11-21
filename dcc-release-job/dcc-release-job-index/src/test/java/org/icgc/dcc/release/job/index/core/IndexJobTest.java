@@ -103,9 +103,7 @@ public class IndexJobTest extends AbstractJobTest {
 
   private void verifyDrugSets(DocumentType type, String field, Optional<String> path, long expectedDocuments) {
     val existsQuery = QueryBuilders.existsQuery(field);
-    val query = path.isPresent() ?
-        QueryBuilders.nestedQuery(path.get(), existsQuery, ScoreMode.Avg) :
-        existsQuery;
+    val query = path.isPresent() ? QueryBuilders.nestedQuery(path.get(), existsQuery, ScoreMode.Avg) : existsQuery;
 
     val hits = esClient.prepareSearch(index)
         .setTypes(type.getName())

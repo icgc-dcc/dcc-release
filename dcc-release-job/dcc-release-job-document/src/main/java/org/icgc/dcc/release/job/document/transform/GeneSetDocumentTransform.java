@@ -18,18 +18,21 @@
 package org.icgc.dcc.release.job.document.transform;
 
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneSetId;
-import lombok.NonNull;
-import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
+import org.icgc.dcc.release.core.util.FieldNames.DocumentFieldNames;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import lombok.NonNull;
+import lombok.val;
 
 public class GeneSetDocumentTransform implements DocumentTransform, Function<ObjectNode, Document> {
 
@@ -47,8 +50,18 @@ public class GeneSetDocumentTransform implements DocumentTransform, Function<Obj
   @Override
   public Document transformDocument(@NonNull ObjectNode geneSet, @NonNull DocumentContext context) {
     val geneSetId = getGeneSetId(geneSet);
+    // Elasticsearch requires that all unique field paths in all types have the same type. E.g if gene.pathway is an
+    // array, it must be an array in all the index types.
+    renameFields(geneSet);
 
     return new Document(context.getType(), geneSetId, geneSet);
+  }
+
+  private static void renameFields(ObjectNode geneSet) {
+    val pathway = geneSet.remove(FieldNames.GENE_SET_PATHWAY);
+    if (pathway != null) {
+      geneSet.set(DocumentFieldNames.GENE_SET_PATHWAY, pathway);
+    }
   }
 
 }

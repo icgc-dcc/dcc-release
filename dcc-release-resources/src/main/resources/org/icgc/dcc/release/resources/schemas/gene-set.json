@@ -83,38 +83,38 @@
       "id": "https://dcc.icgc.org/gene-set/name",
       "type": "string"
     },
-    "pathway": {
-      "id": "https://dcc.icgc.org/gene-set/pathway",
+    "gene_set_pathway": {
+      "id": "https://dcc.icgc.org/gene-set/gene_set_pathway",
       "type": "object",
       "properties": {
         "diagrammed": {
-          "id": "https://dcc.icgc.org/gene-set/pathway/diagrammed",
+          "id": "https://dcc.icgc.org/gene-set/gene_set_pathway/diagrammed",
           "type": "boolean"
         },
         "evidence_code": {
-          "id": "https://dcc.icgc.org/gene-set/pathway/evidence_code",
+          "id": "https://dcc.icgc.org/gene-set/gene_set_pathway/evidence_code",
           "type": "string"
         },
         "hierarchy": {
-          "id": "https://dcc.icgc.org/gene-set/pathway/hierarchy",
+          "id": "https://dcc.icgc.org/gene-set/gene_set_pathway/hierarchy",
           "type": "array",
           "items": {
-            "id": "https://dcc.icgc.org/gene-set/pathway/hierarchy/0",
+            "id": "https://dcc.icgc.org/gene-set/gene_set_pathway/hierarchy/0",
             "type": "array",
             "items": {
-              "id": "https://dcc.icgc.org/gene-set/pathway/hierarchy/0/3",
+              "id": "https://dcc.icgc.org/gene-set/gene_set_pathway/hierarchy/0/3",
               "type": "object",
               "properties": {
                 "diagrammed": {
-                  "id": "https://dcc.icgc.org/gene-set/pathway/hierarchy/0/3/diagrammed",
+                  "id": "https://dcc.icgc.org/gene-set/gene_set_pathway/hierarchy/0/3/diagrammed",
                   "type": "boolean"
                 },
                 "id": {
-                  "id": "https://dcc.icgc.org/gene-set/pathway/hierarchy/0/3/id",
+                  "id": "https://dcc.icgc.org/gene-set/gene_set_pathway/hierarchy/0/3/id",
                   "type": "string"
                 },
                 "name": {
-                  "id": "https://dcc.icgc.org/gene-set/pathway/hierarchy/0/3/name",
+                  "id": "https://dcc.icgc.org/gene-set/gene_set_pathway/hierarchy/0/3/name",
                   "type": "string"
                 }
               },
@@ -125,7 +125,7 @@
           "additionalItems": false
         },
         "species": {
-          "id": "https://dcc.icgc.org/gene-set/pathway/species",
+          "id": "https://dcc.icgc.org/gene-set/gene_set_pathway/species",
           "type": "string"
         }
       },
