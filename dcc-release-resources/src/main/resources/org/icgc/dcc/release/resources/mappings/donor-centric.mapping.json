@@ -42,16 +42,7 @@
             }
           }
         }
-      },
-      "project":{
-        "properties":{
-          "project_name":{
-            "type":"string",
-            "store":"yes",
-            "index":"not_analyzed"
-          }
-        }
-      }      
+      }    
     }
   }
 }

@@ -50,7 +50,7 @@
           }
         }
       },
-      "gene_project": {
+      "gene_centric_project": {
         "type": "nested"
       }
     }
