@@ -39,9 +39,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
-import lombok.SneakyThrows;
-import lombok.val;
-
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
@@ -51,8 +48,6 @@ import org.icgc.dcc.release.core.function.Unwind;
 import org.icgc.dcc.release.core.util.Keys;
 import org.icgc.dcc.release.job.export.function.ConvertRow;
 
-import scala.Tuple2;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ArrayListMultimap;
@@ -61,6 +56,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+
+import lombok.SneakyThrows;
+import lombok.val;
+import scala.Tuple2;
 
 public class ClinicalRecordConverter implements RecordConverter, PairFlatMapFunction<ObjectNode, String, String> {
 
@@ -87,6 +86,9 @@ public class ClinicalRecordConverter implements RecordConverter, PairFlatMapFunc
     outputRows.addAll(convertNestedType(row, DownloadDataType.DONOR_THERAPY));
     outputRows.addAll(convertNestedType(row, Optional.of(study), DownloadDataType.SPECIMEN));
     outputRows.addAll(convertSample(row));
+
+    outputRows.addAll(convertSupplementalSpecimenType(row, DownloadDataType.BIOMARKER));
+    outputRows.addAll(convertSupplementalSpecimenType(row, DownloadDataType.SURGERY));
 
     return outputRows.build();
   }
@@ -149,6 +151,31 @@ public class ClinicalRecordConverter implements RecordConverter, PairFlatMapFunc
     for (val specimen : unwinder.call(donor)) {
       addParentValues(donorProject, specimen);
       outputRows.addAll(convertNestedType(specimen, dataType, keyOpt));
+    }
+
+    return outputRows.build();
+  }
+
+  @SneakyThrows
+  private static Iterable<Tuple2<String, String>> convertSupplementalSpecimenType(ObjectNode row,
+      DownloadDataType dataType) {
+    val outputRows = ImmutableList.<Tuple2<String, String>> builder();
+    val key = getKey(row, dataType);
+
+    val donorRetainFields = Lists.newArrayList(DONOR_FIELDS);
+    donorRetainFields.add(DONOR_SPECIMEN);
+    val specimens = row.retain(donorRetainFields);
+
+    val specimenUnwinder = Unwind.unwind(DONOR_SPECIMEN);
+    for (val specimen : specimenUnwinder.call(specimens)) {
+      val parentFields = getSpecimenIds(specimen);
+      val dataTypeUnwinder = Unwind.unwind(dataType.getId());
+      for (val nestedDataType : dataTypeUnwinder.call(specimen)) {
+        addParentValues(parentFields, nestedDataType);
+        val converter = new ConvertRow(dataType.getDownloadFields());
+        val value = converter.call(nestedDataType);
+        outputRows.add(tuple(key, value));
+      }
     }
 
     return outputRows.build();
