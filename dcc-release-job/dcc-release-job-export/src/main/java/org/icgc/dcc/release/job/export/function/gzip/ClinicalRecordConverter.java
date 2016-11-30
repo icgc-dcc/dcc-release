@@ -19,6 +19,7 @@ package org.icgc.dcc.release.job.export.function.gzip;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Collections.emptyMap;
 import static org.icgc.dcc.common.core.model.DownloadDataType.SAMPLE;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
@@ -87,10 +88,29 @@ public class ClinicalRecordConverter implements RecordConverter, PairFlatMapFunc
     outputRows.addAll(convertNestedType(row, Optional.of(study), DownloadDataType.SPECIMEN));
     outputRows.addAll(convertSample(row));
 
-    outputRows.addAll(convertSupplementalSpecimenType(row, DownloadDataType.BIOMARKER));
-    outputRows.addAll(convertSupplementalSpecimenType(row, DownloadDataType.SURGERY));
+    val specimenIds = resolveSpecimenIds(row);
+    outputRows.addAll(convertSupplementalDonorSpecimenType(row, DownloadDataType.BIOMARKER, specimenIds));
+    outputRows.addAll(convertSupplementalDonorSpecimenType(row, DownloadDataType.SURGERY, specimenIds));
 
     return outputRows.build();
+  }
+
+  private static Map<String, String> resolveSpecimenIds(ObjectNode row) {
+    val specimens = row.path(DONOR_SPECIMEN);
+    if (specimens.isMissingNode()) {
+      return emptyMap();
+    }
+
+    val specimenIds = ImmutableMap.<String, String> builder();
+    for (val specimen : specimens) {
+      val submissionSpecimenId = textValue(specimen, SUBMISSION_SPECIMEN_ID);
+      val specimenId = textValue(specimen, DONOR_SPECIMEN_ID);
+      if (!isNullOrEmpty(specimenId) && !isNullOrEmpty(submissionSpecimenId)) {
+        specimenIds.put(submissionSpecimenId, specimenId);
+      }
+    }
+
+    return specimenIds.build();
   }
 
   private static Iterable<Tuple2<String, String>> convertNestedType(ObjectNode row, DownloadDataType dataType) {
@@ -143,7 +163,7 @@ public class ClinicalRecordConverter implements RecordConverter, PairFlatMapFunc
 
     val specimenRetainFields = Lists.newArrayList(DONOR_FIELDS);
     specimenRetainFields.add(DONOR_SPECIMEN);
-    val donor = row.retain(specimenRetainFields);
+    val donor = row.deepCopy().retain(specimenRetainFields);
     val donorProject = getDonorProjectIds(donor);
     val unwinder = Unwind.unwind(DONOR_SPECIMEN);
     val keyOpt = Optional.of(key);
@@ -157,28 +177,39 @@ public class ClinicalRecordConverter implements RecordConverter, PairFlatMapFunc
   }
 
   @SneakyThrows
-  private static Iterable<Tuple2<String, String>> convertSupplementalSpecimenType(ObjectNode row,
-      DownloadDataType dataType) {
+  private static Iterable<Tuple2<String, String>> convertSupplementalDonorSpecimenType(ObjectNode row,
+      DownloadDataType dataType, Map<String, String> specimenIds) {
     val outputRows = ImmutableList.<Tuple2<String, String>> builder();
     val key = getKey(row, dataType);
 
     val donorRetainFields = Lists.newArrayList(DONOR_FIELDS);
-    donorRetainFields.add(DONOR_SPECIMEN);
-    val specimens = row.retain(donorRetainFields);
+    val unwindFieldName = dataType.getId();
+    donorRetainFields.add(unwindFieldName);
 
-    val specimenUnwinder = Unwind.unwind(DONOR_SPECIMEN);
-    for (val specimen : specimenUnwinder.call(specimens)) {
-      val parentFields = getSpecimenIds(specimen);
-      val dataTypeUnwinder = Unwind.unwind(dataType.getId());
-      for (val nestedDataType : dataTypeUnwinder.call(specimen)) {
-        addParentValues(parentFields, nestedDataType);
-        val converter = new ConvertRow(dataType.getDownloadFields());
-        val value = converter.call(nestedDataType);
-        outputRows.add(tuple(key, value));
-      }
+    val refinedDonor = row.deepCopy().retain(donorRetainFields);
+    val parentFields = getDonorProjectIds(refinedDonor);
+
+    val dataTypeUnwinder = Unwind.unwind(unwindFieldName);
+    for (val nestedDataType : dataTypeUnwinder.call(refinedDonor)) {
+      addParentValues(parentFields, nestedDataType);
+      addSpecimenId(nestedDataType, specimenIds);
+
+      val converter = new ConvertRow(dataType.getDownloadFields());
+      val value = converter.call(nestedDataType);
+      outputRows.add(tuple(key, value));
     }
 
     return outputRows.build();
+  }
+
+  private static void addSpecimenId(ObjectNode nestedDataType, Map<String, String> specimenIds) {
+    val submittedSpecimenId = textValue(nestedDataType, SUBMISSION_SPECIMEN_ID);
+    if (!isNullOrEmpty(submittedSpecimenId)) {
+      val specimenId = specimenIds.get(submittedSpecimenId);
+      if (!isNullOrEmpty(specimenId)) {
+        nestedDataType.put(DONOR_SPECIMEN_ID, specimenId);
+      }
+    }
   }
 
   private static String resolveDonorNestedPath(DownloadDataType dataType) {
