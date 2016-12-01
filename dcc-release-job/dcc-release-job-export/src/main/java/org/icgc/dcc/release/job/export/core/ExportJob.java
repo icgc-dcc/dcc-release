@@ -18,6 +18,7 @@
 package org.icgc.dcc.release.job.export.core;
 
 import static java.util.Collections.singleton;
+import static org.icgc.dcc.common.core.model.DownloadDataType.SGV_CONTROLLED;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableMap;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
@@ -30,11 +31,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -65,6 +61,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableSet;
+
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -115,9 +116,24 @@ public class ExportJob extends GenericJob {
       executeTasksParallel(jobContext, tasks);
     }
 
+    // Check if the jobContext contains the sgv types and run them separately.
+    if (isExportSgv()) {
+      final Iterable<Task> sgvExportTask = stream(SGV_CONTROLLED)
+          .map(createTask())
+          .collect(toImmutableSet());
+
+      executeTasksSequentially(jobContext, sgvExportTask);
+    }
+
     // Write header files
     val task = new WriteHeadersTask(exportProperties.getExportDir());
     jobContext.execute(task);
+  }
+
+  private boolean isExportSgv() {
+    val exportTypes = exportProperties.getExportTypes();
+
+    return exportTypes.isEmpty() || exportTypes.contains(SGV_CONTROLLED.getCanonicalName());
   }
 
   private Iterable<Task> createTasks() {
@@ -227,6 +243,12 @@ public class ExportJob extends GenericJob {
     return dt -> {
       // Don't create tasks for DONOR_EXPOSURE etc. as all the DONOR sub-types will be exported in the export DONOR job
       if (dt.isClinicalSubtype()) {
+        return false;
+      }
+
+      // Don't create tasks for SGV type which should be run sequentially. Too big tasks to be run in parallel.
+      // A separate task will be created for SGV.
+      if (SGV_CONTROLLED == dt) {
         return false;
       }
 

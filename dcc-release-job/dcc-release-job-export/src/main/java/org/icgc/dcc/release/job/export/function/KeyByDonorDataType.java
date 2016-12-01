@@ -23,15 +23,15 @@ import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
 import static org.icgc.dcc.release.core.util.Keys.getKey;
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
 
 import org.apache.spark.api.java.function.PairFunction;
 
-import scala.Tuple2;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import scala.Tuple2;
 
 @RequiredArgsConstructor
 public class KeyByDonorDataType implements PairFunction<ObjectNode, String, ObjectNode> {
@@ -42,7 +42,7 @@ public class KeyByDonorDataType implements PairFunction<ObjectNode, String, Obje
   @Override
   public Tuple2<String, ObjectNode> call(ObjectNode row) throws Exception {
     val donorId = textValue(row, DONOR_ID);
-    checkState(!isNullOrEmpty(donorId), "Failed to resolve _donor_id from row: {}", row);
+    checkState(!isNullOrEmpty(donorId), "Failed to resolve _donor_id from row: %s", row);
     val key = getKey(donorId, dataType);
 
     return tuple(key, row);
