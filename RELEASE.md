@@ -115,3 +115,23 @@ Options:
   -p    A comma-separated list of projects to run the release for
   -h    Print this message
 ```
+
+To execute release only couple jobs or resume execution see the following examples.
+
+Execute all jobs including the `IndexJob`:
+
+```shell
+$ ./release.sh -j -INDEX ICGC23
+```
+
+Execute all jobs staring from the `AnnotateJob`
+
+```shell
+$ ./release.sh -j ANNOTATE- ICGC23
+```
+
+Execute `AnnotateJob` and `JoinJob`
+
+```shell
+$ ./release.sh -j ANNOTATE-JOIN ICGC23
+```
