@@ -40,6 +40,7 @@ Execute the following command in the command line:
     --project-names ${PROJ} \
     --jobs ${JOBS}
 ```
+
 where
 
  - `${DRIVER_LIB}` - path to the native libraries(E.g. snappy).
@@ -49,3 +50,68 @@ where
  -  `${WORK_DIR}` - work directory on HDFS used to store output files created after each release job is run.
  -  `${PROJ}` - for what projects the ETL process should be performed.
  -  `${JOBS}` - jobs to be run. E.g. `STAGE`,`MASK`.
+
+#### Using a wrapper script
+
+Alternatively, the [release.sh](https://github.com/icgc-dcc/dcc-release/blob/develop/dcc-release-client/src/main/bin/release.sh) script could be used to do a release run. 
+
+The script tracks run history. The feature ensures that each ETL run has a unique name, thus a production Elasticsearch index would not be overridden by accident. It is also possible to configure how resources allocated to jobs. For example, set that the `AnnotateJob` should only be allocated 50 cores.
+
+##### Configuration
+
+The script's configuration relies on the DCC standard application layout:
+
+```shell
+$ ls -1
+bin
+conf
+lib
+logs
+```
+
+The script itself is located in the `bin` directory and all its configuration resides in the `conf` directory. The script has following configuration files: `release-env.sh`, `jobs.properties` and `.lastrun`.
+
+###### release-env.sh
+`release-env.sh` contains the default project configuration information. For example, 2 default projects are specified below. If the script is invoked without any project configuration release jobs will use data file for those projects only.
+
+```shell
+PROJ="ALL-US,AML-US"
+```
+
+###### jobs.properties
+`jobs.properties` configures default job resources allocation. For example, the `IndexJob` is allocated only 10 Spark cores, otherwise our production Elasticsearch cluster will be overloaded with index requests.
+
+`jobs.properties` example: 
+
+```shell
+ANNOTATE=450
+FATHMM=50
+INDEX=10
+```
+
+###### .lastrun
+`.lastrun` contains release name of the last run. For example, `ICGC23-9`. It's not required to create the file manually. It will be created and updated automatically.
+
+##### Running the script
+
+To start a complete processing of ICGC23 release data use the following command:
+
+```shell
+$ ./release.sh ICGC23
+```
+
+You can always to ask for help to find out about other ways how to run the scirpt.
+
+```shell
+$ ./release.sh -h
+Usage: release.sh [OPTIONS] RELEASE
+  or: release.sh -h
+Run DCC RELEASE.
+For example: release.sh ICGC21
+
+Options:
+  -c    u of cores to use. Defaults to maximum allowed
+  -j    Jobs to run. Could be a comma-separated list or a jobs range
+  -p    A comma-separated list of projects to run the release for
+  -h    Print this message
+```
