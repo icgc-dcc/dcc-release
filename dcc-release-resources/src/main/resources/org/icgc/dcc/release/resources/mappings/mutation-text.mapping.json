@@ -35,7 +35,7 @@
       "type": {
         "type": "keyword"
       },
-      "start": {
+      "mutation_text_chromosome_start": {
         "type": "keyword"
       }
     }

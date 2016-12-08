@@ -52,10 +52,6 @@
       },
       "gene_centric_project": {
         "type": "nested"
-      },
-      "start": {
-        "type": "long",
-        "store": true
       }
     }
   }

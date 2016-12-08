@@ -107,7 +107,7 @@ public class MutationTextDocumentTransform implements DocumentTransform,
             mutation.path(MUTATION_CHROMOSOME_START).asText(),
             mutation.path(NormalizerFieldNames.NORMALIZER_MUTATION).asText()));
     mutation.put("type", "mutation");
-    mutation.put("start", mutation.path(MUTATION_CHROMOSOME_START).asText());
+    mutation.put("mutation_text_chromosome_start", mutation.path(MUTATION_CHROMOSOME_START).asText());
 
     mutation.remove(MUTATION_ID);
     mutation.remove(MUTATION_CHROMOSOME);
