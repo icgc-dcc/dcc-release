@@ -17,40 +17,51 @@
  */
 package org.icgc.dcc.release.job.fathmm.core;
 
-import static java.lang.String.format;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.release.job.fathmm.util.PostgresTests.initDb;
 
 import java.io.File;
 
 import lombok.val;
 
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.job.fathmm.util.PostgresTests;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
+import com.opentable.db.postgres.junit.SingleInstancePostgresRule;
 
-@Ignore("Prepare test data")
 public class FathmmJobTest extends AbstractJobTest {
 
-  private static final String PROJECT_NAME = "BRCA-UK";
-  private static final String JDBC_URL = format("jdbc:h2:mem;MODE=MySQL;INIT=runscript from '%s'",
-      "src/test/resources/sql/fathmm.sql");
+  private static final String PROJECT_NAME = "TEST-DCC";
 
   /**
    * Class under test.
    */
   FathmmJob job;
 
-  @Override
+  @Rule
+  public SingleInstancePostgresRule pg = EmbeddedPostgresRules.singleInstance();
+
   @Before
-  public void setUp() {
-    super.setUp();
+  public void setUpFathmmJobTest() throws Exception {
+    val embeddedPostgres = pg.getEmbeddedPostgres();
+    val dataSource = embeddedPostgres.getPostgresDatabase();
+    initDb(dataSource);
+
     this.job = new FathmmJob();
-    ReflectionTestUtils.setField(job, "jdbcUrl", JDBC_URL);
+    val jdbcUrl = PostgresTests.getJdbcUrl(embeddedPostgres);
+    ReflectionTestUtils.setField(job, "jdbcUrl", jdbcUrl);
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    pg.getEmbeddedPostgres().close();
   }
 
   @Test
@@ -59,8 +70,7 @@ public class FathmmJobTest extends AbstractJobTest {
     val jobContext = createJobContext(job.getType(), ImmutableList.of(PROJECT_NAME));
     job.execute(jobContext);
 
-    val observations = produces(PROJECT_NAME, FileType.OBSERVATION_FATHMM);
-    assertThat(observations).isNotEmpty();
+    verifyResult(PROJECT_NAME, FileType.OBSERVATION_FATHMM);
   }
 
 }

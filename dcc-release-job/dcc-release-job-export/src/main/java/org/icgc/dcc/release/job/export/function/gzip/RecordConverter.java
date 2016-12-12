@@ -21,11 +21,17 @@ import java.io.Serializable;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.icgc.dcc.release.job.export.io.ProjectDonorMultipleGzipOutputFormat;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface RecordConverter extends Serializable {
 
+  /**
+   * Converts an input {@link ObjectNode} to a PairRDD, where {@code key} is contains path to records file which will be
+   * saved by {@link ProjectDonorMultipleGzipOutputFormat}, and {@code value} contains single file record<br>
+   * For example, {@code key} value: {@code <donor_id/file_type>} or {@code DO123/ssm_controlled}
+   */
   JavaPairRDD<String, String> convert(JavaRDD<ObjectNode> input);
 
 }
