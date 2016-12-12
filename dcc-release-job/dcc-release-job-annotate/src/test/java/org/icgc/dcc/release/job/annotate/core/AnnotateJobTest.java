@@ -18,12 +18,8 @@
 package org.icgc.dcc.release.job.annotate.core;
 
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
-import java.util.List;
-
-import lombok.val;
 
 import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.core.job.FileType;
@@ -31,14 +27,13 @@ import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.val;
 
 public class AnnotateJobTest extends AbstractJobTest {
 
   /**
    * Constants.
    */
-  private static final String INPUT_DIR = TEST_FIXTURES_DIR + "/staging";
   private static final String PROJECT_NAME = "BRCA-UK";
 
   /**
@@ -55,42 +50,12 @@ public class AnnotateJobTest extends AbstractJobTest {
 
   @Test
   public void testExecute() {
-    given(new File(INPUT_DIR));
+    given(new File(INPUT_TEST_FIXTURES_DIR));
     val jobContext = createJobContext(job.getType(), singletonList(PROJECT_NAME));
     job.execute(jobContext);
 
-    val ssmResults = produces(PROJECT_NAME, FileType.SSM_S);
-    assertThat(ssmResults).hasSize(4);
-    verifyResults(ssmResults, FileType.SSM);
-
-    val sgvResults = produces(PROJECT_NAME, FileType.SGV_S);
-    assertThat(sgvResults).hasSize(9);
-    verifyResults(sgvResults, FileType.SGV);
-  }
-
-  private static void verifyResults(List<ObjectNode> results, FileType fileType) {
-    for (val result : results) {
-      assertResultFile(result, fileType);
-    }
-  }
-
-  private static void assertResultFile(ObjectNode result, FileType fileType) {
-    assertThat(result.get("consequence_type").asText()).endsWith("_variant");
-    assertThat(result.get("gene_affected").asText()).startsWith("ENSG");
-    assertThat(result.get("transcript_affected").asText()).startsWith("ENST");
-    assertThat(result.get("gene_build_version").asText()).isEqualTo("75");
-    assertThat(result.get("observation_id").asText()).isEqualTo("zzz123");
-
-    if (fileType == FileType.SGV) {
-      assertThat(result.get("aa_change").isNull()).isTrue();
-      assertThat(result.get("cds_change").isNull()).isTrue();
-    } else {
-      assertThat(result.get("aa_mutation").isNull()).isTrue();
-      assertThat(result.get("cds_mutation").isNull()).isTrue();
-    }
-
-    assertThat(result.get("protein_domain_affected").isNull()).isTrue();
-    assertThat(result.get("note").isNull()).isTrue();
+    verifyResult(PROJECT_NAME, FileType.SSM_S);
+    verifyResult(PROJECT_NAME, FileType.SGV_S);
   }
 
   private static SnpEffProperties createSnpEffProperties() {
