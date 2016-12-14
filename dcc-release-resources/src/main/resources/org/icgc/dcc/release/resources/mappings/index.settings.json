@@ -1,6 +1,6 @@
 {
   "index.number_of_shards":15,
-  "index.max_result_window":100000,
+  "index.max_result_window":60000000,
   "analysis":{
     "analyzer":{
       "id_search":{
