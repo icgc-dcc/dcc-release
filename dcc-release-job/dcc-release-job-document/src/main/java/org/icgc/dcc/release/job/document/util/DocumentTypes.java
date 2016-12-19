@@ -478,6 +478,7 @@ public final class DocumentTypes {
 
                             // Consequence
                             "consequence.aa_change",
+                            "consequence.aa_position",
                             "consequence.cds_change",
                             "consequence.note",
                             "consequence.protein_domain_affected",

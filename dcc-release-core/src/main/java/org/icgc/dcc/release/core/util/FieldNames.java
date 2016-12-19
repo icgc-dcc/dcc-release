@@ -83,7 +83,7 @@ public class FieldNames {
 
   public static class AnnotateFieldNames {
 
-    public static final String AMINO_ACID_POSITION = "aaPosition";
+    public static final String AMINO_ACID_POSITION = "aa_position";
 
   }
 
