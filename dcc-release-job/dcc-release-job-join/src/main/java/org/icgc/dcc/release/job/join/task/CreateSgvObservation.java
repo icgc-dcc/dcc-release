@@ -96,10 +96,6 @@ public final class CreateSgvObservation implements Function<ObjectNode, ObjectNo
     return consequence;
   }
 
-  /**
-   * @param observationId
-   * @return
-   */
   private Optional<Iterable<SgvConsequence>> getConsequences(String observationId) {
     val consequences = consequencesBroadcast.value().get(observationId);
 

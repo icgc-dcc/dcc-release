@@ -19,6 +19,8 @@ package org.icgc.dcc.release.job.join.task;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID;
 import static org.icgc.dcc.release.core.util.Keys.getKey;
 import static org.icgc.dcc.release.job.join.utils.Tasks.resolveDonorSamples;
 
@@ -30,7 +32,6 @@ import lombok.val;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;
-import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.task.GenericTask;
 import org.icgc.dcc.release.core.task.TaskContext;
@@ -79,6 +80,8 @@ public class PrimaryMetaJoinTask extends GenericTask {
     val keyFunction = new KeyAnalysisIdAnalyzedSampleIdField();
     val outputFileType = resolveOutputFileType(primaryFileType);
     val type = outputFileType.getId();
+
+    // Meta file type is small. We are going to put it in memory and distribute between the workers.
     val metaPairs = meta.mapToPair(keyFunction).collectAsMap();
     final Broadcast<Map<String, ObjectNode>> metaPairsBroadcast = taskContext
         .getSparkContext()
@@ -93,9 +96,7 @@ public class PrimaryMetaJoinTask extends GenericTask {
       Broadcast<Map<String, ObjectNode>> metaPairsBroadcast) {
     return primary
         .map(p -> {
-          String key = getKey(p,
-              FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_ANALYSIS_ID,
-              FieldNames.SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID);
+          String key = getKey(p, SUBMISSION_OBSERVATION_ANALYSIS_ID, SUBMISSION_ANALYZED_SAMPLE_ID);
           ObjectNode metaValue = metaPairsBroadcast.value().get(key);
           checkState(metaValue != null, "A primary record must have a corresponding record in the meta file");
           p.setAll(metaValue);

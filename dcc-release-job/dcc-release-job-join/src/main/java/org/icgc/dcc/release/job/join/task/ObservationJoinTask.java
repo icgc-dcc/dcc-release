@@ -149,6 +149,7 @@ public class ObservationJoinTask extends GenericTask {
   }
 
   private Broadcast<Map<String, SsmMetaFeatureType>> resolveMeta(TaskContext taskContext) {
+    // Meta files are small. Put them in memory and distribute to workers.
     val metaPairs = parseSsmM(taskContext)
         .mapToPair(keyMeta())
         .collectAsMap();

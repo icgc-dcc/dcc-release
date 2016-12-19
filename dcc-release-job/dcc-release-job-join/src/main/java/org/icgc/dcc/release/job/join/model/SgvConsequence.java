@@ -26,6 +26,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 
+/**
+ * A model for a SGV Consequence. Used to decreases memory pressure.
+ */
 @Value
 public class SgvConsequence implements Serializable {
 
