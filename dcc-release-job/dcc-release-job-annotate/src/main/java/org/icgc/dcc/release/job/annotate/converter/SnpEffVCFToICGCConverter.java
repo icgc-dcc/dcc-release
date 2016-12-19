@@ -233,7 +233,9 @@ public class SnpEffVCFToICGCConverter {
 
           @Override
           public String apply(@NonNull SnpEffect item) {
-            return !item.getTranscriptID().isEmpty() ? item.getTranscriptID() : item.getGeneID();
+            val transcriptID = item.getTranscriptID();
+
+            return isNullOrEmpty(transcriptID) ? item.getGeneID() : transcriptID;
           }
 
         });
