@@ -17,20 +17,22 @@
  */
 package org.icgc.dcc.release.job.annotate.parser;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.lang.String.format;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.util.Separators.DASH;
 import static org.icgc.dcc.common.core.util.Separators.DOT;
-import static org.icgc.dcc.common.core.util.Separators.EMPTY_STRING;
+import static org.icgc.dcc.common.core.util.Separators.SLASH;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.release.job.annotate.model.ConsequenceType.UNKNOWN_CONSEQUENCE;
 import static org.icgc.dcc.release.job.annotate.model.ConsequenceType.byId;
 import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.ALLELE;
+import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.CDNA_POSITION_INDEX;
 import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.FEATURE_ID_INDEX;
 import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.GENE_ID_INDEX;
 import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.HGVS_C_INDEX;
 import static org.icgc.dcc.release.job.annotate.model.InfoHeaderField.HGVS_P_INDEX;
+import static org.icgc.dcc.release.job.annotate.parser.AminoAcidChangeParser.parseAminoAcidChange;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -40,7 +42,6 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.common.core.util.Splitters;
-import org.icgc.dcc.release.job.annotate.converter.AminoAcidConverter;
 import org.icgc.dcc.release.job.annotate.model.ConsequenceType;
 import org.icgc.dcc.release.job.annotate.model.InfoHeaderField;
 import org.icgc.dcc.release.job.annotate.model.ParseNotification;
@@ -57,8 +58,6 @@ import com.google.common.collect.ImmutableList;
 @NoArgsConstructor(access = PRIVATE)
 public final class SnpEffectParser {
 
-  private static final Pattern AMINO_ACID_CHANGE_PATTERN = Pattern.compile("p.(\\w{3})(\\d+)(\\w{3})");
-  private static final Pattern FRAMESHIFT_AMINO_ACID_CHANGE_PATTERN = Pattern.compile("p.(\\w{3})(\\d+)fs");
   private static final Pattern CODON_CHANGE_PATTERN = Pattern.compile("c\\.(\\d+\\w>\\w)");
 
   /**
@@ -131,11 +130,23 @@ public final class SnpEffectParser {
 
     result.codonChange(parseCodonChange(metadata.get(HGVS_C_INDEX.getFieldIndex())));
     result.aminoAcidChange(parseAminoAcidChange(metadata.get(HGVS_P_INDEX.getFieldIndex())));
+    result.aminoAcidPosition(parseAminoAcidPosition(metadata.get(CDNA_POSITION_INDEX.getFieldIndex())));
 
     result.allele(metadata.get(ALLELE.getFieldIndex()));
     result.parseState(parseState);
 
     return result.build();
+  }
+
+  private static String parseAminoAcidPosition(String cdnaPosition) {
+    if (isNullOrEmpty(cdnaPosition)) {
+      return null;
+    }
+
+    val aaPositionEnd = cdnaPosition.indexOf(SLASH);
+    checkState(aaPositionEnd != -1, "Malformed amino acid position/length: '%s'", cdnaPosition);
+
+    return cdnaPosition.substring(0, aaPositionEnd);
   }
 
   /**
@@ -150,36 +161,6 @@ public final class SnpEffectParser {
   private static boolean isSkipGene(String geneID) {
     // Ranges of genes occur for intergenic_region consequence types. They should be skipped.
     return geneID == null || geneID.contains(DASH);
-  }
-
-  static String parseAminoAcidChange(String aaChange) {
-    if (isNullOrEmpty(aaChange)) {
-      return null;
-    }
-
-    String from = null;
-    String to = null;
-    String position = null;
-
-    val frameshiftMatcher = FRAMESHIFT_AMINO_ACID_CHANGE_PATTERN.matcher(aaChange);
-    val matcher = AMINO_ACID_CHANGE_PATTERN.matcher(aaChange);
-    if (frameshiftMatcher.matches()) {
-      from = AminoAcidConverter.convert(frameshiftMatcher.group(1));
-      to = EMPTY_STRING;
-      position = frameshiftMatcher.group(2);
-    } else if (matcher.matches()) {
-      from = AminoAcidConverter.convert(matcher.group(1));
-      to = AminoAcidConverter.convert(matcher.group(3));
-      position = matcher.group(2);
-    } else {
-      return null;
-    }
-
-    if (from == null || to == null) {
-      throw new IllegalArgumentException(format("Failed to convert AA change: '%s'", aaChange));
-    }
-
-    return from + position + to;
   }
 
   static String parseCodonChange(String codonChange) {

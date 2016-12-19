@@ -18,7 +18,6 @@
 package org.icgc.dcc.release.job.annotate.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.release.job.annotate.parser.SnpEffectParser.parseAminoAcidChange;
 import static org.icgc.dcc.release.job.annotate.parser.SnpEffectParser.parseCodonChange;
 import static org.icgc.dcc.release.job.annotate.parser.SnpEffectParser.parseTranscriptId;
 import lombok.val;
@@ -54,17 +53,6 @@ public class SnpEffectParserTest {
     assertThat(parseCodonChange("n.42652889G>T")).isNull();
     assertThat(parseCodonChange("n.G>T")).isNull();
     assertThat(parseCodonChange("n.42652889Gc>T")).isNull();
-  }
-
-  @Test
-  public void testParseAminoAcidChange() throws Exception {
-    assertThat(parseAminoAcidChange("p.Ser125Leu")).isEqualTo("S125L");
-    // Frameshift
-    assertThat(parseAminoAcidChange("p.Thr120fs")).isEqualTo("T120");
-
-    assertThat(parseAminoAcidChange("p.Thr120fs")).isEqualTo("T120");
-
-    assertThat(parseAminoAcidChange("n.Thr120fs")).isNull();
   }
 
   @Test

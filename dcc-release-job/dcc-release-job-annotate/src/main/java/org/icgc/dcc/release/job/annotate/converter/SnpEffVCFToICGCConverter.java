@@ -105,6 +105,7 @@ public class SnpEffVCFToICGCConverter {
     return SecondaryEntity.builder()
         .consequenceType(getValue(effect.getConsequenceType().getConsequenceName()))
         .aaMutation(getValue(effect.getAminoAcidChange()))
+        .aaPosition(getValue(effect.getAminoAcidPosition()))
         .cdsMutation(getValue(effect.getCodonChange()))
         .proteinDomainAffected(getValue(PROTEIN_AFFECTED_DOMAIN_VALUE))
         .geneAffected(getValue(effect.getGeneID()))

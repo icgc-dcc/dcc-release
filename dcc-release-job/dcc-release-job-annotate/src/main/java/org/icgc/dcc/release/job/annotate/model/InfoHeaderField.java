@@ -34,6 +34,7 @@ public enum InfoHeaderField {
   FEATURE_ID_INDEX(6),
   HGVS_C_INDEX(9),
   HGVS_P_INDEX(10),
+  CDNA_POSITION_INDEX(11),
   ERRORS_INDEX(15);
 
   // Index within the effect metadata subfields from the SnpEff EFF annotation where each key's associated value can

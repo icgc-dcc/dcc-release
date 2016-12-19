@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableMap;
  * @see https://wiki.oicr.on.ca/display/DCCSOFT/Upgrade+SnpEff+from+v3.6c+to+4.2
  */
 
-public class AminoAcidConverter {
+public class AminoAcidNotationConverter {
 
   private static final Map<String, String> DICTIONARY = ImmutableMap.<String, String> builder()
       .put("Cys", "C")
@@ -51,7 +51,7 @@ public class AminoAcidConverter {
       .put("Met", "M")
       .build();
 
-  public static String convert(String aminoAcid) {
+  public static String convertLongToShortNotation(String aminoAcid) {
     return DICTIONARY.get(aminoAcid);
   }
 

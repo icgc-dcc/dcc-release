@@ -15,46 +15,42 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.annotate.model;
+package org.icgc.dcc.release.job.annotate.parser;
 
-import static com.google.common.base.Preconditions.checkState;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.icgc.dcc.release.job.annotate.parser.AminoAcidChangeParser.parseAminoAcidChange;
 
-/**
- * A snpEff 3.6 representation.
- */
-@Value
-@Builder
-public final class SnpEffect implements Comparable<SnpEffect> {
+import org.junit.Test;
 
-  ConsequenceType consequenceType;
-  String codonChange;
-  String aminoAcidChange;
-  String aminoAcidPosition;
-  String geneID;
-  String transcriptID;
-  String cancerID;
-  String allele;
-  ParseState parseState;
+public class AminoAcidChangeParserTest {
 
-  @Override
-  public int compareTo(SnpEffect otherEffect) {
-    return consequenceType.compareTo(otherEffect.getConsequenceType());
+  @Test
+  public void testParseAminoAcidChange() throws Exception {
+    assertThat(parseAminoAcidChange("p.Ser125Leu")).isEqualTo("S125L");
+
+    // Frameshift
+    assertThat(parseAminoAcidChange("p.Thr120fs")).isEqualTo("T120fs");
+
+    // Doesn't start with 'p.'
+    assertThat(parseAminoAcidChange("n.Thr120fs")).isNull();
+
+    assertThat(parseAminoAcidChange("p.Trp120*")).isEqualTo("W120*");
+    assertThat(parseAminoAcidChange("p.Trp120*")).isEqualTo("W120*");
+    assertThat(parseAminoAcidChange("p.Ile334_Thr337del")).isEqualTo("I334_T337del");
+
+    // Empty or null
+    assertThat(parseAminoAcidChange("")).isNull();
+    assertThat(parseAminoAcidChange(null)).isNull();
   }
 
-  /**
-   * Checks if there are annotation parsing errors or warnings.
-   */
-  public boolean hasError() {
-    checkState(parseState != null);
-
-    return parseState.hasError();
+  @Test(expected = IllegalStateException.class)
+  public void testParseAminoAcidChange_malformed() {
+    parseAminoAcidChange("p.Ser125Le");
   }
 
-  public boolean containsAnyError(@NonNull ParseNotification... error) {
-    return parseState.containsAnyError(error);
+  @Test(expected = IllegalStateException.class)
+  public void testParseAminoAcidChange_invalid3letterNotation() {
+    parseAminoAcidChange("p.ZZZ125Leu");
   }
 
 }

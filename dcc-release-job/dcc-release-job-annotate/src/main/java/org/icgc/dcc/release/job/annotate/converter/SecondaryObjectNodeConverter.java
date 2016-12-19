@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 import lombok.val;
 
 import org.icgc.dcc.common.core.model.FieldNames;
+import org.icgc.dcc.release.core.util.FieldNames.AnnotateFieldNames;
 import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
 import org.icgc.dcc.release.job.annotate.model.SecondaryEntity;
 
@@ -54,6 +55,7 @@ public final class SecondaryObjectNodeConverter {
     secondary.put(FieldNames.AnnotatorFieldNames.ANNOTATOR_GENE_BUILD_VERSION, secondaryEntity.getGeneBuildVersion());
     secondary.put(FieldNames.AnnotatorFieldNames.ANNOTATOR_NOTE, secondaryEntity.getNote());
     secondary.put(FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID, secondaryEntity.getObservationId());
+    secondary.put(AnnotateFieldNames.AMINO_ACID_POSITION, secondaryEntity.getAaPosition());
 
     return secondary;
   }
