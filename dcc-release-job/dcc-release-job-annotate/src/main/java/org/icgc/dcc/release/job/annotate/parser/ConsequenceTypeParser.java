@@ -27,8 +27,6 @@ import java.util.regex.Pattern;
 import lombok.NoArgsConstructor;
 import lombok.val;
 
-import org.icgc.dcc.release.job.annotate.model.ConsequenceType;
-
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -37,13 +35,10 @@ import com.google.common.collect.Lists;
 public final class ConsequenceTypeParser {
 
   /**
-   * Multiple consequences are separated by '+'
+   * Multiple consequences are separated by '&'
    */
   private static final Pattern MULTI_CONSEQUENCE_PATTERN = Pattern.compile("(\\w+)\\&(\\w+)");
   private static final Splitter SPLITTER = Splitter.on('&');
-  private static final int EFFECTS_QUANTITY = 2;
-  private static final int EFFECT_LAST_INDEX = 1;
-  private static final String EXON_LOSS_CONSEQUENCE_NAME = "exon_loss";
 
   public static List<String> parse(String effectName) {
     checkState(!isNullOrEmpty(effectName), "Null or empty consequence type");
@@ -51,22 +46,11 @@ public final class ConsequenceTypeParser {
     val matcher = MULTI_CONSEQUENCE_PATTERN.matcher(effectName);
     if (matcher.find()) {
       val result = Lists.newArrayList(SPLITTER.split(effectName));
-      checkState(result.size() == EFFECTS_QUANTITY,
-          "Invalid number of effects %s, should be %s. Original effect: '%s'",
-          result.size(), EFFECTS_QUANTITY, effectName);
-      remapExonLoss(result);
 
       return result;
     }
 
     return ImmutableList.of(effectName);
-  }
-
-  // Re-mapping according to https://jira.oicr.on.ca/browse/DCC-2770
-  private static void remapExonLoss(List<String> consequences) {
-    if (consequences.get(EFFECT_LAST_INDEX).equals(EXON_LOSS_CONSEQUENCE_NAME)) {
-      consequences.set(EFFECT_LAST_INDEX, ConsequenceType.EXON_LOSS_VARIANT.getId());
-    }
   }
 
 }
