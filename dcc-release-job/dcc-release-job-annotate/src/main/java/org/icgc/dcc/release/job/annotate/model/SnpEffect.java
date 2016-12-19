@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.release.job.annotate.model;
 
-import static com.google.common.base.Preconditions.checkState;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -48,9 +47,7 @@ public final class SnpEffect implements Comparable<SnpEffect> {
    * Checks if there are annotation parsing errors or warnings.
    */
   public boolean hasError() {
-    checkState(parseState != null);
-
-    return parseState.hasError();
+    return parseState != null ? parseState.hasError() : false;
   }
 
   public boolean containsAnyError(@NonNull ParseNotification... error) {
