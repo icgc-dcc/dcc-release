@@ -160,17 +160,21 @@ public class JoinJob extends GenericJob {
 
     // Discard the broadcast
     rawSequenceDataBroadcast.destroy(false);
+
+    // Find which types to join if command arguments where provided
     val executeFileTypes = resolveExecuteFileTypes();
 
     if (executeFileTypes.isEmpty()) {
       return;
     }
 
+    // Resolve reference data required downstream
     val resolveDonorSamplesTask = new ResolveDonorSamplesTask();
     val resolveSampleIds = new ResolveSampleSurrogateSampleIds();
     jobContext.execute(resolveDonorSamplesTask);
     val donorSamples = createBroadcast(resolveDonorSamplesTask.getProjectDonorSamples());
 
+    // Create and execute join tasks
     val tasks = createTasks(jobContext, executeFileTypes, resolveSampleIds, donorSamples);
     executeTasks(jobContext, tasks);
   }

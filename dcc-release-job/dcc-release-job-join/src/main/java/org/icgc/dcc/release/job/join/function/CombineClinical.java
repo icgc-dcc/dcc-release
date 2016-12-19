@@ -20,15 +20,18 @@ package org.icgc.dcc.release.job.join.function;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_DONOR_ID;
 import static org.icgc.dcc.release.job.join.utils.JsonNodes.populateArrayNode;
+import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
 
-import lombok.val;
-import scala.Tuple2;
-
+/**
+ * Joins {@code specimen} to {@code donor}.
+ */
 public class CombineClinical
     implements Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, ObjectNode> {
 

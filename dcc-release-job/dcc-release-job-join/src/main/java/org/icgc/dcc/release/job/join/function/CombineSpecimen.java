@@ -20,15 +20,18 @@ package org.icgc.dcc.release.job.join.function;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_SPECIMEN_ID;
 import static org.icgc.dcc.release.job.join.utils.JsonNodes.populateArrayNode;
+import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
+
+import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
 
-import lombok.val;
-import scala.Tuple2;
-
+/**
+ * Joins {@code specimen} and {@code sample}s.
+ */
 public class CombineSpecimen
     implements Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, ObjectNode> {
 
