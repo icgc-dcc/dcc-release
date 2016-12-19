@@ -20,6 +20,7 @@ package org.icgc.dcc.release.job.annotate.converter;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.model.SpecialValue.NO_VALUE;
+import static org.icgc.dcc.common.core.util.Separators.EMPTY_STRING;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.release.job.annotate.converter.SignificantEffectsResolver.getSignificantGenotype;
 import static org.icgc.dcc.release.job.annotate.model.ParseNotification.WARNING_REF_DOES_NOT_MATCH_GENOME;
@@ -234,8 +235,13 @@ public class SnpEffVCFToICGCConverter {
           @Override
           public String apply(@NonNull SnpEffect item) {
             val transcriptID = item.getTranscriptID();
+            if (isNullOrEmpty(transcriptID)) {
+              val geneId = item.getGeneID();
 
-            return isNullOrEmpty(transcriptID) ? item.getGeneID() : transcriptID;
+              return isNullOrEmpty(geneId) ? EMPTY_STRING : geneId;
+            }
+
+            return transcriptID;
           }
 
         });
