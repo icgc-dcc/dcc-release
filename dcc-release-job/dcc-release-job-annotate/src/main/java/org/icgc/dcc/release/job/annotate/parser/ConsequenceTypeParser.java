@@ -51,8 +51,9 @@ public final class ConsequenceTypeParser {
     val matcher = MULTI_CONSEQUENCE_PATTERN.matcher(effectName);
     if (matcher.find()) {
       val result = Lists.newArrayList(SPLITTER.split(effectName));
-      checkState(result.size() == EFFECTS_QUANTITY, "Invalid number of effects %s, should be %s", result.size(),
-          EFFECTS_QUANTITY);
+      checkState(result.size() == EFFECTS_QUANTITY,
+          "Invalid number of effects %s, should be %s. Original effect: '%s'",
+          result.size(), EFFECTS_QUANTITY, effectName);
       remapExonLoss(result);
 
       return result;
