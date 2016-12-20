@@ -69,7 +69,7 @@ public enum ParseNotification implements Identifiable {
         return notification;
       }
     }
-    log.warn("Unrecognized parse notificaiton '{}'", id);
+    log.debug("Unrecognized parse notificaiton '{}'", id);
 
     return UNKNOWN_NOTIFICATION;
   }
