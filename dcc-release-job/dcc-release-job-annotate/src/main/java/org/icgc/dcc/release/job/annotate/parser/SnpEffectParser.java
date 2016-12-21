@@ -89,7 +89,7 @@ public final class SnpEffectParser {
    * {@code "T|intergenic_region|MODIFIER|KSR1P1-IGKV1OR10-1|ENSG00000229485-ENSG00000237592|intergenic_region|ENSG00000229485-ENSG00000237592|||n.42652889G>T||||||"}
    */
   public static List<SnpEffect> parse(String effectAnnotation) {
-    log.info("Parsing effect annotation: {}", effectAnnotation);
+    log.debug("Parsing effect annotation: {}", effectAnnotation);
     if (isNullOrEmpty(effectAnnotation)) {
       return ImmutableList.of(MALFORMED_SNP_EFFECT);
     }
