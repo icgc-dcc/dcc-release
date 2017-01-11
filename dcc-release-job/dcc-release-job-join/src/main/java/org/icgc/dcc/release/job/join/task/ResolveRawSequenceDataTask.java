@@ -40,6 +40,21 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
+/**
+ * Creates a reference data of the following structure: {@code Map<ProjectId, RDD<ObjectNode>>},<br>
+ * where the {@code ObjectNode} contains data like:
+ * 
+ * <pre>
+ *  {
+ *     "analyzed_sample_id": "ASID1",
+ *     "raw_data_accession": "EGAS00001000395:EGAD00001001095",
+ *     "repository": "EGA",
+ *     "library_strategy": "RNA-Seq"
+ *  }
+ * </pre>
+ * 
+ * The reference data is used by the {@link ClinicalJoinTask} to create samples.
+ */
 public class ResolveRawSequenceDataTask extends GenericTask {
 
   private static final Set<FileType> EXCLUDE_RAW_SEQUENCE_FILE_TYPES = ImmutableSet.of(METH_ARRAY_M, EXP_ARRAY_M,

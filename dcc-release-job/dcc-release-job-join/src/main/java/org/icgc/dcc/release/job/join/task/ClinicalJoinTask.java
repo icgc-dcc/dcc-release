@@ -30,6 +30,10 @@ import static org.icgc.dcc.release.core.util.Tasks.resolveProjectName;
 
 import java.util.Map;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;
@@ -45,13 +49,10 @@ import org.icgc.dcc.release.job.join.function.ExtractSpecimenId;
 import org.icgc.dcc.release.job.join.function.KeyDonorIdField;
 import org.icgc.dcc.release.job.join.function.KeySpecimenIdField;
 
+import scala.Tuple2;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
-
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import scala.Tuple2;
 
 @RequiredArgsConstructor
 public class ClinicalJoinTask extends GenericTask {
@@ -73,7 +74,7 @@ public class ClinicalJoinTask extends GenericTask {
   private JavaRDD<ObjectNode> joinSpecimen(TaskContext taskContext) {
     val specimen = readInput(taskContext, SPECIMEN_SURROGATE_KEY_IMAGE);
     val sample = readInput(taskContext, SAMPLE_SURROGATE_KEY);
-    val joinedSample = joinSample(taskContext, sample);
+    val joinedSample = joinSampleAndRawSequenceData(taskContext, sample);
 
     val joinedSpecimen = joinSpecimenSample(specimen, joinedSample);
 
@@ -91,6 +92,9 @@ public class ClinicalJoinTask extends GenericTask {
     return donor.leftOuterJoin(pairedSpecimen);
   }
 
+  /**
+   * Joins donor and its supplemental file types.
+   */
   private JavaPairRDD<String, ObjectNode> joinDonor(
       TaskContext taskContext) {
     val donor = readInput(taskContext, DONOR_SURROGATE_KEY);
@@ -123,7 +127,7 @@ public class ClinicalJoinTask extends GenericTask {
         .leftOuterJoin(sample.groupBy(extractSpecimenId, specimenPartitions));
   }
 
-  private JavaRDD<ObjectNode> joinSample(TaskContext taskContext, JavaRDD<ObjectNode> sample) {
+  private JavaRDD<ObjectNode> joinSampleAndRawSequenceData(TaskContext taskContext, JavaRDD<ObjectNode> sample) {
     val rawSeqData = getRawSequenceData(taskContext);
 
     return sample

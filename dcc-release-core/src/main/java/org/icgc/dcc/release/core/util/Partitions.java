@@ -57,6 +57,9 @@ public final class Partitions {
     return partitionsCount;
   }
 
+  /**
+   * See {@link Partitions#getPartitionsCount(AbstractJavaRDDLike, AbstractJavaRDDLike)} for method motivation.
+   */
   public static int getPartitionsCount(@NonNull AbstractJavaRDDLike<?, ?> rdd) {
     val partitionsCount = rdd.partitions().size();
     if (partitionsCount == 0) {

@@ -41,7 +41,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
 /**
- * Creates mapping from {@code 'analyzed_sample_id'} to {@code (_donor_id, _specimen_id, _sample_id)}.
+ * Creates mapping from {@code 'analyzed_sample_id'} to {@code (_donor_id, _specimen_id, _sample_id)}. This reference
+ * data is required to enrich meta file type.
  */
 public class ResolveDonorSamplesTask extends GenericTask {
 

@@ -89,8 +89,8 @@ public class ClinicalRecordConverter implements RecordConverter, PairFlatMapFunc
     outputRows.addAll(convertSample(row));
 
     val specimenIds = resolveSpecimenIds(row);
-    outputRows.addAll(convertSupplementalDonorSpecimenType(row, DownloadDataType.BIOMARKER, specimenIds));
-    outputRows.addAll(convertSupplementalDonorSpecimenType(row, DownloadDataType.SURGERY, specimenIds));
+    outputRows.addAll(convertSupplementalDonorSpecimenType(row, DownloadDataType.DONOR_BIOMARKER, specimenIds));
+    outputRows.addAll(convertSupplementalDonorSpecimenType(row, DownloadDataType.DONOR_SURGERY, specimenIds));
 
     return outputRows.build();
   }
@@ -183,7 +183,7 @@ public class ClinicalRecordConverter implements RecordConverter, PairFlatMapFunc
     val key = getKey(row, dataType);
 
     val donorRetainFields = Lists.newArrayList(DONOR_FIELDS);
-    val unwindFieldName = dataType.getId();
+    val unwindFieldName = resolveDonorNestedPath(dataType);
     donorRetainFields.add(unwindFieldName);
 
     val refinedDonor = row.deepCopy().retain(donorRetainFields);
