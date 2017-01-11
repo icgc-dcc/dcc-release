@@ -62,14 +62,17 @@ import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_VERIFICATION
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.getTestedTypeCountFieldName;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.val;
+
+import org.icgc.dcc.common.core.model.FieldNames;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.val;
 
 /**
  * Static accessor methods for dynamic collection objects.
@@ -227,6 +230,10 @@ public final class CollectionFieldAccessors {
 
   public static void setObservationProject(@NonNull ObjectNode observation, @NonNull ObjectNode project) {
     observation.set(OBSERVATION_PROJECT, project);
+  }
+
+  public static void setMutationObservationProject(@NonNull ObjectNode observation, @NonNull ObjectNode project) {
+    observation.set(FieldNames.MUTATION_OBSERVATION_PROJECT, project);
   }
 
   public static void setObservationDonor(@NonNull ObjectNode observation, @NonNull ObjectNode donor) {
