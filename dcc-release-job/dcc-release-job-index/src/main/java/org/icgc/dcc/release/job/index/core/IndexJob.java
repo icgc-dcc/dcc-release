@@ -32,13 +32,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import lombok.Cleanup;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -57,6 +50,13 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+
+import lombok.Cleanup;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -120,9 +120,13 @@ public class IndexJob extends GenericJob {
     indexService.reportIndex(indexName);
 
     // Compact
-    log.info("Optimizing index...");
-    indexService.optimizeIndex(indexName);
-    indexService.optimizeForSearching(indexName);
+    if (properties.isForceMerge()) {
+      log.info("Optimizing index...");
+      indexService.optimizeIndex(indexName);
+      indexService.optimizeForSearching(indexName);
+    } else {
+      log.info("Skipping optimizing index step...");
+    }
 
     // Freeze
     log.info("Freezing index...");

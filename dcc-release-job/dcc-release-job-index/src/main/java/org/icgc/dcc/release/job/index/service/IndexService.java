@@ -293,6 +293,7 @@ public class IndexService implements Closeable {
         .actionGet();
   }
 
+  @SuppressWarnings("unused")
   private void setClusterSettings(Map<String, Object> settings) {
     getClusterClient()
         .prepareUpdateSettings()
