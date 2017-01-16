@@ -17,23 +17,22 @@
  */
 package org.icgc.dcc.release.job.document.transform;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.NonNull;
+import lombok.val;
+import org.apache.spark.api.java.function.Function;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_DISPLAY_NAME;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_PRIMARY_SITE;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_TUMOUR_SUBTYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_TUMOUR_TYPE;
-import lombok.NonNull;
-import lombok.val;
-
-import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
+import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * {@link DocumentTransform} implementation that creates a project document.
@@ -63,7 +62,10 @@ public class ProjectTextDocumentTransform implements DocumentTransform, Function
     project.set("tumourSubtype", project.remove(PROJECT_TUMOUR_SUBTYPE));
     project.put("type", "project");
 
-    return new Document(context.getType(), projectId, project);
+    val projectText = MAPPER.createObjectNode();
+    projectText.set("project-text", project);
+
+    return new Document(context.getType(), projectId, projectText);
   }
 
 }

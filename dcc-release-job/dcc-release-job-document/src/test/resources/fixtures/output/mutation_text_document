@@ -1,2 +1,2 @@
-{"mutation":"chr3:g.77299437G>A","id":"MU2","geneMutations":["5S_rRNA L412L"],"type":"mutation","mutation_text_chromosome_start":"77299437"}
-{"mutation":"chr3:g.77299437G>A","id":"MU1","geneMutations":[],"type":"mutation","mutation_text_chromosome_start":"77299437"}
+{"mutation-text":{"mutation":"chr3:g.77299437G>A","id":"MU2","geneMutations":["5S_rRNA L412L"],"type":"mutation","mutation_text_chromosome_start":"77299437"}}
+{"mutation-text":{"mutation":"chr3:g.77299437G>A","id":"MU1","geneMutations":[],"type":"mutation","mutation_text_chromosome_start":"77299437"}}

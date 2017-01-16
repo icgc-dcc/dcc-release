@@ -17,36 +17,34 @@
  */
 package org.icgc.dcc.release.job.document.transform;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import static com.google.common.base.Objects.firstNonNull;
+import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import org.apache.spark.api.java.function.Function;
 import static org.icgc.dcc.common.core.model.FieldNames.CONSEQUENCE_AA_MUTATION;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SYMBOL;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_CHROMOSOME;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_CHROMOSOME_START;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_ID;
+import org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames;
+import org.icgc.dcc.release.core.document.Document;
+import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
+import org.icgc.dcc.release.job.document.context.MutationCentricDocumentContext;
+import org.icgc.dcc.release.job.document.core.DocumentContext;
+import org.icgc.dcc.release.job.document.core.DocumentJobContext;
+import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationId;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequenceGeneId;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequences;
 import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.createFakeGene;
 import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-
-import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames;
-import org.icgc.dcc.release.core.document.Document;
-import org.icgc.dcc.release.job.document.context.MutationCentricDocumentContext;
-import org.icgc.dcc.release.job.document.core.DocumentContext;
-import org.icgc.dcc.release.job.document.core.DocumentJobContext;
-import org.icgc.dcc.release.job.document.core.DocumentTransform;
-
 import scala.Tuple2;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
-import com.google.common.collect.Sets;
 
 /**
  * {@link DocumentTransform} implementation that creates a mutation document.
@@ -113,7 +111,10 @@ public class MutationTextDocumentTransform implements DocumentTransform,
     mutation.remove(MUTATION_CHROMOSOME);
     mutation.remove(MUTATION_CHROMOSOME_START);
 
-    return new Document(context.getType(), mutationId, mutation);
+    val mutationText = MAPPER.createObjectNode();
+    mutationText.set("mutation-text", mutation);
+
+    return new Document(context.getType(), mutationId, mutationText);
   }
 
   private String formatMutationString(String chromosome, String chromosomeStart, String mutation) {
