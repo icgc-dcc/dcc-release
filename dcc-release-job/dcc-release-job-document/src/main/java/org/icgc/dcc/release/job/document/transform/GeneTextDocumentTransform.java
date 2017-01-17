@@ -76,7 +76,7 @@ public class GeneTextDocumentTransform implements DocumentTransform, Function<Ob
     gene.remove(GENE_ID);
 
     val geneText = MAPPER.createObjectNode();
-    geneText.set("gene-text", gene);
+    geneText.set("text", gene);
 
     return new Document(context.getType(), geneId, geneText);
   }

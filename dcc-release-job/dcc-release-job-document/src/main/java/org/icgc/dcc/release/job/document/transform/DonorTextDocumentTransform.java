@@ -17,13 +17,6 @@
  */
 package org.icgc.dcc.release.job.document.transform;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import lombok.NonNull;
-import lombok.val;
-import org.apache.spark.api.java.function.Function;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE;
@@ -31,14 +24,24 @@ import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE_ANALYZED_SA
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SAMPLE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN;
 import static org.icgc.dcc.common.core.model.FieldNames.DONOR_SPECIMEN_ID;
+import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
+import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorId;
+
+import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
-import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorId;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
+import lombok.NonNull;
+import lombok.val;
 
 /**
  * {@link DocumentTransform} implementation that creates a donor document.
@@ -104,7 +107,7 @@ public class DonorTextDocumentTransform implements DocumentTransform, Function<O
     donor.remove(DONOR_SPECIMEN);
 
     val donorText = MAPPER.createObjectNode();
-    donorText.set("donor-text", donor);
+    donorText.set("text", donor);
 
     return new Document(context.getType(), donorId, donorText);
   }

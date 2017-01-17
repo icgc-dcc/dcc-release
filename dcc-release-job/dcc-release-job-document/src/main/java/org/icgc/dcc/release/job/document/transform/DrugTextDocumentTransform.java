@@ -17,26 +17,29 @@
  */
 package org.icgc.dcc.release.job.document.transform;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import static com.google.common.base.Objects.firstNonNull;
-import com.google.common.collect.Sets;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.apache.spark.api.java.function.Function;
 import static org.icgc.dcc.common.core.model.FieldNames.DRUG_ID;
 import static org.icgc.dcc.common.core.util.Separators.EMPTY_STRING;
-import org.icgc.dcc.release.core.document.Document;
-import org.icgc.dcc.release.core.document.DocumentType;
 import static org.icgc.dcc.release.core.document.DocumentType.DRUG_TEXT_TYPE;
 import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
+
+import java.util.Collection;
+
+import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;
 
-import java.util.Collection;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
+
+import lombok.NonNull;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DrugTextDocumentTransform implements DocumentTransform, Function<ObjectNode, Document> {
@@ -66,7 +69,7 @@ public class DrugTextDocumentTransform implements DocumentTransform, Function<Ob
     log.debug("[{}] Transformed external references. Final document: {}", id, drug);
 
     val drugText = MAPPER.createObjectNode();
-    drugText.set("drug-text", drug);
+    drugText.set("text", drug);
 
     return new Document(DRUG_TEXT_TYPE, id, drugText);
   }
