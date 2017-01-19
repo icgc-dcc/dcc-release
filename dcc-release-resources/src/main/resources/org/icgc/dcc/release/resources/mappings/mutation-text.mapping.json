@@ -32,11 +32,16 @@
       }
     ],
     "properties": {
-      "type": {
-        "type": "keyword"
-      },
-      "mutation_text_chromosome_start": {
-        "type": "keyword"
+      "text": {
+        "properties": {
+          "type": {
+            "index": "not_analyzed",
+            "type": "keyword"
+          },
+          "mutation_text_chromosome_start": {
+	        "type": "keyword"
+	      }
+        }
       }
     }
   }

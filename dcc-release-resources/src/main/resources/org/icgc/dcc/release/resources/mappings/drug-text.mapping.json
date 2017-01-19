@@ -30,6 +30,16 @@
           }
         }
       }
-    ]
+    ],
+    "properties": {
+      "text": {
+        "properties": {
+          "type": {
+            "index": "not_analyzed",
+            "type": "keyword"
+          }
+        }
+      }
+    }
   }
 }

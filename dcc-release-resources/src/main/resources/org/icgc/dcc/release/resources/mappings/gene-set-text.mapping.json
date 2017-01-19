@@ -32,8 +32,13 @@
       }
     ],
     "properties": {
-      "type": {
-        "type": "keyword"
+      "text": {
+        "properties": {
+          "type": {
+            "index": "not_analyzed",
+            "type": "keyword"
+          }
+        }
       }
     }
   }
