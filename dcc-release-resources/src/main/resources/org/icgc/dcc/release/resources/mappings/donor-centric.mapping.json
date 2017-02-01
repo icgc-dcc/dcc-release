@@ -4,7 +4,7 @@
       "excludes": ["gene.*"]
     },
     "_all":{
-      "enabled":"false"
+      "enabled":false
     },
     "dynamic_templates":[
       {
@@ -12,12 +12,12 @@
           "match":"*",
           "match_mapping_type":"string",
           "mapping":{
-            "index":"not_analyzed"
+            "type": "keyword"
           }
         }
       }
     ],
-    "date_detection":"false",
+    "date_detection":false,
     "properties":{
       "gene":{
         "type":"nested",
@@ -42,16 +42,7 @@
             }
           }
         }
-      },
-      "project":{
-        "properties":{
-          "project_name":{
-            "type":"string",
-            "store":"yes",
-            "index":"not_analyzed"
-          }
-        }
-      }      
+      }    
     }
   }
 }

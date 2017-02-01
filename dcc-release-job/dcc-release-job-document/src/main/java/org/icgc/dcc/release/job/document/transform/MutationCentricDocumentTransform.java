@@ -48,8 +48,8 @@ import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.g
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequences;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationDonorId;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getTranscriptId;
+import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.setMutationObservationProject;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.setObservationDonor;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.setObservationProject;
 import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_TRANSCRIPT_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.createFakeGene;
@@ -59,10 +59,6 @@ import static org.icgc.dcc.release.job.document.util.JsonNodes.defaultObject;
 
 import java.util.List;
 import java.util.TreeMap;
-
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.BusinessKeys;
@@ -74,11 +70,14 @@ import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import org.icgc.dcc.release.job.document.util.Fakes;
 
-import scala.Tuple2;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
+
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import scala.Tuple2;
 
 /**
  * {@link DocumentTransform} implementation that creates a nested mutation-centric document:
@@ -182,7 +181,7 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
       // Embed project
       val mutationObservationProjectId = getDonorProjectId(mutationObservationDonor);
       val mutationObservationProject = context.getProject(mutationObservationProjectId);
-      setObservationProject(mutationObservation, mutationObservationProject);
+      setMutationObservationProject(mutationObservation, mutationObservationProject);
 
       /**
        * Observation: {@code mutation.ssm_occurrence.$}(s).
@@ -237,8 +236,8 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     for (val transcriptEntry : mutationTranscriptMap.entrySet()) {
       val transcriptId = transcriptEntry.getKey();
       // Resolve or create fake transcript
-      val transcript = Fakes.isFakeTranscriptId(transcriptId) ?
-          Fakes.createFakeTranscript() : transcriptEntry.getValue();
+      val transcript =
+          Fakes.isFakeTranscriptId(transcriptId) ? Fakes.createFakeTranscript() : transcriptEntry.getValue();
 
       // Resolve children
       val gene = mutationTranscriptGeneMap.get(transcriptId);

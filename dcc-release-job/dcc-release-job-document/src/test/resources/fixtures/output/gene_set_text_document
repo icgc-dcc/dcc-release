@@ -1,3 +1,3 @@
-{"id":"GS2","name":"DCC mediated attractive signaling","source":"Reactome","type":"pathway"}
-{"id":"GS1","name":"Cancer Gene Census","source":"COSMIC - Sanger","type":"go_term"}
-{"id":"GS3","name":"DCC mediated attractive signaling","source":"Reactome","type":"go_term","altIds":[]}
+{"text":{"id":"GS2","name":"DCC mediated attractive signaling","source":"Reactome","type":"pathway"}}
+{"text":{"id":"GS1","name":"Cancer Gene Census","source":"COSMIC - Sanger","type":"go_term"}}
+{"text":{"id":"GS3","name":"DCC mediated attractive signaling","source":"Reactome","type":"go_term","altIds":[]}}

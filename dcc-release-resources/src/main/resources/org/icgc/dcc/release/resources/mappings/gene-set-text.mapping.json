@@ -1,85 +1,42 @@
 {
   "gene-set-text": {
     "_all": {
-      "enabled": "false"
+      "enabled": false
     },
-    "_source": {
-    },
-    "date_detection": "false",
+    "date_detection": false,
     "dynamic_templates": [
       {
         "template_1": {
+          "match_mapping_type": "string",
           "mapping": {
-            "index": "not_analyzed"
-          },
-          "match": "*",
-          "match_mapping_type": "string"
+            "fields": {
+              "analyzed": {
+                "analyzer": "id_index",
+                "search_analyzer": "id_search",
+                "type": "text"
+              },
+              "raw": {
+                "store": true,
+                "type": "keyword"
+              },
+              "search": {
+                "analyzer": "id_search",
+                "type": "text"
+              }
+            },
+            "index": false,
+            "store": false,
+            "type": "keyword"
+          }
         }
       }
     ],
     "properties": {
-      "id": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
+      "text": {
+        "properties": {
+          "type": {
             "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "string"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "string"
-          }
-        }
-      },
-      "altIds": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "string"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "string"
-          }
-        }
-      },
-
-
-      "name": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "string"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "string"
+            "type": "keyword"
           }
         }
       }

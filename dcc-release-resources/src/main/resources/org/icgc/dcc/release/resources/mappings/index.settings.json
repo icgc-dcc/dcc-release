@@ -1,8 +1,6 @@
 {
-  "index.store.compress.stored":true,
-  "index.store.compress.tv":true,
   "index.number_of_shards":15,
-  "index.cache.query.enable":true,
+  "index.max_result_window":60000000,
   "analysis":{
     "analyzer":{
       "id_search":{

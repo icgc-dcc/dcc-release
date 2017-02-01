@@ -22,9 +22,9 @@ import static java.util.regex.Pattern.compile;
 import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.checkExistence;
 import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.getInputStream;
 import static org.icgc.dcc.common.hadoop.fs.HadoopUtils.lsFile;
-import static org.icgc.dcc.release.core.document.DocumentType.DONOR_CENTRIC_TYPE;
 import static org.icgc.dcc.release.core.util.JacksonFactory.SMILE_READER;
 import static org.icgc.dcc.release.job.index.io.DocumentWriterFactory.createDocumentWriter;
+import static org.icgc.dcc.release.job.index.utils.Documents.convertDocument;
 import static org.icgc.dcc.release.job.index.utils.IndexTasks.getBigFilesPath;
 import static org.icgc.dcc.release.job.index.utils.IndexTasks.getDocumentTypeFromFileName;
 import static org.icgc.dcc.release.job.index.utils.IndexTasks.getIdFromFileName;
@@ -68,14 +68,14 @@ public class IndexBigFilesTask extends GenericTask {
 
     val indexName = getIndexName(taskContext.getJobContext().getReleaseName());
     @Cleanup
-    val documentWriter = createDocumentWriter(esUri, indexName, DONOR_CENTRIC_TYPE);
+    val documentWriter = createDocumentWriter(esUri, indexName);
 
     int loadedDocsCount = 0;
     for (val file : files) {
       val document = createDocument(taskContext.getFileSystem(), file);
       log.info("[{}/{}] Loading document {} to {} index type...", ++loadedDocsCount, files.size(), document.getId(),
           document.getType().getName());
-      documentWriter.write(document);
+      documentWriter.write(convertDocument(document));
     }
   }
 

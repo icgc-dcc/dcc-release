@@ -22,8 +22,8 @@ import static com.google.common.collect.ImmutableSet.copyOf;
 import static com.google.common.collect.Sets.difference;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
+import static org.icgc.dcc.dcc.common.es.TransportClientFactory.createClient;
 import static org.icgc.dcc.release.core.document.DocumentType.DONOR_CENTRIC_TYPE;
-import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newTransportClient;
 import static org.icgc.dcc.release.job.index.utils.IndexTasks.getBigFilesPath;
 import static org.icgc.dcc.release.job.index.utils.IndexTasks.getEsExportPath;
 import static org.icgc.dcc.release.job.index.utils.IndexTasks.getIndexName;
@@ -31,13 +31,6 @@ import static org.icgc.dcc.release.job.index.utils.IndexTasks.getIndexName;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-
-import lombok.Cleanup;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.job.GenericJob;
@@ -57,6 +50,13 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+
+import lombok.Cleanup;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -95,7 +95,7 @@ public class IndexJob extends GenericJob {
     }
 
     @Cleanup
-    val client = newTransportClient(properties.getEsUri());
+    val client = createClient(properties.getEsUri(), false);
     @Cleanup
     val indexService = new IndexService(client);
 
@@ -120,9 +120,13 @@ public class IndexJob extends GenericJob {
     indexService.reportIndex(indexName);
 
     // Compact
-    log.info("Optimizing index...");
-    indexService.optimizeIndex(indexName);
-    indexService.optimizeForSearching(indexName);
+    if (properties.isForceMerge()) {
+      log.info("Optimizing index...");
+      indexService.optimizeIndex(indexName);
+      indexService.optimizeForSearching(indexName);
+    } else {
+      log.info("Skipping optimizing index step...");
+    }
 
     // Freeze
     log.info("Freezing index...");

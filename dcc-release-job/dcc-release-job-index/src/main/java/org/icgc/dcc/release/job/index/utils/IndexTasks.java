@@ -56,8 +56,8 @@ public final class IndexTasks {
     return new Path(getEsExportDir(workingDir));
   }
 
-  public static String getBigFileName(@NonNull DocumentType documentType, @NonNull String id) {
-    return documentType.getName() + UNDERSCORE + id + GZIP_EXTENSION;
+  public static String getBigFileName(@NonNull String indexName, @NonNull String id) {
+    return indexName + UNDERSCORE + id + GZIP_EXTENSION;
   }
 
   public static String getIndexName(@NonNull String releaseName) {

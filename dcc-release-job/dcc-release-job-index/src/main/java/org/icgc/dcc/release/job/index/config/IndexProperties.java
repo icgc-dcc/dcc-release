@@ -67,4 +67,9 @@ public class IndexProperties {
    */
   boolean indexDocuments = true;
 
+  /**
+   * Whether to optimize the Elasticsearch index after indexing is completed.
+   */
+  boolean forceMerge = true;
+
 }

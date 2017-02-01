@@ -19,7 +19,7 @@ package org.icgc.dcc.release.job.index.core;
 
 import static com.google.common.base.Preconditions.checkState;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.icgc.dcc.release.job.index.factory.TransportClientFactory.newTransportClient;
+import static org.icgc.dcc.dcc.common.es.TransportClientFactory.createClient;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
@@ -29,9 +29,8 @@ import java.util.Optional;
 
 import lombok.val;
 
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.document.DocumentType;
@@ -52,7 +51,7 @@ import com.google.common.collect.Table;
 public class IndexJobTest extends AbstractJobTest {
 
   private static final String PROJECT = "BRCA-UK";
-  private static final String ES_URI = "es://localhost:9300";
+  private static final String ES_URI = "es://10.30.129.4:9300";
 
   /**
    * Class under test.
@@ -71,7 +70,7 @@ public class IndexJobTest extends AbstractJobTest {
 
     this.job = new IndexJob(properties);
     this.index = IndexTasks.getIndexName(RELEASE_VERSION);
-    this.esClient = newTransportClient(ES_URI);
+    this.esClient = createClient(ES_URI, false);
     cleanUpIndex(esClient, index);
   }
 
@@ -103,11 +102,8 @@ public class IndexJobTest extends AbstractJobTest {
   }
 
   private void verifyDrugSets(DocumentType type, String field, Optional<String> path, long expectedDocuments) {
-    val existsFilter = FilterBuilders.existsFilter(field);
-    // Can't use val here. Lombok fails to infer the type correctly
-    QueryBuilder query = path.isPresent() ?
-        QueryBuilders.nestedQuery(path.get(), existsFilter) :
-        QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), existsFilter);
+    val existsQuery = QueryBuilders.existsQuery(field);
+    val query = path.isPresent() ? QueryBuilders.nestedQuery(path.get(), existsQuery, ScoreMode.Avg) : existsQuery;
 
     val hits = esClient.prepareSearch(index)
         .setTypes(type.getName())
@@ -191,7 +187,7 @@ public class IndexJobTest extends AbstractJobTest {
         .prepareSearch(index)
         // .setTypes(DocumentType.DONOR_TYPE.getName())
         .setTypes("donor")
-        .setPostFilter(FilterBuilders.existsFilter("project"))
+        .setPostFilter(QueryBuilders.existsQuery("project"))
         .execute().actionGet().getHits().getTotalHits();
     assertThat(donorsWithProjectCount).isEqualTo(3L);
   }

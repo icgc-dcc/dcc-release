@@ -81,4 +81,10 @@ public class FieldNames {
 
   }
 
+  public static class DocumentFieldNames {
+
+    public static final String GENE_SET_PATHWAY = "gene_set_pathway";
+
+  }
+
 }

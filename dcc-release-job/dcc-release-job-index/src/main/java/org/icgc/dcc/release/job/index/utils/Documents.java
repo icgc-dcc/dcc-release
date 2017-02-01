@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,19 +15,23 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.core.document;
+package org.icgc.dcc.release.job.index.utils;
 
-import java.io.Closeable;
-import java.io.IOException;
+import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-/**
- * Abstract document output writer contract.
- */
-public interface DocumentWriter extends Closeable {
+import org.icgc.dcc.dcc.common.es.model.IndexDocument;
+import org.icgc.dcc.release.core.document.Document;
 
-  void write(Document document) throws IOException;
+@NoArgsConstructor(access = PRIVATE)
+public final class Documents {
 
-  @Override
-  void close() throws IOException;
+  public static IndexDocument convertDocument(@NonNull Document document) {
+    return new IndexDocument(
+        document.getId(),
+        document.getSource(),
+        document.getType()::getName);
+  }
 
 }

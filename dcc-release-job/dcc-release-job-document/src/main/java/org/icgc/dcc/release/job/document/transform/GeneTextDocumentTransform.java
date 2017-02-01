@@ -18,8 +18,7 @@
 package org.icgc.dcc.release.job.document.transform;
 
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
-import lombok.NonNull;
-import lombok.val;
+import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.document.Document;
@@ -30,6 +29,9 @@ import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import lombok.NonNull;
+import lombok.val;
 
 /**
  * {@link DocumentTransform} implementation that creates a gene document.
@@ -72,7 +74,11 @@ public class GeneTextDocumentTransform implements DocumentTransform, Function<Ob
 
     gene.remove("external_db_ids");
     gene.remove(GENE_ID);
-    return new Document(context.getType(), geneId, gene);
+
+    val geneText = MAPPER.createObjectNode();
+    geneText.set("text", gene);
+
+    return new Document(context.getType(), geneId, geneText);
   }
 
 }

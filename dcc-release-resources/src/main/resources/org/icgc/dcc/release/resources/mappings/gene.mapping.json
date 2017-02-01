@@ -1,11 +1,9 @@
 {
   "gene":{
-    "enabled":"false",
-    "_source":{
-    },
+    "enabled":false,
     "_all":{
-      "enabled":"false"
+      "enabled":false
     },
-    "date_detection":"false"
+    "date_detection":false
   }
 }

@@ -17,8 +17,7 @@
  */
 package org.icgc.dcc.release.job.document.transform;
 
-import lombok.NonNull;
-import lombok.val;
+import static org.icgc.dcc.release.core.util.ObjectNodes.MAPPER;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.document.Document;
@@ -29,6 +28,9 @@ import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import lombok.NonNull;
+import lombok.val;
 
 public class GeneSetTextDocumentTransform implements DocumentTransform, Function<ObjectNode, Document> {
 
@@ -58,7 +60,10 @@ public class GeneSetTextDocumentTransform implements DocumentTransform, Function
       geneSet.remove("go_term");
     }
 
-    return new Document(type, id, geneSet);
+    val geneSetText = MAPPER.createObjectNode();
+    geneSetText.set("text", geneSet);
+
+    return new Document(type, id, geneSetText);
   }
 
 }

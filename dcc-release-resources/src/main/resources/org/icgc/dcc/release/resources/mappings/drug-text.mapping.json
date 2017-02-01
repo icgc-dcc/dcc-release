@@ -1,141 +1,42 @@
 {
   "drug-text": {
     "_all": {
-      "enabled": "false"
+      "enabled": false
     },
-    "_source": {
-    },
-    "date_detection": "false",
+    "date_detection": false,
     "dynamic_templates": [
       {
         "template_1": {
+          "match_mapping_type":"string",
           "mapping": {
-            "type": "multi_field",
             "fields": {
+              "analyzed": {
+                "analyzer": "id_index",
+                "search_analyzer": "id_search",
+                "type": "text"
+              },
               "raw": {
-                "index": "not_analyzed",
-                "store": "yes",
-                "type": "string"
+                "store": true,
+                "type": "keyword"
               },
               "search": {
-                "index": "analyzed",
                 "analyzer": "id_search",
-                "type": "string"
+                "type": "text"
               }
-            }
-          },
-          "match": "*",
-          "match_mapping_type": "string"
+            },
+            "index": false,
+            "store": false,
+            "type": "keyword"
+          }
         }
       }
     ],
     "properties": {
-      "drug_class": {
-        "index": "not_analyzed",
-        "type": "string"
-      },
-      "name": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
+      "text": {
+        "properties": {
+          "type": {
             "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "string"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "string"
-          }
-        }
-      },
-      "synonyms": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "string"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "string"
-          }
-        }
-      },
-      "atc_codes_description": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "string"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "string"
-          }
-        }
-      },
-      "trials_description": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "string"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "string"
-          }
-        }
-      },
-      "trials_conditions_name": {
-        "type": "multi_field",
-        "fields": {
-          "raw": {
-            "index": "not_analyzed",
-            "store": "yes",
-            "type": "string"
-          },
-          "analyzed": {
-            "index": "analyzed",
-            "index_analyzer": "id_index",
-            "search_analyzer": "id_search",
-            "type": "string"
-          },
-          "search": {
-            "index": "analyzed",
-            "analyzer": "id_search",
-            "type": "string"
+            "type": "keyword"
           }
         }
       }
