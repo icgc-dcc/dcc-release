@@ -17,31 +17,28 @@
  */
 package org.icgc.dcc.release.job.annotate.function;
 
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MUTATION;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_VARIANT_ALLELE;
-import static org.icgc.dcc.release.core.util.Mutations.createMutation;
-import static org.icgc.dcc.release.job.annotate.model.AnnotatedFileType.SSM;
-
-import java.util.Iterator;
-import java.util.List;
-
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
-
+import lombok.val;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.icgc.dcc.common.core.json.Jackson;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_MUTATION;
+import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_OBSERVATION_VARIANT_ALLELE;
 import org.icgc.dcc.release.core.config.SnpEffProperties;
+import static org.icgc.dcc.release.core.util.Mutations.createMutation;
 import org.icgc.dcc.release.job.annotate.converter.ICGCToVCFConverter.MutationType;
 import org.icgc.dcc.release.job.annotate.converter.SecondaryObjectNodeConverter;
 import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
+import static org.icgc.dcc.release.job.annotate.model.AnnotatedFileType.SSM;
 import org.icgc.dcc.release.job.annotate.model.SecondaryEntity;
 import org.icgc.dcc.release.job.annotate.snpeff.SnpEffPredictor;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
+import java.util.Iterator;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor

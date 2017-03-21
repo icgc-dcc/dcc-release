@@ -84,6 +84,8 @@ public class ObservationJoinTask extends GenericTask {
     val primary = parseSsmP(taskContext)
         .mapToPair(o -> tuple(o.getObservation_id(), o));
 
+    val poo = primary.collectAsMap();
+
     val primaryPartitions = getPartitionsCount(primary);
     primary.persist(StorageLevel.MEMORY_ONLY_SER());
 
@@ -96,6 +98,7 @@ public class ObservationJoinTask extends GenericTask {
 
     // Join SSM
     val ssm = join(donorSamples, sampleToSurrogageSampleId, primary, consequences, metaPairsBroadcast);
+    val doodoo = ssm.collect();
     writeSsm(taskContext, ssm);
 
     // Join Observations

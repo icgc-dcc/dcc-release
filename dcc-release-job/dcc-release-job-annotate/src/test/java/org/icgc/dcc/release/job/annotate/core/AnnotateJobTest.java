@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import org.icgc.dcc.release.core.config.SnpEffProperties;
@@ -33,6 +34,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+@Slf4j
 public class AnnotateJobTest extends AbstractJobTest {
 
   /**
@@ -63,6 +65,9 @@ public class AnnotateJobTest extends AbstractJobTest {
     assertThat(ssmResults).hasSize(4);
     verifyResults(ssmResults, FileType.SSM);
 
+    val ssmPrimaryResults = produces(PROJECT_NAME, FileType.SSM_P_MASKED);
+    log.info("ssm_p_masked results: {}", ssmPrimaryResults.toString());
+
     val sgvResults = produces(PROJECT_NAME, FileType.SGV_S);
     assertThat(sgvResults).hasSize(9);
     verifyResults(sgvResults, FileType.SGV);
@@ -85,6 +90,7 @@ public class AnnotateJobTest extends AbstractJobTest {
       assertThat(result.get("aa_change").isNull()).isTrue();
       assertThat(result.get("cds_change").isNull()).isTrue();
     } else {
+      log.info("Resulting Object Node: {}", result.toString());
       assertThat(result.get("aa_mutation").isNull()).isTrue();
       assertThat(result.get("cds_mutation").isNull()).isTrue();
     }
