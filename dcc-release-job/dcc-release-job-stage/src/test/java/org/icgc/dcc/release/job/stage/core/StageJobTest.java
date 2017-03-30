@@ -20,10 +20,10 @@ package org.icgc.dcc.release.job.stage.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
 
+import java.util.Arrays;
 import java.util.List;
 
-import lombok.val;
-
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
 import org.icgc.dcc.release.core.job.DefaultJobContext;
@@ -38,12 +38,17 @@ import org.icgc.dcc.release.test.util.SubmissionFiles;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 
+import lombok.val;
+
 public class StageJobTest extends AbstractJobTest {
 
-  private static final List<String> PROJECTS = ImmutableList.of("PROJ-01", "PROJ-02", "PROJ-03");
+  protected static final String PCAWG_TEST_FIXTURES_DIR = "src/test/resources/pcawg_fixtures";
+  private static final List<String> PROJECTS = ImmutableList.of("BOCA-UK", "BRCA-UK", "BTCA-SG", "EOPC-DE", "LAML-KR",
+      "LICA-FR", "LIRI-JP", "OV-AU", "PACA-AU", "PAEN-AU", "PRAD-CA", "PRAD-UK", "RECA-EU");
 
   SubmissionFileSystem submissionFileSystem;
 
@@ -65,20 +70,13 @@ public class StageJobTest extends AbstractJobTest {
     val jobContext = createJobContext();
     job.execute(jobContext);
 
-    assertProj1();
+    assertBocaUK();
   }
 
-  private void assertProj1() {
-    assertControlledFields();
-    assertSsm();
-  }
-
-  private void assertSsm() {
-    val ssms = produces("PROJ-01", FileType.SSM_P);
-    assertThat(ssms).hasSize(8);
-
+  private void assertSsm_p_nulls() {
+    val ssms = produces("BOCA-UK", FileType.SSM_P);
     for (val ssm : ssms) {
-      assertThat(ssm.get(PROJECT_ID).textValue()).isEqualTo("PROJ-01");
+
       assertThat(ssm.path(SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE).isMissingNode()).isFalse();
       assertThat(ssm.path(SubmissionFieldNames.SUBMISSION_OBSERVATION_CONTROL_GENOTYPE).isMissingNode()).isFalse();
       assertThat(ssm.path(SubmissionFieldNames.SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE).isMissingNode()).isFalse();
@@ -86,8 +84,61 @@ public class StageJobTest extends AbstractJobTest {
 
   }
 
+  private void assertSsm_p() {
+    val ssms = produces("BOCA-UK", FileType.SSM_P);
+    assertThat(ssms).hasSize(5007); // * from submission fixtures (3 + 1 + 4 + 4999)
+
+    for (val ssm : ssms) {
+      assertThat(ssm.get(PROJECT_ID).textValue()).isEqualTo("BOCA-UK");
+      assertThat(ssm.path(SubmissionFieldNames.SUBMISSION_OBSERVATION_MUTATED_FROM_ALLELE).isMissingNode()).isFalse();
+      assertThat(ssm.path(SubmissionFieldNames.SUBMISSION_OBSERVATION_CONTROL_GENOTYPE).isMissingNode()).isFalse();
+      assertThat(ssm.path(SubmissionFieldNames.SUBMISSION_OBSERVATION_TUMOUR_GENOTYPE).isMissingNode()).isFalse();
+    }
+  }
+
+  private void assertSsm_m() {
+    val ssms = produces("BOCA-UK", FileType.SSM_M);
+    assertThat(ssms).hasSize(131); // * from submission fixtures (1 + 1 + 1 + 128)
+  }
+
+  private void assertBocaUK() {
+    assertControlledFields();
+    assertSsm_p();
+    assertSsm_m();
+
+    assertFlagM();
+    assertFlagP();
+  }
+
+  private void assertFlagM() {
+    val ssms = produces("BOCA-UK", FileType.SSM_M);
+
+    for (val ssm : ssms) {
+      val node = ssm.get("pcawg_flag");
+      assertThat(node).isNotNull(); // JsonNode is present (but value is null) - if pcawg_flag was actually missing,
+                                    // node itself would be null
+    }
+    val counts = countFlags(ssms);
+    assertThat(counts.getLeft()).isEqualTo(3);
+    assertThat(counts.getRight()).isEqualTo(128);
+  }
+
+  private void assertFlagP() {
+    val ssms = produces("BOCA-UK", FileType.SSM_P);
+
+    for (val ssm : ssms) {
+      val node = ssm.get("pcawg_flag");
+      assertThat(node).isNotNull(); // JsonNode is present (but value is null) - if pcawg_flag was actually missing,
+                                    // node itself would be null
+    }
+    val counts = countFlags(ssms);
+
+    assertThat(counts.getLeft()).isEqualTo(8);
+    assertThat(counts.getRight()).isEqualTo(4999);
+  }
+
   private void assertControlledFields() {
-    val donors = produces("PROJ-01", FileType.DONOR);
+    val donors = produces("BOCA-UK", FileType.DONOR);
     for (val donor : donors) {
       assertThat(donor.path(" donor_region_of_residence").isMissingNode()).isTrue();
       assertThat(donor.path("donor_notes").isMissingNode()).isTrue();
@@ -95,16 +146,36 @@ public class StageJobTest extends AbstractJobTest {
   }
 
   private JobContext createJobContext() {
-    return new DefaultJobContext(JobType.STAGE, RELEASE_VERSION, PROJECTS, TEST_FIXTURES_DIR,
-        workingDir.toString(), resolveSubmissionFiles(), taskExecutor, false);
+    Table<String, String, List<Path>> submissionFiles = resolveSubmissionFiles();
+
+    val result = new DefaultJobContext(JobType.STAGE, RELEASE_VERSION, PROJECTS, Arrays.asList(TEST_FIXTURES_DIR),
+        workingDir.toString(), submissionFiles, taskExecutor, false);
+    return result;
+
   }
 
   private Table<String, String, List<Path>> resolveSubmissionFiles() {
     return new LazyTable<String, String, List<Path>>(() -> {
       List<SubmissionFileSchema> metadata = SubmissionFiles.getMetadata();
 
-      return submissionFileSystem.getFiles(TEST_FIXTURES_DIR, PROJECTS, metadata);
+      return submissionFileSystem.getFiles(Arrays.asList(TEST_FIXTURES_DIR, PCAWG_TEST_FIXTURES_DIR), PROJECTS,
+          metadata);
     });
+  }
+
+  private Pair<Integer, Integer> countFlags(List<ObjectNode> nodes) {
+    int submissionCount = 0;
+    int pcawgCount = 0;
+
+    for (val ssm : nodes) {
+      val node = ssm.get("pcawg_flag");
+      if (node.isNull()) {
+        submissionCount += 1;
+      } else if (node.textValue().equals("true")) {
+        pcawgCount += 1;
+      }
+    }
+    return Pair.of(submissionCount, pcawgCount);
   }
 
 }

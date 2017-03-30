@@ -89,10 +89,12 @@ public class ClientMain {
   }
 
   private static WorkflowContext createWorkflowContext(Options options) {
+    log.info("Building Workflow Context using options: {}", options);
     return new WorkflowContext(
         options.release,
         options.projectNames,
         options.releaseDir,
+        options.pcawgDir,
         options.stagingDir,
         options.jobs,
         options.compressOutput);

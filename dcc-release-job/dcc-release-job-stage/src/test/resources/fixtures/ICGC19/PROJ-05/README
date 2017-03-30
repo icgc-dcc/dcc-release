@@ -1,5 +1,0 @@
-# This project is used to exercise different types of submission validation errors
-ssm__dd__01__001__s__1__20130313.txt.bz2: COMPRESSION_CODEC_ERROR
-ssm__dd__01__001__m__1__20130313.txt: INVALID_CHARSET_ROW_ERROR
-ssm__dd__01__001__p__1__20130313.txt: STRUCTURALLY_INVALID_ROW_ERROR, INVALID_CHARSET_ROW_ERROR
-

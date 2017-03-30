@@ -1,0 +1,3 @@
+analysis_id	analyzed_sample_id	matched_sample_id	assembly_version	platform	experimental_protocol	base_calling_algorithm	alignment_algorithm	variation_calling_algorithm	other_analysis_algorithm	sequencing_strategy	seq_coverage	raw_data_repository	raw_data_accession
+CGP_analysis_18	00301	-888	1	60	-888	-888	BWA http://bio-bwa.sourceforge.net	Brass http://www.nature.com/ng/journal/v45/n8/full/ng.2668.html#ref23	-888	3	-888	1	EGAD00001000358
+CGP_analysis_18	00312	-888	1	60	-888	-888	BWA http://bio-bwa.sourceforge.net	Brass http://www.nature.com/ng/journal/v45/n8/full/ng.2668.html#ref23	-888	3	-888	1	EGAD00001000358

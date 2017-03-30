@@ -19,6 +19,7 @@ package org.icgc.dcc.release.core.task;
 
 import static org.icgc.dcc.release.core.task.TaskType.FILE_TYPE;
 
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 
 import lombok.val;
@@ -47,9 +48,14 @@ public class TaskExecutorTest {
 
   @Test
   public void testExecute() {
-    val jobContext = new DefaultJobContext(
-        JobType.STAGE, "", ImmutableList.<String> of(), "", "", null,
-        new TaskExecutor(executorService, sparkContext, fileSystem), false);
+    val jobContext = new DefaultJobContext(JobType.STAGE,
+        "",
+        ImmutableList.<String> of(),
+        Arrays.asList(""),
+        "",
+        null,
+        new TaskExecutor(executorService, sparkContext, fileSystem),
+        false);
 
     jobContext.execute(
         task(() -> System.out.println("task 1")),

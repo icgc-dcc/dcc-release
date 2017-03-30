@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -193,7 +194,7 @@ public abstract class AbstractJobTest {
 
   @SuppressWarnings("unchecked")
   protected JobContext createJobContext(JobType type, List<String> projectNames) {
-    return new DefaultJobContext(type, RELEASE_VERSION, projectNames, "/dev/null",
+    return new DefaultJobContext(type, RELEASE_VERSION, projectNames, Arrays.asList("/dev/null"),
         workingDir.toString(), mock(Table.class), taskExecutor, false);
   }
 
@@ -220,17 +221,15 @@ public abstract class AbstractJobTest {
       checkState(fileTypeDirectory.mkdirs() == true, "Failed to create directory %s", fileTypeDirectory);
     }
 
-    val target = inputFile.isProjectPartitioned() ?
-        getProjectFileTypeDirectory(inputFile.getProjectName(), inputFile.getFileType()) :
-        getFileTypeFile(inputFile.getFileType());
+    val target = inputFile.isProjectPartitioned() ? getProjectFileTypeDirectory(inputFile.getProjectName(),
+        inputFile.getFileType()) : getFileTypeFile(inputFile.getFileType());
     if (!isPartFile(target) && !target.exists()) {
       checkState(target.mkdirs() == true, "Failed to create directory %s", target);
     }
 
     if (inputFile.isFile()) {
       val sourceFile = new File(inputFile.getPath());
-      val targetFile = !inputFile.hasFileName() || isPartFile(target) ?
-          target : new File(target, sourceFile.getName());
+      val targetFile = !inputFile.hasFileName() || isPartFile(target) ? target : new File(target, sourceFile.getName());
       TestFiles.writeInputFile(sourceFile, targetFile);
     } else {
       val targetFile = new File(target, "part-00000");
@@ -277,9 +276,8 @@ public abstract class AbstractJobTest {
 
   @SneakyThrows
   protected List<ObjectNode> produces(String projectName, FileType fileType) {
-    val file = projectName == null ?
-        getFileTypeDirectory(fileType) :
-        getProjectFileTypeDirectory(projectName, fileType);
+    val file =
+        projectName == null ? getFileTypeDirectory(fileType) : getProjectFileTypeDirectory(projectName, fileType);
 
     return TestFiles.readInputDirectory(file);
   }
@@ -322,8 +320,8 @@ public abstract class AbstractJobTest {
   protected void verifyResult(Optional<String> projectName, FileType fileType,
       Consumer<Entry<ObjectNode, ObjectNode>> resultComaparator) {
     val actualResult = projectName.isPresent() ? produces(projectName.get(), fileType) : produces(fileType);
-    val expectedResult = projectName.isPresent() ?
-        getExpectedJson(projectName.get(), fileType) : getExpectedJson(fileType);
+    val expectedResult =
+        projectName.isPresent() ? getExpectedJson(projectName.get(), fileType) : getExpectedJson(fileType);
     compareResults(actualResult, expectedResult, resultComaparator);
   }
 
@@ -365,9 +363,8 @@ public abstract class AbstractJobTest {
   }
 
   private static File resolveExpectedFile(String projectName, FileType fileType) {
-    val parentDir = projectName == null ?
-        new File(OUTPUT_TEST_FIXTURES_DIR) :
-        new File(OUTPUT_TEST_FIXTURES_DIR, Partitions.getPartitionName(projectName));
+    val parentDir = projectName == null ? new File(OUTPUT_TEST_FIXTURES_DIR) : new File(OUTPUT_TEST_FIXTURES_DIR,
+        Partitions.getPartitionName(projectName));
 
     return new File(parentDir, fileType.getDirName());
   }

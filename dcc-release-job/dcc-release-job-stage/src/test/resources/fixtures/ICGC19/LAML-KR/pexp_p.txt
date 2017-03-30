@@ -1,0 +1,7 @@
+analysis_id	analyzed_sample_id	antibody_id	gene_name	gene_stable_id	gene_build_version	normalized_expression_level	verification_status	verification_platform	biological_validation_status	biological_validation_platform
+1138	00301	Rad51	RAD51	-888	-888	-.0795800220000002	2	-888	2	-888
+1138	00301	Raf-B	BRAF	-888	-888	1.966985039	2	-888	2	-888
+1138	00301	Raptor	RPTOR	-888	-888	1.617252276	2	-888	2	-888
+1177	00312	Rad50	RAD50	-888	-888	1.440855212	2	-888	2	-888
+1177	00312	Rad51	RAD51	-888	-888	-.310960846	2	-888	2	-888
+1177	00312	Raf-B	BRAF	-888	-888	2.341977199	2	-888	2	-888

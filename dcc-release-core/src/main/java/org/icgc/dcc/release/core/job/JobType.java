@@ -21,9 +21,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collection;
 
-import lombok.val;
-
 import com.google.common.collect.ImmutableList;
+
+import lombok.val;
 
 public enum JobType {
 
