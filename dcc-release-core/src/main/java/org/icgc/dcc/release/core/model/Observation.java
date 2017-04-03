@@ -58,5 +58,6 @@ public class Observation implements Serializable {
   protected String variation_calling_algorithm;
   protected String verification_platform;
   protected String verification_status;
+  protected boolean pcawg_flag = false;
 
 }
