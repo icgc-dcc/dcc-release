@@ -57,54 +57,6 @@ public class SubmissionFileSystem {
 
   @NonNull
   @SneakyThrows
-  public Table<String, String, List<Path>> getPCAWGFiles(String releaseDir, List<String> projectNames,
-      List<SubmissionFileSchema> metadata) {
-    val watch = createStarted();
-    log.info("Resolving submission files...");
-
-    val table = TreeBasedTable.<String, String, List<Path>> create();
-    val iterator = fileSystem.listFiles(new Path(releaseDir), true);
-
-    SubmissionFileSchema mSchema = null;
-    SubmissionFileSchema pSchema = null;
-
-    // we're only interested in two schema's:
-    for (val schema : metadata) {
-      if (schema.getName().equalsIgnoreCase("ssm_m")) {
-        mSchema = extendSchema(schema);
-      } else if (schema.getName().equalsIgnoreCase("ssm_p")) {
-        pSchema = extendSchema(schema);
-      }
-    }
-
-    // for every file in the release dir
-    while (iterator.hasNext()) {
-      val status = iterator.next();
-      val path = status.getPath();
-
-      val name = path.getName();
-      if (name.matches(mSchema.getPattern())) {
-        addFile(projectNames, mSchema, path, table);
-      } else if (name.matches(pSchema.getPattern())) {
-        addFile(projectNames, pSchema, path, table);
-      }
-    }
-
-    log.info("Finished resolving submission files in {}", watch);
-    return table;
-  }
-
-  private SubmissionFileSchema extendSchema(SubmissionFileSchema schema) {
-    SubmissionFileField pcawgFlag = new SubmissionFileField("pcawg_flag", ValueType.TEXT, false, null);
-    List<SubmissionFileField> newFields = new ImmutableList.Builder<SubmissionFileField>()
-        .addAll(schema.getFields())
-        .add(pcawgFlag)
-        .build();
-    return new SubmissionFileSchema(schema.getName(), schema.getPattern(), newFields);
-  }
-
-  @NonNull
-  @SneakyThrows
   public Table<String, String, List<Path>> getFiles(String releaseDir, List<String> projectNames,
       List<SubmissionFileSchema> metadata) {
     return getFiles(Arrays.asList(releaseDir), projectNames, metadata);

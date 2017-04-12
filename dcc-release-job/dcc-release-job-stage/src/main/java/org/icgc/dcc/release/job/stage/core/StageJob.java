@@ -109,11 +109,11 @@ public class StageJob implements Job {
   }
 
   private SubmissionFileSchema decorateSchema(SubmissionFileSchema schema) {
-    SubmissionFileField pcawgFlag = new SubmissionFileField("pcawg_flag", ValueType.TEXT, false, null);
+    SubmissionFileField studyField = new SubmissionFileField("_study", ValueType.TEXT, false, null);
     // SubmissionFileField bonusFlag = new SubmissionFileField("bonus", ValueType.TEXT, false, null);
     List<SubmissionFileField> newFields = new ImmutableList.Builder<SubmissionFileField>()
         .addAll(schema.getFields())
-        .add(pcawgFlag)
+        .add(studyField)
         // .add(bonusFlag)
         .build();
     return new SubmissionFileSchema(schema.getName(), schema.getPattern(), newFields);

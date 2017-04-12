@@ -114,7 +114,7 @@ public class StageJobTest extends AbstractJobTest {
     val ssms = produces("BOCA-UK", FileType.SSM_M);
 
     for (val ssm : ssms) {
-      val node = ssm.get("pcawg_flag");
+      val node = ssm.get("_study");
       assertThat(node).isNotNull(); // JsonNode is present (but value is null) - if pcawg_flag was actually missing,
                                     // node itself would be null
     }
@@ -127,7 +127,7 @@ public class StageJobTest extends AbstractJobTest {
     val ssms = produces("BOCA-UK", FileType.SSM_P);
 
     for (val ssm : ssms) {
-      val node = ssm.get("pcawg_flag");
+      val node = ssm.get("_study");
       assertThat(node).isNotNull(); // JsonNode is present (but value is null) - if pcawg_flag was actually missing,
                                     // node itself would be null
     }
@@ -168,10 +168,10 @@ public class StageJobTest extends AbstractJobTest {
     int pcawgCount = 0;
 
     for (val ssm : nodes) {
-      val node = ssm.get("pcawg_flag");
+      val node = ssm.get("_study");
       if (node.isNull()) {
         submissionCount += 1;
-      } else if (node.textValue().equals("true")) {
+      } else if (node.textValue().equals("PCAWG")) {
         pcawgCount += 1;
       }
     }
