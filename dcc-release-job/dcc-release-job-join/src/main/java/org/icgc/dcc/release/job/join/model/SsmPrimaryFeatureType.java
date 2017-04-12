@@ -50,6 +50,6 @@ public class SsmPrimaryFeatureType implements Serializable {
   private String tumour_genotype;
   private String verification_platform;
   private String verification_status;
-  private boolean pcawg_flag = false;
+  private String _study;
 
 }

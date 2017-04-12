@@ -54,6 +54,8 @@ public class FunctionalImpactJobTest extends AbstractJobTest {
 
     val observations = produces(PROJECT_NAME, FileType.OBSERVATION_FI);
     assertThat(observations).isNotEmpty();
+    assertThat(observations.get(0).path("observation").path("study").isMissingNode());
+    assertThat(!observations.get(1).path("observation").path("study").isMissingNode());
   }
 
 }
