@@ -297,7 +297,8 @@ public final class DocumentTypes {
                         "chromosome_start",
                         "observation.platform",
                         "observation.sequencing_strategy",
-                        "observation.verification_status"
+                        "observation.verification_status",
+                        "observation._study"
                     )
             )
         );
@@ -383,7 +384,8 @@ public final class DocumentTypes {
                             "mutation_type",
                             "observation.platform",
                             "observation.sequencing_strategy",
-                            "observation.verification_status"
+                            "observation.verification_status",
+                            "observation._study"
                         )
                 )
                 .geneFields(
@@ -596,7 +598,8 @@ public final class DocumentTypes {
                             "consequence.functional_impact_prediction_summary",
                             "observation.platform",
                             "observation.sequencing_strategy",
-                            "observation.verification_status"
+                            "observation.verification_status",
+                            "observation._study"
                         )
                 )
                 .mutationFields(
