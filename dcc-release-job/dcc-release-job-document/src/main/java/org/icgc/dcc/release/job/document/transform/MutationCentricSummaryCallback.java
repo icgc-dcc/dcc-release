@@ -30,22 +30,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_SUMMARY_AFFECTE
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_SUMMARY_TESTED_DONOR_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_VALIDATION_STATUS;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_VERIFICATION_STATUS;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getConsequenceType;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationObservationDonor;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationObservationProject;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationOccurrences;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationTranscriptConsequence;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationTranscriptImpactPredictionSummary;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationTranscripts;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationIsAnnotated;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationPlatform;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationSequenceStrategy;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationValidationStatus;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationVerificationStatus;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getOccurrenceObservations;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getProjectId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getProjectTestedDonorSsmCount;
+import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.*;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.addAll;
 
 import java.util.Set;
@@ -63,6 +48,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.icgc.dcc.release.job.document.model.CollectionFieldAccessors;
 
 public class MutationCentricSummaryCallback implements DocumentCallback {
 
@@ -80,6 +66,7 @@ public class MutationCentricSummaryCallback implements DocumentCallback {
     val donorIds = newTreeSet();
     val projectIds = newTreeSet();
     val platforms = newTreeSet();
+    val studies = newTreeSet();
     val validationStatuses = newTreeSet();
     val verificationStatuses = newTreeSet();
     val sequencingStrategies = newTreeSet();
@@ -96,6 +83,12 @@ public class MutationCentricSummaryCallback implements DocumentCallback {
         val platform = getObservationPlatform(mutationObservation);
         if (platform != null) {
           platforms.add(platform);
+        }
+
+        // Collect studies
+        val study = getObservationStudy(mutationObservation);
+        if (study != null) {
+          studies.add(study);
         }
 
         // Collect validation statuses
@@ -147,6 +140,10 @@ public class MutationCentricSummaryCallback implements DocumentCallback {
 
     // Add unique value to top level for faceting
     addAll(mutation.withArray(MUTATION_PLATFORM), platforms);
+
+
+    // FIXME: factor out "_study" string to constant.
+    addAll(mutation.withArray("_study"), studies);
 
     /**
      * Verification Statuses: {@code mutation.verification_status}(s).
