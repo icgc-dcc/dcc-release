@@ -19,8 +19,10 @@ package org.icgc.dcc.release.job.document.util;
 
 import static com.google.common.base.Strings.nullToEmpty;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.val;
 
 import org.icgc.dcc.release.job.document.vcf.model.Consequence;
@@ -97,6 +99,10 @@ public class MutationCentricFeatureConverter {
   private static Feature createFeature(ObjectNode source, List<Occurrence> occurrences, List<Consequence> consequences) {
     String value = source.get("mutation").textValue();
     String altAllele = value.split(">")[1];
+
+    val studies = new ArrayList<String>();
+    ((ArrayNode) source.at("/_study")).forEach( s -> studies.add(s.asText()));
+
     Mutation mutation = Mutation.builder()
         .mutationType(MutationType.fromText(source.get("mutation_type").textValue()))
         .mutation(value)
@@ -104,6 +110,7 @@ public class MutationCentricFeatureConverter {
         .affectedDonors(source.at("/_summary/_affected_donor_count").intValue())
         .testedDonors(source.at("/_summary/_tested_donor_count").intValue())
         .projectCount(source.at("/_summary/_affected_project_count").intValue())
+        .studies(studies)
         .occurrences(occurrences)
         .consequences(consequences)
         .build();

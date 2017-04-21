@@ -34,6 +34,8 @@ public class Mutation {
   private int testedDonors;
   private int projectCount;
 
+  private List<String> studies;
+
   private List<Consequence> consequences;
   private List<Occurrence> occurrences;
 
