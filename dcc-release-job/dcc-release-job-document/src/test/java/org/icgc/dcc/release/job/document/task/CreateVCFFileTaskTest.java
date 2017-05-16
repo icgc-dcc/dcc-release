@@ -32,6 +32,7 @@ import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.job.document.function.SaveVCFRecords;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 @Slf4j
@@ -54,6 +55,8 @@ public class CreateVCFFileTaskTest extends AbstractJobTest {
     verifyOutput();
   }
 
+  // TODO: Fix the compressed fixture at some point. DCC-5589
+  @Ignore
   @Test
   public void testExecute_compressed() throws Exception {
     given(new File(COMPRESSED_INPUT));
