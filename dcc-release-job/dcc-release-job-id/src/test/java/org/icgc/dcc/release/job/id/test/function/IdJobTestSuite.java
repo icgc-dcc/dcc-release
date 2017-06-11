@@ -17,7 +17,8 @@ import org.junit.runners.Suite;
         AddSurrogateDonorIdTest.class,
         AddSurrogateMutaionIdTest.class,
         AddSurrogateSampleIdTest.class,
-        AddSurrogateSpecimenIdTest.class
+        AddSurrogateSpecimenIdTest.class,
+        ExportStringParserTest.class
 })
 public class IdJobTestSuite {
 
