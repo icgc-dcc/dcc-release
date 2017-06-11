@@ -17,18 +17,23 @@
  */
 package org.icgc.dcc.release.job.id.function;
 
+import lombok.NonNull;
 import lombok.val;
 
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames;
 import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.icgc.dcc.release.job.id.model.DonorID;
 
-public class AddSurrogateDonorId extends AddSurrogateId {
+import java.util.Map;
 
-  public AddSurrogateDonorId(IdClientFactory idClientFactory) {
-    super(idClientFactory);
+public class AddSurrogateDonorId extends AddSurrogateId<DonorID> {
+
+  public AddSurrogateDonorId(IdClientFactory idClientFactory, Broadcast<Map<DonorID, String>> broadcast) {
+    super(idClientFactory, broadcast);
   }
 
   @Override
@@ -36,7 +41,11 @@ public class AddSurrogateDonorId extends AddSurrogateId {
     val submittedDonorId = row.get(SubmissionFieldNames.SUBMISSION_DONOR_ID).textValue();
     val submittedProjectId = getSubmittedProjectId(row);
 
-    val donorId = client().createDonorId(submittedDonorId, submittedProjectId);
+    String donorId = broadcast.getValue().get(new DonorID(submittedDonorId, submittedProjectId));
+
+    if(donorId == null){
+      donorId = client().createDonorId(submittedDonorId, submittedProjectId);
+    }
 
     row.put(IdentifierFieldNames.SURROGATE_DONOR_ID, donorId);
 

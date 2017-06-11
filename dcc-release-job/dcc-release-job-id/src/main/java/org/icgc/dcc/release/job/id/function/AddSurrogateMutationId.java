@@ -25,17 +25,21 @@ import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUB
 import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 import lombok.val;
 
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.icgc.dcc.release.job.id.model.MutationID;
 
-public class AddSurrogateMutationId extends AddSurrogateId {
+import java.util.Map;
 
-  private static final String ASSEMBLY_VERSION = "GRCh37";
+public class AddSurrogateMutationId extends AddSurrogateId<MutationID> {
 
-  public AddSurrogateMutationId(IdClientFactory idClientFactory) {
-    super(idClientFactory);
+    private static final String ASSEMBLY_VERSION = "GRCh37";
+
+  public AddSurrogateMutationId(IdClientFactory idClientFactory, Broadcast<Map<MutationID, String>> broadcast) {
+    super(idClientFactory, broadcast);
   }
 
   @Override
@@ -50,8 +54,12 @@ public class AddSurrogateMutationId extends AddSurrogateId {
     // TODO: get from meta file
     String assemblyVersion = ASSEMBLY_VERSION;
 
-    val mutationId = client()
-        .createMutationId(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion);
+
+    String mutationId = broadcast.getValue().get(new MutationID(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion));
+    if(mutationId == null){
+      mutationId = client()
+              .createMutationId(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion);
+    }
 
     row.put(IdentifierFieldNames.SURROGATE_MUTATION_ID, mutationId);
 

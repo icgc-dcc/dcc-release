@@ -19,23 +19,32 @@ package org.icgc.dcc.release.job.id.function;
 
 import lombok.val;
 
+import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.util.collection.SizeTracker;
 import org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames;
 import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.icgc.dcc.release.job.id.model.SampleID;
 
-public class AddSurrogateSampleId extends AddSurrogateId {
+import java.util.Map;
 
-  public AddSurrogateSampleId(IdClientFactory idClientFactory) {
-    super(idClientFactory);
+public class AddSurrogateSampleId extends AddSurrogateId<SampleID> {
+
+  public AddSurrogateSampleId(IdClientFactory idClientFactory, Broadcast<Map<SampleID, String>> broadcast) {
+    super(idClientFactory, broadcast);
   }
 
   @Override
   public ObjectNode call(ObjectNode row) throws Exception {
     val submittedSampleId = row.get(SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID).textValue();
     val submittedProjectId = getSubmittedProjectId(row);
-    val sampleId = client().createSampleId(submittedSampleId, submittedProjectId);
+
+    String sampleId = broadcast.getValue().get(new SampleID(submittedSampleId, submittedProjectId));
+    if (sampleId == null){
+      sampleId = client().createSampleId(submittedSampleId, submittedProjectId);
+    }
 
     row.put(IdentifierFieldNames.SURROGATE_SAMPLE_ID, sampleId);
 

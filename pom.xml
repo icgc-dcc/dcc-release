@@ -314,7 +314,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dcc-common.version>4.3.11-20170112.215910-4</dcc-common.version>
 
     <!-- Versions - DCC ID -->
-    <dcc-id.version>4.2.1</dcc-id.version>
+    <dcc-id.version>4.3.2-SNAPSHOT</dcc-id.version>
 
     <!-- Versions - Spring -->
     <spring.version>4.0.8.RELEASE</spring.version>

@@ -19,12 +19,20 @@ package org.icgc.dcc.release.job.id.task;
 
 import lombok.NonNull;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.job.id.function.AddSurrogateDonorId;
 import org.icgc.dcc.release.job.id.function.AddSurrogateSpecimenId;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.icgc.dcc.release.job.id.model.DonorID;
+import org.icgc.dcc.release.job.id.model.SpecimenID;
+import org.icgc.dcc.release.job.id.parser.ExportStringParser;
+import scala.reflect.ClassTag$;
+
+import java.util.Map;
 
 public class AddSurrogateSpecimenIdTask extends AddSurrogateIdTask {
 
@@ -34,8 +42,17 @@ public class AddSurrogateSpecimenIdTask extends AddSurrogateIdTask {
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input
-        .map(new AddSurrogateSpecimenId(idClientFactory));
+    return input.map(
+            new AddSurrogateSpecimenId(
+                    idClientFactory,
+                    input.context().broadcast(
+                            (new ExportStringParser<SpecimenID>()).parse(
+                                    idClientFactory.create().getAllSpecimenIds().get(),
+                                    fields -> Pair.of(new SpecimenID(fields.get(1), fields.get(2)), fields.get(0))
+                            ),
+                            ClassTag$.MODULE$.apply(Map.class))
+            )
+    );
   }
 
 }
