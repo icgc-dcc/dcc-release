@@ -40,17 +40,17 @@ public class AddSurrogateSampleIdTask extends AddSurrogateIdTask {
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input.map(
-            new AddSurrogateSampleId(
-                    idClientFactory,
-                    input.context().broadcast(
-                            (new ExportStringParser<SampleID>()).parse(
-                                    idClientFactory.create().getAllSampleIds().get(),
-                                    fields -> Pair.of(new SampleID(fields.get(1), fields.get(2)), fields.get(0))
-                            ),
-                            ClassTag$.MODULE$.apply(Map.class))
-            )
-    );
+
+      AddSurrogateSampleId sampleId =  new AddSurrogateSampleId(
+              idClientFactory,
+              input.context().broadcast(
+                      (new ExportStringParser<SampleID>()).parse(
+                              idClientFactory.create().getAllSampleIds().get(),
+                              fields -> Pair.of(new SampleID(fields.get(1), fields.get(2)), fields.get(0))
+                      ),
+                      ClassTag$.MODULE$.apply(Map.class))
+      );
+    return input.map(sampleId);
   }
 
 }

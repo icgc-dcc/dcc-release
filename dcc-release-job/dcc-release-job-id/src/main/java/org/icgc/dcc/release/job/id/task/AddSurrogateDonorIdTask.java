@@ -41,17 +41,17 @@ public class AddSurrogateDonorIdTask extends AddSurrogateIdTask {
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
 
-      return input.map(
-              new AddSurrogateDonorId(
-                      idClientFactory,
-                      input.context().broadcast(
-                              (new ExportStringParser<DonorID>()).parse(
-                                      idClientFactory.create().getAllDonorIds().get(),
-                                      fields -> Pair.of(new DonorID(fields.get(1), fields.get(2)), fields.get(0))
-                              ),
-                              ClassTag$.MODULE$.apply(Map.class))
-              )
+      AddSurrogateDonorId donorId = new AddSurrogateDonorId(
+              idClientFactory,
+              input.context().broadcast(
+                      (new ExportStringParser<DonorID>()).parse(
+                              idClientFactory.create().getAllDonorIds().get(),
+                              fields -> Pair.of(new DonorID(fields.get(1), fields.get(2)), fields.get(0))
+                      ),
+                      ClassTag$.MODULE$.apply(Map.class))
       );
+
+      return input.map(donorId);
   }
 
 }

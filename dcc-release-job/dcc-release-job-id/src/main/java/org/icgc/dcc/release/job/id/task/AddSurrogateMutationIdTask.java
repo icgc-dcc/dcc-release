@@ -42,17 +42,18 @@ public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input.map(
-            new AddSurrogateMutationId(
-                    idClientFactory,
-                    input.context().broadcast(
-                            (new ExportStringParser<MutationID>()).parse(
-                                    idClientFactory.create().getAllMutationIds().get(),
-                                    fields -> Pair.of(new MutationID(fields.get(1), fields.get(2), fields.get(3),fields.get(4),fields.get(5),fields.get(6)), fields.get(0))
-                            ),
-                            ClassTag$.MODULE$.apply(Map.class))
-            )
-    );
+
+      AddSurrogateMutationId mutationId = new AddSurrogateMutationId(
+              idClientFactory,
+              input.context().broadcast(
+                      (new ExportStringParser<MutationID>()).parse(
+                              idClientFactory.create().getAllMutationIds().get(),
+                              fields -> Pair.of(new MutationID(fields.get(1), fields.get(2), fields.get(3),fields.get(4),fields.get(5),fields.get(6)), fields.get(0))
+                      ),
+                      ClassTag$.MODULE$.apply(Map.class))
+      );
+
+    return input.map(mutationId);
   }
 
 }
