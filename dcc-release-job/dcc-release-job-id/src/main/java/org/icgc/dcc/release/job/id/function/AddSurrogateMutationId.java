@@ -55,11 +55,14 @@ public class AddSurrogateMutationId extends AddSurrogateId<MutationID> {
     String assemblyVersion = ASSEMBLY_VERSION;
 
 
-    String mutationId = broadcast.getValue().get(new MutationID(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion));
-    if(mutationId == null){
-      mutationId = client()
-              .createMutationId(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion);
-    }
+//    String mutationId = broadcast.value().get(new MutationID(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion));
+//    if(mutationId == null){
+//      mutationId = client()
+//              .createMutationId(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion);
+//    }
+
+    val mutationId = client()
+            .createMutationId(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion);
 
     row.put(IdentifierFieldNames.SURROGATE_MUTATION_ID, mutationId);
 

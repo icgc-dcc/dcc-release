@@ -41,7 +41,7 @@ public class AddSurrogateDonorId extends AddSurrogateId<DonorID> {
     val submittedDonorId = row.get(SubmissionFieldNames.SUBMISSION_DONOR_ID).textValue();
     val submittedProjectId = getSubmittedProjectId(row);
 
-    String donorId = broadcast.getValue().get(new DonorID(submittedDonorId, submittedProjectId));
+    String donorId = broadcast.value().get(new DonorID(submittedDonorId, submittedProjectId));
 
     if(donorId == null){
       donorId = client().createDonorId(submittedDonorId, submittedProjectId);

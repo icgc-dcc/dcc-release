@@ -3,10 +3,10 @@ package org.icgc.dcc.release.job.id.parser;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import static org.icgc.dcc.common.core.util.Splitters.NEWLINE;
 import static org.icgc.dcc.common.core.util.Splitters.TAB;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableMap;
 
 /**
  Copyright (c) $today.year The Ontario Institute for Cancer Research. All rights reserved.
@@ -29,10 +29,10 @@ public class ExportStringParser<IDTYPE> {
 
     public Map<IDTYPE, String> parse(String str, GenerateIDTypeInstance<IDTYPE> generator){
         return
-                NEWLINE.splitToList(str).stream()
+                NEWLINE.trimResults().omitEmptyStrings().splitToList(str).stream()
                         .map(TAB::splitToList)
                         .map(generator::generate)
-                        .collect(toImmutableMap(Entry::getKey, Entry::getValue));
+                        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     }
 
     public interface GenerateIDTypeInstance<IDTYPE>{

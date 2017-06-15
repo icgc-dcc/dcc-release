@@ -32,6 +32,7 @@ import org.icgc.dcc.release.job.id.model.MutationID;
 import org.icgc.dcc.release.job.id.parser.ExportStringParser;
 import scala.reflect.ClassTag$;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
@@ -45,12 +46,13 @@ public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
 
       AddSurrogateMutationId mutationId = new AddSurrogateMutationId(
               idClientFactory,
-              input.context().broadcast(
-                      (new ExportStringParser<MutationID>()).parse(
-                              idClientFactory.create().getAllMutationIds().get(),
-                              fields -> Pair.of(new MutationID(fields.get(1), fields.get(2), fields.get(3),fields.get(4),fields.get(5),fields.get(6)), fields.get(0))
-                      ),
-                      ClassTag$.MODULE$.apply(Map.class))
+//              input.context().broadcast(
+//                      (new ExportStringParser<MutationID>()).parse(
+//                              idClientFactory.create().getAllMutationIds().get(),
+//                              fields -> Pair.of(new MutationID(fields.get(1), fields.get(2), fields.get(3),fields.get(4),fields.get(5),fields.get(6)), fields.get(0))
+//                      ),
+//                      ClassTag$.MODULE$.apply(Map.class))
+              input.context().broadcast(new HashMap<MutationID, String>(), ClassTag$.MODULE$.apply(Map.class))
       );
 
     return input.map(mutationId);

@@ -40,7 +40,7 @@ public class AddSurrogateSpecimenId extends AddSurrogateId<SpecimenID> {
     val submittedSpecimenId = row.get(SUBMISSION_SPECIMEN_ID).textValue();
     val submittedProjectId = getSubmittedProjectId(row);
 
-    String specimenId = broadcast.getValue().get(new SpecimenID(submittedSpecimenId, submittedProjectId));
+    String specimenId = broadcast.value().get(new SpecimenID(submittedSpecimenId, submittedProjectId));
     if(specimenId == null){
       specimenId = client().createSpecimenId(submittedSpecimenId, submittedProjectId);
     }

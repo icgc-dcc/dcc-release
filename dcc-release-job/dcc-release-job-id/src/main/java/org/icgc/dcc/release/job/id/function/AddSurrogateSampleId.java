@@ -41,7 +41,7 @@ public class AddSurrogateSampleId extends AddSurrogateId<SampleID> {
     val submittedSampleId = row.get(SubmissionFieldNames.SUBMISSION_ANALYZED_SAMPLE_ID).textValue();
     val submittedProjectId = getSubmittedProjectId(row);
 
-    String sampleId = broadcast.getValue().get(new SampleID(submittedSampleId, submittedProjectId));
+    String sampleId = broadcast.value().get(new SampleID(submittedSampleId, submittedProjectId));
     if (sampleId == null){
       sampleId = client().createSampleId(submittedSampleId, submittedProjectId);
     }
