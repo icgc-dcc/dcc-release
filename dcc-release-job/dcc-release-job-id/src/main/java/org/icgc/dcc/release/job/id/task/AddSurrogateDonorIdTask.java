@@ -21,10 +21,12 @@ import lombok.NonNull;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.release.core.job.FileType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.job.id.function.AddSurrogateDonorId;
 import org.icgc.dcc.release.job.id.model.DonorID;
 import org.icgc.dcc.release.job.id.parser.ExportStringParser;
@@ -34,24 +36,27 @@ import java.util.Map;
 
 public class AddSurrogateDonorIdTask extends AddSurrogateIdTask {
 
-  public AddSurrogateDonorIdTask(@NonNull IdClientFactory idClientFactory) {
+  private Broadcast<Map<DonorID, String>> broadcast;
+  public AddSurrogateDonorIdTask(@NonNull IdClientFactory idClientFactory, Broadcast<Map<DonorID, String>> broadcast) {
     super(FileType.DONOR, FileType.DONOR_SURROGATE_KEY, idClientFactory);
+    this.broadcast = broadcast;
   }
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-
-      AddSurrogateDonorId donorId = new AddSurrogateDonorId(
-              idClientFactory,
-              input.context().broadcast(
-                      (new ExportStringParser<DonorID>()).parse(
-                              idClientFactory.create().getAllDonorIds().get(),
-                              fields -> Pair.of(new DonorID(fields.get(1), fields.get(2)), fields.get(0))
-                      ),
-                      ClassTag$.MODULE$.apply(Map.class))
-      );
+      AddSurrogateDonorId donorId = new AddSurrogateDonorId(idClientFactory, this.broadcast);
 
       return input.map(donorId);
   }
 
+  public static Broadcast<Map<DonorID, String>> createCache(JobContext jobContext, IdClientFactory idClientFactory) {
+    return
+      jobContext.getJavaSparkContext().sc().broadcast(
+        (new ExportStringParser<DonorID>()).parse(
+          idClientFactory.create().getAllDonorIds().get(),
+          fields -> Pair.of(new DonorID(fields.get(1), fields.get(2)), fields.get(0))
+        ),
+        ClassTag$.MODULE$.apply(Map.class)
+      );
+  }
 }

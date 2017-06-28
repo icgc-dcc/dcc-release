@@ -1,6 +1,8 @@
 package org.icgc.dcc.release.job.id.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.io.Serializable;
@@ -23,24 +25,29 @@ import java.io.Serializable;
  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class MutationID implements Serializable {
 
     @NonNull
-    private final String chromosome;
+    private  String chromosome;
 
     @NonNull
-    private final String chromosomeStart;
+    private  String chromosomeStart;
 
     @NonNull
-    private final String chromosomeEnd;
+    private  String chromosomeEnd;
 
     @NonNull
-    private final String mutation;
+    private  String mutation;
 
     @NonNull
-    private final String mutationType;
+    private  String mutationType;
 
     @NonNull
-    private final String assemblyVersion;
+    private  String assemblyVersion;
 
+    @NonNull
+    private  String uniqueId;
+    
 }

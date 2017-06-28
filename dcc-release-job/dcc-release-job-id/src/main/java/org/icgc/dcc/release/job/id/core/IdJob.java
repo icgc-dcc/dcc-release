@@ -19,7 +19,12 @@ package org.icgc.dcc.release.job.id.core;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.icgc.dcc.common.core.util.Splitters.TAB;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.SQLContext;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.id.client.http.HttpIdClient;
 import org.icgc.dcc.id.client.http.webclient.WebClientConfig;
@@ -28,15 +33,22 @@ import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
 import org.icgc.dcc.release.job.id.config.IdProperties;
-import org.icgc.dcc.release.job.id.task.AddSurrogateDonorIdTask;
-import org.icgc.dcc.release.job.id.task.AddSurrogateMutationIdTask;
-import org.icgc.dcc.release.job.id.task.AddSurrogateSampleIdTask;
-import org.icgc.dcc.release.job.id.task.AddSurrogateSpecimenIdTask;
+import org.icgc.dcc.release.job.id.config.PostgresqlProperties;
+import org.icgc.dcc.release.job.id.dump.DumpDataToHDFS;
+import org.icgc.dcc.release.job.id.dump.impl.DumpMutationDataByPGCopyManager;
+import org.icgc.dcc.release.job.id.function.AddSurrogateSpecimenId;
+import org.icgc.dcc.release.job.id.model.*;
+import org.icgc.dcc.release.job.id.parser.ExportStringParser;
+import org.icgc.dcc.release.job.id.task.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import lombok.NonNull;
 import lombok.val;
+import scala.reflect.ClassTag$;
+
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class IdJob extends GenericJob {
@@ -51,6 +63,16 @@ public class IdJob extends GenericJob {
    */
   @Autowired
   IdProperties identifierProperties;
+  @Autowired
+  PostgresqlProperties postgresqlProperties;
+
+  static {
+    try {
+      Class.forName("org.postgresql.Driver");
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
+  }
 
   @Override
   public JobType getType() {
@@ -60,6 +82,10 @@ public class IdJob extends GenericJob {
   @Override
   public void execute(@NonNull JobContext jobContext) {
     clean(jobContext);
+    boolean bSuccessful = dumpPGDataToHDFS(jobContext);
+    if(!bSuccessful) {
+      throw new RuntimeException("Dumping postgresql data failed!");
+    }
     id(jobContext);
   }
 
@@ -71,15 +97,36 @@ public class IdJob extends GenericJob {
         FileType.SSM_P_MASKED_SURROGATE_KEY);
   }
 
+  private DumpDataToHDFS getDumpImpl(JobContext jobContext) {
+    return new DumpMutationDataByPGCopyManager(jobContext.getFileSystem(), this.postgresqlProperties, jobContext.getWorkingDir() + AddSurrogateMutationIdTask.mutationDumpPath);
+  }
+
+  private boolean dumpPGDataToHDFS(@NonNull JobContext jobContext) {
+    DumpDataToHDFS dump = getDumpImpl(jobContext);
+    return dump.dump();
+  }
+
   private void id(JobContext jobContext) {
     val releaseName = resolveReleaseName(jobContext.getReleaseName());
     val idClientFactory = createIdClientFactory(releaseName);
 
+    Broadcast<Map<SampleID, String>> samples = AddSurrogateSampleIdTask.createCache(jobContext, idClientFactory);
+
+    Broadcast<Map<DonorID, String>> donors = AddSurrogateDonorIdTask.createCache(jobContext, idClientFactory);
+
+    Broadcast<Map<SpecimenID, String>> specimens = AddSurrogateSpecimenIdTask.createCache(jobContext, idClientFactory);
+
+
+    SQLContext sqlContext = new SQLContext(jobContext.getJavaSparkContext());
+
+    DataFrame mutationDF = AddSurrogateMutationIdTask.createDataFrameForPGData(sqlContext, jobContext);
+
     jobContext.execute(
-        new AddSurrogateDonorIdTask(idClientFactory),
-        new AddSurrogateSpecimenIdTask(idClientFactory),
-        new AddSurrogateSampleIdTask(idClientFactory),
-        new AddSurrogateMutationIdTask(idClientFactory));
+      new AddSurrogateSampleIdTask(idClientFactory, samples),
+      new AddSurrogateDonorIdTask(idClientFactory, donors),
+      new AddSurrogateSpecimenIdTask(idClientFactory, specimens),
+      new AddSurrogateMutationIdTask(idClientFactory, mutationDF, sqlContext)
+    );
   }
 
   private static String resolveReleaseName(String releaseName) {

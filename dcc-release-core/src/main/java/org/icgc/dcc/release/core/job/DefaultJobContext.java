@@ -22,7 +22,9 @@ import java.util.List;
 
 import lombok.Value;
 
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.core.task.TaskExecutor;
 
@@ -63,6 +65,16 @@ public class DefaultJobContext implements JobContext {
   @Override
   public void executeSequentially(Collection<? extends Task> tasks) {
     executor.executeSequentially(this, tasks);
+  }
+
+  @Override
+  public JavaSparkContext getJavaSparkContext() {
+    return executor.getSparkContext();
+  }
+
+  @Override
+  public FileSystem getFileSystem() {
+    return executor.getFileSystem();
   }
 
 }

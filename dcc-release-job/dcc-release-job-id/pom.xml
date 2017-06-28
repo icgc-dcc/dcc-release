@@ -37,7 +37,29 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       <groupId>${project.groupId}</groupId>
       <artifactId>dcc-id-client</artifactId>
     </dependency>
+      <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-sql_2.10</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>org.postgresql</groupId>
+          <artifactId>postgresql</artifactId>
+      </dependency>
+
+    <dependency>
+      <groupId>org.apache.sqoop</groupId>
+      <artifactId>sqoop</artifactId>
+      <version>1.4.6.2.4.2.12-1</version>
+    </dependency>
 
   </dependencies>
+
+  <repositories>
+    <repository>
+      <id>spring-plugins</id>
+      <url>http://repo.spring.io/plugins-release/</url>
+      <name>Spring Plugins</name>
+    </repository>
+  </repositories>
 
 </project>

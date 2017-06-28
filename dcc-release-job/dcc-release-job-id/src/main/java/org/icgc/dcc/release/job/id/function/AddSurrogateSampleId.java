@@ -20,7 +20,6 @@ package org.icgc.dcc.release.job.id.function;
 import lombok.val;
 
 import org.apache.spark.broadcast.Broadcast;
-import org.apache.spark.util.collection.SizeTracker;
 import org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames;
 import org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames;
 import org.icgc.dcc.id.client.core.IdClientFactory;

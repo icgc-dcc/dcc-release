@@ -20,7 +20,9 @@ package org.icgc.dcc.release.core.job;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.release.core.task.Task;
 
 import com.google.common.collect.Table;
@@ -48,5 +50,9 @@ public interface JobContext {
   void executeSequentially(Collection<? extends Task> tasks);
 
   boolean isCompressOutput();
+
+  JavaSparkContext getJavaSparkContext();
+
+  FileSystem getFileSystem();
 
 }

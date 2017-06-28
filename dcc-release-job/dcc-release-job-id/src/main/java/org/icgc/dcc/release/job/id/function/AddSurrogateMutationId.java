@@ -49,17 +49,8 @@ public class AddSurrogateMutationId extends AddSurrogateId<MutationID> {
     val chromosomeEnd = textValue(row, SUBMISSION_OBSERVATION_CHROMOSOME_END);
     val mutation = row.get(NORMALIZER_MUTATION).textValue();
     val mutationType = row.get(SUBMISSION_OBSERVATION_MUTATION_TYPE).textValue();
-    // String assemblyVersion = row.get(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION).textValue();
-
     // TODO: get from meta file
     String assemblyVersion = ASSEMBLY_VERSION;
-
-
-//    String mutationId = broadcast.value().get(new MutationID(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion));
-//    if(mutationId == null){
-//      mutationId = client()
-//              .createMutationId(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion);
-//    }
 
     val mutationId = client()
             .createMutationId(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion);

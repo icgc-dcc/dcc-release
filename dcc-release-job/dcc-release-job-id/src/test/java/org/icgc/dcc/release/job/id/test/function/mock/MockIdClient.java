@@ -42,7 +42,7 @@ public class MockIdClient implements IdClient {
 
     @Override
     public Optional<String> getMutationId(String chromosome, String chromosomeStart, String chromosomeEnd, String mutation, String mutationType, String assemblyVersion) {
-        String id = MockCaches.getInstance().getMutations().get(new MutationID(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion));
+        String id = MockCaches.getInstance().getMutations().get(new MutationID(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion, ""));
         return (id == null)?Optional.empty():Optional.of(id);
     }
 
@@ -89,7 +89,7 @@ public class MockIdClient implements IdClient {
         String ret = "";
         synchronized (MockCaches.getInstance().getMutations()) {
             ret = Integer.toString(next_id_mutation);
-            MockCaches.getInstance().getMutations().put(new MutationID(chromosome + "_" + next_id_mutation, chromosomeStart + "_" + next_id_mutation, chromosomeEnd+"_"+next_id_mutation, mutation+"_"+next_id_mutation, mutationType+"_"+next_id_mutation, "GRCh37"), ret);
+            MockCaches.getInstance().getMutations().put(new MutationID(chromosome + "_" + next_id_mutation, chromosomeStart + "_" + next_id_mutation, chromosomeEnd+"_"+next_id_mutation, mutation+"_"+next_id_mutation, mutationType+"_"+next_id_mutation, "GRCh37", ""), ret);
             next_id_mutation++;
         }
         return ret;

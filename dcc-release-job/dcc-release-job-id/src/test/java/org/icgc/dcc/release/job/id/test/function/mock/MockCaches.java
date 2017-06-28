@@ -87,7 +87,7 @@ public class MockCaches {
             Map<MutationID, String> map = new HashMap<>();
 
             IntStream.range(0, 100).forEach(value -> {
-                map.put(new MutationID("chromosome_"+value, "chromosomeStart_"+ value, "chromosomeEnd_" + value, "mutation_" + value, "mutationType_" + value, "GRCh37"), Integer.toString(value));
+                map.put(new MutationID("chromosome_"+value, "chromosomeStart_"+ value, "chromosomeEnd_" + value, "mutation_" + value, "mutationType_" + value, "GRCh37", ""), Integer.toString(value));
             });
             return map;
         }

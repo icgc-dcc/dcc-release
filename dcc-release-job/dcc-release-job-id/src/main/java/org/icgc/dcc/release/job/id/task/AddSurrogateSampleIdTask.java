@@ -21,8 +21,10 @@ import lombok.NonNull;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.job.id.function.AddSurrogateSampleId;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,23 +36,26 @@ import java.util.Map;
 
 public class AddSurrogateSampleIdTask extends AddSurrogateIdTask {
 
-  public AddSurrogateSampleIdTask(@NonNull IdClientFactory idClientFactory) {
+  private Broadcast<Map<SampleID, String>> broadcast;
+  public AddSurrogateSampleIdTask(@NonNull IdClientFactory idClientFactory, Broadcast<Map<SampleID, String>> broadcast) {
     super(FileType.SAMPLE, FileType.SAMPLE_SURROGATE_KEY, idClientFactory);
+    this.broadcast = broadcast;
   }
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-
-      AddSurrogateSampleId sampleId =  new AddSurrogateSampleId(
-              idClientFactory,
-              input.context().broadcast(
-                      (new ExportStringParser<SampleID>()).parse(
-                              idClientFactory.create().getAllSampleIds().get(),
-                              fields -> Pair.of(new SampleID(fields.get(1), fields.get(2)), fields.get(0))
-                      ),
-                      ClassTag$.MODULE$.apply(Map.class))
-      );
+    AddSurrogateSampleId sampleId =  new AddSurrogateSampleId(idClientFactory, this.broadcast);
     return input.map(sampleId);
   }
 
+  public static Broadcast<Map<SampleID, String>> createCache(JobContext jobContext, IdClientFactory idClientFactory) {
+    return
+      jobContext.getJavaSparkContext().sc().broadcast(
+        (new ExportStringParser<SampleID>()).parse(
+          idClientFactory.create().getAllSampleIds().get(),
+          fields -> Pair.of(new SampleID(fields.get(1), fields.get(2)), fields.get(0))
+        ),
+        ClassTag$.MODULE$.apply(Map.class)
+      );
+  }
 }
