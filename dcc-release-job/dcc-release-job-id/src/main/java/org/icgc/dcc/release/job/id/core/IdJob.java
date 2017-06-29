@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.icgc.dcc.common.core.util.Splitters.TAB;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.DataFrame;
@@ -50,6 +51,7 @@ import scala.reflect.ClassTag$;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 public class IdJob extends GenericJob {
 
@@ -70,7 +72,7 @@ public class IdJob extends GenericJob {
     try {
       Class.forName("org.postgresql.Driver");
     } catch (ClassNotFoundException e) {
-      e.printStackTrace();
+      log.error(e.getMessage());
     }
   }
 

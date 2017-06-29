@@ -1,5 +1,6 @@
 package org.icgc.dcc.release.job.id.dump.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -30,7 +31,7 @@ import java.sql.SQLException;
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+@Slf4j
 public class DumpMutationDataByPGCopyManager implements DumpDataToHDFS {
 
   private final FileSystem fileSystem;
@@ -63,9 +64,9 @@ public class DumpMutationDataByPGCopyManager implements DumpDataToHDFS {
       return true;
 
     } catch (SQLException e) {
-      e.printStackTrace();
+      log.error(e.getMessage());
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error(e.getMessage());
     }
 
     return false;
