@@ -44,7 +44,7 @@ public class MockIdClient implements IdClient {
     public Optional<String> getMutationId(String chromosome, String chromosomeStart, String chromosomeEnd, String mutation, String mutationType, String assemblyVersion) {
         String id = MockCaches.getInstance().getMutations().get(new MutationID(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion, ""));
         return (id == null)?Optional.empty():Optional.of(id);
-    }
+}
 
     @Override
     public Optional<String> getFileId(String submittedFileId) {
