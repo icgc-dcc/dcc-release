@@ -49,7 +49,9 @@ public class DumpMutationDataByPGCopyManager implements DumpDataToHDFS {
 
       Path target = new Path(this.dumpTarget);
 
-      this.fileSystem.delete(target, true);
+      if(this.fileSystem.exists(target)){
+        this.fileSystem.delete(target, true);
+      }
 
       FSDataOutputStream outputStream = this.fileSystem.create(target);
 

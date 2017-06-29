@@ -43,6 +43,7 @@ import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 
 public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
   private static final String ASSEMBLY_VERSION = "GRCh37";
+  private static final String MUTATION_ID_PREFIX = "MU";
   public static final String mutationDumpPath = "/pg_dump/mutation/mutation.txt";
   private DataFrame mutationIDs;
   private SQLContext sqlContext;
@@ -118,7 +119,7 @@ public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
                   mutation,
                   mutationType,
                   assemblyVersion,
-                  row.<String>getAs("db.uniqueId")
+                  MUTATION_ID_PREFIX + row.<String>getAs("db.uniqueId")
               );
           }
         }).mapPartitions(iterator -> {
@@ -139,10 +140,10 @@ public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
         });
   }
 
-  public static DataFrame createDataFrameForPGData(SQLContext sqlContext, JobContext jobContext) {
+  public static DataFrame createDataFrameForPGData(SQLContext sqlContext, JobContext jobContext, String dumpPath) {
     DataFrame mutationDF =
         sqlContext.createDataFrame(
-            jobContext.getJavaSparkContext().textFile(jobContext.getFileSystem().getConf().get("fs.defaultFS") + jobContext.getWorkingDir() + mutationDumpPath, 10).map(row -> {
+            jobContext.getJavaSparkContext().textFile(jobContext.getFileSystem().getConf().get("fs.defaultFS") + jobContext.getWorkingDir() + dumpPath, 10).map(row -> {
               List<String> fields =
                   TAB.trimResults().omitEmptyStrings().splitToList(row);
               return new MutationID(fields.get(1), fields.get(2), fields.get(3), fields.get(4), fields.get(5), fields.get(6), fields.get(0));

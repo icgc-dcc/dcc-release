@@ -121,7 +121,7 @@ public class IdJob extends GenericJob {
 
     SQLContext sqlContext = new SQLContext(jobContext.getJavaSparkContext());
 
-    DataFrame mutationDF = AddSurrogateMutationIdTask.createDataFrameForPGData(sqlContext, jobContext);
+    DataFrame mutationDF = AddSurrogateMutationIdTask.createDataFrameForPGData(sqlContext, jobContext, AddSurrogateMutationIdTask.mutationDumpPath);
 
     jobContext.execute(
       new AddSurrogateSampleIdTask(idClientFactory, samples),

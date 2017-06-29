@@ -31,6 +31,8 @@ import java.util.Map;
 
 public class AddSurrogateDonorId extends AddSurrogateId<DonorID> {
 
+  private final String DONOR_ID_PREFIX = "DO";
+
   public AddSurrogateDonorId(IdClientFactory idClientFactory, Broadcast<Map<DonorID, String>> broadcast) {
     super(idClientFactory, broadcast);
   }
@@ -46,7 +48,7 @@ public class AddSurrogateDonorId extends AddSurrogateId<DonorID> {
       donorId = client().createDonorId(submittedDonorId, submittedProjectId);
     }
 
-    row.put(IdentifierFieldNames.SURROGATE_DONOR_ID, donorId);
+    row.put(IdentifierFieldNames.SURROGATE_DONOR_ID, DONOR_ID_PREFIX + donorId);
 
     return row;
   }

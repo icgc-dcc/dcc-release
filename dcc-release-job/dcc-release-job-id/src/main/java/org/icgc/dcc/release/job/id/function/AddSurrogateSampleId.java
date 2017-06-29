@@ -31,6 +31,8 @@ import java.util.Map;
 
 public class AddSurrogateSampleId extends AddSurrogateId<SampleID> {
 
+  private final String SAMPLE_ID_PREFIX = "SA";
+
   public AddSurrogateSampleId(IdClientFactory idClientFactory, Broadcast<Map<SampleID, String>> broadcast) {
     super(idClientFactory, broadcast);
   }
@@ -45,7 +47,7 @@ public class AddSurrogateSampleId extends AddSurrogateId<SampleID> {
       sampleId = client().createSampleId(submittedSampleId, submittedProjectId);
     }
 
-    row.put(IdentifierFieldNames.SURROGATE_SAMPLE_ID, sampleId);
+    row.put(IdentifierFieldNames.SURROGATE_SAMPLE_ID, SAMPLE_ID_PREFIX + sampleId);
 
     return row;
   }
