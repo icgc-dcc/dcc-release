@@ -46,9 +46,13 @@ public class AddSurrogateDonorId extends AddSurrogateId<DonorID> {
 
     if(donorId == null){
       donorId = client().createDonorId(submittedDonorId, submittedProjectId);
+      row.put(IdentifierFieldNames.SURROGATE_DONOR_ID,  donorId);
+    }
+    else{
+      row.put(IdentifierFieldNames.SURROGATE_DONOR_ID, DONOR_ID_PREFIX + donorId);
+
     }
 
-    row.put(IdentifierFieldNames.SURROGATE_DONOR_ID, DONOR_ID_PREFIX + donorId);
 
     return row;
   }

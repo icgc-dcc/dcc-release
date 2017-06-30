@@ -45,9 +45,12 @@ public class AddSurrogateSpecimenId extends AddSurrogateId<SpecimenID> {
     String specimenId = broadcast.value().get(new SpecimenID(submittedSpecimenId, submittedProjectId));
     if(specimenId == null){
       specimenId = client().createSpecimenId(submittedSpecimenId, submittedProjectId);
+      row.put(IdentifierFieldNames.SURROGATE_SPECIMEN_ID, specimenId);
+    }
+    else{
+      row.put(IdentifierFieldNames.SURROGATE_SPECIMEN_ID, SPECIMEN_ID_PREFIX + specimenId);
     }
 
-    row.put(IdentifierFieldNames.SURROGATE_SPECIMEN_ID, SPECIMEN_ID_PREFIX + specimenId);
 
     return row;
   }

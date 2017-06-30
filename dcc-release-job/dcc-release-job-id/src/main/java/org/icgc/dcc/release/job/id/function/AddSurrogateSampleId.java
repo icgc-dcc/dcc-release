@@ -45,9 +45,11 @@ public class AddSurrogateSampleId extends AddSurrogateId<SampleID> {
     String sampleId = broadcast.value().get(new SampleID(submittedSampleId, submittedProjectId));
     if (sampleId == null){
       sampleId = client().createSampleId(submittedSampleId, submittedProjectId);
+      row.put(IdentifierFieldNames.SURROGATE_SAMPLE_ID, sampleId);
     }
-
-    row.put(IdentifierFieldNames.SURROGATE_SAMPLE_ID, SAMPLE_ID_PREFIX + sampleId);
+    else {
+      row.put(IdentifierFieldNames.SURROGATE_SAMPLE_ID, SAMPLE_ID_PREFIX + sampleId);
+    }
 
     return row;
   }
