@@ -1,4 +1,4 @@
-package org.icgc.dcc.release.job.id.test.function.mock;
+package org.icgc.dcc.release.job.id.test.mock;
 
 import org.icgc.dcc.release.job.id.model.DonorID;
 import org.icgc.dcc.release.job.id.model.MutationID;
@@ -48,7 +48,7 @@ public class MockCaches {
             Map<DonorID, String> map = new HashMap<>();
 
             IntStream.range(0, 100).forEach(value -> {
-                map.put(new DonorID("donor_"+value, "project_"+ value), Integer.toString(value));
+                map.put(new DonorID("DO"+value, "project_"+ value), Integer.toString(value));
             });
             return map;
         }
@@ -61,7 +61,7 @@ public class MockCaches {
             Map<SampleID, String> map = new HashMap<>();
 
             IntStream.range(0, 100).forEach(value -> {
-                map.put(new SampleID("sample_"+value, "project_"+ value), Integer.toString(value));
+                map.put(new SampleID("SA"+value, "project_"+ value), Integer.toString(value));
             });
             return map;
         }
@@ -74,7 +74,7 @@ public class MockCaches {
             Map<SpecimenID, String> map = new HashMap<>();
 
             IntStream.range(0, 100).forEach(value -> {
-                map.put(new SpecimenID("specimen_"+value, "project_"+ value), Integer.toString(value));
+                map.put(new SpecimenID("SP"+value, "project_"+ value), Integer.toString(value));
             });
             return map;
         }
@@ -87,7 +87,7 @@ public class MockCaches {
             Map<MutationID, String> map = new HashMap<>();
 
             IntStream.range(0, 100).forEach(value -> {
-                map.put(new MutationID("chromosome_"+value, "chromosomeStart_"+ value, "chromosomeEnd_" + value, "mutation_" + value, "mutationType_" + value, "GRCh37", ""), Integer.toString(value));
+                map.put(new MutationID("chromosome_"+value, "chromosomeStart_"+ value, "chromosomeEnd_" + value, "mutation_" + value, "mutationType_" + value, "GRCh37", "MU"+value), Integer.toString(value));
             });
             return map;
         }

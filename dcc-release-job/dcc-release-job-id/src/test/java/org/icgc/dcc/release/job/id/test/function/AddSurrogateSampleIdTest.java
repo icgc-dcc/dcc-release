@@ -6,8 +6,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.release.job.id.function.AddSurrogateSampleId;
 import org.icgc.dcc.release.job.id.model.SampleID;
-import org.icgc.dcc.release.job.id.test.function.mock.MockCaches;
-import org.icgc.dcc.release.job.id.test.function.mock.MockIdClient;
+import org.icgc.dcc.release.job.id.test.mock.MockCaches;
+import org.icgc.dcc.release.job.id.test.mock.MockIdClient;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -30,20 +30,20 @@ public class AddSurrogateSampleIdTest {
         ObjectReader reader = mapper.reader(ObjectNode.class);
         try {
             int index = 77;
-            String json = String.format("{\"analyzed_sample_id\":\"sample_%d\", \"_project_id\":\"project_%d\"}", index, index);
+            String json = String.format("{\"analyzed_sample_id\":\"SA%d\", \"_project_id\":\"project_%d\"}", index, index);
 
             ObjectNode objectNode = reader.readValue(json);
 
             ObjectNode newObjectNode = sample.call(objectNode);
 
-            assertEquals(index, Long.parseLong( newObjectNode.get("_sample_id").textValue()) );
+            assertEquals("SA" + index, newObjectNode.get("_sample_id").textValue() );
 
             index = 200;
-            json = String.format("{\"analyzed_sample_id\":\"sample_%d\", \"_project_id\":\"project_%d\"}", index, index);
+            json = String.format("{\"analyzed_sample_id\":\"SA%d\", \"_project_id\":\"project_%d\"}", index, index);
 
             objectNode = reader.readValue(json);
             newObjectNode = sample.call(objectNode);
-            assertEquals(((MockIdClient)IdJobTestSuite.factory.create()).getNext_id_sample() - 1, Long.parseLong( newObjectNode.get("_sample_id").textValue()) );
+            assertEquals("SA" + (((MockIdClient)IdJobTestSuite.factory.create()).getNext_id_sample() - 1), newObjectNode.get("_sample_id").textValue() );
 
         } catch (IOException e) {
             e.printStackTrace();

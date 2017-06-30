@@ -1,4 +1,4 @@
-package org.icgc.dcc.release.job.id.test.function.mock;
+package org.icgc.dcc.release.job.id.test.mock;
 
 import org.icgc.dcc.id.client.core.IdClient;
 import org.icgc.dcc.id.client.core.IdClientFactory;

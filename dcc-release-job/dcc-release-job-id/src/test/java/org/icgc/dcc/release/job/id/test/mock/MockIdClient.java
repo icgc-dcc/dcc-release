@@ -1,4 +1,4 @@
-package org.icgc.dcc.release.job.id.test.function.mock;
+package org.icgc.dcc.release.job.id.test.mock;
 
 import com.google.common.base.Joiner;
 import org.icgc.dcc.id.client.core.IdClient;
@@ -55,8 +55,8 @@ public class MockIdClient implements IdClient {
     public String createDonorId(String submittedDonorId, String submittedProjectId) {
         String ret = "";
         synchronized (MockCaches.getInstance().getDonors()) {
-            ret = Integer.toString(next_id_donor);
-            MockCaches.getInstance().getDonors().put(new DonorID(submittedDonorId + "_" + next_id_donor, submittedProjectId + "_" + next_id_donor), ret);
+            ret = "DO" + Integer.toString(next_id_donor);
+            MockCaches.getInstance().getDonors().put(new DonorID( "DO" + next_id_donor, submittedProjectId + "_" + next_id_donor), ret);
             next_id_donor++;
         }
         return ret;
@@ -66,8 +66,8 @@ public class MockIdClient implements IdClient {
     public String createSpecimenId(String submittedSpecimenId, String submittedProjectId) {
         String ret = "";
         synchronized (MockCaches.getInstance().getSpecimens()) {
-            ret = Integer.toString(next_id_specimen);
-            MockCaches.getInstance().getSpecimens().put(new SpecimenID(submittedSpecimenId + "_" + next_id_specimen, submittedProjectId + "_" + next_id_specimen), ret);
+            ret = "SP" + Integer.toString(next_id_specimen);
+            MockCaches.getInstance().getSpecimens().put(new SpecimenID("SP" + next_id_specimen, submittedProjectId + "_" + next_id_specimen), ret);
             next_id_specimen++;
         }
         return ret;
@@ -77,8 +77,8 @@ public class MockIdClient implements IdClient {
     public String createSampleId(String submittedSampleId, String submittedProjectId) {
         String ret = "";
         synchronized (MockCaches.getInstance().getSamples()) {
-            ret = Integer.toString(next_id_sample);
-            MockCaches.getInstance().getSamples().put(new SampleID(submittedSampleId + "_" + next_id_sample, submittedProjectId + "_" + next_id_sample), ret);
+            ret = "SA" + Integer.toString(next_id_sample);
+            MockCaches.getInstance().getSamples().put(new SampleID("SA" + next_id_sample, submittedProjectId + "_" + next_id_sample), ret);
             next_id_sample++;
         }
         return ret;
@@ -88,8 +88,8 @@ public class MockIdClient implements IdClient {
     public String createMutationId(String chromosome, String chromosomeStart, String chromosomeEnd, String mutation, String mutationType, String assemblyVersion) {
         String ret = "";
         synchronized (MockCaches.getInstance().getMutations()) {
-            ret = Integer.toString(next_id_mutation);
-            MockCaches.getInstance().getMutations().put(new MutationID(chromosome + "_" + next_id_mutation, chromosomeStart + "_" + next_id_mutation, chromosomeEnd+"_"+next_id_mutation, mutation+"_"+next_id_mutation, mutationType+"_"+next_id_mutation, "GRCh37", ""), ret);
+            ret = "MU" + Integer.toString(next_id_mutation);
+            MockCaches.getInstance().getMutations().put(new MutationID(chromosome + "_" + next_id_mutation, chromosomeStart + "_" + next_id_mutation, chromosomeEnd+"_"+next_id_mutation, mutation+"_"+next_id_mutation, mutationType+"_"+next_id_mutation, "GRCh37", "MU" + next_id_mutation), ret);
             next_id_mutation++;
         }
         return ret;

@@ -3,7 +3,7 @@ package org.icgc.dcc.release.job.id.test.function;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.icgc.dcc.id.client.core.IdClientFactory;
-import org.icgc.dcc.release.job.id.test.function.mock.MockIdClientFactory;
+import org.icgc.dcc.release.job.id.test.mock.MockIdClientFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -27,7 +27,7 @@ public class IdJobTestSuite {
     @BeforeClass
     public static void initialize(){
         factory = new MockIdClientFactory("", "");
-        conf = (new SparkConf()).setMaster("local[4]").setAppName("AddSurrogateDonorIdTest");
+        conf = (new SparkConf()).setMaster("local[4]").setAppName("DCC-RELEASE-ID");
         sc = new JavaSparkContext(conf);
     }
 
