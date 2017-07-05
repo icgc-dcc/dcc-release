@@ -1,0 +1,3 @@
+The files in this project should all be VALID
+
+IMPORTANT NOTE ABOUT SGV DATA: the SGV data in this folder is actually SSM data modified to fit the SGV schema - DO NEVER COMMIT ACTUAL SGV DATA

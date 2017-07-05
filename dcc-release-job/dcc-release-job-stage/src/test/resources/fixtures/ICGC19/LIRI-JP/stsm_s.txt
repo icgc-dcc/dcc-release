@@ -1,0 +1,4 @@
+analysis_id	analyzed_sample_id	sv_id	placement	gene_affected_by_bkpt_from	gene_affected_by_bkpt_to	transcript_affected_by_bkpt_from	transcript_affected_by_bkpt_to	bkpt_from_context	bkpt_to_context	gene_build_version
+CGP_analysis_18	00301	CGP_stsm_3459	1	ENSG00000130413	ENSG00000130413	ENST00000473980	ENST00000526360	-888	-888	Ensembl:66
+CGP_analysis_18	00312	CGP_stsm_3461	1	ENSG00000133943	ENSG00000100796	ENST00000521334	ENST00000525393	-888	-888	Ensembl:66
+CGP_analysis_18	00312	CGP_stsm_3461	1	ENSG00000138674	ENSG00000156471	ENST00000503937	ENST00000517309	-888	-888	Ensembl:66

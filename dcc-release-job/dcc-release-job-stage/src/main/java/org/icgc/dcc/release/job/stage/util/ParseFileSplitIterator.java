@@ -104,7 +104,8 @@ public class ParseFileSplitIterator implements Iterator<ObjectNode> {
     val objectNode = MAPPER.createObjectNode();
     for (int i = 0; i < fields.size(); i++) {
       val fieldName = fields.get(i).getName();
-      val fieldValue = values[i];
+      // pad missing columns in data if schema is expecting more
+      val fieldValue = i < values.length ? values[i] : "";
 
       objectNode.put(fieldName, fieldValue);
     }

@@ -1,0 +1,3 @@
+analysis_id	analyzed_sample_id	platform	experimental_protocol	normalization_algorithm	other_analysis_algorithm	raw_data_repository	raw_data_accession	reference_sample_type
+188	00301	60	RNASeqV2_RSEM_genes https://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor	my_algorithm 2.1.0 http://my_algorithm.ca	-888	4	60273208-fd67-4180-a977-5095576c14e9	-888
+344	00312	60	RNASeqV2_RSEM_genes https://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor	my_algorithm 2.1.0 http://my_algorithm.ca	-888	4	a5e8f882-9755-406f-879d-7f286b6bdcb7	-888

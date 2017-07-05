@@ -74,7 +74,7 @@ public class Workflow {
     val watch = createStarted();
     log.info("Executing workflow...");
 
-    val submissionFiles = resolveSubmissionFiles(workflowContext);
+    val submissionFiles = resolveInputFiles(workflowContext);
 
     executeJobs(submissionFiles, workflowContext);
 
@@ -120,11 +120,11 @@ public class Workflow {
     }
   }
 
-  private Table<String, String, List<Path>> resolveSubmissionFiles(WorkflowContext workflowContext) {
+  private Table<String, String, List<Path>> resolveInputFiles(WorkflowContext workflowContext) {
     return new LazyTable<String, String, List<Path>>(() -> {
       List<SubmissionFileSchema> metadata = submissionMetadata.getMetadata();
 
-      return submissionFileSystem.getFiles(workflowContext.getReleaseDir(), workflowContext.getProjectNames(),
+      return submissionFileSystem.getFiles(workflowContext.getInputDirs(), workflowContext.getProjectNames(),
           metadata);
     });
   }
@@ -135,7 +135,7 @@ public class Workflow {
         type,
         workflowContext.getReleaseName(),
         workflowContext.getProjectNames(),
-        workflowContext.getReleaseDir(),
+        workflowContext.getInputDirs(),
         workflowContext.getWorkingDir(),
         submissionFiles,
         taskExecutor,

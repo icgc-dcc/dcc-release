@@ -1,0 +1,3 @@
+analysis_id	analyzed_sample_id	assembly_version	gene_build_version	platform	experimental_protocol	base_calling_algorithm	alignment_algorithm	normalization_algorithm	other_analysis_algorithm	sequencing_strategy	seq_coverage	raw_data_repository	raw_data_accession
+release15	00301	1	Ensembl:GRCh37v66	60	Nugen Encore mRNALibrary http://www.nugeninc.com	Bustard1.8.0 http://www.illumina.com	Tophat2.0.3 http://tophat.cbcb.umd.edu	NONE	-888	4	-888	1	EGAS00001000395
+release15	00312	1	Ensembl:GRCh37v66	60	Nugen Encore mRNALibrary http://www.nugeninc.com	Bustard1.8.0 http://www.illumina.com	Tophat2.0.3 http://tophat.cbcb.umd.edu	NONE	-888	4	-888	1	EGAS00001000395

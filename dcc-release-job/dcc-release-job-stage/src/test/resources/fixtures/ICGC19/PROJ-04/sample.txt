@@ -1,3 +1,0 @@
-analyzed_sample_id	specimen_id	analyzed_sample_type	analyzed_sample_type_other	analyzed_sample_interval	percentage_cellularity	level_of_cellularity	analyzed_sample_notes
-ª	0020	3	nRrunEpW c	-888	-888	-888	-888
-00312	0020	7	-888	68	-888	-888	QBbNUpprVD

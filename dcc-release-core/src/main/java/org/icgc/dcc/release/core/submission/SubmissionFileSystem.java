@@ -20,6 +20,7 @@ package org.icgc.dcc.release.core.submission;
 import static com.google.common.base.Stopwatch.createStarted;
 import static com.google.common.collect.Lists.newArrayList;
 
+import java.util.Arrays;
 import java.util.List;
 
 import lombok.NonNull;
@@ -30,10 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.icgc.dcc.common.core.model.ValueType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 import com.google.common.collect.TreeBasedTable;
 
@@ -56,20 +59,31 @@ public class SubmissionFileSystem {
   @SneakyThrows
   public Table<String, String, List<Path>> getFiles(String releaseDir, List<String> projectNames,
       List<SubmissionFileSchema> metadata) {
+    return getFiles(Arrays.asList(releaseDir), projectNames, metadata);
+  }
+
+  @NonNull
+  @SneakyThrows
+  public Table<String, String, List<Path>> getFiles(List<String> releaseDirs, List<String> projectNames,
+      List<SubmissionFileSchema> metadata) {
     val watch = createStarted();
     log.info("Resolving submission files...");
 
     val table = TreeBasedTable.<String, String, List<Path>> create();
-    val iterator = fileSystem.listFiles(new Path(releaseDir), true);
+    for (String dir : releaseDirs) {
+      val iterator = fileSystem.listFiles(new Path(dir), true);
 
-    while (iterator.hasNext()) {
-      val status = iterator.next();
-      val path = status.getPath();
+      // for every file in the release dir
+      while (iterator.hasNext()) {
+        val status = iterator.next();
+        val path = status.getPath();
 
-      for (val schema : metadata) {
-        val name = path.getName();
-        if (name.matches(schema.getPattern())) {
-          addFile(projectNames, schema, path, table);
+        // check to see if the file matches any of the specified filename patterns in the list of supported schemas
+        for (val schema : metadata) {
+          val name = path.getName();
+          if (name.matches(schema.getPattern())) {
+            addFile(projectNames, schema, path, table);
+          }
         }
       }
     }

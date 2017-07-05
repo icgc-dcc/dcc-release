@@ -1,0 +1,7 @@
+analysis_id	analyzed_sample_id	junction_id	gene_stable_id	gene_chromosome	gene_strand	gene_start	gene_end	second_gene_stable_id	exon1_chromosome	exon1_number_bases	exon1_end	exon1_strand	exon2_chromosome	exon2_number_bases	exon2_start	exon2_strand	is_fusion_gene	is_novel_splice_form	junction_seq	junction_type	junction_read_count	quality_score	probability	verification_status	verification_platform	biological_validation_status	biological_validation_platform
+release15	00301	hg19_1_15795_1_15037	ENSG00000227232	1	-1	14363	29806	-888	1	33	15795	-1	1	41	15037	-1	2	2	-888	-888	8.0	-888	-888	2	-888	2	-888
+release15	00301	hg19_1_16857_1_16764	ENSG00000227232	1	-1	14363	29806	-888	1	27	16857	-1	1	73	16764	-1	2	2	-888	-888	155.0	-888	-888	2	-888	2	-888
+release15	00301	hg19_1_17232_1_17054	ENSG00000227232	1	-1	14363	29806	-888	1	63	17232	-1	1	65	17054	-1	2	2	-888	-888	150.0	-888	-888	2	-888	2	-888
+release15	00312	hg19_23_155253936_23_155254696	ENSG00000182484	X	1	155249967	155255375	-888	X	23	155253936	1	X	51	155254696	1	2	2	-888	-888	7.0	-888	-888	2	-888	2	-888
+release15	00312	hg19_24_26288643_24_26292180	ENSG00000235981	Y	1	26288505	26303990	-888	Y	30	26288643	1	Y	44	26292180	1	2	1	-888	-888	6.0	-888	-888	2	-888	2	-888
+release15	00312	hg19_24_27673793_24_27670256	ENSG00000235583	Y	-1	27658448	27673933	-888	Y	43	27673793	-1	Y	31	27670256	-1	2	1	-888	-888	6.0	-888	-888	2	-888	2	-888

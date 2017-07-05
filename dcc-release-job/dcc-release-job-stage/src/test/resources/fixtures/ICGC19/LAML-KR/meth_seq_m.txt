@@ -1,0 +1,3 @@
+analysis_id	analyzed_sample_id	sequencing_platform	fraction_wg_cpg_sites_covered	conversion_rate	experimental_protocol	sequencing_strategy	base_quality_score_threshold	alignment_algorithm	other_analysis_algorithm	raw_data_repository	raw_data_accession	assembly_version
+15311	00301	69	-999	-999	Paired End http://www.illumina.com/technology/paired_end_sequencing_assay.ilmn	16	22	my_algorithm 2.1.0 http://my_algorithm.ca	-888	3	TCGA-HZ-7926-01A-11D-2157-05	1
+15311	00312	69	-999	-999	Paired End http://www.illumina.com/technology/paired_end_sequencing_assay.ilmn	16	22	my_algorithm 2.1.0 http://my_algorithm.ca	-888	3	TCGA-HZ-7919-01A-11D-2157-05	1

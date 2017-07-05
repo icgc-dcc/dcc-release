@@ -20,8 +20,6 @@ package org.icgc.dcc.release.core.job;
 import java.util.Collection;
 import java.util.List;
 
-import lombok.Value;
-
 import org.apache.hadoop.fs.Path;
 import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.core.task.TaskExecutor;
@@ -29,15 +27,19 @@ import org.icgc.dcc.release.core.task.TaskExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 
+import lombok.AllArgsConstructor;
+import lombok.Value;
+
 @Value
+@AllArgsConstructor
 public class DefaultJobContext implements JobContext {
 
   JobType type;
   String releaseName;
   List<String> projectNames;
 
-  String releaseDir;
-  String workingDir;
+  List<String> releaseDirs; // input/submission
+  String workingDir; // output
 
   Table<String, String, List<Path>> files;
 

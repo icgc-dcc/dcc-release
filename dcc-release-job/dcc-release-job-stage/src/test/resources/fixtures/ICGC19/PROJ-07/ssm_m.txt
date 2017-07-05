@@ -1,2 +1,0 @@
-analysis_id	analyzed_sample_id	matched_sample_id	assembly_version	platform	experimental_protocol	base_calling_algorithm	alignment_algorithm	variation_calling_algorithm	other_analysis_algorithm	sequencing_strategy	seq_coverage	raw_data_repository	raw_data_accession	note
-0040	00312	00301	1	28	Paired End http://www.illumina.com/technology/paired_end_sequencing_assay.ilmn	CASAVA http://support.illumina.com/sequencing/sequencing_software/casava.ilmn	BWA 0.6.2 http://bio-bwa.sourceforge.net	BWA 0.6.2 http://bio-bwa.sourceforge.net	-888	27	24.13092593874892	1	EGAD0	qnZKIwxHVX

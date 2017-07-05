@@ -39,5 +39,6 @@ public class SsmMetaFeatureType implements Serializable {
   private Double seq_coverage;
   private String sequencing_strategy;
   private String variation_calling_algorithm;
+  private String _study;
 
 }

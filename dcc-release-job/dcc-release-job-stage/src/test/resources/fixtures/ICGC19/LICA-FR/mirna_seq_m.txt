@@ -1,0 +1,3 @@
+analysis_id	analyzed_sample_id	assembly_version	sequencing_platform	total_read_count	experimental_protocol	reference_sample_type	alignment_algorithm	normalization_algorithm	other_analysis_algorithm	sequencing_strategy	raw_data_repository	raw_data_accession
+248	00301	1	60	7654321	reverse_transcription https://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/	-888	-888	norm.1	-888	5	4	d731e68f-edde-4b92-8b44-4a8e6758736f
+332	00312	1	60	7654321	reverse_transcription https://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/	-888	-888	norm.2	-888	5	4	5a2e60b3-1248-41b5-8657-56d144cbe935

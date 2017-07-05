@@ -1,0 +1,7 @@
+analysis_id	analyzed_sample_id	mutation_id	start_probe_id	end_probe_id	chromosome	chromosome_start	chromosome_end	chromosome_start_range	chromosome_end_range	mutation_type	copy_number	segment_mean	segment_median	quality_score	probability	is_annotated	verification_status	verification_platform	biological_validation_status	biological_validation_platform
+679	00301	1648764	-888	-888	1	10208	26540335	-888	-888	-1	-888	0.678303025271201	-888	-888	-888	2	2	-888	2	-888
+679	00301	1648765	-888	-888	1	26540336	27503218	-888	-888	-1	-888	-0.814371031710069	-888	-888	-888	2	2	-888	2	-888
+679	00301	1648766	-888	-888	1	27503219	56554257	-888	-888	-1	-888	0.72042208006278	-888	-888	-888	2	2	-888	2	-888
+1281	00312	1639092	-888	-888	7	10238194	54380373	-888	-888	-1	-888	0.4065	-888	-888	-888	2	2	-888	2	-888
+1281	00312	1639097	-888	-888	7	97402045	115934700	-888	-888	-1	-888	-0.0163	-888	-888	-888	2	2	-888	2	-888
+1281	00312	1639103	-888	-888	7	143911624	158215549	-888	-888	-1	-888	-0.0617	-888	-888	-888	2	2	-888	2	-888
