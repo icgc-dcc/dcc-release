@@ -33,7 +33,7 @@ public interface JobContext {
 
   List<String> getProjectNames();
 
-  String getReleaseDir();
+  List<String> getReleaseDirs();
 
   String getReleaseName();
 

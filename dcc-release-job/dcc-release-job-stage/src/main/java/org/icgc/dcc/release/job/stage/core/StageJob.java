@@ -25,9 +25,12 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.fs.Path;
+import org.icgc.dcc.common.core.model.ValueType;
 import org.icgc.dcc.release.core.job.Job;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
+import org.icgc.dcc.release.core.submission.SubmissionFileField;
+import org.icgc.dcc.release.core.submission.SubmissionFileSchema;
 import org.icgc.dcc.release.core.submission.SubmissionFileSchemas;
 import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.job.stage.task.DeleteStageTask;
@@ -65,16 +68,16 @@ public class StageJob implements Job {
   }
 
   private void stage(JobContext jobContext) {
-    val stagingTasks = createStagingTasks(jobContext.getWorkingDir(), jobContext.getFiles());
+    val stagingTasks = createStagingTasks(jobContext.getFiles());
     jobContext.execute(stagingTasks);
   }
 
-  private List<Task> createStagingTasks(String stagingDir, Table<String, String, List<Path>> files) {
+  private List<Task> createStagingTasks(Table<String, String, List<Path>> files) {
     int taskCount = 0;
     val schemaProjectTasks = ImmutableList.<Task> builder();
 
     for (val schemaName : files.rowKeySet()) {
-      val schema = schemas.get(schemaName);
+      val schema = getSchema(schemaName);
       val schemaPaths = files.row(schemaName);
 
       for (val entry : schemaPaths.entrySet()) {
@@ -88,6 +91,32 @@ public class StageJob implements Job {
     }
 
     return schemaProjectTasks.build();
+  }
+
+
+  public SubmissionFileSchema getSchema(@NonNull String schemaName) {
+    SubmissionFileSchema result;
+
+    // add PCAWG-specific column to ssm schemas
+    if (schemaName.equalsIgnoreCase("ssm_m") || schemaName.equalsIgnoreCase("ssm_p")) {
+      // yes, this is actually required for the fields to be included in output
+      // unless we permanently add field to schema
+      result = decorateSchema(schemas.get(schemaName));
+    } else {
+      result = schemas.get(schemaName);
+    }
+    return result;
+  }
+
+  private SubmissionFileSchema decorateSchema(SubmissionFileSchema schema) {
+    SubmissionFileField studyField = new SubmissionFileField("_study", ValueType.TEXT, false, null);
+    // SubmissionFileField bonusFlag = new SubmissionFileField("bonus", ValueType.TEXT, false, null);
+    List<SubmissionFileField> newFields = new ImmutableList.Builder<SubmissionFileField>()
+        .addAll(schema.getFields())
+        .add(studyField)
+        // .add(bonusFlag)
+        .build();
+    return new SubmissionFileSchema(schema.getName(), schema.getPattern(), newFields);
   }
 
 }

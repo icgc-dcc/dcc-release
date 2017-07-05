@@ -51,7 +51,7 @@ public class MockJobContext implements JobContext {
   }
 
   @Override
-  public String getReleaseDir() {
+  public List<String> getReleaseDirs() {
     return null;
   }
 

@@ -180,6 +180,13 @@ public final class CollectionFieldAccessors {
     return getText(mutation, OBSERVATION_PLATFORM);
   }
 
+  public static String getObservationStudy(@NonNull JsonNode mutation) {
+    // FIXME: Factor out to DCC Commons artifact
+    val OBSERVATION_STUDY = "_study";
+    return getText(mutation, OBSERVATION_STUDY);
+  }
+
+
   public static String getObservationValidationStatus(@NonNull JsonNode mutation) {
     return getText(mutation, OBSERVATION_VALIDATION_STATUS);
   }

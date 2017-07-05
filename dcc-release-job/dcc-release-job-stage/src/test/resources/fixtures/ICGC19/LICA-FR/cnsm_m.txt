@@ -1,0 +1,3 @@
+analysis_id	analyzed_sample_id	matched_sample_id	assembly_version	platform	experimental_protocol	base_calling_algorithm	alignment_algorithm	variation_calling_algorithm	other_analysis_algorithm	sequencing_strategy	seq_coverage	raw_data_repository	raw_data_accession
+679	00301	-888	1	60	IlluminaHiSeq_DNASeqC http://www.illumina.com	-888	-888	-888	-888	1	-888	4	d850ddcd-6e04-4eb4-887c-e1ae410c301c
+1281	00312	-888	1	8	Genome_Wide_SNP_6 https://www.affymetrix.com/	-888	-888	-888	-888	1	-888	3	TCGA-K4-A6FZ-01A-11D-A31K-01

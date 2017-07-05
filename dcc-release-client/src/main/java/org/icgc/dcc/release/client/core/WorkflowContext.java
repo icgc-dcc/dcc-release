@@ -17,12 +17,15 @@
  */
 package org.icgc.dcc.release.client.core;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import org.icgc.dcc.release.core.job.JobType;
+
+import com.google.common.base.Strings;
 
 import lombok.NonNull;
 import lombok.Value;
-
-import org.icgc.dcc.release.core.job.JobType;
 
 @Value
 public class WorkflowContext {
@@ -31,6 +34,7 @@ public class WorkflowContext {
   List<String> projectNames;
 
   String releaseDir;
+  String pcawgDir;
   String workingDir;
 
   List<JobType> jobTypes;
@@ -41,4 +45,14 @@ public class WorkflowContext {
     return jobTypes.contains(jobType);
   }
 
+  public List<String> getInputDirs() {
+    List<String> result = new ArrayList<String>();
+    if (!Strings.isNullOrEmpty(releaseDir)) {
+      result.add(releaseDir);
+    }
+    if (!Strings.isNullOrEmpty(pcawgDir)) {
+      result.add(pcawgDir);
+    }
+    return result;
+  }
 }

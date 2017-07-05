@@ -1,0 +1,1 @@
+donor_id	relationship_type	relationship_type_other	relationship_sex	relationship_age	relationship_disease_icd10	relationship_disease

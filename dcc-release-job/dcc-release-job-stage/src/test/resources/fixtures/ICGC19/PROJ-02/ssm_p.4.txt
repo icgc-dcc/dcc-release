@@ -1,5 +1,0 @@
-analysis_id	analyzed_sample_id	mutation_type	chromosome	chromosome_start	chromosome_end	chromosome_strand	reference_genome_allele	control_genotype	mutated_from_allele	mutated_to_allele	tumour_genotype	expressed_allele	quality_score	probability	total_read_count	mutant_allele_read_count	verification_status	verification_platform	biological_validation_status	biological_validation_platform	note
-0043	00312	1	8	96491348	96491348	1	A	A/C	A	C	C/C	C	45.07500905476384	28.61602652148211	2	1	4	-777	1	1	-888
-0043	00312	1	2	152238002	152238002	1	A	-/A	-	A	A/A	A	35.0526051344603	22.214998321675832	2	1	3	-9999	1	1	 W snmwHUe
-0043	00312	1	4	190224574	190224574	1	G	A/A	A	G	A/G	A	22.743876527128247	34.80944556578917	2	1	4	35	1	1	-888
-0043	00312	1	14	72470741	72470741	1	C	C/T	C	T	T/T	T	35.345950390037764	-888	2	1	4	-9999	1	1	ZDruYgplmz

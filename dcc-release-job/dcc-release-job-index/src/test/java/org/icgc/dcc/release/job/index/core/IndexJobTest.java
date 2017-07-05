@@ -23,6 +23,7 @@ import static org.icgc.dcc.dcc.common.es.TransportClientFactory.createClient;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -210,7 +211,7 @@ public class IndexJobTest extends AbstractJobTest {
 
   @SuppressWarnings("unchecked")
   private JobContext createIndexJobContext(JobType type, List<String> projectNames) {
-    return new DefaultJobContext(type, RELEASE_VERSION, projectNames, "/dev/null",
+    return new DefaultJobContext(type, RELEASE_VERSION, projectNames, Arrays.asList("/dev/null"),
         new File(INPUT_TEST_FIXTURES_DIR).getAbsolutePath(), mock(Table.class), taskExecutor, true);
   }
 

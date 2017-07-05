@@ -1,0 +1,3 @@
+analysis_id	analyzed_sample_id	fraction_wg_cpg_sites_covered	conversion_rate	experimental_protocol	other_analysis_algorithm	raw_data_repository	raw_data_accession
+16831	00301	-999	-999	jhu-usc.edu.hybridization.HumanMethylation450.01	-888	3	TCGA-FU-A23L-01A-11D-A16P-05
+16836	00312	-999	-999	jhu-usc.edu.hybridization.HumanMethylation450.01	-888	3	TCGA-C5-A1MN-01A-11D-A14Z-05

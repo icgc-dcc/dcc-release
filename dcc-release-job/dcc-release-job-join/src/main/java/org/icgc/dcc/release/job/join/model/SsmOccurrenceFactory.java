@@ -77,6 +77,7 @@ public final class SsmOccurrenceFactory {
     observation.setVariation_calling_algorithm(meta.getVariation_calling_algorithm());
     observation.setVerification_platform(primary.getVerification_platform());
     observation.setVerification_status(primary.getVerification_status());
+    observation.set_study(primary.get_study());
 
     return observation;
   }

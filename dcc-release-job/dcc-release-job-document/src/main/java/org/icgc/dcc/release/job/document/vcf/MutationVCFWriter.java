@@ -114,6 +114,7 @@ public class MutationVCFWriter implements Closeable {
     header.addMetaDataLine(new VCFInfoHeaderLine("affected_donors", 1, VCFHeaderLineType.Integer, "Number of donors with the current mutation"));
     header.addMetaDataLine(new VCFInfoHeaderLine("tested_donors",   1, VCFHeaderLineType.Integer, "Total number of donors with SSM data available"));
     header.addMetaDataLine(new VCFInfoHeaderLine("project_count",   1, VCFHeaderLineType.Integer, "Number of projects with the current mutation"));
+    header.addMetaDataLine(new VCFInfoHeaderLine("studies",         1, VCFHeaderLineType.Integer, "Produced from study."));
     
     header.addMetaDataLine(new VCFInfoHeaderLine("CONSEQUENCE",    UNBOUNDED, VCFHeaderLineType.String,  "Mutation consequence predictions annotated by SnpEff (subfields: " + formatValues(CONSEQUENCE_SUBFIELDS) + ")"));
     header.addMetaDataLine(new VCFInfoHeaderLine("OCCURRENCE",     UNBOUNDED, VCFHeaderLineType.String,  "Mutation occurrence counts broken down by project (subfields: "    + formatValues(OCCURRENCE_SUBFIELDS)  + ")"));
@@ -160,6 +161,8 @@ public class MutationVCFWriter implements Closeable {
     attributes.put("affected_donors", mutation.getAffectedDonors());
     attributes.put("tested_donors",   totalSsmTestedDonorCount);
     attributes.put("project_count",   mutation.getProjectCount());
+
+    attributes.put("studies", mutation.getStudies());
 
     attributes.put("CONSEQUENCE", formatList(mutation.getConsequences()));
     attributes.put("OCCURRENCE",  formatList(mutation.getOccurrences()));
