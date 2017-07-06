@@ -1,19 +1,15 @@
 package org.icgc.dcc.release.job.id.model;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
 import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_MUTATION;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.*;
+import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
+
 
 /**
  * Copyright (c) $today.year The Ontario Institute for Cancer Research. All rights reserved.
@@ -61,31 +57,20 @@ public class MutationEntity {
   private  String uniqueId;
 
   @NonNull
-  private String rest;
+  private String all;
 
 
   public static MutationEntity fromObjectNode(ObjectNode node) {
 
     MutationEntity entity = new MutationEntity();
     entity.chromosome = node.get(SUBMISSION_OBSERVATION_CHROMOSOME).textValue();
-    node.remove(SUBMISSION_OBSERVATION_CHROMOSOME);
-
-    entity.chromosomeStart = node.get(SUBMISSION_OBSERVATION_CHROMOSOME_START).textValue();
-    node.remove(SUBMISSION_OBSERVATION_CHROMOSOME_START);
-
-    entity.chromosomeEnd = node.get(SUBMISSION_OBSERVATION_CHROMOSOME_END).textValue();
-    node.remove(SUBMISSION_OBSERVATION_CHROMOSOME_END);
-
+    entity.chromosomeStart = textValue(node, SUBMISSION_OBSERVATION_CHROMOSOME_START);
+    entity.chromosomeEnd = textValue(node, SUBMISSION_OBSERVATION_CHROMOSOME_END);
     entity.mutation = node.get(NORMALIZER_MUTATION).textValue();
-    node.remove(NORMALIZER_MUTATION);
-
     entity.mutationType = node.get(SUBMISSION_OBSERVATION_MUTATION_TYPE).textValue();
-    node.remove(SUBMISSION_OBSERVATION_MUTATION_TYPE);
-
     entity.assemblyVersion = ASSEMBLY_VERSION;
     entity.uniqueId = "";
-
-    entity.rest = node.toString();
+    entity.all = node.toString();
 
     return entity;
   }

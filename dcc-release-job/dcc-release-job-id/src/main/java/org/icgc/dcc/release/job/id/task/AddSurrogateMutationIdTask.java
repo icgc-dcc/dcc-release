@@ -85,7 +85,7 @@ public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
           return
             StreamSupport.stream(iterable.spliterator(), false).map(row -> {
               try {
-                ObjectNode node = (ObjectNode)mapper.readTree(row.<String>getAs("rest"));
+                ObjectNode node = (ObjectNode)mapper.readTree(row.<String>getAs("all"));
 
                 String chromosome = row.<String>getAs("chromosome");
                 String chromosomeStart = row.<String>getAs("chromosomeStart");
@@ -93,12 +93,6 @@ public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
                 String mutation = row.<String>getAs("mutation");
                 String mutationType = row.<String>getAs("mutationType");
                 String assemblyVersion = row.<String>getAs("assemblyVersion");
-
-                node.put(SUBMISSION_OBSERVATION_CHROMOSOME, chromosome);
-                node.put(SUBMISSION_OBSERVATION_CHROMOSOME_START, Long.parseLong(chromosomeStart));
-                node.put(SUBMISSION_OBSERVATION_CHROMOSOME_END, Long.parseLong(chromosomeEnd));
-                node.put(NORMALIZER_MUTATION, mutation);
-                node.put(SUBMISSION_OBSERVATION_MUTATION_TYPE, mutationType);
 
                 String uniqueId = row.<String>getAs("db.uniqueId");
                 if(uniqueId == null || uniqueId.isEmpty()){

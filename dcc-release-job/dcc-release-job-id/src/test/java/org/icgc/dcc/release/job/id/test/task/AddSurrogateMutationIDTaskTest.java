@@ -126,8 +126,8 @@ public class AddSurrogateMutationIDTaskTest {
                     List<String> fields = TAB.splitToList(row);
                     ObjectNode node = mapper.createObjectNode();
                     node.put(SUBMISSION_OBSERVATION_CHROMOSOME, fields.get(1));
-                    node.put(SUBMISSION_OBSERVATION_CHROMOSOME_START, fields.get(2));
-                    node.put(SUBMISSION_OBSERVATION_CHROMOSOME_END, fields.get(3));
+                    node.put(SUBMISSION_OBSERVATION_CHROMOSOME_START, Long.parseLong(fields.get(2)));
+                    node.put(SUBMISSION_OBSERVATION_CHROMOSOME_END, Long.parseLong(fields.get(3)));
                     node.put(NORMALIZER_MUTATION, fields.get(4));
                     node.put(SUBMISSION_OBSERVATION_MUTATION_TYPE, fields.get(5));
                     node.put(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION, fields.get(6));
