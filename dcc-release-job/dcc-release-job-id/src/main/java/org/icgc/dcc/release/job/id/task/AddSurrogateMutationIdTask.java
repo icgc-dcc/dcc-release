@@ -133,7 +133,7 @@ public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
                 node.put(SUBMISSION_OBSERVATION_CHROMOSOME_END, id.getChromosomeEnd());
                 node.put(NORMALIZER_MUTATION, id.getMutation());
                 node.put(SUBMISSION_OBSERVATION_MUTATION_TYPE, id.getMutationType());
-                node.put(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION, id.getAssemblyVersion());
+//                node.put(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION, id.getAssemblyVersion());
                 node.put(SURROGATE_MUTATION_ID, id.getUniqueId());
                 return node;
               }).collect(Collectors.toList());
