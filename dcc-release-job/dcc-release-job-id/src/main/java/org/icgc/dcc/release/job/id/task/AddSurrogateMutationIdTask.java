@@ -5,13 +5,18 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.NonNull;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
+import org.icgc.dcc.id.client.core.IdClient;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.JobContext;
+import org.icgc.dcc.release.job.id.model.MutationEntity;
 import org.icgc.dcc.release.job.id.model.MutationID;
+import rx.Observable;
 import scala.collection.convert.WrapAsScala$;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,7 +47,6 @@ import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
  */
 
 public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
-  private static final String ASSEMBLY_VERSION = "GRCh37";
   private static final String MUTATION_ID_PREFIX = "MU";
   public static final String mutationDumpPath = "/pg_dump/mutation/mutation.txt";
   private DataFrame mutationIDs;
@@ -61,18 +65,9 @@ public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
 
     DataFrame raw_df =
       sqlContext.createDataFrame(
-        input.map(row -> {
-          String chromosome = row.get(SUBMISSION_OBSERVATION_CHROMOSOME).textValue();
-          String chromosomeStart = textValue(row, SUBMISSION_OBSERVATION_CHROMOSOME_START);
-          String chromosomeEnd = textValue(row, SUBMISSION_OBSERVATION_CHROMOSOME_END);
-          String mutation = row.get(NORMALIZER_MUTATION).textValue();
-          String mutationType = row.get(SUBMISSION_OBSERVATION_MUTATION_TYPE).textValue();
-          String assemblyVersion = ASSEMBLY_VERSION;
-          return new MutationID(chromosome, chromosomeStart, chromosomeEnd, mutation, mutationType, assemblyVersion, "");
-        }),
-        MutationID.class
+        input.map(row -> MutationEntity.fromObjectNode(row)),
+        MutationEntity.class
       );
-
 
     String[] fields = {"chromosome", "chromosomeStart", "chromosomeEnd", "mutation", "mutationType", "assemblyVersion"};
 
@@ -81,62 +76,55 @@ public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
             mutationIDs.withColumnRenamed("uniqueId", "db.uniqueId"),
             WrapAsScala$.MODULE$.asScalaBuffer(Arrays.asList(fields)),
             "left_outer"
-        ).rdd().toJavaRDD()
-        .map(row -> {
+        ).rdd().toJavaRDD().mapPartitions(iterator -> {
 
-          String chromosome = row.<String>getAs("chromosome");
-          String chromosomeStart = row.<String>getAs("chromosomeStart");
-          String chromosomeEnd = row.<String>getAs("chromosomeEnd");
-          String mutation = row.<String>getAs("mutation");
-          String mutationType = row.<String>getAs("mutationType");
-          String assemblyVersion = row.<String>getAs("assemblyVersion");
-
-          if(row.<String>getAs("db.uniqueId") == null || row.<String>getAs("db.uniqueId").isEmpty()){
-            return
-              new MutationID(
-                  chromosome,
-                  chromosomeStart,
-                  chromosomeEnd,
-                  mutation,
-                  mutationType,
-                  assemblyVersion,
-                  localIdClientFactory.create().createMutationId(
-                      chromosome,
-                      chromosomeStart,
-                      chromosomeEnd,
-                      mutation,
-                      mutationType,
-                      assemblyVersion
-                  )
-              );
-          }
-          else {
-            return
-              new MutationID(
-                  chromosome,
-                  chromosomeStart,
-                  chromosomeEnd,
-                  mutation,
-                  mutationType,
-                  assemblyVersion,
-                  MUTATION_ID_PREFIX + row.<String>getAs("db.uniqueId")
-              );
-          }
-        }).mapPartitions(iterator -> {
+          IdClient idClient = localIdClientFactory.create();
           ObjectMapper mapper = new ObjectMapper();
-          Iterable<MutationID> iterable = () ->  iterator;
+
+          Iterable<Row> iterable = () -> iterator;
           return
-              StreamSupport.stream(iterable.spliterator(), false).map(id -> {
-                ObjectNode node = mapper.createObjectNode();
-                node.put(SUBMISSION_OBSERVATION_CHROMOSOME, id.getChromosome());
-                node.put(SUBMISSION_OBSERVATION_CHROMOSOME_START, id.getChromosomeStart());
-                node.put(SUBMISSION_OBSERVATION_CHROMOSOME_END, id.getChromosomeEnd());
-                node.put(NORMALIZER_MUTATION, id.getMutation());
-                node.put(SUBMISSION_OBSERVATION_MUTATION_TYPE, id.getMutationType());
-//                node.put(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION, id.getAssemblyVersion());
-                node.put(SURROGATE_MUTATION_ID, id.getUniqueId());
+            StreamSupport.stream(iterable.spliterator(), false).map(row -> {
+              try {
+                ObjectNode node = (ObjectNode)mapper.readTree(row.<String>getAs("rest"));
+
+                String chromosome = row.<String>getAs("chromosome");
+                String chromosomeStart = row.<String>getAs("chromosomeStart");
+                String chromosomeEnd = row.<String>getAs("chromosomeEnd");
+                String mutation = row.<String>getAs("mutation");
+                String mutationType = row.<String>getAs("mutationType");
+                String assemblyVersion = row.<String>getAs("assemblyVersion");
+
+                node.put(SUBMISSION_OBSERVATION_CHROMOSOME, chromosome);
+                node.put(SUBMISSION_OBSERVATION_CHROMOSOME_START, Long.parseLong(chromosomeStart));
+                node.put(SUBMISSION_OBSERVATION_CHROMOSOME_END, Long.parseLong(chromosomeEnd));
+                node.put(NORMALIZER_MUTATION, mutation);
+                node.put(SUBMISSION_OBSERVATION_MUTATION_TYPE, mutationType);
+
+                String uniqueId = row.<String>getAs("db.uniqueId");
+                if(uniqueId == null || uniqueId.isEmpty()){
+                  node.put(SURROGATE_MUTATION_ID,
+                      idClient.createMutationId(
+                          chromosome,
+                          chromosomeStart,
+                          chromosomeEnd,
+                          mutation,
+                          mutationType,
+                          assemblyVersion
+                      )
+                  );
+                }
+                else{
+                  node.put(SURROGATE_MUTATION_ID, MUTATION_ID_PREFIX + row.<String>getAs("db.uniqueId"));
+                }
+
                 return node;
-              }).collect(Collectors.toList());
+
+              } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+              }
+            }).collect(Collectors.toList());
+
         });
   }
 

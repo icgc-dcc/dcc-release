@@ -131,6 +131,8 @@ public class AddSurrogateMutationIDTaskTest {
                     node.put(NORMALIZER_MUTATION, fields.get(4));
                     node.put(SUBMISSION_OBSERVATION_MUTATION_TYPE, fields.get(5));
                     node.put(SUBMISSION_OBSERVATION_ASSEMBLY_VERSION, fields.get(6));
+                    node.put("other", "other");
+                    node.putNull("testnull");
                     return node;
                   }).collect(Collectors.toList());
             }
@@ -146,6 +148,8 @@ public class AddSurrogateMutationIDTaskTest {
       JavaRDD<ObjectNode> cached = ret.cache();
 
       assertEquals(20, cached.count());
+
+      cached.foreach(node -> System.out.println(node.toString()));
 
       List<String> collected = cached.map(node -> node.get("_mutation_id").asText()).collect();
 
