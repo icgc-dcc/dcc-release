@@ -29,13 +29,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.VoidFunction;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.job.index.io.DocumentWriterContext;
 
 import com.google.common.collect.Lists;
 
 @RequiredArgsConstructor
-public final class DocumentIndexer implements FlatMapFunction<Iterator<Document>, Void> {
+public final class DocumentIndexer implements VoidFunction<Iterator<Document>> {
 
   private static final long serialVersionUID = 3834434199819463998L;
 
@@ -50,7 +51,7 @@ public final class DocumentIndexer implements FlatMapFunction<Iterator<Document>
   private final String workingDir;
 
   @Override
-  public Iterable<Void> call(Iterator<Document> document) throws Exception {
+  public void call(Iterator<Document> document) throws Exception {
     @Cleanup
     val documentWriter = createFilteringDocumentWriter(createDocumentWriterContext());
 
@@ -58,7 +59,7 @@ public final class DocumentIndexer implements FlatMapFunction<Iterator<Document>
       documentWriter.write(convertDocument(document.next()));
     }
 
-    return Lists.newArrayList();
+//    return Lists.newArrayList();
   }
 
   private DocumentWriterContext createDocumentWriterContext() {

@@ -19,6 +19,7 @@ package org.icgc.dcc.release.core.job;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import lombok.Value;
 
@@ -63,6 +64,26 @@ public class DefaultJobContext implements JobContext {
   @Override
   public void executeSequentially(Collection<? extends Task> tasks) {
     executor.executeSequentially(this, tasks);
+  }
+
+  @Override
+  public void execute(ExecutorService executorService, Task... tasks) {
+
+  }
+
+  @Override
+  public void execute(ExecutorService executorService, Collection<? extends Task> tasks) {
+
+  }
+
+  @Override
+  public void executeSequentially(ExecutorService executorServic, Task... tasks) {
+
+  }
+
+  @Override
+  public void executeSequentially(ExecutorService executorService, Collection<? extends Task> tasks) {
+
   }
 
 }

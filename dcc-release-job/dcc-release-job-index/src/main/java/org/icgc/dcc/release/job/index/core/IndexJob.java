@@ -31,7 +31,10 @@ import static org.icgc.dcc.release.job.index.utils.IndexTasks.getIndexName;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
@@ -80,19 +83,25 @@ public class IndexJob extends GenericJob {
 
     val indexName = getIndexName(jobContext.getReleaseName());
     val indexTypes = getIndexTypes();
-    val allTasks = createTasks(indexName, indexTypes);
-    log.info("Created {} tasks.", allTasks.size());
+    val esTaskExecutor = Executors.newFixedThreadPool(10);
+    val indexTaskExecutor = Executors.newFixedThreadPool(10);
+    val allTasks = createTasks(indexName, indexTypes, "");
+    val indexTasks = allTasks.getLeft();
+    val esTasks = allTasks.getRight();
+    log.info("Created {} tasks.", indexTasks.size() + esTasks.size());
 
-    if (allTasks.isEmpty()) {
+    if (indexTasks.isEmpty() && esTasks.isEmpty()) {
       log.info("No tasks to execute. Finishing IndexJob...");
       return;
     }
 
-    if (!hasIndexTasks(allTasks)) {
-      log.info("IndexJob doesn't have indexing tasks. Creating Elasticsearch archives only...");
-      jobContext.execute(allTasks);
-      return;
-    }
+//    if (!hasIndexTasks(allTasks)) {
+//      log.info("IndexJob doesn't have indexing tasks. Creating Elasticsearch archives only...");
+//      jobContext.execute(allTasks);
+//      return;
+//    }
+
+    jobContext.execute(esTaskExecutor, esTasks);
 
     @Cleanup
     val client = createClient(properties.getEsUri(), false);
@@ -100,20 +109,23 @@ public class IndexJob extends GenericJob {
     val indexService = new IndexService(client);
 
     prepareIndex(indexName, indexService, indexTypes);
-    val noBigFilesTasks = allTasks.stream()
-        .filter(task -> !(task instanceof IndexBigFilesTask))
-        .collect(toImmutableList());
-    if (!noBigFilesTasks.isEmpty()) {
-      jobContext.execute(noBigFilesTasks);
-    }
 
-    val bigFilesTask = allTasks.stream()
-        .filter(task -> task instanceof IndexBigFilesTask)
-        .findFirst();
-    if (bigFilesTask.isPresent()) {
-      log.info("Indexing big files...");
-      jobContext.execute(bigFilesTask.get());
-    }
+    jobContext.execute(indexTaskExecutor, indexTasks);
+
+//    val noBigFilesTasks = allTasks.stream()
+//        .filter(task -> !(task instanceof IndexBigFilesTask))
+//        .collect(toImmutableList());
+//    if (!noBigFilesTasks.isEmpty()) {
+//      jobContext.execute(noBigFilesTasks);
+//    }
+//
+//    val bigFilesTask = allTasks.stream()
+//        .filter(task -> task instanceof IndexBigFilesTask)
+//        .findFirst();
+//    if (bigFilesTask.isPresent()) {
+//      log.info("Indexing big files...");
+//      jobContext.execute(bigFilesTask.get());
+//    }
 
     // Report
     log.info("Reporting index...");
@@ -150,6 +162,23 @@ public class IndexJob extends GenericJob {
     }
 
     return tasks.build();
+  }
+
+  Pair<Collection<Task>, Collection<Task>> createTasks(String indexName, Set<DocumentType> indexTypes, String placeholder) {
+    val indexTasks = ImmutableList.<Task> builder();
+    val esTasks = ImmutableList.<Task> builder();
+
+    if (properties.isIndexDocuments()) {
+      log.info("Creating index tasks for index types: {}", indexTypes);
+      indexTasks.addAll(createIndexTasks(indexName, indexTypes));
+    }
+
+    if (properties.isExportEsIndex()) {
+      log.info("Creating export Elasticsearch index tasks...");
+      esTasks.addAll(createEsExportTasks(indexName, indexTypes));
+    }
+
+    return Pair.of(indexTasks.build(), esTasks.build());
   }
 
   private void prepareIndex(String indexName, IndexService indexService, Set<DocumentType> indexTypes) {
