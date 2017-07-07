@@ -19,6 +19,7 @@ package org.icgc.dcc.release.core.job;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -48,6 +49,14 @@ public interface JobContext {
   void executeSequentially(Task... tasks);
 
   void executeSequentially(Collection<? extends Task> tasks);
+
+  void execute(ExecutorService executorService, Task... tasks);
+
+  void execute(ExecutorService executorService, Collection<? extends Task> tasks);
+
+  void executeSequentially(ExecutorService executorServic, Task... tasks);
+
+  void executeSequentially(ExecutorService executorService, Collection<? extends Task> tasks);
 
   boolean isCompressOutput();
 

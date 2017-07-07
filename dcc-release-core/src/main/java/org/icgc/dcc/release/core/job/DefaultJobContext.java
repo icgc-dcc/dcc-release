@@ -19,6 +19,7 @@ package org.icgc.dcc.release.core.job;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import lombok.Value;
 import org.apache.hadoop.fs.FileSystem;
@@ -77,6 +78,27 @@ public class DefaultJobContext implements JobContext {
   @Override
   public FileSystem getFileSystem() {
     return executor.getFileSystem();
+  }
+
+  @Override
+
+  public void execute(ExecutorService executorService, Task... tasks) {
+    executor.execute(this, ImmutableList.copyOf(tasks), executorService);
+  }
+
+  @Override
+  public void execute(ExecutorService executorService, Collection<? extends Task> tasks) {
+    executor.execute(this, tasks, executorService);
+  }
+
+  @Override
+  public void executeSequentially(ExecutorService executorService, Task... tasks) {
+    executor.executeSequentially(this, ImmutableList.copyOf(tasks), executorService);
+  }
+
+  @Override
+  public void executeSequentially(ExecutorService executorService, Collection<? extends Task> tasks) {
+    executor.executeSequentially(this, tasks, executorService);
   }
 
 }
