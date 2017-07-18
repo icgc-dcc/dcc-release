@@ -60,8 +60,8 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeabl
   /**
    * State.
    */
-  private transient FathmmPredictor predictor;
-  private transient FathmmRepository repository;
+//  private transient FathmmPredictor predictor;
+//  private transient FathmmRepository repository;
 
   @Override
   public ObjectNode call(ObjectNode observation) throws Exception {
@@ -114,9 +114,9 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeabl
 
   @Override
   public void close() throws IOException {
-    if (repository != null) {
-      repository.close();
-    }
+//    if (repository != null) {
+//      repository.close();
+//    }
   }
 
   private ObjectNode calculateFATHMM(String translationIdStr, String aaMutationStr) {
@@ -133,12 +133,13 @@ public class PredictFathmm implements Function<ObjectNode, ObjectNode>, Closeabl
   }
 
   private Map<String, String> predict(String translationIdStr, String aaMutationStr) {
-    if (predictor == null) {
-      repository = new FathmmRepository(fathmmRepositoryUrl);
-      predictor = new FathmmPredictor(repository);
-    }
+//    if (predictor == null) {
+//      repository = new FathmmRepository(fathmmRepositoryUrl);
+//      predictor = new FathmmPredictor(repository);
+//      predictor = new FathmmPredictor(FathmmRepository.getInstance(this.fathmmRepositoryUrl));
+//    }
 
-    return predictor.predict(translationIdStr, aaMutationStr);
+    return FathmmPredictor.getInstance(this.fathmmRepositoryUrl).predict(translationIdStr, aaMutationStr);
   }
 
 }

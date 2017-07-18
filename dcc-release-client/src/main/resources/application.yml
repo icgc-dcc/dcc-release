@@ -59,9 +59,15 @@ spark:
 postgres:
   user: dcc
   password: <fill in>
-  database: fathmm
   server: localhost
-  url: jdbc:postgresql://${postgres.server}/${postgres.database}?user=${postgres.user}&password=${postgres.password}
+
+id:
+  postgres:
+    database: <fill in>
+
+fathmm:
+  postgres:
+    url: jdbc:postgresql://${postgres.server}/fathmm?user=${postgres.user}&password=${postgres.password}
 
 mail:
   recipients: nobody@example.com

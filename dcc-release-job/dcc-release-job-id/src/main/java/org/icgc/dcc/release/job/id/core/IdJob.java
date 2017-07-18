@@ -38,6 +38,7 @@ import org.icgc.dcc.release.job.id.dump.impl.DumpMutationDataByPGCopyManager;
 import org.icgc.dcc.release.job.id.model.*;
 import org.icgc.dcc.release.job.id.task.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import lombok.NonNull;
@@ -62,6 +63,8 @@ public class IdJob extends GenericJob {
   IdProperties identifierProperties;
   @Autowired
   PostgresqlProperties postgresqlProperties;
+  @Value("${id.postgres.database}")
+  String database;
 
   static {
     try {
@@ -91,7 +94,7 @@ public class IdJob extends GenericJob {
   }
 
   private DumpDataToHDFS getDumpImpl(JobContext jobContext) {
-    return new DumpMutationDataByPGCopyManager(jobContext.getFileSystem(), this.postgresqlProperties, jobContext.getWorkingDir() + AddSurrogateMutationIdTask.mutationDumpPath);
+    return new DumpMutationDataByPGCopyManager(jobContext.getFileSystem(), this.postgresqlProperties, this.database,jobContext.getWorkingDir() + AddSurrogateMutationIdTask.mutationDumpPath);
   }
 
   private Observable<Boolean> rxDumpPGDataToHDFS(@NonNull JobContext jobContext){

@@ -41,7 +41,7 @@ import com.google.common.collect.BiMap;
 @Component
 public class FathmmJob extends GenericJob {
 
-  @Value("${postgres.url}")
+  @Value("${fathmm.postgres.url}")
   private String jdbcUrl;
 
   @Override

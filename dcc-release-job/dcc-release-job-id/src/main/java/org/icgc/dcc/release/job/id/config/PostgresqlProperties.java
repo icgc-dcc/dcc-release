@@ -27,7 +27,6 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 public class PostgresqlProperties {
   String server;
-  String database;
   String user;
   String password;
 }

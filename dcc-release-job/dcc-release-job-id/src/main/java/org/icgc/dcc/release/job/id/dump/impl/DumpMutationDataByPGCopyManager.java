@@ -1,5 +1,6 @@
 package org.icgc.dcc.release.job.id.dump.impl;
 
+import ch.qos.logback.core.db.dialect.DBUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -36,15 +37,21 @@ public class DumpMutationDataByPGCopyManager implements DumpDataToHDFS {
 
   private final FileSystem fileSystem;
   private final PostgresqlProperties postgresqlProperties;
+  private final String database;
   private final String dumpTarget;
 
-  public DumpMutationDataByPGCopyManager(FileSystem system, PostgresqlProperties postgresql, String target) {
+  public DumpMutationDataByPGCopyManager(FileSystem system, PostgresqlProperties postgresql, String database, String target) {
     this.fileSystem = system;
     this.postgresqlProperties = postgresql;
+    this.database = database;
     this.dumpTarget = target;
   }
   @Override
   public boolean dump() {
+
+    Connection conn = null;
+    FSDataOutputStream outputStream = null;
+
     try {
 
       Path target = new Path(this.dumpTarget);
@@ -53,15 +60,14 @@ public class DumpMutationDataByPGCopyManager implements DumpDataToHDFS {
         this.fileSystem.delete(target, true);
       }
 
-      FSDataOutputStream outputStream = this.fileSystem.create(target);
+      outputStream = this.fileSystem.create(target);
 
 
-      Connection conn = DriverManager.getConnection("jdbc:postgresql://" + postgresqlProperties.getServer() + "/" + postgresqlProperties.getDatabase(), postgresqlProperties.getUser(), postgresqlProperties.getPassword());
+      conn = DriverManager.getConnection("jdbc:postgresql://" + postgresqlProperties.getServer() + "/" + this.database, postgresqlProperties.getUser(), postgresqlProperties.getPassword());
       CopyManager copyManager = ((PGConnection)conn).getCopyAPI();
       copyManager.copyOut("COPY mutation_ids TO STDOUT ", outputStream);
 
       outputStream.flush();
-      outputStream.close();
 
       return true;
 
@@ -69,6 +75,9 @@ public class DumpMutationDataByPGCopyManager implements DumpDataToHDFS {
       log.error(e.getMessage());
     } catch (IOException e) {
       log.error(e.getMessage());
+    } finally {
+      try{outputStream.close();} catch (Exception e) {}
+      try{conn.close();} catch (Exception e) {}
     }
 
     return false;
