@@ -50,18 +50,21 @@ public abstract class DirectoryResourceResolver<T> extends FileMutexResolver<T> 
 
   @SneakyThrows
   private void ensureResourceDir(final File resourceDir) {
-    new FileMutex(getLockFile(DirectoryResourceResolver.class)) {
 
-      @Override
-      public void withLock() {
-        if (!resourceDir.exists()) {
-          log.info("Creating resource dir '{}'...", resourceDir);
-          checkState(resourceDir.mkdirs(), "Could not make base dir '%s'", resourceDir);
-          log.info("Finished resource base dir");
+    synchronized (DirectoryResourceResolver.class){
+      new FileMutex(getLockFile(DirectoryResourceResolver.class)) {
+
+        @Override
+        public void withLock() {
+          if (!resourceDir.exists()) {
+            log.info("Creating resource dir '{}'...", resourceDir);
+            checkState(resourceDir.mkdirs(), "Could not make base dir '%s'", resourceDir);
+            log.info("Finished resource base dir");
+          }
         }
-      }
 
-    };
+      };
+    }
   }
 
 }
