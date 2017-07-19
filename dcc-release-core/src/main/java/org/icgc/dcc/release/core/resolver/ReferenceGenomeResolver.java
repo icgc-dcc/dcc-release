@@ -60,19 +60,22 @@ public class ReferenceGenomeResolver extends DirectoryResourceResolver<File> {
     val dataDir = new File(getResourceDir(), "genome");
     val versionDir = new File(dataDir, version);
     val fastaFile = new File(versionDir, version + ".fasta");
-    if (fastaFile.exists()) {
-      log.info("Reference genome '{}' exists. Returning", fastaFile.getAbsolutePath());
+
+    synchronized (this.getClass()){
+      if (fastaFile.exists()) {
+        log.info("Reference genome '{}' exists. Returning", fastaFile.getAbsolutePath());
+        return fastaFile;
+      }
+
+      log.info("Reference genome '{}' does not exist. Creating...", versionDir.getAbsolutePath());
+      checkState(versionDir.mkdirs(), "Could not make data version directory '%s'", versionDir);
+
+      log.info("Downloading reference genome version '{}'...", version);
+      download(url, versionDir);
+      log.info("Finished downloading reference genome");
+
       return fastaFile;
     }
-
-    log.info("Reference genome '{}' does not exist. Creating...", versionDir.getAbsolutePath());
-    checkState(versionDir.mkdirs(), "Could not make data version directory '%s'", versionDir);
-
-    log.info("Downloading reference genome version '{}'...", version);
-    download(url, versionDir);
-    log.info("Finished downloading reference genome");
-
-    return fastaFile;
   }
 
   private void download(URL url, File dir) throws IOException, FileNotFoundException {
