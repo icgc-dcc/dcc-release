@@ -67,13 +67,15 @@ public class ReferenceGenomeResolver extends DirectoryResourceResolver<File> {
         return fastaFile;
       }
 
-      log.info("Reference genome '{}' does not exist. Creating...", versionDir.getAbsolutePath());
-      checkState(versionDir.mkdirs(), "Could not make data version directory '%s'", versionDir);
+      if(!versionDir.exists()) {
+        log.info("Reference genome '{}' does not exist. Creating...", versionDir.getAbsolutePath());
+        checkState(versionDir.mkdirs(), "Could not make data version directory '%s'", versionDir);
 
-      log.info("Downloading reference genome version '{}'...", version);
-      download(url, versionDir);
-      log.info("Finished downloading reference genome");
-
+        log.info("Downloading reference genome version '{}'...", version);
+        download(url, versionDir);
+        log.info("Finished downloading reference genome");
+      }
+      
       return fastaFile;
     }
   }
