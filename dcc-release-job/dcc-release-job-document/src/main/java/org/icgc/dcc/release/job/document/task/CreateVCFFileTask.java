@@ -28,7 +28,9 @@ import static org.icgc.dcc.release.core.util.Partitions.getPartitionsCount;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Collections;
+import java.util.Map;
 
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.spark.api.java.JavaRDD;
 import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.core.job.FileType;
@@ -85,9 +87,13 @@ public class CreateVCFFileTask extends GenericTask {
 
     // Coalescing to 1 partition so only 1 instance of SaveVCFRecords function will be created and it will get the whole
     // input
+//    output.coalesce(1)
+//        .mapPartitions(new SaveVCFRecords(workingDir, fileSystemSettings))
+//        .count();
+
     output.coalesce(1)
-        .mapPartitions(new SaveVCFRecords(workingDir, fileSystemSettings))
-        .count();
+        .foreachPartition(new SaveVCFRecords(workingDir, fileSystemSettings));
+
   }
 
   private Integer resolveTotalSsmTestedDonorCount(TaskContext taskContext) {
