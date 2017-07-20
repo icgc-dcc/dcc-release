@@ -87,10 +87,6 @@ public class CreateVCFFileTask extends GenericTask {
 
     // Coalescing to 1 partition so only 1 instance of SaveVCFRecords function will be created and it will get the whole
     // input
-//    output.coalesce(1)
-//        .mapPartitions(new SaveVCFRecords(workingDir, fileSystemSettings))
-//        .count();
-
     output.coalesce(1)
         .foreachPartition(new SaveVCFRecords(workingDir, fileSystemSettings));
 

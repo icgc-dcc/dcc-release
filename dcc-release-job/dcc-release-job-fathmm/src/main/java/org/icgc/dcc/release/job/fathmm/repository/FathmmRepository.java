@@ -49,14 +49,6 @@ public class FathmmRepository implements Closeable {
 
   private final Handle handle;
 
-//  private final Query<Map<String, Object>> cacheQuery;
-//  private final Query<Map<String, Object>> sequenceQuery;
-//  private final Query<Map<String, Object>> domainQuery;
-//  private final Query<Map<String, Object>> probabilityQuery;
-//  private final Query<Map<String, Object>> weightQuery;
-//  private final Update updateCache;
-
-
   private final String cacheQuery =  "select * from \"DCC_CACHE\" where translation_id = :translationId and aa_mutation = :aaMutation";
   private final String sequenceQuery = "select a.* from \"SEQUENCE\" a, \"PROTEIN\" b where a.id = b.id and b.name = :translationId";
   private final String domainQuery =  "select * from \"DOMAINS\" where id=:sequenceId and :substitution between seq_begin and seq_end order by score";
@@ -74,15 +66,6 @@ public class FathmmRepository implements Closeable {
 
   private FathmmRepository(@NonNull Handle handle) {
     this.handle = handle;
-
-    // @formatter:off
-//    this.cacheQuery       = handle.createQuery("select * from \"DCC_CACHE\" where translation_id = :translationId and aa_mutation = :aaMutation");
-//    this.sequenceQuery    = handle.createQuery("select a.* from \"SEQUENCE\" a, \"PROTEIN\" b where a.id = b.id and b.name = :translationId");
-//    this.domainQuery      = handle.createQuery("select * from \"DOMAINS\" where id=:sequenceId and :substitution between seq_begin and seq_end order by score");
-//    this.probabilityQuery = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:probId and a.position=:probPosition");
-//    this.weightQuery      = handle.createQuery(format("select disease, other from \"WEIGHTS\" where id=:wid and type='%s'\\:\\:weights_type", WEIGHT_TYPE));
-//    this.updateCache      = handle.createStatement("insert into \"DCC_CACHE\" (translation_id,  aa_mutation, score, prediction) values (:translationId, :aaChange, :score, :prediction)");
-    // @formatter:on
   }
 
   @Override
