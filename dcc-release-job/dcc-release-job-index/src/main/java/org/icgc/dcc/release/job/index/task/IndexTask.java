@@ -82,9 +82,6 @@ public class IndexTask extends GenericIndexTask {
         bigDocumentThresholdMb,
         taskContext.getJobContext().getWorkingDir()));
 
-        // Calling count() to trigger calculation of the RDD. Using the count() action to iterate over the whole
-        // partition. first(), for example, will stop after processing of the first element.
-//        .count();
   }
 
   private JavaRDD<Document> readDocuments(TaskContext taskContext) {
