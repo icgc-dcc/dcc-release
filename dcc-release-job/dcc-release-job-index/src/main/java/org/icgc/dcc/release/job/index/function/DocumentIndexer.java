@@ -59,7 +59,6 @@ public final class DocumentIndexer implements VoidFunction<Iterator<Document>> {
       documentWriter.write(convertDocument(document.next()));
     }
 
-//    return Lists.newArrayList();
   }
 
   private DocumentWriterContext createDocumentWriterContext() {

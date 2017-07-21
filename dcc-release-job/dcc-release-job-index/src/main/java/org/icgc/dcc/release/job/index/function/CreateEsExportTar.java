@@ -41,6 +41,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.VoidFunction;
 import org.icgc.dcc.common.core.util.Separators;
 import org.icgc.dcc.common.hadoop.fs.Configurations;
 import org.icgc.dcc.common.hadoop.fs.FileSystems;
@@ -54,7 +55,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Slf4j
 @RequiredArgsConstructor
-public final class CreateEsExportTar implements FlatMapFunction<Iterator<Document>, Void> {
+public final class CreateEsExportTar implements VoidFunction<Iterator<Document>> {
 
   private static final ObjectMapper MAPPER = JacksonFactory.MAPPER;
 
@@ -68,11 +69,11 @@ public final class CreateEsExportTar implements FlatMapFunction<Iterator<Documen
   private final Map<String, String> fileSystemSettings;
 
   @Override
-  public Iterable<Void> call(Iterator<Document> documents) throws Exception {
+  public void call(Iterator<Document> documents) throws Exception {
     if (!documents.hasNext()) {
       log.warn("Empty partition.");
 
-      return Collections.emptyList();
+      return;
     }
 
     log.info("Started processing '{}' file type...", documentTypeName);
@@ -92,7 +93,6 @@ public final class CreateEsExportTar implements FlatMapFunction<Iterator<Documen
     }
     tarOutputStream.finish();
 
-    return Collections.emptyList();
   }
 
   private void writeDocument(TarArchiveOutputStream tarOutputStream, Document document) throws Exception {
