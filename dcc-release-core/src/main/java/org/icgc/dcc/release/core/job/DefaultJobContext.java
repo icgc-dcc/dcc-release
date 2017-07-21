@@ -68,22 +68,22 @@ public class DefaultJobContext implements JobContext {
 
   @Override
   public void execute(ExecutorService executorService, Task... tasks) {
-
+    executor.execute(this, ImmutableList.copyOf(tasks), executorService);
   }
 
   @Override
   public void execute(ExecutorService executorService, Collection<? extends Task> tasks) {
-
+    executor.execute(this, tasks, executorService);
   }
 
   @Override
-  public void executeSequentially(ExecutorService executorServic, Task... tasks) {
-
+  public void executeSequentially(ExecutorService executorService, Task... tasks) {
+    executor.executeSequentially(this, ImmutableList.copyOf(tasks), executorService);
   }
 
   @Override
   public void executeSequentially(ExecutorService executorService, Collection<? extends Task> tasks) {
-
+    executor.executeSequentially(this, tasks, executorService);
   }
 
 }
