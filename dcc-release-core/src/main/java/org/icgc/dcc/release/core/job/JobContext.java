@@ -54,7 +54,7 @@ public interface JobContext {
 
   void execute(ExecutorService executorService, Collection<? extends Task> tasks);
 
-  void executeSequentially(ExecutorService executorServic, Task... tasks);
+  void executeSequentially(ExecutorService executorService, Task... tasks);
 
   void executeSequentially(ExecutorService executorService, Collection<? extends Task> tasks);
 
