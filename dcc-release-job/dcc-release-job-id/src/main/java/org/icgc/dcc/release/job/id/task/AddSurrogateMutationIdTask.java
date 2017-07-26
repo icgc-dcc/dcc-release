@@ -119,7 +119,7 @@ public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
               }
             }).collect(Collectors.toList());
 
-        });
+        }).repartition(2);
   }
 
   public static DataFrame createDataFrameForPGData(SQLContext sqlContext, JobContext jobContext, String dumpPath) {
