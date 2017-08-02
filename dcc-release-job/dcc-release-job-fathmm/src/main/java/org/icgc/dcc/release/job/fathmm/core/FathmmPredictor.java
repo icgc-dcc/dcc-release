@@ -263,7 +263,7 @@ public class FathmmPredictor {
   private static FathmmPredictor predictor = null;
   public static FathmmPredictor getInstance(String jdbcUrl){
     if(predictor == null){
-      synchronized(Object.class) {
+      synchronized(FathmmPredictor.class) {
         if (predictor == null) {
           predictor = new FathmmPredictor(new FathmmRepository(jdbcUrl));
         }
