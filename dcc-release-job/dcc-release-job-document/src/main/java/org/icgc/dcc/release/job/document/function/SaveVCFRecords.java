@@ -35,34 +35,33 @@ import lombok.val;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.VoidFunction;
 import org.icgc.dcc.common.hadoop.fs.FileSystems;
 
 @RequiredArgsConstructor
-public final class SaveVCFRecords implements FlatMapFunction<Iterator<String>, Void> {
+public final class SaveVCFRecords implements VoidFunction<Iterator<String>> {
 
-  @NonNull
-  private final String workingDir;
-  @NonNull
-  private final Map<String, String> fileSystemSettings;
+      @NonNull
+      private final String workingDir;
+      @NonNull
+      private final Map<String, String> fileSystemSettings;
 
-  /**
-   * See
-   * https://wiki.oicr.on.ca/display/DCCSOFT/Aggregated+Data+Download+Specification?focusedCommentId=57774680#comment
-   * -57774680
-   */
-  public static final String VCF_FILE_NAME = "simple_somatic_mutation.aggregated.vcf.gz";
+      /**
+       * See
+       * https://wiki.oicr.on.ca/display/DCCSOFT/Aggregated+Data+Download+Specification?focusedCommentId=57774680#comment
+       * -57774680
+       */
+      public static final String VCF_FILE_NAME = "simple_somatic_mutation.aggregated.vcf.gz";
 
-  @Override
-  public Iterable<Void> call(Iterator<String> rows) throws Exception {
-    val vcfFilePath = new Path(workingDir, SaveVCFRecords.VCF_FILE_NAME);
-    val fileSystem = FileSystems.getFileSystem(fileSystemSettings);
-    @Cleanup
-    val writer = getWriter(vcfFilePath, fileSystem);
-    while (rows.hasNext()) {
-      writer.write(rows.next());
-    }
-
-    return Collections.emptyList();
+      @Override
+      public void call(Iterator<String> rows) throws Exception {
+        val vcfFilePath = new Path(workingDir, SaveVCFRecords.VCF_FILE_NAME);
+        val fileSystem = FileSystems.getFileSystem(fileSystemSettings);
+        @Cleanup
+        val writer = getWriter(vcfFilePath, fileSystem);
+        while (rows.hasNext()) {
+          writer.write(rows.next());
+        }
   }
 
   private static BufferedWriter getWriter(Path vcfFilePath, FileSystem fileSystem) throws IOException {

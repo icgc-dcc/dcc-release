@@ -19,7 +19,11 @@ package org.icgc.dcc.release.job.id.core;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
-
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Triple;
+import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.SQLContext;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.id.client.http.HttpIdClient;
 import org.icgc.dcc.id.client.http.webclient.WebClientConfig;
@@ -28,16 +32,22 @@ import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
 import org.icgc.dcc.release.job.id.config.IdProperties;
-import org.icgc.dcc.release.job.id.task.AddSurrogateDonorIdTask;
-import org.icgc.dcc.release.job.id.task.AddSurrogateMutationIdTask;
-import org.icgc.dcc.release.job.id.task.AddSurrogateSampleIdTask;
-import org.icgc.dcc.release.job.id.task.AddSurrogateSpecimenIdTask;
+import org.icgc.dcc.release.job.id.config.PostgresqlProperties;
+import org.icgc.dcc.release.job.id.dump.DumpDataToHDFS;
+import org.icgc.dcc.release.job.id.dump.impl.DumpMutationDataByPGCopyManager;
+import org.icgc.dcc.release.job.id.model.*;
+import org.icgc.dcc.release.job.id.task.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import lombok.NonNull;
 import lombok.val;
+import rx.Observable;
+import rx.schedulers.Schedulers;
+import java.util.Map;
 
+@Slf4j
 @Component
 public class IdJob extends GenericJob {
 
@@ -51,6 +61,18 @@ public class IdJob extends GenericJob {
    */
   @Autowired
   IdProperties identifierProperties;
+  @Autowired
+  PostgresqlProperties postgresqlProperties;
+  @Value("${id.postgres.database}")
+  String database;
+
+  static {
+    try {
+      Class.forName("org.postgresql.Driver");
+    } catch (ClassNotFoundException e) {
+      log.error(e.getMessage());
+    }
+  }
 
   @Override
   public JobType getType() {
@@ -71,15 +93,37 @@ public class IdJob extends GenericJob {
         FileType.SSM_P_MASKED_SURROGATE_KEY);
   }
 
+  private DumpDataToHDFS getDumpImpl(JobContext jobContext) {
+    return new DumpMutationDataByPGCopyManager(jobContext.getFileSystem(), this.postgresqlProperties, this.database,jobContext.getWorkingDir() + AddSurrogateMutationIdTask.mutationDumpPath);
+  }
+
+  private Observable<Boolean> rxDumpPGDataToHDFS(@NonNull JobContext jobContext){
+    return Observable.just( getDumpImpl(jobContext).dump());
+  }
+
   private void id(JobContext jobContext) {
     val releaseName = resolveReleaseName(jobContext.getReleaseName());
     val idClientFactory = createIdClientFactory(releaseName);
 
+    Triple<Broadcast<Map<SampleID, String>>, Broadcast<Map<DonorID, String>>, Broadcast<Map<SpecimenID, String>>> triple =
+    Observable.zip(
+        Observable.defer(() -> Observable.just(AddSurrogateSampleIdTask.createCache(jobContext, idClientFactory))),
+        Observable.defer(() -> Observable.just(AddSurrogateDonorIdTask.createCache(jobContext, idClientFactory))),
+        Observable.defer(() -> Observable.just(AddSurrogateSpecimenIdTask.createCache(jobContext, idClientFactory))),
+        Observable.defer(() -> rxDumpPGDataToHDFS(jobContext)),
+        (samples, donors, specimens, dump) -> Triple.of(samples, donors, specimens))
+      .subscribeOn(Schedulers.io()).toBlocking().single();
+
+    SQLContext sqlContext = new SQLContext(jobContext.getJavaSparkContext());
+
+    DataFrame mutationDF = AddSurrogateMutationIdTask.createDataFrameForPGData(sqlContext, jobContext, AddSurrogateMutationIdTask.mutationDumpPath);
+
     jobContext.execute(
-        new AddSurrogateDonorIdTask(idClientFactory),
-        new AddSurrogateSpecimenIdTask(idClientFactory),
-        new AddSurrogateSampleIdTask(idClientFactory),
-        new AddSurrogateMutationIdTask(idClientFactory));
+      new AddSurrogateSampleIdTask(idClientFactory, triple.getLeft()),
+      new AddSurrogateDonorIdTask(idClientFactory, triple.getMiddle()),
+      new AddSurrogateSpecimenIdTask(idClientFactory, triple.getRight()),
+      new AddSurrogateMutationIdTask(idClientFactory, mutationDF, sqlContext)
+    );
   }
 
   private static String resolveReleaseName(String releaseName) {

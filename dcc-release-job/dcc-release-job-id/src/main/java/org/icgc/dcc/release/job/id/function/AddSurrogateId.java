@@ -21,20 +21,25 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.id.client.core.IdClient;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.util.Map;
+
 @RequiredArgsConstructor
-public abstract class AddSurrogateId implements Function<ObjectNode, ObjectNode> {
+public abstract class AddSurrogateId<ID> implements Function<ObjectNode, ObjectNode> {
 
   /**
    * Configuration.
    */
   @NonNull
   private final IdClientFactory idClientFactory;
+  @NonNull
+  protected final Broadcast<Map<ID, String>> broadcast;
   private transient IdClient idClient;
 
   protected IdClient client() {

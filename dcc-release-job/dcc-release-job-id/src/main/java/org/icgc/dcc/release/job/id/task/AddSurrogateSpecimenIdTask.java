@@ -19,23 +19,45 @@ package org.icgc.dcc.release.job.id.task;
 
 import lombok.NonNull;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.job.id.function.AddSurrogateSpecimenId;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.icgc.dcc.release.job.id.model.SpecimenID;
+import org.icgc.dcc.release.job.id.parser.ExportStringParser;
+import scala.reflect.ClassTag$;
+
+import java.util.Map;
 
 public class AddSurrogateSpecimenIdTask extends AddSurrogateIdTask {
 
-  public AddSurrogateSpecimenIdTask(@NonNull IdClientFactory idClientFactory) {
+  private Broadcast<Map<SpecimenID, String>> broadcast;
+
+  public AddSurrogateSpecimenIdTask(@NonNull IdClientFactory idClientFactory, Broadcast<Map<SpecimenID, String>> broadcast) {
     super(FileType.SPECIMEN, FileType.SPECIMEN_SURROGATE_KEY, idClientFactory);
+    this.broadcast = broadcast;
   }
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-    return input
-        .map(new AddSurrogateSpecimenId(idClientFactory));
+
+    AddSurrogateSpecimenId specimenId = new AddSurrogateSpecimenId(idClientFactory, this.broadcast);
+    return input.map(specimenId);
   }
 
+  public static Broadcast<Map<SpecimenID, String>> createCache(JobContext jobContext, IdClientFactory idClientFactory) {
+    return
+        jobContext.getJavaSparkContext().sc().broadcast(
+            (new ExportStringParser<SpecimenID>()).parse(
+                idClientFactory.create().getAllSpecimenIds().get(),
+                fields -> Pair.of(new SpecimenID(fields.get(1), fields.get(2)), fields.get(0))
+            ),
+            ClassTag$.MODULE$.apply(Map.class)
+        );
+  }
 }

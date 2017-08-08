@@ -28,10 +28,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -52,8 +49,10 @@ public class TaskExecutor {
   @NonNull
   protected final ExecutorService executor;
   @NonNull
+  @Getter
   protected final JavaSparkContext sparkContext;
   @NonNull
+  @Getter
   protected final FileSystem fileSystem;
 
   public void execute(@NonNull JobContext jobContext, Collection<? extends Task> tasks) {

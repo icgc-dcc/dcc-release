@@ -20,24 +20,37 @@ package org.icgc.dcc.release.job.id.function;
 import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.SUBMISSION_SPECIMEN_ID;
 import lombok.val;
 
+import org.apache.spark.broadcast.Broadcast;
 import org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.icgc.dcc.release.job.id.model.SpecimenID;
 
-public class AddSurrogateSpecimenId extends AddSurrogateId {
+import java.util.Map;
 
-  public AddSurrogateSpecimenId(IdClientFactory identifierConfig) {
-    super(identifierConfig);
+public class AddSurrogateSpecimenId extends AddSurrogateId<SpecimenID> {
+
+  private final String SPECIMEN_ID_PREFIX = "SP";
+
+  public AddSurrogateSpecimenId(IdClientFactory identifierConfig, Broadcast<Map<SpecimenID, String>> broadcast) {
+    super(identifierConfig, broadcast);
   }
 
   @Override
   public ObjectNode call(ObjectNode row) throws Exception {
     val submittedSpecimenId = row.get(SUBMISSION_SPECIMEN_ID).textValue();
     val submittedProjectId = getSubmittedProjectId(row);
-    val specimenId = client().createSpecimenId(submittedSpecimenId, submittedProjectId);
 
-    row.put(IdentifierFieldNames.SURROGATE_SPECIMEN_ID, specimenId);
+    String specimenId = broadcast.value().get(new SpecimenID(submittedSpecimenId, submittedProjectId));
+    if(specimenId == null){
+      specimenId = client().createSpecimenId(submittedSpecimenId, submittedProjectId);
+      row.put(IdentifierFieldNames.SURROGATE_SPECIMEN_ID, specimenId);
+    }
+    else{
+      row.put(IdentifierFieldNames.SURROGATE_SPECIMEN_ID, SPECIMEN_ID_PREFIX + specimenId);
+    }
+
 
     return row;
   }

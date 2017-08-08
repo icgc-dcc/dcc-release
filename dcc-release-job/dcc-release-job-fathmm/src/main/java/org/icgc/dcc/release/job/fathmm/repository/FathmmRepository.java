@@ -49,12 +49,12 @@ public class FathmmRepository implements Closeable {
 
   private final Handle handle;
 
-  private final Query<Map<String, Object>> cacheQuery;
-  private final Query<Map<String, Object>> sequenceQuery;
-  private final Query<Map<String, Object>> domainQuery;
-  private final Query<Map<String, Object>> probabilityQuery;
-  private final Query<Map<String, Object>> weightQuery;
-  private final Update updateCache;
+  private final String cacheQuery =  "select * from \"DCC_CACHE\" where translation_id = :translationId and aa_mutation = :aaMutation";
+  private final String sequenceQuery = "select a.* from \"SEQUENCE\" a, \"PROTEIN\" b where a.id = b.id and b.name = :translationId";
+  private final String domainQuery =  "select * from \"DOMAINS\" where id=:sequenceId and :substitution between seq_begin and seq_end order by score";
+  private final String probabilityQuery = "select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:probId and a.position=:probPosition";
+  private final String weightQuery = "select disease, other from \"WEIGHTS\" where id=:wid and type='%s'\\:\\:weights_type";
+  private final String updateCache = "insert into \"DCC_CACHE\" (translation_id,  aa_mutation, score, prediction) values (:translationId, :aaChange, :score, :prediction)";
 
   public FathmmRepository(@NonNull String fathmmPostgresqlUri) {
     this(new DBI(fathmmPostgresqlUri).open());
@@ -66,15 +66,6 @@ public class FathmmRepository implements Closeable {
 
   private FathmmRepository(@NonNull Handle handle) {
     this.handle = handle;
-
-    // @formatter:off
-    this.cacheQuery       = handle.createQuery("select * from \"DCC_CACHE\" where translation_id = :translationId and aa_mutation = :aaMutation");
-    this.sequenceQuery    = handle.createQuery("select a.* from \"SEQUENCE\" a, \"PROTEIN\" b where a.id = b.id and b.name = :translationId");
-    this.domainQuery      = handle.createQuery("select * from \"DOMAINS\" where id=:sequenceId and :substitution between seq_begin and seq_end order by score");
-    this.probabilityQuery = handle.createQuery("select a.*, b.* from \"PROBABILITIES\" a, \"LIBRARY\" b where a.id=b.id and a.id=:probId and a.position=:probPosition");
-    this.weightQuery      = handle.createQuery(format("select disease, other from \"WEIGHTS\" where id=:wid and type='%s'\\:\\:weights_type", WEIGHT_TYPE));
-    this.updateCache      = handle.createStatement("insert into \"DCC_CACHE\" (translation_id,  aa_mutation, score, prediction) values (:translationId, :aaChange, :score, :prediction)");
-    // @formatter:on
   }
 
   @Override
@@ -84,13 +75,13 @@ public class FathmmRepository implements Closeable {
   }
 
   public Map<String, Object> getFromCache(@NonNull String translationId, @NonNull String aaChange) {
-    val cache = cacheQuery.bind(TRANSLATION_ID, translationId).bind(AA_MUTATION, aaChange).first();
+    val cache = handle.createQuery(cacheQuery).bind(TRANSLATION_ID, translationId).bind(AA_MUTATION, aaChange).first();
     return cache;
   }
 
   public void updateCache(@NonNull String translationId, @NonNull String aaChange, @NonNull String score,
       @NonNull String prediction) {
-    val rowsAffected = updateCache
+    val rowsAffected = handle.createStatement(updateCache)
         .bind("translationId", translationId)
         .bind("aaChange", aaChange)
         .bind("score", score)
@@ -101,23 +92,23 @@ public class FathmmRepository implements Closeable {
   }
 
   public Map<String, Object> getSequence(@NonNull String translationId) {
-    return sequenceQuery.bind(TRANSLATION_ID, translationId).first();
+    return handle.createQuery(sequenceQuery).bind(TRANSLATION_ID, translationId).first();
   }
 
   public Map<String, Object> getWeight(@NonNull String weightId, @NonNull String weights) {
-    return weightQuery.bind("wid", weightId).first();
+    return handle.createQuery(format(weightQuery, WEIGHT_TYPE)).bind("wid", weightId).first();
   }
 
   public Map<String, Object> getUnweightedProbability(String sequenceId, int substitution) {
-    return probabilityQuery.bind("probId", sequenceId).bind("probPosition", substitution).first();
+    return handle.createQuery(probabilityQuery).bind("probId", sequenceId).bind("probPosition", substitution).first();
   }
 
   public List<Map<String, Object>> getDomains(int sequenceId, int substitution) {
-    return domainQuery.bind("sequenceId", sequenceId).bind("substitution", substitution).list();
+    return handle.createQuery(domainQuery).bind("sequenceId", sequenceId).bind("substitution", substitution).list();
   }
 
   public Map<String, Object> getProbability(@NonNull String hmm, @NonNull Integer residue) {
-    return probabilityQuery.bind("probId", hmm).bind("probPosition", residue).first();
+    return handle.createQuery(probabilityQuery).bind("probId", hmm).bind("probPosition", residue).first();
   }
 
 }

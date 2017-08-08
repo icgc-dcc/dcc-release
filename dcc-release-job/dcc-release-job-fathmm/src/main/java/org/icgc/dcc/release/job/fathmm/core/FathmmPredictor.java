@@ -260,4 +260,17 @@ public class FathmmPredictor {
     return matcher.matches();
   }
 
+  private static FathmmPredictor predictor = null;
+  public static FathmmPredictor getInstance(String jdbcUrl){
+    if(predictor == null){
+      synchronized(FathmmPredictor.class) {
+        if (predictor == null) {
+          predictor = new FathmmPredictor(new FathmmRepository(jdbcUrl));
+        }
+      }
+    }
+
+    return predictor;
+  }
+
 }
