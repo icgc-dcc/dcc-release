@@ -55,8 +55,6 @@ public class CreateVCFFileTaskTest extends AbstractJobTest {
     verifyOutput();
   }
 
-  // TODO: Fix the compressed fixture at some point. DCC-5589
-  @Ignore
   @Test
   public void testExecute_compressed() throws Exception {
     given(new File(COMPRESSED_INPUT));
