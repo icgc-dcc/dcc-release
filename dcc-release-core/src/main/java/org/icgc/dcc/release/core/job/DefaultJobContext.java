@@ -81,7 +81,6 @@ public class DefaultJobContext implements JobContext {
   }
 
   @Override
-
   public void execute(ExecutorService executorService, Task... tasks) {
     executor.execute(this, ImmutableList.copyOf(tasks), executorService);
   }
