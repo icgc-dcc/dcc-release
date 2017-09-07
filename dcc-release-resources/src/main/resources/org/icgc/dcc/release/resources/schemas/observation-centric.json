@@ -209,6 +209,10 @@
                     "consequence_type": {
                       "id": "https://dcc.icgc.org/observation-centric/ssm/gene/0/consequence/0/consequence_type",
                       "type": "string"
+                    },
+                    "coding": {
+                      "id": "https://dcc.icgc.org/observation-centric/ssm/gene/0/consequence/0/coding",
+                      "type": "boolean"
                     }
                   },
                   "additionalProperties": false

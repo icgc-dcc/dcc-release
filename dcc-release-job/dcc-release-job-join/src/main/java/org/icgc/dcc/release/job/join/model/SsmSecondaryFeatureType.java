@@ -35,5 +35,6 @@ public class SsmSecondaryFeatureType implements Serializable {
   protected String observation_id;
   protected String protein_domain_affected;
   protected String transcript_affected;
+  protected boolean coding;
 
 }
