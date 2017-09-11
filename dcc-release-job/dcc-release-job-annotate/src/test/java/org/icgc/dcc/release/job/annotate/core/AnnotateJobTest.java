@@ -21,13 +21,17 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.val;
 
 import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,11 +50,23 @@ public class AnnotateJobTest extends AbstractJobTest {
    */
   AnnotateJob job;
 
+  private SnpEffProperties snpEffProperties;
+
   @Before
   @Override
   public void setUp() {
     super.setUp();
-    this.job = new AnnotateJob(createSnpEffProperties());
+
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    try {
+
+      snpEffProperties = mapper.treeToValue(mapper.readTree(AnnotateJobTest.class.getResourceAsStream("/application.yml")).get("snpeff"), SnpEffProperties.class);
+      this.job = new AnnotateJob(snpEffProperties);
+
+    } catch (IOException e) {
+      e.printStackTrace();
+      Assert.assertTrue(false);
+    }
   }
 
   @Test

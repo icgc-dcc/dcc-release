@@ -20,13 +20,21 @@ package org.icgc.dcc.release.job.document.core;
 import static org.icgc.dcc.release.job.index.utils.TestUtils.createSnpEffProperties;
 
 import java.io.File;
+import java.io.IOException;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLParser;
 import lombok.val;
 
+import org.icgc.dcc.release.core.config.SnpEffProperties;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.job.document.config.DocumentProperties;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -34,6 +42,8 @@ import com.google.common.collect.ImmutableList;
 public class DocumentJobTest extends AbstractJobTest {
 
   private static final String PROJECT = "BRCA-UK";
+
+  private SnpEffProperties snpEffProperties;
 
   /**
    * Class under test.
@@ -44,8 +54,17 @@ public class DocumentJobTest extends AbstractJobTest {
   @Before
   public void setUp() {
     super.setUp();
-    val properties = new DocumentProperties();
-    this.job = new DocumentJob(properties, createSnpEffProperties(), sparkContext);
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    try {
+      snpEffProperties = mapper.treeToValue(mapper.readTree(DocumentJobTest.class.getResourceAsStream("/application.yml")).get("snpeff"), SnpEffProperties.class);
+
+      val properties = new DocumentProperties();
+      this.job = new DocumentJob(properties, snpEffProperties, sparkContext);
+    } catch (IOException e) {
+      e.printStackTrace();
+      Assert.assertTrue(false);
+    }
+
   }
 
   @Test
