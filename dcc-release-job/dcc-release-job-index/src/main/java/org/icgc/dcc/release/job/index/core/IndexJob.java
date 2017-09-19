@@ -169,7 +169,7 @@ public class IndexJob extends GenericJob {
     val esTasks = ImmutableList.<Task> builder();
 
     if (properties.isIndexDocuments()) {
-      log.info("Creating index tasks for index types: {}", indexTypes);
+      log.info("Creating index tasks for index types: {}", indexName + "/" +indexTypes);
       indexTasks.addAll(createIndexTasks(indexName, indexTypes));
     }
 
@@ -182,7 +182,7 @@ public class IndexJob extends GenericJob {
   }
 
   private void prepareIndex(String indexName, IndexService indexService, Set<DocumentType> indexTypes) {
-    log.info("Initializing index...");
+    log.info("Initializing index {} ..." + indexName + "/" + indexTypes);
     if (isIndexAll()) {
       indexService.initializeIndex(indexName, indexTypes);
     } else {
