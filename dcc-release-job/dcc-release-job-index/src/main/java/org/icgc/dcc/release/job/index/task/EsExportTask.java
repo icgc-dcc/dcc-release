@@ -59,9 +59,8 @@ public class EsExportTask extends GenericIndexTask {
     prepareDirs(taskContext);
     readDocuments(taskContext)
         .coalesce(1)
-        .mapPartitions(createExportTarFucntion(taskContext))
-        // Force calculation of the partition
-        .count();
+        .foreachPartition(createExportTarFucntion(taskContext));
+
   }
 
   private CreateEsExportTar createExportTarFucntion(TaskContext taskContext) {

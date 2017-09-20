@@ -56,11 +56,19 @@ public class TaskExecutor {
   protected final FileSystem fileSystem;
 
   public void execute(@NonNull JobContext jobContext, Collection<? extends Task> tasks) {
-    execute(jobContext, tasks, true);
+    execute(jobContext, tasks, true, null);
   }
 
   public void executeSequentially(@NonNull JobContext jobContext, Collection<? extends Task> tasks) {
-    execute(jobContext, tasks, false);
+    execute(jobContext, tasks, false, null);
+  }
+
+  public void execute(@NonNull JobContext jobContext, Collection<? extends Task> tasks, ExecutorService executorService){
+    execute(jobContext, tasks, true, executorService);
+  }
+
+  public void executeSequentially(@NonNull JobContext jobContext, Collection<? extends Task> tasks, ExecutorService executorService) {
+    execute(jobContext, tasks, false, executorService);
   }
 
   public void shutdown() {
@@ -69,11 +77,11 @@ public class TaskExecutor {
     log.info("Cancelled all tasks");
   }
 
-  private void execute(JobContext jobContext, Collection<? extends Task> tasks, boolean parallel) {
+  private void execute(JobContext jobContext, Collection<? extends Task> tasks, boolean parallel, ExecutorService executorService) {
     val watch = createStarted();
     try {
       log.info("Starting {} task(s)...", tasks.size());
-      executeTasks(jobContext, tasks, parallel);
+      executeTasks(jobContext, tasks, parallel, executorService);
       log.info("Finished {} task(s) in {}", tasks.size(), watch);
     } catch (Throwable t) {
       log.error("Aborting task(s) executions due to exception...", t);
@@ -82,8 +90,8 @@ public class TaskExecutor {
   }
 
   @SneakyThrows
-  private int executeTasks(JobContext jobContext, Collection<? extends Task> tasks, boolean parallel) {
-    val service = createCompletionService();
+  private int executeTasks(JobContext jobContext, Collection<? extends Task> tasks, boolean parallel, ExecutorService executorService) {
+    val service = (executorService==null)?createCompletionService():new ExecutorCompletionService<String>(executorService);
     val watch = createStarted();
     int taskCount = 0;
     val submitTasks = getSubmitTasks(jobContext, tasks);

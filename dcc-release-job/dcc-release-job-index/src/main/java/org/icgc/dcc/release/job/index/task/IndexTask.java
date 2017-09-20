@@ -33,6 +33,8 @@ import org.icgc.dcc.release.core.util.Configurations;
 import org.icgc.dcc.release.job.index.function.CreateDocument;
 import org.icgc.dcc.release.job.index.function.DocumentIndexer;
 
+
+
 @RequiredArgsConstructor
 public class IndexTask extends GenericIndexTask {
 
@@ -73,16 +75,13 @@ public class IndexTask extends GenericIndexTask {
       documents = documents.coalesce(documentType.getParallelism());
     }
 
-    documents.mapPartitions(new DocumentIndexer(
+    documents.foreachPartition(new DocumentIndexer(
         esUri,
         indexName,
         getFileSystemConfig(taskContext),
         bigDocumentThresholdMb,
-        taskContext.getJobContext().getWorkingDir()))
+        taskContext.getJobContext().getWorkingDir()));
 
-        // Calling count() to trigger calculation of the RDD. Using the count() action to iterate over the whole
-        // partition. first(), for example, will stop after processing of the first element.
-        .count();
   }
 
   private JavaRDD<Document> readDocuments(TaskContext taskContext) {

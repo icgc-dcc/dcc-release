@@ -11,6 +11,7 @@ import org.icgc.dcc.release.core.task.Task;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Copyright (c) $today.year The Ontario Institute for Cancer Research. All rights reserved.
@@ -87,6 +88,26 @@ public class MockJobContext implements JobContext {
 
   @Override
   public void executeSequentially(Collection<? extends Task> tasks) {
+
+  }
+
+  @Override
+  public void execute(ExecutorService executorService, Task... tasks) {
+
+  }
+
+  @Override
+  public void execute(ExecutorService executorService, Collection<? extends Task> tasks) {
+
+  }
+
+  @Override
+  public void executeSequentially(ExecutorService executorServic, Task... tasks) {
+
+  }
+
+  @Override
+  public void executeSequentially(ExecutorService executorService, Collection<? extends Task> tasks) {
 
   }
 
