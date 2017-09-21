@@ -51,6 +51,7 @@ public class SgvConsequence implements Serializable {
   @JsonProperty("gene_build_version")
   String geneBuildVersion;
   String note;
+  boolean coding;
 
   @JsonCreator
   public SgvConsequence(
@@ -62,7 +63,8 @@ public class SgvConsequence implements Serializable {
       @JsonProperty("gene_affected") String geneAffected,
       @JsonProperty("transcript_affected") String transcriptAffected,
       @JsonProperty("gene_build_version") String geneBuildVersion,
-      @JsonProperty("note") String note)
+      @JsonProperty("note") String note,
+      @JsonProperty("coding") boolean coding)
   {
     this.observationId = intern(observationId);
     this.consequenceType = intern(consequenceType);
@@ -73,6 +75,7 @@ public class SgvConsequence implements Serializable {
     this.transcriptAffected = intern(transcriptAffected);
     this.geneBuildVersion = intern(geneBuildVersion);
     this.note = intern(note);
+    this.coding = coding;
   }
 
   private static String intern(String original) {
