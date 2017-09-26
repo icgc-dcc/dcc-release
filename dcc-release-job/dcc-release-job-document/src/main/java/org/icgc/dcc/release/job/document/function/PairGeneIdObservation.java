@@ -25,6 +25,7 @@ import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.PairFlatMapFunction;
+import org.icgc.dcc.release.core.model.CodingTypes;
 import org.icgc.dcc.release.job.document.model.Occurrence;
 
 import scala.Tuple2;
@@ -50,6 +51,8 @@ public final class PairGeneIdObservation implements PairFlatMapFunction<Occurren
   private static Iterable<String> getObservationConsequenceGeneIds(@NonNull Occurrence observation) {
     val geneIds = Lists.<String> newArrayList();
     for (val consequence : observation.getConsequence()) {
+      if(consequence.getConsequence_type() != null)
+        consequence.setCoding(CodingTypes.isCoding(consequence.getConsequence_type()));
       geneIds.add(consequence.get_gene_id());
     }
 

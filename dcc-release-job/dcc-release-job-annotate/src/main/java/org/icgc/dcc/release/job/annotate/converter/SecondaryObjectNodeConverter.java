@@ -18,8 +18,9 @@
 package org.icgc.dcc.release.job.annotate.converter;
 
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.release.job.annotate.model.ConsequenceType.*;
-import static org.icgc.dcc.release.job.annotate.model.ConsequenceType.STOP_RETAINED_VARIANT;
+import static org.icgc.dcc.release.core.model.CodingTypes.fieldNameForCoding;
+import static org.icgc.dcc.release.core.model.ConsequenceType.*;
+import static org.icgc.dcc.release.core.model.ConsequenceType.STOP_RETAINED_VARIANT;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import org.icgc.dcc.common.core.model.FieldNames;
+import org.icgc.dcc.release.core.model.CodingTypes;
 import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
 import org.icgc.dcc.release.job.annotate.model.SecondaryEntity;
 
@@ -40,25 +42,6 @@ import java.util.Set;
 public final class SecondaryObjectNodeConverter {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
-
-  private static final Set<String> CODING_TYPES = ImmutableSet.of(
-      FRAMESHIFT_VARIANT.getConsequenceName(),
-      MISSENSE_VARIANT.getConsequenceName(),
-      INITIATOR_CODON_VARIANT.getConsequenceName(),
-      STOP_GAINED.getConsequenceName(),
-      STOP_LOST.getConsequenceName(),
-      RARE_AMINO_ACID_VARIANT.getConsequenceName(),
-      CODING_SEQUENCE_VARIANT.getConsequenceName(),
-      NON_CANONICAL_START_CODON.getConsequenceName(),
-      DISRUPTIVE_INFRAME_DELETION.getConsequenceName(),
-      INFRAME_DELETION.getConsequenceName(),
-      DISRUPTIVE_INFRAME_INSERTION.getConsequenceName(),
-      INFRAME_INSERTION.getConsequenceName(),
-      SYNONYMOUS_VARIANT.getConsequenceName(),
-      STOP_RETAINED_VARIANT.getConsequenceName()
-  );
-
-  private static final String fieldNameForCoding = "coding";
 
   public static ObjectNode convert(SecondaryEntity secondaryEntity, AnnotatedFileType fileType) {
 
@@ -83,7 +66,7 @@ public final class SecondaryObjectNodeConverter {
     secondary.put(FieldNames.AnnotatorFieldNames.ANNOTATOR_NOTE, secondaryEntity.getNote());
     secondary.put(FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID, secondaryEntity.getObservationId());
 
-    secondary.put(fieldNameForCoding, CODING_TYPES.contains(secondaryEntity.getConsequenceType()));
+    secondary.put(fieldNameForCoding, CodingTypes.isCoding(secondaryEntity.getConsequenceType()));
 
     return secondary;
   }

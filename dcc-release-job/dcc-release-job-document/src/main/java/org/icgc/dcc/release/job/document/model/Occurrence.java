@@ -63,6 +63,7 @@ public class Occurrence implements Serializable {
     private String note;
     private String gene_affected;
     private String transcript_affected;
+    private boolean coding;
 
   }
 

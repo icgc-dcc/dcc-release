@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 import lombok.NoArgsConstructor;
 import lombok.val;
 
-import org.icgc.dcc.release.job.annotate.model.ConsequenceType;
+import org.icgc.dcc.release.core.model.ConsequenceType;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;

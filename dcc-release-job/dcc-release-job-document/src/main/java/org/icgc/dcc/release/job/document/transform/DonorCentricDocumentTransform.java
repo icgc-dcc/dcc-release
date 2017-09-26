@@ -20,6 +20,7 @@ package org.icgc.dcc.release.job.document.transform;
 import static com.google.common.base.Objects.firstNonNull;
 import static java.util.Collections.singleton;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
+import static org.icgc.dcc.release.core.model.CodingTypes.fieldNameForCoding;
 import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.createFakeGenePOJO;
 import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
@@ -33,6 +34,8 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.common.core.model.FieldNames;
+import org.icgc.dcc.release.core.model.CodingTypes;
 import org.icgc.dcc.release.core.util.JacksonFactory;
 import org.icgc.dcc.release.job.document.context.DonorCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
@@ -160,6 +163,8 @@ public final class DonorCentricDocumentTransform implements
       val related = geneId.equals(consequenceGeneId);
 
       if (related) {
+        if(consequence.getConsequence_type() != null)
+          consequence.setCoding(CodingTypes.isCoding(consequence.getConsequence_type()));
         filteredConsequenes.add(consequence);
       }
     }

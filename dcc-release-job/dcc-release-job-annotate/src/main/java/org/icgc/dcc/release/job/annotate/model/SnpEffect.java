@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.Builder;
+import org.icgc.dcc.release.core.model.ConsequenceType;
 
 /**
  * A snpEff 3.6 representation.
