@@ -30,6 +30,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_SUMMARY_AFFECTE
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_SUMMARY_TESTED_DONOR_COUNT;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_VALIDATION_STATUS;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_VERIFICATION_STATUS;
+import static org.icgc.dcc.release.core.model.CodingTypes.fieldNameForCoding;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.*;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.addAll;
 
@@ -42,6 +43,7 @@ import lombok.val;
 import org.icgc.dcc.common.core.fi.CompositeImpactCategory;
 import org.icgc.dcc.common.core.model.ConsequenceType;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.model.CodingTypes;
 import org.icgc.dcc.release.job.document.core.DocumentCallback;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -171,6 +173,9 @@ public class MutationCentricSummaryCallback implements DocumentCallback {
     // Add unique value to top level for faceting
     mutation.putPOJO(MUTATION_CONSEQUENCE_TYPES, consequenceTypes);
     mutation.putPOJO(MUTATION_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY, impactCategories);
+
+    // add coding field based on consequence_type array
+    mutation.put(fieldNameForCoding, consequenceTypes.stream().filter(consequenceType -> CodingTypes.isCoding(consequenceType.getId())).count() > 0);
 
     /**
      * Summary: {@code mutation._summary}.

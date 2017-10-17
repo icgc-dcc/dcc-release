@@ -38,7 +38,6 @@ import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_IS_ANNOTATED;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_MUTATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
-import static org.icgc.dcc.release.core.model.CodingTypes.fieldNameForCoding;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorProjectId;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneTranscripts;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationId;
@@ -63,9 +62,7 @@ import java.util.TreeMap;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.BusinessKeys;
-import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.document.Document;
-import org.icgc.dcc.release.core.model.CodingTypes;
 import org.icgc.dcc.release.job.document.context.MutationCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentCallback;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
@@ -207,10 +204,6 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
          */
 
         val consequence = (ObjectNode) mutationObservationConsequence;
-
-        val consequence_type = consequence.get(FieldNames.MUTATION_CONSEQUENCE_TYPES);
-        if(consequence_type != null)
-          consequence.put(fieldNameForCoding, CodingTypes.isCoding(consequence_type.textValue()));
 
         // Get gene associated with consequence: {@code consequence._gene_id}
         val consequenceGeneId =
