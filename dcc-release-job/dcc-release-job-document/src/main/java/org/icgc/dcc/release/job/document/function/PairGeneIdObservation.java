@@ -51,8 +51,6 @@ public final class PairGeneIdObservation implements PairFlatMapFunction<Occurren
   private static Iterable<String> getObservationConsequenceGeneIds(@NonNull Occurrence observation) {
     val geneIds = Lists.<String> newArrayList();
     for (val consequence : observation.getConsequence()) {
-      if(consequence.getConsequence_type() != null)
-        consequence.setCoding(CodingTypes.isCoding(consequence.getConsequence_type()));
       geneIds.add(consequence.get_gene_id());
     }
 

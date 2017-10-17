@@ -24,6 +24,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_GENE;
+import static org.icgc.dcc.release.core.model.CodingTypes.fieldNameForCoding;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorProjectId;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequenceGeneId;
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequences;
@@ -35,15 +36,20 @@ import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.createFakeGene;
 import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
+import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
+import org.icgc.dcc.release.core.model.CodingTypes;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -117,6 +123,16 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
       trimObservationConsequence(observationConsequence);
       val consequences = gene.withArray(OBSERVATION_CONSEQUENCES);
       consequences.add(observationConsequence);
+
+      Set<String> consequenceTypes = new HashSet<>();
+      consequences.forEach(consequenceNode -> {
+        JsonNode consequenceType = consequenceNode.get(FieldNames.MUTATION_CONSEQUENCE_TYPES);
+        if(consequenceType != null) {
+          consequenceTypes.add(consequenceType.textValue());
+        }
+      });
+      gene.put(fieldNameForCoding, consequenceTypes.stream().filter(consequenceType -> CodingTypes.isCoding(consequenceType)).count() > 0);
+
     }
 
     val observationGenes = createGenesArray(observation, observationType);

@@ -45,6 +45,7 @@ public class Occurrence implements Serializable {
   private String mutation;
   private String[] consequence_type;
   private String assembly_version;
+  private boolean coding;
 
   @Data
   public static class Consequence implements Serializable {
@@ -63,7 +64,6 @@ public class Occurrence implements Serializable {
     private String note;
     private String gene_affected;
     private String transcript_affected;
-    private boolean coding;
 
   }
 

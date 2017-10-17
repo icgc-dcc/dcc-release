@@ -20,15 +20,22 @@ package org.icgc.dcc.release.job.document.transform;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_GENE_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_TYPE;
+import static org.icgc.dcc.release.core.model.CodingTypes.fieldNameForCoding;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.normalizeTextValue;
 import lombok.NonNull;
 import lombok.val;
 
+import org.icgc.dcc.common.core.model.FieldNames;
+import org.icgc.dcc.release.core.model.CodingTypes;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class AbstractCentricDocumentTransform implements DocumentTransform {
 
@@ -39,6 +46,8 @@ public abstract class AbstractCentricDocumentTransform implements DocumentTransf
     val consequences = (ArrayNode) geneObservation.get(OBSERVATION_CONSEQUENCES);
 
     if (consequences != null) {
+      Set<String> consequenceTypes = new HashSet<>();
+
       // Remove consequences unrelated to the target gene
       val iterator = consequences.iterator();
       while (iterator.hasNext()) {
@@ -53,7 +62,14 @@ public abstract class AbstractCentricDocumentTransform implements DocumentTransf
         if (!related) {
           iterator.remove();
         }
+        else{
+          JsonNode consequenceType = consequence.get(OBSERVATION_CONSEQUENCES_CONSEQUENCE_TYPE);
+          if (consequenceType != null)
+            consequenceTypes.add(consequenceType.textValue());
+        }
       }
+      geneObservation.put(fieldNameForCoding, consequenceTypes.stream().filter(consequenceType -> CodingTypes.isCoding(consequenceType)).count() > 0);
+
     }
   }
 

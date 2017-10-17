@@ -12,6 +12,7 @@
           "description",
           "donor.ssm.consequence.transcript_affected",
           "donor.ssm.consequence._gene_id",
+          "donor.ssm.coding",
           "external_db_ids",
           "end",
           "name",

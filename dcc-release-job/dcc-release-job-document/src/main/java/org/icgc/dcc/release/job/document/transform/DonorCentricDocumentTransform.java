@@ -123,6 +123,10 @@ public final class DonorCentricDocumentTransform implements
       val consequences = filterGeneObservationConsequences(donorGeneId, donorGeneObservation);
       donorGeneObservation.setConsequence(consequences);
 
+      donorGeneObservation.setCoding(
+          consequences.stream().filter(consequence -> CodingTypes.isCoding(consequence.getConsequence_type())).count() > 0
+      );
+
       unsetGeneId(donorGeneObservation);
 
       array.add(donorGeneObservation);
@@ -163,8 +167,6 @@ public final class DonorCentricDocumentTransform implements
       val related = geneId.equals(consequenceGeneId);
 
       if (related) {
-        if(consequence.getConsequence_type() != null)
-          consequence.setCoding(CodingTypes.isCoding(consequence.getConsequence_type()));
         filteredConsequenes.add(consequence);
       }
     }
