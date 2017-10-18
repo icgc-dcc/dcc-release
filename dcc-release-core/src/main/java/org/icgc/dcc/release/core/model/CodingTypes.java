@@ -28,7 +28,9 @@ import static org.icgc.dcc.release.core.model.ConsequenceType.*;
 
 public class CodingTypes {
 
-  public static final String fieldNameForCoding = "coding";
+  public static final String fieldNameForCoding = "genomic_region";
+  public static final String coding = "coding";
+  public static final String non_coding = "non-coding";
 
   private static final Set<String> CODING_TYPES = ImmutableSet.of(
       FRAMESHIFT_VARIANT.getConsequenceName(),

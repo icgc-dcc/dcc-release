@@ -131,7 +131,7 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
           consequenceTypes.add(consequenceType.textValue());
         }
       });
-      gene.put(fieldNameForCoding, consequenceTypes.stream().filter(consequenceType -> CodingTypes.isCoding(consequenceType)).count() > 0);
+      gene.put(fieldNameForCoding, (consequenceTypes.stream().filter(consequenceType -> CodingTypes.isCoding(consequenceType)).count() > 0)?CodingTypes.coding:CodingTypes.non_coding);
 
     }
 

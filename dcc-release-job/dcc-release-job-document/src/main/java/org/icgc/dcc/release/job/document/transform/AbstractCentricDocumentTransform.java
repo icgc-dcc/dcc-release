@@ -68,7 +68,7 @@ public abstract class AbstractCentricDocumentTransform implements DocumentTransf
             consequenceTypes.add(consequenceType.textValue());
         }
       }
-      geneObservation.put(fieldNameForCoding, consequenceTypes.stream().filter(consequenceType -> CodingTypes.isCoding(consequenceType)).count() > 0);
+      geneObservation.put(fieldNameForCoding, (consequenceTypes.stream().filter(consequenceType -> CodingTypes.isCoding(consequenceType)).count() > 0)?CodingTypes.coding:CodingTypes.non_coding);
 
     }
   }

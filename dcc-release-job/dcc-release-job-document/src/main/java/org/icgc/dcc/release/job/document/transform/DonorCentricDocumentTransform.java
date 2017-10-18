@@ -20,7 +20,6 @@ package org.icgc.dcc.release.job.document.transform;
 import static com.google.common.base.Objects.firstNonNull;
 import static java.util.Collections.singleton;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
-import static org.icgc.dcc.release.core.model.CodingTypes.fieldNameForCoding;
 import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.createFakeGenePOJO;
 import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
@@ -34,7 +33,6 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
-import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.model.CodingTypes;
 import org.icgc.dcc.release.core.util.JacksonFactory;
 import org.icgc.dcc.release.job.document.context.DonorCentricDocumentContext;
@@ -123,8 +121,8 @@ public final class DonorCentricDocumentTransform implements
       val consequences = filterGeneObservationConsequences(donorGeneId, donorGeneObservation);
       donorGeneObservation.setConsequence(consequences);
 
-      donorGeneObservation.setCoding(
-          consequences.stream().filter(consequence -> CodingTypes.isCoding(consequence.getConsequence_type())).count() > 0
+      donorGeneObservation.setGenomic_region(
+          (consequences.stream().filter(consequence -> CodingTypes.isCoding(consequence.getConsequence_type())).count() > 0)?CodingTypes.coding:CodingTypes.non_coding
       );
 
       unsetGeneId(donorGeneObservation);

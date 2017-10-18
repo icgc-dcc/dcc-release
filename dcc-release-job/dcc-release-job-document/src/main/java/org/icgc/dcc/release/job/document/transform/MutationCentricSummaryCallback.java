@@ -174,8 +174,8 @@ public class MutationCentricSummaryCallback implements DocumentCallback {
     mutation.putPOJO(MUTATION_CONSEQUENCE_TYPES, consequenceTypes);
     mutation.putPOJO(MUTATION_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY, impactCategories);
 
-    // add coding field based on consequence_type array
-    mutation.put(fieldNameForCoding, consequenceTypes.stream().filter(consequenceType -> CodingTypes.isCoding(consequenceType.getId())).count() > 0);
+    // add genomic_region field based on consequence_type array
+    mutation.put(fieldNameForCoding, (consequenceTypes.stream().filter(consequenceType -> CodingTypes.isCoding(consequenceType.getId())).count() > 0)?CodingTypes.coding:CodingTypes.non_coding);
 
     /**
      * Summary: {@code mutation._summary}.
