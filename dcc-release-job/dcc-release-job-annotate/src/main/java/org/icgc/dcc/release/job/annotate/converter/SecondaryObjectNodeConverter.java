@@ -65,9 +65,7 @@ public final class SecondaryObjectNodeConverter {
     secondary.put(FieldNames.AnnotatorFieldNames.ANNOTATOR_GENE_BUILD_VERSION, secondaryEntity.getGeneBuildVersion());
     secondary.put(FieldNames.AnnotatorFieldNames.ANNOTATOR_NOTE, secondaryEntity.getNote());
     secondary.put(FieldNames.NormalizerFieldNames.NORMALIZER_OBSERVATION_ID, secondaryEntity.getObservationId());
-
-    secondary.put(fieldNameForCoding, (CodingTypes.isCoding(secondaryEntity.getConsequenceType()))?CodingTypes.coding:CodingTypes.non_coding);
-
+    
     return secondary;
   }
 
