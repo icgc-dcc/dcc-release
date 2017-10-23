@@ -122,7 +122,7 @@ public class IdJob extends GenericJob {
       new AddSurrogateSampleIdTask(idClientFactory, triple.getLeft()),
       new AddSurrogateDonorIdTask(idClientFactory, triple.getMiddle()),
       new AddSurrogateSpecimenIdTask(idClientFactory, triple.getRight()),
-      new AddSurrogateMutationIdTask(idClientFactory, mutationDF, sqlContext)
+      new AddSurrogateMutationIdTask("", 0, mutationDF, sqlContext)
     );
   }
 

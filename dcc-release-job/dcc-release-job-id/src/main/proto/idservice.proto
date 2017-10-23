@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option java_package = "org.icgc.dcc.release.job.id.rpc";
+option java_multiple_files = true;
+
+message CreateMutationID {
+    string chromosome = 2;
+    string chromosomeStart = 3;
+    string chromosomeEnd = 4;
+    string mutation = 5;
+    string mutationType = 6;
+    string assemblyVersion = 7;
+}
+
+message CreateMutationIDRequestEntity {
+    int32 index = 1;
+    CreateMutationID entity = 2;
+}
+
+message CreateMutationIDRequest {
+    repeated CreateMutationIDRequestEntity entities = 1;
+}
+
+message CreateMutationIDResponseEntity {
+    int32 index = 1;
+    string id = 2;
+}
+
+message CreateMutationIDResponse {
+    repeated CreateMutationIDResponseEntity ids = 1;
+}
+
+service MutationIDService {
+    rpc createMutationID(CreateMutationIDRequest) returns (CreateMutationIDResponse) {}
+}

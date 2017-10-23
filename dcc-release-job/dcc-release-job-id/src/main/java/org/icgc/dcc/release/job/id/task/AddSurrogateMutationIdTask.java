@@ -2,6 +2,8 @@ package org.icgc.dcc.release.job.id.task;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import lombok.NonNull;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.DataFrame;
@@ -11,15 +13,19 @@ import org.icgc.dcc.id.client.core.IdClient;
 import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.JobContext;
+import org.icgc.dcc.release.core.task.GenericProcessTask;
 import org.icgc.dcc.release.job.id.model.MutationEntity;
 import org.icgc.dcc.release.job.id.model.MutationID;
+import org.icgc.dcc.release.job.id.rpc.*;
 import rx.Observable;
 import scala.collection.convert.WrapAsScala$;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
 import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_MUTATION_ID;
@@ -46,22 +52,24 @@ import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
+public class AddSurrogateMutationIdTask extends GenericProcessTask {
   private static final String MUTATION_ID_PREFIX = "MU";
   public static final String mutationDumpPath = "/pg_dump/mutation/mutation.txt";
   private DataFrame mutationIDs;
   private SQLContext sqlContext;
+  private String remoteServer;
+  private int port;
 
-  public AddSurrogateMutationIdTask(@NonNull IdClientFactory idClientFactory, DataFrame df, SQLContext sqlContext) {
-    super(FileType.SSM_P_MASKED, FileType.SSM_P_MASKED_SURROGATE_KEY, idClientFactory);
+  public AddSurrogateMutationIdTask(String remoteHost, int port, DataFrame df, SQLContext sqlContext) {
+    super(FileType.SSM_P_MASKED, FileType.SSM_P_MASKED_SURROGATE_KEY);
     this.mutationIDs = df;
     this.sqlContext = sqlContext;
+    this.remoteServer = remoteHost;
+    this.port = port;
   }
 
   @Override
   protected JavaRDD<ObjectNode> process(JavaRDD<ObjectNode> input) {
-
-    IdClientFactory localIdClientFactory = idClientFactory;
 
     DataFrame raw_df =
       sqlContext.createDataFrame(
@@ -78,46 +86,77 @@ public class AddSurrogateMutationIdTask extends AddSurrogateIdTask {
             "left_outer"
         ).rdd().toJavaRDD().mapPartitions(iterator -> {
 
-          IdClient idClient = localIdClientFactory.create();
-          ObjectMapper mapper = new ObjectMapper();
+          ManagedChannel channel = ManagedChannelBuilder.forAddress(remoteServer, port).usePlaintext(true).build();
+          MutationIDServiceGrpc.MutationIDServiceBlockingStub blockingStub =  MutationIDServiceGrpc.newBlockingStub(channel);
 
-          Iterable<Row> iterable = () -> iterator;
+          ObjectMapper mapper1 = new ObjectMapper();
+
           return
-            StreamSupport.stream(iterable.spliterator(), false).map(row -> {
-              try {
-                ObjectNode node = (ObjectNode)mapper.readTree(row.<String>getAs("all"));
 
-                String chromosome = row.<String>getAs("chromosome");
-                String chromosomeStart = row.<String>getAs("chromosomeStart");
-                String chromosomeEnd = row.<String>getAs("chromosomeEnd");
-                String mutation = row.<String>getAs("mutation");
-                String mutationType = row.<String>getAs("mutationType");
-                String assemblyVersion = row.<String>getAs("assemblyVersion");
-
-                String uniqueId = row.<String>getAs("db.uniqueId");
-                if(uniqueId == null || uniqueId.isEmpty()){
-                  node.put(SURROGATE_MUTATION_ID,
-                      idClient.createMutationId(
-                          chromosome,
-                          chromosomeStart,
-                          chromosomeEnd,
-                          mutation,
-                          mutationType,
-                          assemblyVersion
-                      )
-                  );
-                }
-                else{
-                  node.put(SURROGATE_MUTATION_ID, MUTATION_ID_PREFIX + row.<String>getAs("db.uniqueId"));
-                }
-
-                return node;
-
-              } catch (IOException e) {
-                e.printStackTrace();
-                return null;
+            Observable.from(() -> iterator).groupBy(row -> {
+              String uniqueId = row.getAs("db.uniqueId");
+              if(uniqueId == null || uniqueId.isEmpty())
+                return "new";
+              else
+                return "old";
+            }).flatMap(group -> {
+              if(group.getKey().equals("old")){
+                return
+                  group.map(existingRow -> {
+                    try {
+                      ObjectNode node = (ObjectNode)mapper1.readTree(existingRow.<String>getAs("all"));
+                      node.put(SURROGATE_MUTATION_ID, MUTATION_ID_PREFIX + existingRow.<String>getAs("db.uniqueId"));
+                      return node;
+                    } catch (IOException e) {
+                      e.printStackTrace();
+                      return null;
+                    }
+                });
               }
-            }).collect(Collectors.toList());
+              else{
+                return
+                  group.window(10000).flatMap(batch ->
+                    batch.toList().flatMap(list -> {
+
+                      AtomicInteger index = new AtomicInteger(0);
+
+                      CreateMutationIDRequest request =
+                          CreateMutationIDRequest.newBuilder().addAllEntities(
+                              list.stream().map(row ->
+                                  CreateMutationIDRequestEntity.newBuilder()
+                                      .setIndex(index.getAndIncrement())
+                                      .setEntity(
+                                          CreateMutationID.newBuilder()
+                                              .setChromosome(row.<String>getAs("chromosome"))
+                                              .setChromosomeStart(row.<String>getAs("chromosomeStart"))
+                                              .setChromosomeEnd(row.<String>getAs("chromosomeEnd"))
+                                              .setMutation(row.<String>getAs("mutation"))
+                                              .setMutationType(row.<String>getAs("mutationType"))
+                                              .setAssemblyVersion(row.<String>getAs("assemblyVersion")).build()
+                                      ).build()
+                              ).collect(Collectors.toList())
+                          ).build();
+
+                      List<CreateMutationIDResponseEntity> rets = blockingStub.createMutationID(request).getIdsList();
+
+                      return
+                          Observable.from(
+                            IntStream.range(0, list.size()).<ObjectNode>mapToObj(index_ -> {
+                              try {
+                                ObjectNode node = (ObjectNode)mapper1.readTree(list.get(index_).<String>getAs("all"));
+                                node.put(SURROGATE_MUTATION_ID, MUTATION_ID_PREFIX + rets.get(index_).getId());
+                                return node;
+                              } catch (IOException e) {
+                                e.printStackTrace();
+                                return null;
+                              }
+                            }).collect(Collectors.toList())
+                          );
+
+                    }) // end of batch.toList().map
+                  ); //end of group.window(10000).map
+              }//end of else
+            }).toList().toBlocking().first();
 
         }).repartition(2);
   }
