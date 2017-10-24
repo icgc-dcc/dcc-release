@@ -1,8 +1,11 @@
-package org.icgc.dcc.release.job.id.mock.rpc;
+package org.icgc.dcc.release.job.id.config;
 
-import net.devh.springboot.autoconfigure.grpc.server.GrpcService;
-
-import static org.springframework.boot.SpringApplication.run;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 /**
  * Copyright (c) 2017 The Ontario Institute for Cancer Research. All rights reserved.
@@ -21,11 +24,17 @@ import static org.springframework.boot.SpringApplication.run;
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+@Configuration
+public class IDJobConfig {
 
-public class GrpcServer {
+  @Value("${id.postgres.database}")
+  String database;
 
-  public static void main(String[] args) {
-    run(GrpcServer.class, args);
-
+  @Bean
+  @Scope("singleton")
+  public DriverManagerDataSource getDriverManagerDataSource(PostgresqlProperties postgresqlProperties) {
+    return new DriverManagerDataSource(
+        "jdbc:postgresql://" + postgresqlProperties.getServer() + "/" + database + "?user=" + postgresqlProperties.getUser() + "&password=" + postgresqlProperties.getPassword()
+    );
   }
 }
