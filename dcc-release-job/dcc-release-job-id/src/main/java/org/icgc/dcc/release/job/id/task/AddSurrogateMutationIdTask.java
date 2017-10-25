@@ -1,38 +1,21 @@
 package org.icgc.dcc.release.job.id.task;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import lombok.NonNull;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.DataFrame;
-import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
-import org.icgc.dcc.id.client.core.IdClient;
-import org.icgc.dcc.id.client.core.IdClientFactory;
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.task.GenericProcessTask;
+import org.icgc.dcc.release.job.id.function.AddSurrogateMutationId;
 import org.icgc.dcc.release.job.id.model.MutationEntity;
 import org.icgc.dcc.release.job.id.model.MutationID;
-import org.icgc.dcc.release.job.id.rpc.*;
-import rx.Observable;
 import scala.collection.convert.WrapAsScala$;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.StreamSupport;
 
-import static org.icgc.dcc.common.core.model.FieldNames.IdentifierFieldNames.SURROGATE_MUTATION_ID;
-import static org.icgc.dcc.common.core.model.FieldNames.NormalizerFieldNames.NORMALIZER_MUTATION;
-import static org.icgc.dcc.common.core.model.FieldNames.SubmissionFieldNames.*;
 import static org.icgc.dcc.common.core.util.Splitters.TAB;
-import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
 
 /**
  * Copyright (c) $today.year The Ontario Institute for Cancer Research. All rights reserved.
@@ -53,7 +36,6 @@ import static org.icgc.dcc.release.core.util.ObjectNodes.textValue;
  */
 
 public class AddSurrogateMutationIdTask extends GenericProcessTask {
-  private static final String MUTATION_ID_PREFIX = "MU";
   public static final String mutationDumpPath = "/pg_dump/mutation/mutation.txt";
   private DataFrame mutationIDs;
   private SQLContext sqlContext;
@@ -77,88 +59,14 @@ public class AddSurrogateMutationIdTask extends GenericProcessTask {
         MutationEntity.class
       );
 
-    String[] fields = {"chromosome", "chromosomeStart", "chromosomeEnd", "mutation", "mutationType", "assemblyVersion"};
+    String[] fields = {CONSTANTS.CHROMOSOME, CONSTANTS.CHROMOSOMESTART, CONSTANTS.CHROMOSOMEEND, CONSTANTS.MUTATION, CONSTANTS.MUTATIONTYPE, CONSTANTS.ASSEMBLYVERSION};
 
     return
         raw_df.join(
-            mutationIDs.withColumnRenamed("uniqueId", "db.uniqueId"),
+            mutationIDs.withColumnRenamed(CONSTANTS.UNIQUEID, CONSTANTS.DBUNIQUEID),
             WrapAsScala$.MODULE$.asScalaBuffer(Arrays.asList(fields)),
             "left_outer"
-        ).rdd().toJavaRDD().mapPartitions(iterator -> {
-
-          ManagedChannel channel = ManagedChannelBuilder.forAddress(remoteServer, port).usePlaintext(true).build();
-          MutationIDServiceGrpc.MutationIDServiceBlockingStub blockingStub =  MutationIDServiceGrpc.newBlockingStub(channel);
-
-          ObjectMapper mapper1 = new ObjectMapper();
-
-          return
-
-            Observable.from(() -> iterator).groupBy(row -> {
-              String uniqueId = row.getAs("db.uniqueId");
-              if(uniqueId == null || uniqueId.isEmpty())
-                return "new";
-              else
-                return "old";
-            }).flatMap(group -> {
-              if(group.getKey().equals("old")){
-                return
-                  group.map(existingRow -> {
-                    try {
-                      ObjectNode node = (ObjectNode)mapper1.readTree(existingRow.<String>getAs("all"));
-                      node.put(SURROGATE_MUTATION_ID, MUTATION_ID_PREFIX + existingRow.<String>getAs("db.uniqueId"));
-                      return node;
-                    } catch (IOException e) {
-                      e.printStackTrace();
-                      return null;
-                    }
-                });
-              }
-              else{
-                return
-                  group.window(10000).flatMap(batch ->
-                    batch.toList().flatMap(list -> {
-
-                      AtomicInteger index = new AtomicInteger(0);
-
-                      CreateMutationIDRequest request =
-                          CreateMutationIDRequest.newBuilder().addAllEntities(
-                              list.stream().map(row ->
-                                  CreateMutationIDRequestEntity.newBuilder()
-                                      .setIndex(index.getAndIncrement())
-                                      .setEntity(
-                                          CreateMutationID.newBuilder()
-                                              .setChromosome(row.<String>getAs("chromosome"))
-                                              .setChromosomeStart(row.<String>getAs("chromosomeStart"))
-                                              .setChromosomeEnd(row.<String>getAs("chromosomeEnd"))
-                                              .setMutation(row.<String>getAs("mutation"))
-                                              .setMutationType(row.<String>getAs("mutationType"))
-                                              .setAssemblyVersion(row.<String>getAs("assemblyVersion")).build()
-                                      ).build()
-                              ).collect(Collectors.toList())
-                          ).build();
-
-                      List<CreateMutationIDResponseEntity> rets = blockingStub.createMutationID(request).getIdsList();
-
-                      return
-                          Observable.from(
-                            IntStream.range(0, list.size()).<ObjectNode>mapToObj(index_ -> {
-                              try {
-                                ObjectNode node = (ObjectNode)mapper1.readTree(list.get(index_).<String>getAs("all"));
-                                node.put(SURROGATE_MUTATION_ID, MUTATION_ID_PREFIX + rets.get(index_).getId());
-                                return node;
-                              } catch (IOException e) {
-                                e.printStackTrace();
-                                return null;
-                              }
-                            }).collect(Collectors.toList())
-                          );
-
-                    }) // end of batch.toList().map
-                  ); //end of group.window(10000).map
-              }//end of else
-            }).toList().toBlocking().first();
-
-        }).repartition(2);
+        ).rdd().toJavaRDD().mapPartitions(new AddSurrogateMutationId(remoteServer, port)).repartition(2);
   }
 
   public static DataFrame createDataFrameForPGData(SQLContext sqlContext, JobContext jobContext, String dumpPath) {
@@ -173,5 +81,16 @@ public class AddSurrogateMutationIdTask extends GenericProcessTask {
         ).cache();
     mutationDF.count();
     return mutationDF;
+  }
+
+  public static interface CONSTANTS {
+    String CHROMOSOME = "chromosome";
+    String CHROMOSOMESTART = "chromosomeStart";
+    String CHROMOSOMEEND = "chromosomeEnd";
+    String MUTATION = "mutation";
+    String MUTATIONTYPE = "mutationType";
+    String ASSEMBLYVERSION = "assemblyVersion";
+    String UNIQUEID = "uniqueId";
+    String DBUNIQUEID = "db.uniqueId";
   }
 }
