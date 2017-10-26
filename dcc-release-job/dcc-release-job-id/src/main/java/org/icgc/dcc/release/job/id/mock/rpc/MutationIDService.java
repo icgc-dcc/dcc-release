@@ -1,5 +1,6 @@
 package org.icgc.dcc.release.job.id.mock.rpc;
 
+import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,15 +9,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.icgc.dcc.release.job.id.config.PostgresqlProperties;
 import org.icgc.dcc.release.job.id.rpc.*;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.jdbc.core.RowCallbackHandler;
+import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,7 +45,7 @@ public class MutationIDService extends MutationIDServiceGrpc.MutationIDServiceIm
   @NonNull
   private DriverManagerDataSource dataSource;
 
-  private String table_name = "tmp_mutation_ids";
+  private String table_name = "mutation_ids";
   private String sql_batch_insert = "insert into " + table_name + " (chromosome, chromosome_start, chromosome_end, mutation, mutation_type, assembly_version, creation_release) values (?, ?, ?, ?, ?, ?, ?) returning id;";
 
   @Override
@@ -66,8 +64,10 @@ public class MutationIDService extends MutationIDServiceGrpc.MutationIDServiceIm
           Object[] args = {entity.getChromosome(), entity.getChromosomeStart(), entity.getChromosomeEnd(), entity.getMutation(), entity.getMutationType(), entity.getAssemblyVersion(), "ICGC26"};
           String serialNo =
             jdbcTemplate.query(sql_batch_insert, args, resultSet -> {
+              resultSet.next();
               return resultSet.getString("id");
             });
+
           return CreateMutationIDResponseEntity.newBuilder().setIndex(entityWithIndex.getIndex()).setId(serialNo).build();
         }).collect(Collectors.toList())
       ).build()

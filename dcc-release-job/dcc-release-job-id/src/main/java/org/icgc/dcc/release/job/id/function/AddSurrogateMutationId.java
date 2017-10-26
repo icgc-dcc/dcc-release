@@ -49,6 +49,8 @@ public class AddSurrogateMutationId implements FlatMapFunction<Iterator<Row>, Ob
   @NonNull
   private int port;
 
+  private int windowSize = 10000;
+
   @Override
   public Iterable<ObjectNode> call(Iterator<Row> iterator) throws Exception {
     ManagedChannel channel = ManagedChannelBuilder.forAddress(remoteServer, port).usePlaintext(true).build();
@@ -80,7 +82,7 @@ public class AddSurrogateMutationId implements FlatMapFunction<Iterator<Row>, Ob
           }
           else{
             return
-                group.window(10000).flatMap(
+                group.window(windowSize).flatMap(
                     new FlatmapFunction(blockingStub, mapper)
                 ); //end of group.window(10000).map
           }//end of else
@@ -88,7 +90,7 @@ public class AddSurrogateMutationId implements FlatMapFunction<Iterator<Row>, Ob
   }
 
   @RequiredArgsConstructor
-  public class FlatmapFunction implements Func1<Observable<Row>, Observable<ObjectNode> >{
+  public static class FlatmapFunction implements Func1<Observable<Row>, Observable<ObjectNode> >{
 
     @NonNull
     private MutationIDServiceGrpc.MutationIDServiceBlockingStub blockingStub;
@@ -100,13 +102,13 @@ public class AddSurrogateMutationId implements FlatMapFunction<Iterator<Row>, Ob
       return
           batch.toList().flatMap(list -> {
 
-            AtomicInteger index = new AtomicInteger(0);
+            AtomicInteger counter = new AtomicInteger(0);
 
             CreateMutationIDRequest request =
                 CreateMutationIDRequest.newBuilder().addAllEntities(
                     list.stream().map(row ->
                         CreateMutationIDRequestEntity.newBuilder()
-                            .setIndex(index.getAndIncrement())
+                            .setIndex(counter.getAndIncrement())
                             .setEntity(
                                 CreateMutationID.newBuilder()
                                     .setChromosome(row.<String>getAs(CHROMOSOME))
@@ -123,10 +125,10 @@ public class AddSurrogateMutationId implements FlatMapFunction<Iterator<Row>, Ob
 
             return
                 Observable.from(
-                    IntStream.range(0, list.size()).<ObjectNode>mapToObj(index_ -> {
+                    IntStream.range(0, list.size()).<ObjectNode>mapToObj(index -> {
                       try {
-                        ObjectNode node = (ObjectNode)mapper.readTree(list.get(index_).<String>getAs("all"));
-                        node.put(SURROGATE_MUTATION_ID, MUTATION_ID_PREFIX + rets.get(index_).getId());
+                        ObjectNode node = (ObjectNode)mapper.readTree(list.get(index).<String>getAs("all"));
+                        node.put(SURROGATE_MUTATION_ID, MUTATION_ID_PREFIX + rets.get(index).getId());
                         return node;
                       } catch (IOException e) {
                         e.printStackTrace();
