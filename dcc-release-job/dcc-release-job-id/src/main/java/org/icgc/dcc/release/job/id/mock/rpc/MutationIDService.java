@@ -52,6 +52,8 @@ public class MutationIDService extends MutationIDServiceGrpc.MutationIDServiceIm
   public void createMutationID(org.icgc.dcc.release.job.id.rpc.CreateMutationIDRequest request,
                                io.grpc.stub.StreamObserver<org.icgc.dcc.release.job.id.rpc.CreateMutationIDResponse> responseObserver) {
 
+    System.out.println("processing request ...");
+
     List<CreateMutationIDRequestEntity> list = request.getEntitiesList();
 
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
@@ -72,6 +74,7 @@ public class MutationIDService extends MutationIDServiceGrpc.MutationIDServiceIm
         }).collect(Collectors.toList())
       ).build()
     );
+    System.out.println("finish processing request ...");
     responseObserver.onCompleted();
 
 
