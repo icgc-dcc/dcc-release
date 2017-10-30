@@ -1,5 +1,6 @@
 package org.icgc.dcc.release.job.id.mock.rpc;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
+import rx.Observable;
 
 import java.sql.*;
 import java.util.Arrays;
@@ -58,22 +60,41 @@ public class MutationIDService extends MutationIDServiceGrpc.MutationIDServiceIm
 
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
-    responseObserver.onNext(
-      CreateMutationIDResponse.newBuilder().addAllIds(
+    Observable.from(list).window(100).flatMap(group -> group.toList()).flatMap(group ->
 
-        list.stream().map(entityWithIndex -> {
-          CreateMutationID entity = entityWithIndex.getEntity();
-          Object[] args = {entity.getChromosome(), entity.getChromosomeStart(), entity.getChromosomeEnd(), entity.getMutation(), entity.getMutationType(), entity.getAssemblyVersion(), "ICGC26"};
-          String serialNo =
-            jdbcTemplate.query(sql_batch_insert, args, resultSet -> {
-              resultSet.next();
-              return resultSet.getString("id");
-            });
+      Observable.zip(
+          Observable.from(
+              jdbcTemplate.query(
 
-          return CreateMutationIDResponseEntity.newBuilder().setIndex(entityWithIndex.getIndex()).setId(serialNo).build();
-        }).collect(Collectors.toList())
-      ).build()
-    );
+                  "insert into " + table_name + " (chromosome, chromosome_start, chromosome_end, mutation, mutation_type, assembly_version, creation_release) values " +
+                  Joiner.on(',').join(
+                      group.stream().map(entityWithIndex -> {
+                        CreateMutationID entity = entityWithIndex.getEntity();
+                        Object[] args = {entity.getChromosome(), entity.getChromosomeStart(), entity.getChromosomeEnd(), entity.getMutation(), entity.getMutationType(), entity.getAssemblyVersion(), "ICGC26"};
+                        return
+                            "('" + args[0] + "', " +
+                            "'" + args[1] + "', " +
+                            "'" + args[2] + "', " +
+                            "'" + args[3] + "', " +
+                            "'" + args[4] + "', " +
+                            "'" + args[5] + "', " +
+                            "'" + args[6] + "')";
+                      }).collect(Collectors.toList())
+                  ) + " returning id;",
+                  (RowMapper<String>) (rs, i) -> rs.getString("id")
+              )
+          ),
+          Observable.from(group),
+          (left, right) -> CreateMutationIDResponseEntity.newBuilder().setIndex(right.getIndex()).setId(left).build()
+      )
+
+    ).toList().subscribe(total -> {
+      responseObserver.onNext(
+          CreateMutationIDResponse.newBuilder().addAllIds(total).build()
+      );
+    });
+
+
     System.out.println("finish processing request ...");
     responseObserver.onCompleted();
 

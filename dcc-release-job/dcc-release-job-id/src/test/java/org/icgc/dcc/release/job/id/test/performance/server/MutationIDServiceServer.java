@@ -2,6 +2,8 @@ package org.icgc.dcc.release.job.id.test.performance.server;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.icgc.dcc.release.job.id.mock.rpc.MutationIDService;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -23,16 +25,14 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+@RequiredArgsConstructor
 public class MutationIDServiceServer {
 
+  @NonNull
+  DriverManagerDataSource dataSource;
+
   @SneakyThrows
-  public static void main(String[] args) {
-
-    DriverManagerDataSource dataSource = new DriverManagerDataSource(
-        "jdbc:postgresql://localhost:5432/dcc_id?user=postgres&password=wuqiGXX57"
-    );
-
+  public void start() {
     System.out.println("creating server ...");
     Server server = ServerBuilder.forPort(6565).addService(new MutationIDService(dataSource)).build();
 
@@ -40,6 +40,15 @@ public class MutationIDServiceServer {
     server.start();
 
     server.awaitTermination();
+  }
+
+  public static void main(String[] args) {
+
+    new MutationIDServiceServer(
+        new DriverManagerDataSource(
+            "jdbc:postgresql://localhost:5432/dcc_id?user=postgres&password=wuqiGXX57"
+        )
+    ).start();
 
   }
 }
