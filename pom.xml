@@ -311,7 +311,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
   <properties>
     <!-- Versions - DCC -->
-    <dcc-common.version>5.0.0</dcc-common.version>
+    <dcc-common.version>5.0.1-20171115.172026-1</dcc-common.version>
 
     <!-- Versions - DCC ID -->
     <dcc-id.version>5.0.0</dcc-id.version>
