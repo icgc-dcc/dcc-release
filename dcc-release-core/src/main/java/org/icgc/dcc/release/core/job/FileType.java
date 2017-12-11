@@ -32,6 +32,8 @@ import org.icgc.dcc.common.core.model.Identifiable;
 @RequiredArgsConstructor
 public enum FileType implements Identifiable {
 
+  // FILETYPE(bool) - where bool indicates partitioned => isPartitioned()
+
   //
   // Clinical
   //
@@ -131,6 +133,9 @@ public enum FileType implements Identifiable {
   MUTATION(false),
   DIAGRAM(false),
   DRUG(false),
+
+  CLINVAR(false),
+  CIVIC(false),
 
   OBSERVATION_FATHMM(true),
   OBSERVATION_FI(true),
