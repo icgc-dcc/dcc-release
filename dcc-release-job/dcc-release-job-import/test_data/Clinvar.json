@@ -1,5 +1,5 @@
 {
-  "_id" : {"$oid":"5a28200fa90558a7423c41fc"},
+  "_id" : {"$oid": "5a2ef1975a02d63ccb54a7c4"},
   "alleleID" : 15383,
   "variantType" : "single nucleotide variant",
   "name" : "NM_000267.3(NF1):c.4084C>T (p.Arg1362Ter)",
@@ -19,10 +19,11 @@
   "assembly" : "GRCh37",
   "chromosomeAccession" : "NC_000017.10",
   "chromosome" : "17",
-  "start" : "29576111",
-  "stop" : "29576111",
+  "chromosomeStart" : "29576111",
+  "chromosomeEnd" : "29576111",
   "referenceAllele" : "C",
   "alternateAllele" : "T",
+  "mutation" : "C>T",
   "cytogenetic" : "17q11.2",
   "reviewStatus" : "criteria provided, multiple submitters, no conflicts",
   "numberSubmitters" : "5",
@@ -30,7 +31,7 @@
   "testedInGTR" : "N",
   "otherIDs" : "OMIM Allelic Variant:613113.0027",
   "submitterCategories" : "3",
-  "variationID" : 344,
+  "clinvarID" : 344,
   "variationType" : "Variant",
   "interpreted" : false
 }
