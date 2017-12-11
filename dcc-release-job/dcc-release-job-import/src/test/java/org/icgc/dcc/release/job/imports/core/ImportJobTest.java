@@ -49,7 +49,7 @@ public class ImportJobTest extends AbstractJobTest {
     "GeneSet",
     "Drug",
     "Diagram",
-    "ClinVar",
+    "Clinvar",
     "Civic"
   };
   public final static String TEST_DATA_PATH = "test_data";
