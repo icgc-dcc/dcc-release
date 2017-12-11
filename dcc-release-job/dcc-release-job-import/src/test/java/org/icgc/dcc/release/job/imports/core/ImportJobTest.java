@@ -43,7 +43,15 @@ public class ImportJobTest extends AbstractJobTest {
   @Rule
   public final static EmbeddedMongo embeddedMongo = new EmbeddedMongo();
   public final static String TEST_DB = "dcc-import";
-  public final static String[] Collections = { "Project", "Gene", "GeneSet", "Drug", "Diagram" };
+  public final static String[] Collections = {
+    "Project",
+    "Gene",
+    "GeneSet",
+    "Drug",
+    "Diagram",
+    "ClinVar",
+    "Civic"
+  };
   public final static String TEST_DATA_PATH = "test_data";
   /**
    * Class under test.
