@@ -36,6 +36,10 @@ import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_TRANSCRIPTS;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_TRANSCRIPTS_TRANSCRIPT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_MUTATION;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_CHROMOSOME;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_CHROMOSOME_START;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_CHROMOSOME_END;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_OBSERVATIONS;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_OBSERVATION_DONOR;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_OBSERVATION_PROJECT;
@@ -62,6 +66,8 @@ import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_VERIFICATION
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.getTestedTypeCountFieldName;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.CLINVAR_COLLECTION;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.CIVIC_COLLECTION;
 
 import org.icgc.dcc.common.core.model.FieldNames;
 
@@ -73,6 +79,9 @@ import com.google.common.collect.Lists;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
+import org.icgc.dcc.release.core.document.DocumentType;
+import org.icgc.dcc.release.core.util.Tuples;
+import scala.Tuple4;
 
 /**
  * Static accessor methods for dynamic collection objects.
@@ -249,6 +258,14 @@ public final class CollectionFieldAccessors {
 
   public static String getMutationId(@NonNull ObjectNode mutation) {
     return mutation.get(MUTATION_ID).textValue();
+  }
+
+  public static Tuple4<String, String, String, String> getMutationVariantAnnotationId(@NonNull ObjectNode mutation) {
+    val chromosome = mutation.get(MUTATION_CHROMOSOME).textValue();
+    val chromosomeStart = mutation.get(MUTATION_CHROMOSOME_START).textValue();
+    val chromosomeEnd = mutation.get(MUTATION_CHROMOSOME_END).textValue();
+    val mutationType = mutation.get(MUTATION_MUTATION).textValue();
+    return Tuples.tuple4(chromosome, chromosomeStart, chromosomeEnd, mutationType);
   }
 
   public static ArrayNode getOccurrenceObservations(@NonNull ObjectNode occurrence) {
