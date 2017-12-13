@@ -109,6 +109,16 @@ public abstract class AbstractDocumentTask extends GenericTask {
         .map(row -> JacksonFactory.MAPPER.treeToValue(row, Occurrence.class));
   }
 
+  protected JavaRDD<ObjectNode> readClinvar(TaskContext taskContext) {
+    val fields = getFields(type).getClinvarFields();
+    return filterFields(readInput(taskContext, FileType.CLINVAR), fields);
+  }
+
+  protected JavaRDD<ObjectNode> readCivic(TaskContext taskContext) {
+    val fields = getFields(type).getCivicFields();
+    return filterFields(readInput(taskContext, FileType.CIVIC), fields);
+  }
+
   private static JavaRDD<ObjectNode> filterFields(JavaRDD<ObjectNode> rdd, CollectionFields fields) {
     return rdd.map(new FilterFields(new CollectionFieldsFilterAdapter(fields)));
   }
