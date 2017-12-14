@@ -48,6 +48,14 @@ import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS_CONSEQUENCE;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY;
+import static org.icgc.dcc.common.core.model.FieldNames.CLINVAR_CHROMOSOME;
+import static org.icgc.dcc.common.core.model.FieldNames.CLINVAR_CHROMOSOME_START;
+import static org.icgc.dcc.common.core.model.FieldNames.CLINVAR_CHROMOSOME_END;
+import static org.icgc.dcc.common.core.model.FieldNames.CLINVAR_MUTATION;
+import static org.icgc.dcc.common.core.model.FieldNames.CIVIC_CHROMOSOME;
+import static org.icgc.dcc.common.core.model.FieldNames.CIVIC_CHROMOSOME_START;
+import static org.icgc.dcc.common.core.model.FieldNames.CIVIC_CHROMOSOME_END;
+import static org.icgc.dcc.common.core.model.FieldNames.CIVIC_MUTATION;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_GENE_ID;
@@ -260,12 +268,28 @@ public final class CollectionFieldAccessors {
     return mutation.get(MUTATION_ID).textValue();
   }
 
-  public static Tuple4<String, String, String, String> getMutationVariantAnnotationId(@NonNull ObjectNode mutation) {
+  public static String getMutationVariantAnnotationId(@NonNull ObjectNode mutation) {
     val chromosome = mutation.get(MUTATION_CHROMOSOME).textValue();
     val chromosomeStart = mutation.get(MUTATION_CHROMOSOME_START).textValue();
     val chromosomeEnd = mutation.get(MUTATION_CHROMOSOME_END).textValue();
     val mutationType = mutation.get(MUTATION_MUTATION).textValue();
-    return Tuples.tuple4(chromosome, chromosomeStart, chromosomeEnd, mutationType);
+    return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
+  }
+
+  public static String getClinvarVariantAnnotationId(@NonNull ObjectNode mutation) {
+    val chromosome = mutation.get(CLINVAR_CHROMOSOME).textValue();
+    val chromosomeStart = mutation.get(CLINVAR_CHROMOSOME_START).textValue();
+    val chromosomeEnd = mutation.get(CLINVAR_CHROMOSOME_END).textValue();
+    val mutationType = mutation.get(CLINVAR_MUTATION).textValue();
+    return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
+  }
+
+  public static String getCivicVariantAnnotationId(@NonNull ObjectNode mutation) {
+    val chromosome = mutation.get(CIVIC_CHROMOSOME).textValue();
+    val chromosomeStart = mutation.get(CIVIC_CHROMOSOME_START).textValue();
+    val chromosomeEnd = mutation.get(CIVIC_CHROMOSOME_END).textValue();
+    val mutationType = mutation.get(CIVIC_MUTATION).textValue();
+    return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
   }
 
   public static ArrayNode getOccurrenceObservations(@NonNull ObjectNode occurrence) {
