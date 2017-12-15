@@ -23,6 +23,7 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.broadcast.Broadcast;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -35,6 +36,6 @@ public class DocumentJobContext implements Serializable {
   Broadcast<Map<String, ObjectNode>> donorsBroadcast;
   Broadcast<Map<String, ObjectNode>> genesBroadcast;
   Broadcast<Map<String, ObjectNode>> clinvarBroadcast;
-  Broadcast<Map<String, ObjectNode>> civicBroadcast;
+  Broadcast<Map<String, Iterable<ObjectNode>>> civicBroadcast;
 
 }
