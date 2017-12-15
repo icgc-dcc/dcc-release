@@ -46,6 +46,8 @@ import org.icgc.dcc.release.job.document.task.CreateVCFFileTask;
 import org.icgc.dcc.release.job.document.task.ResolveDonorsTask;
 import org.icgc.dcc.release.job.document.task.ResolveGenesTask;
 import org.icgc.dcc.release.job.document.task.ResolveProjectsTask;
+import org.icgc.dcc.release.job.document.task.ResolveClinvarTask;
+import org.icgc.dcc.release.job.document.task.ResolveCivicTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -154,6 +156,14 @@ public class DocumentJob extends GenericJob {
         val resolveGenesTask = (ResolveGenesTask) entry.getValue();
         documentJobBuilder.genesBroadcast(createBroadcast(resolveGenesTask.getGeneIdGenes()));
         break;
+      case CLINVAR:
+        val resolveClinvarTask = (ResolveClinvarTask) entry.getValue();
+        documentJobBuilder.clinvarBroadcast(createBroadcast(resolveClinvarTask.getAnnotationIdClinvar()));
+        break;
+      case CIVIC:
+        val resolveCivicTask = (ResolveCivicTask) entry.getValue();
+        documentJobBuilder.civicBroadcast(createBroadcast(resolveCivicTask.getAnnotationIdCivic()));
+        break;
       default:
         throw new IllegalArgumentException(format("Unrecoginzed broadcast type %s", entry.getKey()));
       }
@@ -199,6 +209,16 @@ public class DocumentJob extends GenericJob {
     val genes = documentJobContext.getGenesBroadcast();
     if (genes != null) {
       genes.destroy(false);
+    }
+
+    val clinvar = documentJobContext.getClinvarBroadcast();
+    if (clinvar != null) {
+      clinvar.destroy(false);
+    }
+
+    val civic = documentJobContext.getCivicBroadcast();
+    if (civic != null) {
+      civic.destroy(false);
     }
   }
 

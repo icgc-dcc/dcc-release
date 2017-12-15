@@ -33,23 +33,7 @@ import org.icgc.dcc.release.job.document.model.BroadcastType;
 import org.icgc.dcc.release.job.document.model.CollectionFields;
 import org.icgc.dcc.release.job.document.model.DocumentFields;
 import org.icgc.dcc.release.job.document.model.DocumentTypeAttributes;
-import org.icgc.dcc.release.job.document.task.DiagramDocumentTask;
-import org.icgc.dcc.release.job.document.task.DonorCentricDocumentTask;
-import org.icgc.dcc.release.job.document.task.DonorDocumentTask;
-import org.icgc.dcc.release.job.document.task.DonorTextDocumentTask;
-import org.icgc.dcc.release.job.document.task.DrugCentricDocumentTask;
-import org.icgc.dcc.release.job.document.task.DrugTextDocumentTask;
-import org.icgc.dcc.release.job.document.task.GeneCentricDocumentTask;
-import org.icgc.dcc.release.job.document.task.GeneDocumentTask;
-import org.icgc.dcc.release.job.document.task.GeneSetDocumentTask;
-import org.icgc.dcc.release.job.document.task.GeneSetTextDocumentTask;
-import org.icgc.dcc.release.job.document.task.GeneTextDocumentTask;
-import org.icgc.dcc.release.job.document.task.MutationCentricDocumentTask;
-import org.icgc.dcc.release.job.document.task.MutationTextDocumentTask;
-import org.icgc.dcc.release.job.document.task.ObservationCentricDocumentTask;
-import org.icgc.dcc.release.job.document.task.ProjectDocumentTask;
-import org.icgc.dcc.release.job.document.task.ProjectTextDocumentTask;
-import org.icgc.dcc.release.job.document.task.ReleaseDocumentTask;
+import org.icgc.dcc.release.job.document.task.*;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -534,7 +518,7 @@ public final class DocumentTypes {
   private static DocumentTypeAttributes defineMutationCentricType() {
     return attributes()
         .documentClassName(MutationCentricDocumentTask.class.getName())
-        .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
+        .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE, BroadcastType.CLINVAR, BroadcastType.CIVIC))
         .fields(
             fields()
                 .projectFields(
