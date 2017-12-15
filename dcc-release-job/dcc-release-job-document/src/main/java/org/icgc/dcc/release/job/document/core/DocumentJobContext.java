@@ -34,5 +34,7 @@ public class DocumentJobContext implements Serializable {
   Broadcast<Map<String, ObjectNode>> projectsBroadcast;
   Broadcast<Map<String, ObjectNode>> donorsBroadcast;
   Broadcast<Map<String, ObjectNode>> genesBroadcast;
+  Broadcast<Map<String, ObjectNode>> clinvarBroadcast;
+  Broadcast<Map<String, ObjectNode>> civicBroadcast;
 
 }
