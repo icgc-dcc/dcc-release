@@ -27,14 +27,14 @@ import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
 import java.util.Map;
 
 import static org.icgc.dcc.release.core.util.Tuples.tuple;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getClinvarVariantAnnotationId;
+import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getCivicVariantAnnotationId;
 
-public class ResolveClinvarTask extends AbstractDocumentTask {
+public class ResolveCivicTask extends AbstractDocumentTask {
 
   @Getter
-  private Map<String, ObjectNode> annotationIdClinvar;
+  private Map<String, ObjectNode> annotationIdCivic;
 
-  public ResolveClinvarTask(DocumentType type) {
+  public ResolveCivicTask(DocumentType type) {
     super(type);
   }
 
@@ -45,11 +45,11 @@ public class ResolveClinvarTask extends AbstractDocumentTask {
 
   @Override
   public void execute(TaskContext taskContext) {
-    annotationIdClinvar = readClinvar(taskContext)
-        .mapToPair(data -> tuple(getClinvarVariantAnnotationId(data), data))
+    annotationIdCivic = readCivic(taskContext)
+        .mapToPair(data -> tuple(getCivicVariantAnnotationId(data), data))
         .collectAsMap();
 
-    annotationIdClinvar = SparkWorkaroundUtils.toHashMap(annotationIdClinvar);
+    annotationIdCivic = SparkWorkaroundUtils.toHashMap(annotationIdCivic);
   }
 
 }
