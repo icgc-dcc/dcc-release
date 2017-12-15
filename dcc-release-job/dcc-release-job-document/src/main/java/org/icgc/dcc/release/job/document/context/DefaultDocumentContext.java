@@ -47,6 +47,10 @@ public class DefaultDocumentContext implements DocumentContext {
   private final Map<String, ObjectNode> genes = filterGenes();
   @Getter(lazy = true)
   private final Map<String, ObjectNode> donors = filterDonors();
+  @Getter(lazy = true)
+  private final Map<String, ObjectNode> clinvar = loadClinvar();
+  @Getter(lazy = true)
+  private final Map<String, Iterable<ObjectNode>> civic = loadCivic();
 
   @Override
   public DocumentType getType() {
@@ -70,6 +74,14 @@ public class DefaultDocumentContext implements DocumentContext {
     }
 
     return getGenes().get(geneId);
+  }
+
+  public ObjectNode getClinvar(String annotationId) {
+    return getClinvar().get(annotationId);
+  }
+
+  public Iterable<ObjectNode> getCivic(String annotationId) {
+    return getCivic().get(annotationId);
   }
 
   @Override
@@ -102,6 +114,14 @@ public class DefaultDocumentContext implements DocumentContext {
 
   private Map<String, ObjectNode> filterDonors() {
     return documentJobContext.getDonorsBroadcast().getValue();
+  }
+
+  private Map<String, ObjectNode> loadClinvar() {
+    return documentJobContext.getClinvarBroadcast().getValue();
+  }
+
+  private Map<String, Iterable<ObjectNode>> loadCivic() {
+    return documentJobContext.getCivicBroadcast().getValue();
   }
 
   private UnsupportedOperationException throwUnsupportedOperationException() {

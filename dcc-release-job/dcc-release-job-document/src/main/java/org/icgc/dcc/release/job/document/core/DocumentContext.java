@@ -52,10 +52,26 @@ public interface DocumentContext extends Serializable {
 
   /**
    * Gets a complete mapping from {@code _gene_id} to gene objects.
-   * 
+   *
    * @return the mapping
    */
   Map<String, ObjectNode> getGenes();
+
+  /**
+   * Gets a clinvar entry by {@code clinvarID} - which is constructed
+   * as a combo of properties (chromosome, c..meStart, c..meEnd, mutation)
+   *
+   * @return the mapping
+   */
+  ObjectNode getClinvar(String annotationId);
+
+  /**
+   * Gets civic entries by {@code civicId} - which is constructed
+   * as a combo of properties (chromosome, c..meStart, c..meEnd, mutation)
+   *
+   * @return the mapping
+   */
+  Iterable<ObjectNode> getCivic(String annotationId);
 
   /**
    * Gets a project by {@code _project_id}.
@@ -75,7 +91,7 @@ public interface DocumentContext extends Serializable {
 
   /**
    * Gets a gene by {@code _gene_id}.
-   * 
+   *
    * @param geneId the {@code _gene_id} of the gene
    * @return the gene
    */
