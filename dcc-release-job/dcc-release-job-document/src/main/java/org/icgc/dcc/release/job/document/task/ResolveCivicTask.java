@@ -19,19 +19,13 @@ package org.icgc.dcc.release.job.document.task;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Getter;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.icgc.dcc.release.core.document.DocumentType;
 import org.icgc.dcc.release.core.task.TaskContext;
 import org.icgc.dcc.release.core.task.TaskType;
-import org.icgc.dcc.release.core.util.ObjectNodes;
 import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
-import scala.Tuple2;
-
+import org.icgc.dcc.release.job.document.model.CollectionFieldAccessors;
 
 import java.util.Map;
-
-import static org.icgc.dcc.release.core.util.Tuples.tuple;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getCivicVariantAnnotationId;
 
 public class ResolveCivicTask extends AbstractDocumentTask {
 
@@ -50,8 +44,9 @@ public class ResolveCivicTask extends AbstractDocumentTask {
   @Override
   public void execute(TaskContext taskContext) {
     annotationIdCivic = readCivic(taskContext)
-        .groupBy(data -> getCivicVariantAnnotationId(data))
+        .groupBy(CollectionFieldAccessors::getCivicVariantAnnotationId)
         .collectAsMap();
-  }
 
+    annotationIdCivic = SparkWorkaroundUtils.toHashMap(annotationIdCivic);
+  }
 }
