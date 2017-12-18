@@ -258,6 +258,7 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
 
   private static ObjectNode attachVariantAnnotationData(ObjectNode mutation, ObjectNode clinvar, Iterable<ObjectNode> civic) {
 
+    // ObjectMapper mapper used to create new nodes
     ObjectMapper mapper = new ObjectMapper();
 
     // Attach empty nodes used later on
@@ -268,18 +269,21 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     mutation.set("clinical_significance", clinical_significance);
     mutation.set("clinical_evidence", clinical_evidence);
 
+    // If there is clinvar data pass it through otherwise don't and get defaults
     if (clinvar == null) {
       attachClinvarData(mutation);
     } else {
       attachClinvarData(mutation, clinvar);
     }
 
+    // If there is civic data pass it through otherwise don't and get defaults
     if (civic == null) {
       attachCivicData(mutation);
     } else {
       attachCivicData(mutation, civic);
     }
 
+    // Finally return the mutation with annotation data now attached
     return mutation;
   }
 
@@ -291,6 +295,7 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
   private static ObjectNode attachClinvarData(ObjectNode mutation) {
     ((ObjectNode)mutation.get("external_db_ids")).set("clinvar", null);
     ((ObjectNode)mutation.get("clinical_significance")).set("clinvar", null);
+
     return mutation;
   }
 
@@ -320,6 +325,7 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     ((ObjectNode)mutation.get("external_db_ids")).set("civic", null);
     ((ObjectNode)mutation.get("clinical_evidence")).set("civic", null);
     mutation.set("description", null);
+
     return mutation;
   }
 
