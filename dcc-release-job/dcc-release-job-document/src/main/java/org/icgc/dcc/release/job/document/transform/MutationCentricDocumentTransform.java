@@ -252,8 +252,8 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     // Temporary debugging
     if (mutationId.equals("MU62030")) {
       log.info("Annotation ID: " + annotationId);
-      log.info("Clinvar: " + clinvar.toString());
-      log.info("Civic: " + civic.toString());
+//      log.info("Clinvar: " + clinvar.toString());
+//      log.info("Civic: " + civic.toString());
       log.info("Mutation: " + mutation.toString());
     }
 
