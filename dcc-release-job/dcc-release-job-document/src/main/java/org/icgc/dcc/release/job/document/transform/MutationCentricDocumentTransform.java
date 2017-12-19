@@ -69,6 +69,7 @@ import com.google.common.collect.Maps;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 import org.icgc.dcc.release.job.document.util.JsonNodes;
 import scala.Tuple2;
 
@@ -115,6 +116,7 @@ import scala.Tuple2;
  * </pre>
  */
 @RequiredArgsConstructor
+@Slf4j
 public class MutationCentricDocumentTransform extends AbstractCentricDocumentTransform implements
     Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> {
 
@@ -247,6 +249,14 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     val civic =  context.getCivic(annotationId);
     mutation = attachVariantAnnotationData(mutation, clinvar, civic);
 
+    // Temporary debugging
+    if (mutationId.equals("MU62030")) {
+      log.info("Annotation ID: " + annotationId);
+      log.info("Clinvar: " + clinvar.toString());
+      log.info("Civic: " + civic.toString());
+      log.info("Mutation: " + mutation.toString());
+    }
+
     // Result
     val document = new Document(context.getType(), mutationId, mutation);
 
@@ -269,18 +279,33 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     mutation.set("clinical_significance", clinical_significance);
     mutation.set("clinical_evidence", clinical_evidence);
 
+    // TEMP
+    val mutationId = getMutationId(mutation);
+
     // If there is clinvar data pass it through otherwise don't and get defaults
     if (clinvar == null) {
       attachClinvarData(mutation);
+      if (mutationId.equals("MU62030")) {
+        log.info("MU62030 will be clinvar NULL"); // TEMP
+      }
     } else {
       attachClinvarData(mutation, clinvar);
+      if (mutationId.equals("MU62030")) {
+        log.info("MU62030 will have clinvar data"); // TEMP
+      }
     }
 
     // If there is civic data pass it through otherwise don't and get defaults
     if (civic == null) {
       attachCivicData(mutation);
+      if (mutationId.equals("MU62030")) {
+        log.info("MU62030 will be civic NULL"); // TEMP
+      }
     } else {
       attachCivicData(mutation, civic);
+      if (mutationId.equals("MU62030")) {
+        log.info("MU62030 will have civic data"); // TEMP
+      }
     }
 
     // Finally return the mutation with annotation data now attached
