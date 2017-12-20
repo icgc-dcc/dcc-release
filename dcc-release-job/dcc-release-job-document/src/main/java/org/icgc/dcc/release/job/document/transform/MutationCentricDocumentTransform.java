@@ -51,7 +51,6 @@ import java.util.TreeMap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.BusinessKeys;
 import org.icgc.dcc.release.core.document.Document;
@@ -115,7 +114,6 @@ import scala.Tuple2;
  * }
  * </pre>
  */
-@Slf4j
 @RequiredArgsConstructor
 public class MutationCentricDocumentTransform extends AbstractCentricDocumentTransform implements
     Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> {
@@ -250,12 +248,12 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     mutation = attachVariantAnnotationData(mutation, clinvar, civic);
 
     // Temporary debugging
-    log.info("TEST LOG OUTPUT");
+    System.out.println("TEST CONSOLE OUTPUT");
     if (mutationId.equals("MU62030")) {
-      log.info("Annotation ID: " + annotationId);
-//      log.info("Clinvar: " + clinvar.toString());
-//      log.info("Civic: " + civic.toString());
-      log.info("Mutation: " + mutation.toString());
+      System.out.println("Annotation ID: " + annotationId);
+//      System.out.println("Clinvar: " + clinvar.toString());
+//      System.out.println("Civic: " + civic.toString());
+      System.out.println("Mutation: " + mutation.toString());
     }
 
     // Result
@@ -287,12 +285,12 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     if (clinvar == null) {
       attachClinvarData(mutation);
       if (mutationId.equals("MU62030")) {
-        log.info("MU62030 will be clinvar NULL"); // TEMP
+        System.out.println("MU62030 will be clinvar NULL"); // TEMP
       }
     } else {
       attachClinvarData(mutation, clinvar);
       if (mutationId.equals("MU62030")) {
-        log.info("MU62030 will have clinvar data"); // TEMP
+        System.out.println("MU62030 will have clinvar data"); // TEMP
       }
     }
 
@@ -300,12 +298,12 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     if (civic == null) {
       attachCivicData(mutation);
       if (mutationId.equals("MU62030")) {
-        log.info("MU62030 will be civic NULL"); // TEMP
+        System.out.println("MU62030 will be civic NULL"); // TEMP
       }
     } else {
       attachCivicData(mutation, civic);
       if (mutationId.equals("MU62030")) {
-        log.info("MU62030 will have civic data"); // TEMP
+        System.out.println("MU62030 will have civic data"); // TEMP
       }
     }
 
