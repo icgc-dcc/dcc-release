@@ -252,7 +252,7 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
 
     if (mutationId.equals("MU62030")) {
       // Temporary debugging to request bin because things ...
-      logToWeb("http://postb.in/IjXr8G7j", annotationId, mutation);
+      logToWeb("http://postb.in/Gh6fsBJJ", annotationId, mutation);
     }
 
     // Result
@@ -271,10 +271,8 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
 
     try {
       method.addParameter("AnnotationID", annotationId);
-//      method.addParameter("Mutation", mutation.toString());
-      int statusCode = client.executeMethod(method);
-//      byte[] responseBody = method.getResponseBody();
-//      System.out.println(new String(responseBody));
+      method.addParameter("Mutation", mutation.toString());
+      client.executeMethod(method);
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
