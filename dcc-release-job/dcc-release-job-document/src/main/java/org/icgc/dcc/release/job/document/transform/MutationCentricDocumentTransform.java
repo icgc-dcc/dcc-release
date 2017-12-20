@@ -252,7 +252,7 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
 
     if (mutationId.equals("MU62030")) {
       // Temporary debugging to request bin because things ...
-      logToWeb("http://postb.in/Gh6fsBJJ", annotationId, mutation);
+      logToWeb("http://postb.in/MyTdTsRd", annotationId, mutation);
     }
 
     // Result

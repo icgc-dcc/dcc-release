@@ -1,2 +1,2 @@
-{"mutation_type":"single base substitution","chromosome":"3","chromosome_start":"77299437","chromosome_end":"77299437","reference_genome_allele":"G","mutation":"G>A","_mutation_id":"MU2","assembly_version":"GRCh37"}
-{"mutation_type":"single base substitution","chromosome":"3","chromosome_start":"77299437","chromosome_end":"77299439","reference_genome_allele":"G","mutation":"G>A","_mutation_id":"MU1","assembly_version":"GRCh37"}
+{"mutation_type":"single base substitution","chromosome":"3","chromosome_start":77299437,"chromosome_end":77299437,"reference_genome_allele":"G","mutation":"G>A","_mutation_id":"MU2","assembly_version":"GRCh37"}
+{"mutation_type":"single base substitution","chromosome":"3","chromosome_start":77299437,"chromosome_end":77299439,"reference_genome_allele":"G","mutation":"G>A","_mutation_id":"MU1","assembly_version":"GRCh37"}
