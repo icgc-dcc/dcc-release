@@ -69,8 +69,11 @@ import com.google.common.collect.Maps;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.icgc.dcc.release.job.document.util.JsonNodes;
 import scala.Tuple2;
+
+import org.apache.commons.httpclient.*;
+import org.apache.commons.httpclient.methods.*;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 
 /**
  * {@link DocumentTransform} implementation that creates a nested mutation-centric document:
@@ -247,13 +250,9 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     val civic =  context.getCivic(annotationId);
     mutation = attachVariantAnnotationData(mutation, clinvar, civic);
 
-    // Temporary debugging
-    System.out.println("TEST CONSOLE OUTPUT");
     if (mutationId.equals("MU62030")) {
-      System.out.println("Annotation ID: " + annotationId);
-//      System.out.println("Clinvar: " + clinvar.toString());
-//      System.out.println("Civic: " + civic.toString());
-      System.out.println("Mutation: " + mutation.toString());
+      // Temporary debugging to request bin because things ...
+      logToWeb("http://postb.in/QyDjQFR2", annotationId, mutation);
     }
 
     // Result
@@ -263,6 +262,22 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     SUMMARY_CALLBACK.call(document);
 
     return document;
+  }
+
+  public static void logToWeb(String targetURL, String annotationId, ObjectNode mutation) {
+
+    HttpClient client = new HttpClient();
+    PostMethod method = new PostMethod(targetURL);
+
+    try {
+      method.addParameter("AnnotationID", annotationId);
+//      method.addParameter("Mutation", mutation.toString());
+      client.executeMethod(method);
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      method.releaseConnection();
+    }
   }
 
   private static ObjectNode attachVariantAnnotationData(ObjectNode mutation, ObjectNode clinvar, Iterable<ObjectNode> civic) {
@@ -284,27 +299,15 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     // If there is clinvar data pass it through otherwise don't and get defaults
     if (clinvar == null) {
       attachClinvarData(mutation);
-      if (mutationId.equals("MU62030")) {
-        System.out.println("MU62030 will be clinvar NULL"); // TEMP
-      }
     } else {
       attachClinvarData(mutation, clinvar);
-      if (mutationId.equals("MU62030")) {
-        System.out.println("MU62030 will have clinvar data"); // TEMP
-      }
     }
 
     // If there is civic data pass it through otherwise don't and get defaults
     if (civic == null) {
       attachCivicData(mutation);
-      if (mutationId.equals("MU62030")) {
-        System.out.println("MU62030 will be civic NULL"); // TEMP
-      }
     } else {
       attachCivicData(mutation, civic);
-      if (mutationId.equals("MU62030")) {
-        System.out.println("MU62030 will have civic data"); // TEMP
-      }
     }
 
     // Finally return the mutation with annotation data now attached
