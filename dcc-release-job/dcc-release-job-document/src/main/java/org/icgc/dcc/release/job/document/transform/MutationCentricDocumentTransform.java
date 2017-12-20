@@ -51,6 +51,7 @@ import java.util.TreeMap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.BusinessKeys;
 import org.icgc.dcc.release.core.document.Document;
@@ -69,7 +70,6 @@ import com.google.common.collect.Maps;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.icgc.dcc.release.core.util.Loggers;
 import org.icgc.dcc.release.job.document.util.JsonNodes;
 import scala.Tuple2;
 
@@ -115,6 +115,7 @@ import scala.Tuple2;
  * }
  * </pre>
  */
+@Slf4j
 @RequiredArgsConstructor
 public class MutationCentricDocumentTransform extends AbstractCentricDocumentTransform implements
     Function<Tuple2<String, Tuple2<ObjectNode, Optional<Iterable<ObjectNode>>>>, Document> {
@@ -249,11 +250,12 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     mutation = attachVariantAnnotationData(mutation, clinvar, civic);
 
     // Temporary debugging
+    log.info("TEST LOG OUTPUT");
     if (mutationId.equals("MU62030")) {
-      Loggers.logWithHeader("Annotation ID: " + annotationId);
+      log.info("Annotation ID: " + annotationId);
 //      log.info("Clinvar: " + clinvar.toString());
 //      log.info("Civic: " + civic.toString());
-      Loggers.logWithHeader("Mutation: " + mutation.toString());
+      log.info("Mutation: " + mutation.toString());
     }
 
     // Result
@@ -285,12 +287,12 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     if (clinvar == null) {
       attachClinvarData(mutation);
       if (mutationId.equals("MU62030")) {
-        Loggers.logWithHeader("MU62030 will be clinvar NULL"); // TEMP
+        log.info("MU62030 will be clinvar NULL"); // TEMP
       }
     } else {
       attachClinvarData(mutation, clinvar);
       if (mutationId.equals("MU62030")) {
-        Loggers.logWithHeader("MU62030 will have clinvar data"); // TEMP
+        log.info("MU62030 will have clinvar data"); // TEMP
       }
     }
 
@@ -298,12 +300,12 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     if (civic == null) {
       attachCivicData(mutation);
       if (mutationId.equals("MU62030")) {
-        Loggers.logWithHeader("MU62030 will be civic NULL"); // TEMP
+        log.info("MU62030 will be civic NULL"); // TEMP
       }
     } else {
       attachCivicData(mutation, civic);
       if (mutationId.equals("MU62030")) {
-        Loggers.logWithHeader("MU62030 will have civic data"); // TEMP
+        log.info("MU62030 will have civic data"); // TEMP
       }
     }
 
