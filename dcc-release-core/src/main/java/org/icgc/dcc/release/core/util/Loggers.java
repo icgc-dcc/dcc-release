@@ -19,11 +19,17 @@ package org.icgc.dcc.release.core.util;
 
 import static com.google.common.base.Strings.repeat;
 import static lombok.AccessLevel.PRIVATE;
+
+import javafx.util.Pair;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.slf4j.Logger;
+
+import java.util.ArrayList;
 
 @Slf4j
 @NoArgsConstructor(access = PRIVATE)
@@ -37,6 +43,29 @@ public final class Loggers {
     printLine(log);
     log.info(message, args);
     printLine(log);
+  }
+
+  /**
+   * Post array of key/values to url - very useful for logging from inside a
+   * transform function where otherwise it's very difficult to debug
+   * @param targetURL - IP/Endpoint to send POST request to
+   * @param data - ArrayList of string/object pairs to be parsed into post data
+   */
+  public static void logToUrl(String targetURL, ArrayList<Pair<String, Object>> data) {
+
+    HttpClient client = new HttpClient();
+    PostMethod method = new PostMethod(targetURL);
+
+    try {
+      for (Pair<String, Object> keyVal : data) {
+        method.addParameter(keyVal.getKey(), keyVal.getValue().toString());
+      }
+      client.executeMethod(method);
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      method.releaseConnection();
+    }
   }
 
   private static void printLine(Logger log) {

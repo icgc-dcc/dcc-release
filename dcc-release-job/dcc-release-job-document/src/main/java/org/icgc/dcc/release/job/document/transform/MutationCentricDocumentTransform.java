@@ -46,14 +46,17 @@ import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.defaultMissing;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.defaultObject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
+import javafx.util.Pair;
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.BusinessKeys;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.util.Loggers;
 import org.icgc.dcc.release.job.document.context.MutationCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentCallback;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
@@ -70,10 +73,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import scala.Tuple2;
-
-import org.apache.commons.httpclient.*;
-import org.apache.commons.httpclient.methods.*;
-import org.apache.commons.httpclient.params.HttpMethodParams;
 
 /**
  * {@link DocumentTransform} implementation that creates a nested mutation-centric document:
@@ -113,7 +112,25 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
  *      consequence_type: 'ct1',
  *      ...
  *    }
- *  } ]
+ *  } ],
+ *  external_db_ids: {
+ *      civic: 001,
+ *      clinvar: 001
+ *  },
+ *  clinical_significance: {
+ *    clinvar: {
+ *        ...
+ *    }
+ *  },
+ *  clinical_evidence: {
+ *    civic: [
+ *      {
+ *          ...
+ *      },
+ *      ...
+ *    ]
+ *  },
+ *  description: 'Lorem ipsum'
  * }
  * </pre>
  */
@@ -250,10 +267,19 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     val civic =  context.getCivic(annotationId);
     mutation = attachVariantAnnotationData(mutation, clinvar, civic);
 
-    if (mutationId.equals("MU62030")) {
-      // Temporary debugging to request bin because things ...
-      logToWeb("http://postb.in/zHVRHyRM", annotationId, mutation);
-    }
+//    //
+//    // EXAMPLE DEBUG TO LOG
+//    // Because logging from inside a transform is no fun ...
+//    //
+//    if (mutationId.equals("MU2")) {
+//      Pair<String, Object> annotation = new Pair<>("Annotation", annotationId);
+//      Pair<String, Object> mutationData = new Pair<>("Mutation", mutation);
+//      ArrayList<Pair<String, Object>> logData = new ArrayList<Pair<String, Object>>();
+//      logData.add(annotation);
+//      logData.add(mutationData);
+//
+//      Loggers.logToUrl("http://postb.in/aYF3eh1U", logData);
+//    }
 
     // Result
     val document = new Document(context.getType(), mutationId, mutation);
@@ -262,22 +288,6 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     SUMMARY_CALLBACK.call(document);
 
     return document;
-  }
-
-  public static void logToWeb(String targetURL, String annotationId, ObjectNode mutation) {
-
-    HttpClient client = new HttpClient();
-    PostMethod method = new PostMethod(targetURL);
-
-    try {
-      method.addParameter("AnnotationID", annotationId);
-      method.addParameter("Mutation", mutation.toString());
-      client.executeMethod(method);
-    } catch (Exception e) {
-      e.printStackTrace();
-    } finally {
-      method.releaseConnection();
-    }
   }
 
   private static ObjectNode attachVariantAnnotationData(ObjectNode mutation, ObjectNode clinvar, Iterable<ObjectNode> civic) {
@@ -292,9 +302,6 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     mutation.set("external_db_ids", external_db_ids);
     mutation.set("clinical_significance", clinical_significance);
     mutation.set("clinical_evidence", clinical_evidence);
-
-    // TEMP
-    val mutationId = getMutationId(mutation);
 
     // If there is clinvar data pass it through otherwise don't and get defaults
     if (clinvar == null) {
