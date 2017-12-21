@@ -51,7 +51,7 @@ public final class Loggers {
    * @param targetURL - IP/Endpoint to send POST request to
    * @param data - ArrayList of string/object pairs to be parsed into post data
    */
-  public static void logToUrl(String targetURL, ArrayList<Pair<String, Object>> data) {
+  public static void logToUrl(@NonNull String targetURL, @NonNull ArrayList<Pair<String, Object>> data) {
 
     HttpClient client = new HttpClient();
     PostMethod method = new PostMethod(targetURL);
