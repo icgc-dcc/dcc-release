@@ -24,13 +24,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_GENE;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorProjectId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequenceGeneId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequences;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationDonorId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationType;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.setObservationDonor;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.setObservationProject;
+import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.*;
 import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.createFakeGene;
 import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
@@ -38,6 +32,8 @@ import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Iterables;
 import lombok.NonNull;
 import lombok.val;
 
@@ -124,6 +120,15 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
       observationGenes.add(gene);
     }
 
+    // Attach annotation data for ssm observations (mutate in place)
+    if (observation.get("ssm") != null) {
+      val annotationId = getObservationVariantAnnotationId(observation.get("ssm"));
+      val clinvar =  context.getClinvar(annotationId);
+      val civic =  context.getCivic(annotationId);
+      val ssm = (ObjectNode)observation.get("ssm");
+      attachVariantAnnotationData(ssm, clinvar, civic);
+    }
+
     return new Document(context.getType(), UUID.randomUUID().toString(), observation);
   }
 
@@ -141,6 +146,83 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
 
   private static void trimObservationConsequence(ObjectNode observationConsequence) {
     observationConsequence.remove(OBSERVATION_CONSEQUENCES_GENE_ID);
+  }
+
+  private static void attachVariantAnnotationData(ObjectNode ssm, ObjectNode clinvar, Iterable<ObjectNode> civic) {
+
+    // ObjectMapper mapper used to create new nodes
+    ObjectMapper mapper = new ObjectMapper();
+
+    // Attach empty nodes used later on
+    val clinical_significance = mapper.createObjectNode();
+    val clinical_evidence = mapper.createObjectNode();
+    ssm.set("clinical_significance", clinical_significance);
+    ssm.set("clinical_evidence", clinical_evidence);
+
+    // If there is clinvar data pass it through otherwise don't and get defaults
+    if (clinvar == null) {
+      attachClinvarData(ssm);
+    } else {
+      attachClinvarData(ssm, clinvar);
+    }
+
+    // If there is civic data pass it through otherwise don't and get defaults
+    if (civic == null) {
+      attachCivicData(ssm);
+    } else {
+      attachCivicData(ssm, civic);
+    }
+  }
+
+  /**
+   * Attached default (empty/null) values if no clinvar data is passed in
+   * @param ssm - object node
+   */
+  private static void attachClinvarData(ObjectNode ssm) {
+    ((ObjectNode)ssm.get("clinical_significance")).set("clinvar", null);
+  }
+
+  /**
+   * Attaches passed in clinvar data to observation
+   * @param ssm - object node
+   * @param clinvar object node to populate minimal clinvar data
+   */
+  private static void attachClinvarData(ObjectNode ssm, ObjectNode clinvar) {
+    // Clinvar field extraction
+    val clinicalSignificance = clinvar.get("clinicalSignificance");
+
+    // ObjectMapper mapper used to create new nodes
+    ObjectMapper mapper = new ObjectMapper();
+    val clinvarObj = mapper.createObjectNode();
+    clinvarObj.set("clinicalSignificance", clinicalSignificance);
+
+    // Set fields
+    ((ObjectNode)ssm.get("clinical_significance")).set("clinvar", clinvarObj);
+  }
+
+  /**
+   * Attached default (empty/null) values if no civic data is passed in
+   * @param ssm - object node
+   */
+  private static void attachCivicData(ObjectNode ssm) {
+    ((ObjectNode)ssm.get("clinical_evidence")).set("civic", null);
+  }
+
+  /**
+   * Attaches passed in civic data to observation
+   * @param ssm - object node
+   * @param civic iterable to populate civic data
+   * @return observation with minimal civic data
+   */
+  private static void attachCivicData(ObjectNode ssm, Iterable<ObjectNode> civic) {
+    ObjectMapper mapper = new ObjectMapper();
+    ArrayNode civicData = mapper.createArrayNode();
+    civic.forEach(civicDataObj -> {
+      ObjectNode civicObj = mapper.createObjectNode();
+      civicObj.set("evidenceLevel", civicDataObj.get("evidenceLevel"));
+      civicData.add(civicObj);
+    });
+    ((ObjectNode)ssm.get("clinical_evidence")).set("civic", civicData);
   }
 
   private static TreeMap<String, ObjectNode> newTreeMap() {

@@ -276,6 +276,14 @@ public final class CollectionFieldAccessors {
     return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
   }
 
+  public static String getObservationVariantAnnotationId(@NonNull JsonNode mutation) {
+    String chromosome = mutation.get(MUTATION_CHROMOSOME).asText();
+    String chromosomeStart = mutation.get(MUTATION_CHROMOSOME_START).asText();
+    String chromosomeEnd = mutation.get(MUTATION_CHROMOSOME_END).asText();
+    String mutationType = mutation.get(MUTATION_MUTATION).asText();
+    return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
+  }
+
   public static String getClinvarVariantAnnotationId(@NonNull ObjectNode mutation) {
     String chromosome = mutation.get(CLINVAR_CHROMOSOME).asText();
     String chromosomeStart = mutation.get(CLINVAR_CHROMOSOME_START).asText();
