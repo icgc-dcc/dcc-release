@@ -213,7 +213,7 @@ public final class DocumentTypes {
   private static DocumentTypeAttributes defineDonorCentricType() {
     return attributes()
         .documentClassName(DonorCentricDocumentTask.class.getName())
-        .broadcastDependencies(ImmutableList.of(BroadcastType.GENE, BroadcastType.PROJECT))
+        .broadcastDependencies(ImmutableList.of(BroadcastType.GENE, BroadcastType.PROJECT, BroadcastType.CLINVAR, BroadcastType.CIVIC))
         .fields(fields()
             .projectFields(
                 projectFields()
@@ -325,7 +325,7 @@ public final class DocumentTypes {
   private static DocumentTypeAttributes defineGeneCentricType() {
     return attributes()
         .documentClassName(GeneCentricDocumentTask.class.getName())
-        .broadcastDependencies(ImmutableList.of(BroadcastType.DONOR, BroadcastType.PROJECT))
+        .broadcastDependencies(ImmutableList.of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.CLINVAR, BroadcastType.CIVIC))
         .fields(
             fields()
                 .projectFields(
@@ -412,7 +412,7 @@ public final class DocumentTypes {
   private static DocumentTypeAttributes defineObservationCentricType() {
     return attributes()
         .documentClassName(ObservationCentricDocumentTask.class.getName())
-        .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE))
+        .broadcastDependencies(of(BroadcastType.DONOR, BroadcastType.PROJECT, BroadcastType.GENE, BroadcastType.CLINVAR, BroadcastType.CIVIC))
         .fields(
             fields()
                 .projectFields(
