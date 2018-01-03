@@ -33,7 +33,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Iterables;
 import lombok.NonNull;
 import lombok.val;
 
@@ -122,7 +121,7 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
 
     // Attach annotation data for ssm observations (mutate in place)
     if (observation.get("ssm") != null) {
-      val annotationId = getObservationVariantAnnotationId(observation.get("ssm"));
+      val annotationId = getSSMVariantAnnotationId(observation.get("ssm"));
       val clinvar =  context.getClinvar(annotationId);
       val civic =  context.getCivic(annotationId);
       val ssm = (ObjectNode)observation.get("ssm");
@@ -212,7 +211,6 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
    * Attaches passed in civic data to observation
    * @param ssm - object node
    * @param civic iterable to populate civic data
-   * @return observation with minimal civic data
    */
   private static void attachCivicData(ObjectNode ssm, Iterable<ObjectNode> civic) {
     ObjectMapper mapper = new ObjectMapper();

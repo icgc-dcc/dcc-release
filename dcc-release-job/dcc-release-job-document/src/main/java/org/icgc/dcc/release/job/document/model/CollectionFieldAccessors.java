@@ -276,7 +276,23 @@ public final class CollectionFieldAccessors {
     return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
   }
 
-  public static String getObservationVariantAnnotationId(@NonNull JsonNode mutation) {
+  public static String getSSMVariantAnnotationId(@NonNull JsonNode mutation) {
+    String chromosome = mutation.get(MUTATION_CHROMOSOME).asText();
+    String chromosomeStart = mutation.get(MUTATION_CHROMOSOME_START).asText();
+    String chromosomeEnd = mutation.get(MUTATION_CHROMOSOME_END).asText();
+    String mutationType = mutation.get(MUTATION_MUTATION).asText();
+    return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
+  }
+
+  public static String getSSMVariantAnnotationId(@NonNull Occurrence occurrence) {
+    String chromosome = occurrence.getChromosome();
+    String chromosomeStart = occurrence.getChromosome_start().toString();
+    String chromosomeEnd = occurrence.getChromosome_end().toString();
+    String mutationType = occurrence.getMutation();
+    return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
+  }
+
+  public static String getSSMVariantAnnotationId(@NonNull ObjectNode mutation) {
     String chromosome = mutation.get(MUTATION_CHROMOSOME).asText();
     String chromosomeStart = mutation.get(MUTATION_CHROMOSOME_START).asText();
     String chromosomeEnd = mutation.get(MUTATION_CHROMOSOME_END).asText();
