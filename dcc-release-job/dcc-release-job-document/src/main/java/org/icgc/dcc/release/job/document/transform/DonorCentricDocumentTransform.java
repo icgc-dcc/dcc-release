@@ -30,8 +30,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -46,6 +44,7 @@ import org.icgc.dcc.release.job.document.model.Donor;
 import org.icgc.dcc.release.job.document.model.Occurrence;
 import org.icgc.dcc.release.job.document.model.Occurrence.Consequence;
 
+import org.icgc.dcc.release.job.document.util.MutationAnnotationData;
 import scala.Tuple2;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -102,14 +101,14 @@ public final class DonorCentricDocumentTransform implements Function<Tuple2<Stri
         donorGene.remove(GENE_ID);
       }
 
-      // Attach annotation data for ssm observations (mutate in place)
+      // Attach annotation data for ssm observations (attachMinimum in place)
       if (donorGene.containsKey("ssm")) {
         val donorGeneSSMList = (ArrayList<Occurrence>) donorGene.get("ssm");
         for (val occurrence : donorGeneSSMList) {
           val annotationId = getSSMVariantAnnotationId(occurrence);
           val clinvar = documentContext.getClinvar(annotationId);
           val civic = documentContext.getCivic(annotationId);
-          attachOccurenceAnnotationData(occurrence, clinvar, civic);
+          MutationAnnotationData.attachMinimum(occurrence, clinvar, civic);
         }
       }
     }
@@ -269,83 +268,6 @@ public final class DonorCentricDocumentTransform implements Function<Tuple2<Stri
     if (objectClonner == null) {
       objectClonner = new Kryo();
     }
-  }
-
-  private static void attachOccurenceAnnotationData(Occurrence occurrence, ObjectNode clinvar, Iterable<ObjectNode> civic) {
-
-    // ObjectMapper mapper used to create new nodes
-    ObjectMapper mapper = new ObjectMapper();
-
-    // Attach empty nodes used later on
-    val clinical_significance = mapper.createObjectNode();
-    val clinical_evidence = mapper.createObjectNode();
-    occurrence.setClinical_significance(clinical_significance);
-    occurrence.setClinical_evidence(clinical_evidence);
-
-    // If there is clinvar data pass it through otherwise don't and get defaults
-    if (clinvar == null) {
-      attachClinvarData(occurrence);
-    } else {
-      attachClinvarData(occurrence, clinvar);
-    }
-
-    // If there is civic data pass it through otherwise don't and get defaults
-    if (civic == null) {
-      attachCivicData(occurrence);
-    } else {
-      attachCivicData(occurrence, civic);
-    }
-  }
-
-  /**
-   * Attached default (empty/null) values if no clinvar data is passed in
-   * @param occurrence - Occurrence object
-   */
-  private static void attachClinvarData(Occurrence occurrence) {
-    occurrence.getClinical_significance().set("clinvar", null);
-  }
-
-  /**
-   * Attaches passed in clinvar data to observation
-   * @param occurrence - Occurrence object
-   * @param clinvar object node to populate minimal clinvar data
-   */
-  private static void attachClinvarData(Occurrence occurrence, ObjectNode clinvar) {
-
-    // Clinvar field extraction
-    val clinicalSignificance = clinvar.get("clinicalSignificance");
-
-    // ObjectMapper mapper used to create new nodes
-    ObjectMapper mapper = new ObjectMapper();
-    val clinvarObj = mapper.createObjectNode();
-    clinvarObj.set("clinicalSignificance", clinicalSignificance);
-
-    // Set fields
-    occurrence.getClinical_significance().set("clinvar", clinvarObj);
-  }
-
-  /**
-   * Attached default (empty/null) values if no civic data is passed in
-   * @param occurrence - Occurrence object
-   */
-  private static void attachCivicData(Occurrence occurrence) {
-    occurrence.getClinical_evidence().set("civic", null);
-  }
-
-  /**
-   * Attaches passed in civic data to observation
-   * @param occurrence - Occurrence object
-   * @param civic iterable to populate civic data
-   */
-  private static void attachCivicData(Occurrence occurrence, Iterable<ObjectNode> civic) {
-    ObjectMapper mapper = new ObjectMapper();
-    ArrayNode civicData = mapper.createArrayNode();
-    civic.forEach(civicDataObj -> {
-      ObjectNode civicObj = mapper.createObjectNode();
-      civicObj.set("evidenceLevel", civicDataObj.get("evidenceLevel"));
-      civicData.add(civicObj);
-    });
-    occurrence.getClinical_evidence().set("civic", civicData);
   }
 
 }
