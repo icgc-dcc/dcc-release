@@ -23,16 +23,12 @@ import static org.icgc.dcc.common.core.model.FieldNames.GENE_DONOR_PROJECT;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_DONOR_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_SUMMARY_AFFECTED_DONOR_COUNT;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorProjectId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneDonorId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneDonors;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationDonorId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationType;
+import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.*;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.isEmpty;
 
 import java.util.Collection;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +41,7 @@ import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
 import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import org.icgc.dcc.release.job.document.model.Occurrence;
+import org.icgc.dcc.release.job.document.util.MutationAnnotationData;
 import org.icgc.dcc.release.job.document.util.Fakes;
 
 import scala.Tuple2;
@@ -110,7 +107,7 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
 
       // Merge
       val geneDonorObservations = geneDonorsObservations.get(geneDonorId);
-      val geneDonorTree = createGeneDonorTree(gene, donor, geneDonorObservations);
+      val geneDonorTree = createGeneDonorTree(gene, donor, geneDonorObservations, context);
       geneDonor.setAll(geneDonorTree);
     }
 
@@ -122,7 +119,6 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
     /**
      * Summary: {@code gene._summary}.
      */
-
     val summary = gene.with(GENE_SUMMARY);
 
     val affectedDonorCount = getAffectedDonorCount(gene);
@@ -132,7 +128,7 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
   }
 
   private static ObjectNode createGeneDonorTree(ObjectNode gene, ObjectNode geneDonor,
-      Iterable<ObjectNode> geneDonorObservations) {
+      Iterable<ObjectNode> geneDonorObservations, @NonNull DocumentContext context) {
 
     // Process each observation associated with the current donor
     for (val geneDonorObservation : geneDonorObservations) {
@@ -142,6 +138,14 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
 
       // Remove unrelated gene consequences and aggregate
       transformGeneObservationConsequences(gene, geneDonorObservation);
+
+      // Attach annotation data (attachMinimum in place)
+      if (Objects.equals(observationType, "ssm")) {
+        val annotationId = getSSMVariantAnnotationId(geneDonorObservation);
+        val clinvar = context.getClinvar(annotationId);
+        val civic = context.getCivic(annotationId);
+        MutationAnnotationData.attachMinimum(geneDonorObservation, clinvar, civic);
+      }
 
       array.add(geneDonorObservation);
     }
@@ -192,5 +196,4 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
 
     return document.build();
   }
-
 }
