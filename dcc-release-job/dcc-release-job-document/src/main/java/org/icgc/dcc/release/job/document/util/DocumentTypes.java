@@ -282,7 +282,8 @@ public final class DocumentTypes {
                         "observation.platform",
                         "observation.sequencing_strategy",
                         "observation.verification_status",
-                        "observation._study"
+                        "observation._study",
+                        "mutation"
                     )
             )
         );

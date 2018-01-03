@@ -20,6 +20,7 @@ package org.icgc.dcc.release.job.document.model;
 import java.io.Serializable;
 import java.util.Collection;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 
 import org.icgc.dcc.release.core.model.Observation;
@@ -46,6 +47,9 @@ public class Occurrence implements Serializable {
   private String[] consequence_type;
   private String assembly_version;
 
+  private ObjectNode clinical_significance;
+  private ObjectNode clinical_evidence;
+
   @Data
   public static class Consequence implements Serializable {
 
@@ -65,5 +69,4 @@ public class Occurrence implements Serializable {
     private String transcript_affected;
 
   }
-
 }
