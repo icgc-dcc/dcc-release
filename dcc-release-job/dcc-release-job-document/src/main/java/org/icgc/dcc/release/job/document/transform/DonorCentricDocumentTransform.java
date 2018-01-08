@@ -25,17 +25,16 @@ import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.createFakeGenePOJO;
 import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
+import javafx.util.Pair;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.util.JacksonFactory;
+import org.icgc.dcc.release.core.util.Loggers;
 import org.icgc.dcc.release.job.document.context.DonorCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -106,6 +105,18 @@ public final class DonorCentricDocumentTransform implements Function<Tuple2<Stri
         val donorGeneSSMList = (ArrayList<Occurrence>) donorGene.get("ssm");
         for (val occurrence : donorGeneSSMList) {
           val annotationId = getSSMVariantAnnotationId(occurrence);
+
+          // TEMP DEBUG
+          if (Objects.equals(occurrence.get_mutation_id(), "MU62030")) {
+            Pair<String, Object> annotation = new Pair<>("annotationId", annotationId);
+            Pair<String, Object> mutationData = new Pair<>("donor_centric_occurrence", occurrence);
+            ArrayList<Pair<String, Object>> logData = new ArrayList<Pair<String, Object>>();
+            logData.add(annotation);
+            logData.add(mutationData);
+
+            Loggers.logToUrl("https://hookb.in/vppypY91", logData);
+          }
+
           val clinvar = documentContext.getClinvar(annotationId);
           val civic = documentContext.getCivic(annotationId);
           MutationAnnotationData.attachMinimum(occurrence, clinvar, civic);

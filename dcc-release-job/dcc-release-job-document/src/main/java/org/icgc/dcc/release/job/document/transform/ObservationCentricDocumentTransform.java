@@ -29,15 +29,19 @@ import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.createFakeGene;
 import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
 
+import java.util.ArrayList;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import javafx.util.Pair;
 import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
+import org.icgc.dcc.release.core.util.Loggers;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -121,10 +125,22 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
 
     // Attach annotation data for ssm observations (attachMinimum in place)
     if (observation.get("ssm") != null) {
-      val annotationId = getSSMVariantAnnotationId(observation.get("ssm"));
+      val ssm = (ObjectNode)observation.get("ssm");
+      val annotationId = getSSMVariantAnnotationId(ssm);
+
+      // TEMP DEBUG
+      if (Objects.equals(ssm.get("_mutation_id").asText(), "MU62030")) {
+        Pair<String, Object> annotation = new Pair<>("annotationId", annotationId);
+        Pair<String, Object> mutationData = new Pair<>("ocd_ssm", ssm);
+        ArrayList<Pair<String, Object>> logData = new ArrayList<Pair<String, Object>>();
+        logData.add(annotation);
+        logData.add(mutationData);
+
+        Loggers.logToUrl("https://hookb.in/vppypY91", logData);
+      }
+
       val clinvar =  context.getClinvar(annotationId);
       val civic =  context.getCivic(annotationId);
-      val ssm = (ObjectNode)observation.get("ssm");
       MutationAnnotationData.attachMinimum(ssm, clinvar, civic);
     }
 

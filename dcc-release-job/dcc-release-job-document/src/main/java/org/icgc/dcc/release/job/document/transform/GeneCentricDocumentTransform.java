@@ -26,16 +26,19 @@ import static org.icgc.dcc.common.core.model.FieldNames.GENE_SUMMARY_AFFECTED_DO
 import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.*;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.isEmpty;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
+import javafx.util.Pair;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.util.Loggers;
 import org.icgc.dcc.release.job.document.context.GeneCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -142,6 +145,18 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
       // Attach annotation data (attachMinimum in place)
       if (Objects.equals(observationType, "ssm")) {
         val annotationId = getSSMVariantAnnotationId(geneDonorObservation);
+
+        // TEMP DEBUG
+        if (Objects.equals(geneDonorObservation.get("_mutation_id").asText(), "MU62030")) {
+          Pair<String, Object> annotation = new Pair<>("annotationId", annotationId);
+          Pair<String, Object> mutationData = new Pair<>("geneDonorObservation", geneDonorObservation);
+          ArrayList<Pair<String, Object>> logData = new ArrayList<Pair<String, Object>>();
+          logData.add(annotation);
+          logData.add(mutationData);
+
+          Loggers.logToUrl("https://hookb.in/vppypY91", logData);
+        }
+
         val clinvar = context.getClinvar(annotationId);
         val civic = context.getCivic(annotationId);
         MutationAnnotationData.attachMinimum(geneDonorObservation, clinvar, civic);

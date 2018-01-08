@@ -267,19 +267,17 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     val civic =  context.getCivic(annotationId);
     mutation = attachVariantAnnotationData(mutation, clinvar, civic);
 
-//    //
-//    // EXAMPLE DEBUG TO LOG
-//    // Because logging from inside a transform is no fun ...
-//    //
-//    if (mutationId.equals("MU2")) {
-//      Pair<String, Object> annotation = new Pair<>("Annotation", annotationId);
-//      Pair<String, Object> mutationData = new Pair<>("Mutation", mutation);
-//      ArrayList<Pair<String, Object>> logData = new ArrayList<Pair<String, Object>>();
-//      logData.add(annotation);
-//      logData.add(mutationData);
-//
-//      Loggers.logToUrl("http://postb.in/aYF3eh1U", logData);
-//    }
+    // EXAMPLE DEBUG TO LOG
+    // Because logging from inside a transform is no fun ...
+    if (mutationId.equals("MU62030")) {
+      Pair<String, Object> annotation = new Pair<>("Annotation_ID", annotationId);
+      Pair<String, Object> mutationData = new Pair<>("Mutation", mutation);
+      ArrayList<Pair<String, Object>> logData = new ArrayList<Pair<String, Object>>();
+      logData.add(annotation);
+      logData.add(mutationData);
+
+      Loggers.logToUrl("https://hookb.in/vppypY91", logData);
+    }
 
     // Result
     val document = new Document(context.getType(), mutationId, mutation);
