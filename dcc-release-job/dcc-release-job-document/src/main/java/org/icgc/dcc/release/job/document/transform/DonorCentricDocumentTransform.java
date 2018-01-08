@@ -105,6 +105,9 @@ public final class DonorCentricDocumentTransform implements Function<Tuple2<Stri
         val donorGeneSSMList = (ArrayList<Occurrence>) donorGene.get("ssm");
         for (val occurrence : donorGeneSSMList) {
           val annotationId = getSSMVariantAnnotationId(occurrence);
+          val clinvar = documentContext.getClinvar(annotationId);
+          val civic = documentContext.getCivic(annotationId);
+          MutationAnnotationData.attachMinimum(occurrence, clinvar, civic);
 
           // TEMP DEBUG
           if (Objects.equals(occurrence.get_mutation_id(), "MU62030")) {
@@ -116,10 +119,6 @@ public final class DonorCentricDocumentTransform implements Function<Tuple2<Stri
 
             Loggers.logToUrl("https://hookb.in/vppypY91", logData);
           }
-
-          val clinvar = documentContext.getClinvar(annotationId);
-          val civic = documentContext.getCivic(annotationId);
-          MutationAnnotationData.attachMinimum(occurrence, clinvar, civic);
         }
       }
     }

@@ -127,6 +127,9 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
     if (observation.get("ssm") != null) {
       val ssm = (ObjectNode)observation.get("ssm");
       val annotationId = getSSMVariantAnnotationId(ssm);
+      val clinvar =  context.getClinvar(annotationId);
+      val civic =  context.getCivic(annotationId);
+      MutationAnnotationData.attachMinimum(ssm, clinvar, civic);
 
       // TEMP DEBUG
       if (Objects.equals(ssm.get("_mutation_id").asText(), "MU62030")) {
@@ -138,10 +141,6 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
 
         Loggers.logToUrl("https://hookb.in/vppypY91", logData);
       }
-
-      val clinvar =  context.getClinvar(annotationId);
-      val civic =  context.getCivic(annotationId);
-      MutationAnnotationData.attachMinimum(ssm, clinvar, civic);
     }
 
     return new Document(context.getType(), UUID.randomUUID().toString(), observation);

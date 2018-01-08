@@ -145,6 +145,9 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
       // Attach annotation data (attachMinimum in place)
       if (Objects.equals(observationType, "ssm")) {
         val annotationId = getSSMVariantAnnotationId(geneDonorObservation);
+        val clinvar = context.getClinvar(annotationId);
+        val civic = context.getCivic(annotationId);
+        MutationAnnotationData.attachMinimum(geneDonorObservation, clinvar, civic);
 
         // TEMP DEBUG
         if (Objects.equals(geneDonorObservation.get("_mutation_id").asText(), "MU62030")) {
@@ -156,10 +159,6 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
 
           Loggers.logToUrl("https://hookb.in/vppypY91", logData);
         }
-
-        val clinvar = context.getClinvar(annotationId);
-        val civic = context.getCivic(annotationId);
-        MutationAnnotationData.attachMinimum(geneDonorObservation, clinvar, civic);
       }
 
       array.add(geneDonorObservation);
