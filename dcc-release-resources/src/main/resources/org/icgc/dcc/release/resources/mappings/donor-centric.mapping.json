@@ -28,9 +28,15 @@
     	          "consequence":{
     	            "type":"nested"
     	          },
-                 "observation":{
-                  "type":"nested"
-                }
+                  "observation":{
+                    "type":"nested"
+                  },
+                  "clinical_significance": {
+                    "type": "object"
+                  },
+                  "clinical_evidence": {
+                    "type": "nested"
+                  }
     	       }           
           }  
         }
