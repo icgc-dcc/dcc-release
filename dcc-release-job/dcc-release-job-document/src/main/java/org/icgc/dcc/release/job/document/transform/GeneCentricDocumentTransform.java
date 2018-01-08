@@ -148,17 +148,6 @@ public class GeneCentricDocumentTransform extends AbstractCentricDocumentTransfo
         val clinvar = context.getClinvar(annotationId);
         val civic = context.getCivic(annotationId);
         MutationAnnotationData.attachMinimum(geneDonorObservation, clinvar, civic);
-
-        // TEMP DEBUG
-        if (Objects.equals(geneDonorObservation.get("_mutation_id").asText(), "MU62030")) {
-          Pair<String, Object> annotation = new Pair<>("annotationId", annotationId);
-          Pair<String, Object> mutationData = new Pair<>("geneDonorObservation", geneDonorObservation);
-          ArrayList<Pair<String, Object>> logData = new ArrayList<Pair<String, Object>>();
-          logData.add(annotation);
-          logData.add(mutationData);
-
-          Loggers.logToUrl("https://hookb.in/vppypY91", logData);
-        }
       }
 
       array.add(geneDonorObservation);

@@ -108,17 +108,6 @@ public final class DonorCentricDocumentTransform implements Function<Tuple2<Stri
           val clinvar = documentContext.getClinvar(annotationId);
           val civic = documentContext.getCivic(annotationId);
           MutationAnnotationData.attachMinimum(occurrence, clinvar, civic);
-
-          // TEMP DEBUG
-          if (Objects.equals(occurrence.get_mutation_id(), "MU62030")) {
-            Pair<String, Object> annotation = new Pair<>("annotationId", annotationId);
-            Pair<String, Object> mutationData = new Pair<>("donor_centric_occurrence", occurrence);
-            ArrayList<Pair<String, Object>> logData = new ArrayList<Pair<String, Object>>();
-            logData.add(annotation);
-            logData.add(mutationData);
-
-            Loggers.logToUrl("https://hookb.in/vppypY91", logData);
-          }
         }
       }
     }

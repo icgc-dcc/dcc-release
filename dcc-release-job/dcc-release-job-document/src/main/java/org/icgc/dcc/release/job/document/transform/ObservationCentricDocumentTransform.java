@@ -130,17 +130,6 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
       val clinvar =  context.getClinvar(annotationId);
       val civic =  context.getCivic(annotationId);
       MutationAnnotationData.attachMinimum(ssm, clinvar, civic);
-
-      // TEMP DEBUG
-      if (Objects.equals(ssm.get("_mutation_id").asText(), "MU62030")) {
-        Pair<String, Object> annotation = new Pair<>("annotationId", annotationId);
-        Pair<String, Object> mutationData = new Pair<>("ocd_ssm", ssm);
-        ArrayList<Pair<String, Object>> logData = new ArrayList<Pair<String, Object>>();
-        logData.add(annotation);
-        logData.add(mutationData);
-
-        Loggers.logToUrl("https://hookb.in/vppypY91", logData);
-      }
     }
 
     return new Document(context.getType(), UUID.randomUUID().toString(), observation);
