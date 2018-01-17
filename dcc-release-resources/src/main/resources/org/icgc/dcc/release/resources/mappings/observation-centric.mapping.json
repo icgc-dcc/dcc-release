@@ -56,7 +56,12 @@
             "type": "object"
           },
           "clinical_evidence": {
-            "type": "nested"
+            "type": "object",
+            "properties": {
+              "civic": {
+                "type": "nested"
+              }
+            }
           }
         }
       }
