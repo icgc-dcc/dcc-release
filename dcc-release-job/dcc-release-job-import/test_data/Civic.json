@@ -8,7 +8,7 @@
   "drugs" : "",
   "evidenceType" : "Diagnostic",
   "evidenceDirection" : "Supports",
-  "evidenceLevel" : "B",
+  "evidenceLevel" : "B - Clinical",
   "clinicalImpact" : "Negative",
   "evidenceStatement" : "JAK2 V617F is not associated with lymphoid leukemia (B-lineage ALL, T-ALL or CLL).",
   "pubmedID" : "16081687",
