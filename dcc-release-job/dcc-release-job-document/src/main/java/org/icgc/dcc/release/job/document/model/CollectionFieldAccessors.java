@@ -36,6 +36,10 @@ import static org.icgc.dcc.common.core.model.FieldNames.GENE_SET_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_TRANSCRIPTS;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_TRANSCRIPTS_TRANSCRIPT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_ID;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_MUTATION;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_CHROMOSOME;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_CHROMOSOME_START;
+import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_CHROMOSOME_END;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_OBSERVATIONS;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_OBSERVATION_DONOR;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_OBSERVATION_PROJECT;
@@ -44,6 +48,14 @@ import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS_CONSEQUENCE;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION;
 import static org.icgc.dcc.common.core.model.FieldNames.MUTATION_TRANSCRIPTS_FUNCTIONAL_IMPACT_PREDICTION_SUMMARY;
+import static org.icgc.dcc.common.core.model.FieldNames.CLINVAR_CHROMOSOME;
+import static org.icgc.dcc.common.core.model.FieldNames.CLINVAR_CHROMOSOME_START;
+import static org.icgc.dcc.common.core.model.FieldNames.CLINVAR_CHROMOSOME_END;
+import static org.icgc.dcc.common.core.model.FieldNames.CLINVAR_MUTATION;
+import static org.icgc.dcc.common.core.model.FieldNames.CIVIC_CHROMOSOME;
+import static org.icgc.dcc.common.core.model.FieldNames.CIVIC_CHROMOSOME_START;
+import static org.icgc.dcc.common.core.model.FieldNames.CIVIC_CHROMOSOME_END;
+import static org.icgc.dcc.common.core.model.FieldNames.CIVIC_MUTATION;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_CONSEQUENCE_TYPE;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_GENE_ID;
@@ -62,6 +74,8 @@ import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_VERIFICATION
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.PROJECT_SUMMARY;
 import static org.icgc.dcc.common.core.model.FieldNames.getTestedTypeCountFieldName;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.CLINVAR_COLLECTION;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.CIVIC_COLLECTION;
 
 import org.icgc.dcc.common.core.model.FieldNames;
 
@@ -73,6 +87,9 @@ import com.google.common.collect.Lists;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
+import org.icgc.dcc.release.core.document.DocumentType;
+import org.icgc.dcc.release.core.util.Tuples;
+import scala.Tuple4;
 
 /**
  * Static accessor methods for dynamic collection objects.
@@ -249,6 +266,54 @@ public final class CollectionFieldAccessors {
 
   public static String getMutationId(@NonNull ObjectNode mutation) {
     return mutation.get(MUTATION_ID).textValue();
+  }
+
+  public static String getMutationVariantAnnotationId(@NonNull ObjectNode mutation) {
+    String chromosome = mutation.get(MUTATION_CHROMOSOME).asText();
+    String chromosomeStart = mutation.get(MUTATION_CHROMOSOME_START).asText();
+    String chromosomeEnd = mutation.get(MUTATION_CHROMOSOME_END).asText();
+    String mutationType = mutation.get(MUTATION_MUTATION).asText();
+    return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
+  }
+
+  public static String getSSMVariantAnnotationId(@NonNull JsonNode mutation) {
+    String chromosome = mutation.get(MUTATION_CHROMOSOME).asText();
+    String chromosomeStart = mutation.get(MUTATION_CHROMOSOME_START).asText();
+    String chromosomeEnd = mutation.get(MUTATION_CHROMOSOME_END).asText();
+    String mutationType = mutation.get(MUTATION_MUTATION).asText();
+    return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
+  }
+
+  public static String getSSMVariantAnnotationId(@NonNull Occurrence occurrence) {
+    String chromosome = occurrence.getChromosome();
+    String chromosomeStart = occurrence.getChromosome_start().toString();
+    String chromosomeEnd = occurrence.getChromosome_end().toString();
+    String mutationType = occurrence.getMutation();
+    return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
+  }
+
+  public static String getSSMVariantAnnotationId(@NonNull ObjectNode mutation) {
+    String chromosome = mutation.get(MUTATION_CHROMOSOME).asText();
+    String chromosomeStart = mutation.get(MUTATION_CHROMOSOME_START).asText();
+    String chromosomeEnd = mutation.get(MUTATION_CHROMOSOME_END).asText();
+    String mutationType = mutation.get(MUTATION_MUTATION).asText();
+    return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
+  }
+
+  public static String getClinvarVariantAnnotationId(@NonNull ObjectNode mutation) {
+    String chromosome = mutation.get(CLINVAR_CHROMOSOME).asText();
+    String chromosomeStart = mutation.get(CLINVAR_CHROMOSOME_START).asText();
+    String chromosomeEnd = mutation.get(CLINVAR_CHROMOSOME_END).asText();
+    String mutationType = mutation.get(CLINVAR_MUTATION).asText();
+    return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
+  }
+
+  public static String getCivicVariantAnnotationId(@NonNull ObjectNode mutation) {
+    String chromosome = mutation.get(CIVIC_CHROMOSOME).asText();
+    String chromosomeStart = mutation.get(CIVIC_CHROMOSOME_START).asText();
+    String chromosomeEnd = mutation.get(CIVIC_CHROMOSOME_END).asText();
+    String mutationType = mutation.get(CIVIC_MUTATION).asText();
+    return String.format("%s-%s-%s-%s",chromosome,chromosomeStart,chromosomeEnd,mutationType );
   }
 
   public static ArrayNode getOccurrenceObservations(@NonNull ObjectNode occurrence) {

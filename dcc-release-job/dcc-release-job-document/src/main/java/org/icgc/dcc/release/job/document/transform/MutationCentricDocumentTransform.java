@@ -38,18 +38,7 @@ import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_IS_ANNOTATED;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_MUTATION_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_TYPE;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorProjectId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getGeneTranscripts;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationOccurrences;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getMutationTranscripts;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequenceGeneId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequenceTranscriptId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequences;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationDonorId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getTranscriptId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.setMutationObservationProject;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.setObservationDonor;
+import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.*;
 import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_TRANSCRIPT_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.createFakeGene;
@@ -57,12 +46,17 @@ import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.defaultMissing;
 import static org.icgc.dcc.release.job.document.util.JsonNodes.defaultObject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Iterables;
+import javafx.util.Pair;
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.common.core.model.BusinessKeys;
 import org.icgc.dcc.release.core.document.Document;
+import org.icgc.dcc.release.core.util.Loggers;
 import org.icgc.dcc.release.job.document.context.MutationCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentCallback;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
@@ -71,6 +65,7 @@ import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import org.icgc.dcc.release.job.document.util.Fakes;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 
@@ -81,7 +76,7 @@ import scala.Tuple2;
 
 /**
  * {@link DocumentTransform} implementation that creates a nested mutation-centric document:
- * 
+ *
  * <pre>
  * {
  *  _mutation_id: 'MU1',
@@ -98,11 +93,11 @@ import scala.Tuple2;
  *    donor: {
  *      _donor_id: 'DO1',
  *      _project_id: 'PR1',
- *      ... 
+ *      ...
  *    },
  *    project: {
  *      _project_id: 'PR1',
- *      ... 
+ *      ...
  *    }
  *    ...
  *  } ],
@@ -117,7 +112,25 @@ import scala.Tuple2;
  *      consequence_type: 'ct1',
  *      ...
  *    }
- *  } ]
+ *  } ],
+ *  external_db_ids: {
+ *      civic: 001,
+ *      clinvar: 001
+ *  },
+ *  clinical_significance: {
+ *    clinvar: {
+ *        ...
+ *    }
+ *  },
+ *  clinical_evidence: {
+ *    civic: [
+ *      {
+ *          ...
+ *      },
+ *      ...
+ *    ]
+ *  },
+ *  description: 'Lorem ipsum'
  * }
  * </pre>
  */
@@ -248,6 +261,24 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
       mutationTranscripts.add(mutationTranscript);
     }
 
+    // Attach annotation data
+    val annotationId = getMutationVariantAnnotationId(mutation);
+    val clinvar =  context.getClinvar(annotationId);
+    val civic =  context.getCivic(annotationId);
+    mutation = attachVariantAnnotationData(mutation, clinvar, civic);
+
+//    // EXAMPLE DEBUG TO LOG
+//    // Because logging from inside a transform is no fun ...
+//    if (mutationId.equals("MU62030")) {
+//      Pair<String, Object> annotation = new Pair<>("Annotation_ID", annotationId);
+//      Pair<String, Object> mutationData = new Pair<>("Mutation", mutation);
+//      ArrayList<Pair<String, Object>> logData = new ArrayList<Pair<String, Object>>();
+//      logData.add(annotation);
+//      logData.add(mutationData);
+//
+//      Loggers.logToUrl("https://hookb.in/vppypY91", logData);
+//    }
+
     // Result
     val document = new Document(context.getType(), mutationId, mutation);
 
@@ -255,6 +286,105 @@ public class MutationCentricDocumentTransform extends AbstractCentricDocumentTra
     SUMMARY_CALLBACK.call(document);
 
     return document;
+  }
+
+  private static ObjectNode attachVariantAnnotationData(ObjectNode mutation, ObjectNode clinvar, Iterable<ObjectNode> civic) {
+
+    // ObjectMapper mapper used to create new nodes
+    ObjectMapper mapper = new ObjectMapper();
+
+    // Attach empty nodes used later on
+    val external_db_ids = mapper.createObjectNode();
+    val clinical_significance = mapper.createObjectNode();
+    val clinical_evidence = mapper.createObjectNode();
+    mutation.set("external_db_ids", external_db_ids);
+    mutation.set("clinical_significance", clinical_significance);
+    mutation.set("clinical_evidence", clinical_evidence);
+
+    // If there is clinvar data pass it through otherwise don't and get defaults
+    if (clinvar == null) {
+      attachClinvarData(mutation);
+    } else {
+      attachClinvarData(mutation, clinvar);
+    }
+
+    // If there is civic data pass it through otherwise don't and get defaults
+    if (civic == null) {
+      attachCivicData(mutation);
+    } else {
+      attachCivicData(mutation, civic);
+    }
+
+    // Finally return the mutation with annotation data now attached
+    return mutation;
+  }
+
+  /**
+   * Attached default (empty/null) values if no clinvar data is passed in
+   * @param mutation - object node
+   * @return mutation with empty clinvar fields
+   */
+  private static ObjectNode attachClinvarData(ObjectNode mutation) {
+    ((ObjectNode)mutation.get("external_db_ids")).set("clinvar", null);
+    ((ObjectNode)mutation.get("clinical_significance")).set("clinvar", null);
+
+    return mutation;
+  }
+
+  /**
+   * Attaches passed in clinvar data to mutation
+   * @param mutation - object node
+   * @param clinvar object node to populate clinvar data
+   * @return mutation with complete clinvar fields
+   */
+  private static ObjectNode attachClinvarData(ObjectNode mutation, ObjectNode clinvar) {
+    // Clinvar field extraction
+    val clinvarId = clinvar.get("clinvarID");
+
+    // Set fields
+    ((ObjectNode)mutation.get("external_db_ids")).set("clinvar", clinvarId);
+    ((ObjectNode)mutation.get("clinical_significance")).set("clinvar", clinvar);
+
+    return mutation;
+  }
+
+  /**
+   * Attached default (empty/null) values if no civic data is passed in
+   * @param mutation - object node
+   * @return mutation with empty civic fields
+   */
+  private static ObjectNode attachCivicData(ObjectNode mutation) {
+    ((ObjectNode)mutation.get("external_db_ids")).set("civic", null);
+    ((ObjectNode)mutation.get("clinical_evidence")).set("civic", null);
+    mutation.set("description", null);
+
+    return mutation;
+  }
+
+  /**
+   * Attaches passed in civic data to mutation
+   * @param mutation - object node
+   * @param civic iterable to populate civic data
+   * @return mutation with complete civic data
+   */
+  private static ObjectNode attachCivicData(ObjectNode mutation, Iterable<ObjectNode> civic) {
+    // Civic field extraction
+    val oneCivic = Iterables.get(civic, 0);
+
+    val civicId = Integer.parseInt(oneCivic.get("civicID").textValue());
+    val description = oneCivic.get("variantSummary");
+
+    // Set fields
+    ((ObjectNode)mutation.get("external_db_ids")).put("civic", civicId);
+    mutation.set("description", description);
+
+    ObjectMapper mapper = new ObjectMapper();
+
+    ArrayNode civicData = mapper.createArrayNode();
+    civic.forEach(civicData::add);
+    ((ObjectNode)mutation.get("clinical_evidence")).set("civic", civicData);
+
+    return mutation;
   }
 
   private static ObjectNode findGeneTranscript(ObjectNode gene, String transcriptId) {

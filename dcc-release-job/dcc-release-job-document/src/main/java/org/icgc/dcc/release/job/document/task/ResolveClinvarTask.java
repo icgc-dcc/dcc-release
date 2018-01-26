@@ -15,58 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.release.job.document.model;
-
-import java.io.Serializable;
-import java.util.Collection;
+package org.icgc.dcc.release.job.document.task;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import lombok.Data;
+import lombok.Getter;
+import org.icgc.dcc.release.core.document.DocumentType;
+import org.icgc.dcc.release.core.task.TaskContext;
+import org.icgc.dcc.release.core.task.TaskType;
+import org.icgc.dcc.release.core.util.SparkWorkaroundUtils;
 
-import org.icgc.dcc.release.core.model.Observation;
+import java.util.Map;
 
-@Data
-public class Occurrence implements Serializable {
+import static org.icgc.dcc.release.core.util.Tuples.tuple;
+import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getClinvarVariantAnnotationId;
 
-  private String _donor_id;
-  private String _mutation_id;
-  private String _type;
-  private Collection<Consequence> consequence;
-  private String mutation_type;
-  private String chromosome;
-  private Integer chromosome_start;
-  private Integer chromosome_end;
-  private String chromosome_strand;
-  private Collection<Observation> observation;
+public class ResolveClinvarTask extends AbstractDocumentTask {
 
-  private String reference_genome_allele;
-  private String mutated_from_allele;
-  private String mutated_to_allele;
-  private String _project_id;
-  private String mutation;
-  private String[] consequence_type;
-  private String assembly_version;
+  @Getter
+  private Map<String, ObjectNode> annotationIdClinvar;
 
-  private ObjectNode clinical_significance;
-  private ObjectNode clinical_evidence;
-
-  @Data
-  public static class Consequence implements Serializable {
-
-    private String _gene_id;
-    private String consequence_type;
-    private String functional_impact_prediction_summary;
-
-    private String protein_domain_affected;
-    private String gene_build_version;
-    private String _transcript_id;
-    private String cds_change;
-    private String aa_change;
-    private String aa_mutation;
-    private String cds_mutation;
-    private String note;
-    private String gene_affected;
-    private String transcript_affected;
-
+  public ResolveClinvarTask(DocumentType type) {
+    super(type);
   }
+
+  @Override
+  public TaskType getType() {
+    return TaskType.FILE_TYPE;
+  }
+
+  @Override
+  public void execute(TaskContext taskContext) {
+    annotationIdClinvar = readClinvar(taskContext)
+        .mapToPair(data -> tuple(getClinvarVariantAnnotationId(data), data))
+        .collectAsMap();
+
+    annotationIdClinvar = SparkWorkaroundUtils.toHashMap(annotationIdClinvar);
+  }
+
 }

@@ -24,26 +24,24 @@ import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_CONSEQUENCES_GENE_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_DONOR_ID;
 import static org.icgc.dcc.common.core.model.FieldNames.OBSERVATION_GENE;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getDonorProjectId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequenceGeneId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationConsequences;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationDonorId;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getObservationType;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.setObservationDonor;
-import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.setObservationProject;
+import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.*;
 import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.createFakeGene;
 import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
 
+import java.util.ArrayList;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import javafx.util.Pair;
 import lombok.NonNull;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.document.Document;
 import org.icgc.dcc.release.core.document.DocumentType;
+import org.icgc.dcc.release.core.util.Loggers;
 import org.icgc.dcc.release.job.document.context.DefaultDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -52,6 +50,7 @@ import org.icgc.dcc.release.job.document.core.DocumentTransform;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
+import org.icgc.dcc.release.job.document.util.MutationAnnotationData;
 
 /**
  * {@link DocumentTransform} implementation that creates a nested observation-centric document.
@@ -122,6 +121,15 @@ public class ObservationCentricDocumentTransform implements DocumentTransform, F
     val observationGenes = createGenesArray(observation, observationType);
     for (val gene : observationGeneMap.values()) {
       observationGenes.add(gene);
+    }
+
+    // Attach annotation data for ssm observations (attachMinimum in place)
+    if (observation.get("ssm") != null) {
+      val ssm = (ObjectNode)observation.get("ssm");
+      val annotationId = getSSMVariantAnnotationId(ssm);
+      val clinvar =  context.getClinvar(annotationId);
+      val civic =  context.getCivic(annotationId);
+      MutationAnnotationData.attachMinimum(ssm, clinvar, civic);
     }
 
     return new Document(context.getType(), UUID.randomUUID().toString(), observation);

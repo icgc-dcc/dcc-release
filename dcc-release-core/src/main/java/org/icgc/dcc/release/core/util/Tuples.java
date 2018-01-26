@@ -20,12 +20,17 @@ package org.icgc.dcc.release.core.util;
 import static lombok.AccessLevel.PRIVATE;
 import lombok.NoArgsConstructor;
 import scala.Tuple2;
+import scala.Tuple4;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class Tuples {
 
   public static <K, V> Tuple2<K, V> tuple(K key, V value) {
     return new Tuple2<K, V>(key, value);
+  }
+
+  public static <A, B, C, D> Tuple4<A, B, C, D> tuple4(A first, B second, C third, D fourth) {
+    return new Tuple4<A, B, C, D>(first, second, third, fourth);
   }
 
 }

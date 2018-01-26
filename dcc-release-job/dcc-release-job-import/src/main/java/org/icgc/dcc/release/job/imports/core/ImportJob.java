@@ -22,11 +22,15 @@ import static org.icgc.dcc.common.core.model.ReleaseCollection.DRUG_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.GENE_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.GENE_SET_COLLECTION;
 import static org.icgc.dcc.common.core.model.ReleaseCollection.PROJECT_COLLECTION;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.CLINVAR_COLLECTION;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.CIVIC_COLLECTION;
 import static org.icgc.dcc.release.core.job.FileType.DIAGRAM;
 import static org.icgc.dcc.release.core.job.FileType.DRUG;
 import static org.icgc.dcc.release.core.job.FileType.GENE;
 import static org.icgc.dcc.release.core.job.FileType.GENE_SET;
 import static org.icgc.dcc.release.core.job.FileType.PROJECT;
+import static org.icgc.dcc.release.core.job.FileType.CLINVAR;
+import static org.icgc.dcc.release.core.job.FileType.CIVIC;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -65,7 +69,7 @@ public class ImportJob extends GenericJob {
   }
 
   private void clean(JobContext jobContext) {
-    delete(jobContext, PROJECT, GENE, GENE_SET, DIAGRAM, DRUG);
+    delete(jobContext, PROJECT, GENE, GENE_SET, DIAGRAM, DRUG, CLINVAR, CIVIC);
   }
 
   private void imports(JobContext jobContext) {
@@ -74,6 +78,8 @@ public class ImportJob extends GenericJob {
         new MongoImportTask(properties, MONGO_REFERENCE_DB, GENE_COLLECTION.getId(), GENE),
         new MongoImportTask(properties, MONGO_REFERENCE_DB, GENE_SET_COLLECTION.getId(), GENE_SET),
         new MongoImportTask(properties, MONGO_REFERENCE_DB, DRUG_COLLECTION.getId(), DRUG),
-        new MongoImportTask(properties, MONGO_REFERENCE_DB, DIAGRAM_COLLECTION.getId(), DIAGRAM));
+        new MongoImportTask(properties, MONGO_REFERENCE_DB, DIAGRAM_COLLECTION.getId(), DIAGRAM),
+        new MongoImportTask(properties, MONGO_REFERENCE_DB, CLINVAR_COLLECTION.getId(), CLINVAR),
+        new MongoImportTask(properties, MONGO_REFERENCE_DB, CIVIC_COLLECTION.getId(), CIVIC));
   }
 }

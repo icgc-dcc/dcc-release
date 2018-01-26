@@ -23,6 +23,8 @@ import org.icgc.dcc.release.core.task.Task;
 import org.icgc.dcc.release.job.document.task.ResolveDonorsTask;
 import org.icgc.dcc.release.job.document.task.ResolveGenesTask;
 import org.icgc.dcc.release.job.document.task.ResolveProjectsTask;
+import org.icgc.dcc.release.job.document.task.ResolveClinvarTask;
+import org.icgc.dcc.release.job.document.task.ResolveCivicTask;
 
 /**
  * Type of broadcast a particular document task depends on.
@@ -31,7 +33,9 @@ public enum BroadcastType {
 
   PROJECT(ResolveProjectsTask.class),
   DONOR(ResolveDonorsTask.class),
-  GENE(ResolveGenesTask.class);
+  GENE(ResolveGenesTask.class),
+  CLINVAR(ResolveClinvarTask.class),
+  CIVIC(ResolveCivicTask.class);
 
   @Getter
   Class<? extends Task> dependencyClass;

@@ -20,20 +20,21 @@ package org.icgc.dcc.release.job.document.transform;
 import static com.google.common.base.Objects.firstNonNull;
 import static java.util.Collections.singleton;
 import static org.icgc.dcc.common.core.model.FieldNames.GENE_ID;
+import static org.icgc.dcc.release.job.document.model.CollectionFieldAccessors.getSSMVariantAnnotationId;
 import static org.icgc.dcc.release.job.document.util.Fakes.FAKE_GENE_ID;
 import static org.icgc.dcc.release.job.document.util.Fakes.createFakeGenePOJO;
 import static org.icgc.dcc.release.job.document.util.Fakes.isFakeGeneId;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
+import javafx.util.Pair;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 
 import org.apache.spark.api.java.function.Function;
 import org.icgc.dcc.release.core.util.JacksonFactory;
+import org.icgc.dcc.release.core.util.Loggers;
 import org.icgc.dcc.release.job.document.context.DonorCentricDocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentContext;
 import org.icgc.dcc.release.job.document.core.DocumentJobContext;
@@ -42,6 +43,7 @@ import org.icgc.dcc.release.job.document.model.Donor;
 import org.icgc.dcc.release.job.document.model.Occurrence;
 import org.icgc.dcc.release.job.document.model.Occurrence.Consequence;
 
+import org.icgc.dcc.release.job.document.util.MutationAnnotationData;
 import scala.Tuple2;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -53,8 +55,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
-public final class DonorCentricDocumentTransform implements
-    Function<Tuple2<String, Tuple2<ObjectNode, Optional<Collection<Occurrence>>>>, Donor> {
+public final class DonorCentricDocumentTransform implements Function<Tuple2<String, Tuple2<ObjectNode, Optional<Collection<Occurrence>>>>, Donor> {
 
   private final DocumentJobContext documentJobContext;
   private final DocumentTransform delegate;
@@ -63,10 +64,10 @@ public final class DonorCentricDocumentTransform implements
   public DonorCentricDocumentTransform(@NonNull DocumentJobContext documentJobContext) {
     this.documentJobContext = documentJobContext;
     this.delegate = new DonorDocumentTransform(documentJobContext);
-
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Donor call(Tuple2<String, Tuple2<ObjectNode, Optional<Collection<Occurrence>>>> tuple) throws Exception {
     val donorId = tuple._1;
     val donorJson = tuple._2._1;
@@ -97,6 +98,17 @@ public final class DonorCentricDocumentTransform implements
       donorGene.putAll(donorGeneTree);
       if (isFakeGeneId(donorGeneId)) {
         donorGene.remove(GENE_ID);
+      }
+
+      // Attach annotation data for ssm observations (attachMinimum in place)
+      if (donorGene.containsKey("ssm")) {
+        val donorGeneSSMList = (ArrayList<Occurrence>) donorGene.get("ssm");
+        for (val occurrence : donorGeneSSMList) {
+          val annotationId = getSSMVariantAnnotationId(occurrence);
+          val clinvar = documentContext.getClinvar(annotationId);
+          val civic = documentContext.getCivic(annotationId);
+          MutationAnnotationData.attachMinimum(occurrence, clinvar, civic);
+        }
       }
     }
 

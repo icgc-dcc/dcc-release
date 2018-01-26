@@ -29,12 +29,12 @@ import com.google.common.collect.Maps;
 public final class SparkWorkaroundUtils {
 
   /**
-   * Broadcast variabled don't work with all Map implementations.
+   * Broadcast variables don't work with all Map implementations.
    * @see <a
    * href="http://mail-archives.us.apache.org/mod_mbox/spark-user/201504.mbox/%3CCA+3qhFS0vXgJrfZ+e+yckpNPrm1wep8k=LSwEGNd53A7mPydzQ@mail.gmail.com%3E">Spark
    * discussion</a>
    */
-  // TODO: Verify if this is fixed in the next Spark version. Current 1.5.2
+  // TODO: Verify if this is fixed in the next Spark version. Current 1.6.1
   // FIXME: Raise a ticket
   public static <K, V> Map<K, V> toHashMap(Map<? extends K, ? extends V> map) {
     return Maps.newHashMap(map);
