@@ -21,7 +21,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   <parent>
     <groupId>org.icgc.dcc</groupId>
     <artifactId>dcc-parent</artifactId>
-    <version>33</version>
+    <version>35</version>
   </parent>
 
   <artifactId>dcc-release</artifactId>
@@ -311,7 +311,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
   <properties>
     <!-- Versions - DCC -->
-    <dcc-common.version>4.3.11-20170112.215910-4</dcc-common.version>
+    <dcc-common.version>5.1.1</dcc-common.version>
 
     <!-- Versions - DCC ID -->
     <dcc-id.version>5.0.0</dcc-id.version>
