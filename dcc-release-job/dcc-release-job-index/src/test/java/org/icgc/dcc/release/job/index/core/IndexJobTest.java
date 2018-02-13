@@ -32,6 +32,7 @@ import lombok.val;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.icgc.dcc.common.core.model.FieldNames;
 import org.icgc.dcc.release.core.document.DocumentType;
@@ -104,7 +105,7 @@ public class IndexJobTest extends AbstractJobTest {
 
   private void verifyDrugSets(DocumentType type, String field, Optional<String> path, long expectedDocuments) {
     val existsQuery = QueryBuilders.existsQuery(field);
-    val query = path.isPresent() ? QueryBuilders.nestedQuery(path.get(), existsQuery, ScoreMode.Avg) : existsQuery;
+    QueryBuilder query = path.isPresent() ? QueryBuilders.nestedQuery(path.get(), existsQuery, ScoreMode.Avg) : existsQuery;
 
     val hits = esClient.prepareSearch(index)
         .setTypes(type.getName())
