@@ -108,6 +108,7 @@ public final class CreateEsExportTar implements VoidFunction<Iterator<Document>>
     }
 
     val fileName = getDocumentFileName(documentId);
+    log.info("Writing {} to tar as an entry.", fileName);
     writeEntry(tarOutputStream, source, fileName);
   }
 
@@ -119,12 +120,14 @@ public final class CreateEsExportTar implements VoidFunction<Iterator<Document>>
   private void addMappings(TarArchiveOutputStream tarOutputStream) throws Exception {
     val mapping = IndexService.getTypeMapping(documentTypeName);
     val fileName = getDocumentFileName("_mapping");
+    log.info("Writing {} to tar as an entry.", fileName);
     writeEntry(tarOutputStream, mapping, fileName);
   }
 
   private void addSettings(TarArchiveOutputStream tarOutputStream) throws Exception {
     val settings = IndexService.getSettings();
     val fileName = PATH.join(indexName, "_settings");
+    log.info("Writing {} to tar as an entry.", fileName);
     writeEntry(tarOutputStream, settings, fileName);
   }
 
