@@ -68,7 +68,10 @@ public final class MutationAnnotationData {
      * @param ssm - object node
      */
     private static void attachClinvarData(ObjectNode ssm) {
-        ((ObjectNode)ssm.get("clinical_significance")).set("clinvar", null);
+        val empty = (new ObjectMapper()).createObjectNode();
+        empty.put("empty", true);
+
+        ((ObjectNode)ssm.get("clinical_significance")).set("clinvar", empty);
     }
 
     /**
