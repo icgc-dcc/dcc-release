@@ -64,7 +64,7 @@ public final class MutationAnnotationData {
     }
 
     /**
-     * Attached default (empty/null) values if no clinvar data is passed in
+     * Attached default (empty) value if no clinvar data is passed in
      * @param ssm - object node
      */
     private static void attachClinvarData(ObjectNode ssm) {
