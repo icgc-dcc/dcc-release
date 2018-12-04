@@ -44,6 +44,7 @@ import org.icgc.dcc.release.job.index.utils.IndexTasks;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -81,6 +82,7 @@ public class IndexJobTest extends AbstractJobTest {
   }
 
   @Test
+  @Ignore
   public void testExecute() {
     job.execute(createIndexJobContext(job.getType(), ImmutableList.of(PROJECT)));
 

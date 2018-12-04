@@ -64,7 +64,7 @@ public final class MutationAnnotationData {
     }
 
     /**
-     * Attached default (empty/null) values if no clinvar data is passed in
+     * Attached default (null) value if no clinvar data is passed in
      * @param ssm - object node
      */
     private static void attachClinvarData(ObjectNode ssm) {
@@ -117,19 +117,25 @@ public final class MutationAnnotationData {
     }
 
     /**
-     * Attached default (empty/null) values if no civic data is passed in
+     * Attached default empty value if no civic data is passed in
      * @param ssm - object node
      */
     private static void attachCivicData(ObjectNode ssm) {
-        ((ObjectNode)ssm.get("clinical_evidence")).set("civic", null);
+        val empty = (new ObjectMapper()).createObjectNode();
+        empty.put("empty", true);
+
+        ((ObjectNode)ssm.get("clinical_evidence")).set("civic", empty);
     }
 
     /**
-     * Attached default (empty/null) values if no civic data is passed in
+     * Attached default empty value if no civic data is passed in
      * @param occurrence - Occurrence object
      */
     private static void attachCivicData(Occurrence occurrence) {
-        occurrence.getClinical_evidence().set("civic", null);
+        val empty = (new ObjectMapper()).createObjectNode();
+        empty.put("empty", true);
+
+        occurrence.getClinical_evidence().set("civic", empty);
     }
 
 

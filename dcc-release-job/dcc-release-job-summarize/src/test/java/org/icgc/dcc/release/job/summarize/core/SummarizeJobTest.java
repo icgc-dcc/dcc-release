@@ -85,8 +85,7 @@ public class SummarizeJobTest extends AbstractJobTest {
             + "'project_count':3,'live_project_count':2,'primary_site_count':2,'live_primary_site_count':2,'donor_count':4,"
             + "'live_donor_count':4,'specimen_count':5,'sample_count':8,'ssm_count':2,'mutated_gene_count':3}");
     val release = releases.get(0);
-    val releaseDate = release.remove(RELEASE_DATE).textValue();
-    assertThat(releaseDate.length()).isEqualTo(29);
+    assertThat(release.remove(RELEASE_DATE)).isNotNull();
     assertThat(expectedRelease).isEqualTo(release);
   }
 
