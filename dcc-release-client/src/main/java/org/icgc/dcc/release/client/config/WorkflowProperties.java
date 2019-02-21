@@ -26,6 +26,7 @@ import org.icgc.dcc.release.job.document.config.DocumentProperties;
 import org.icgc.dcc.release.job.export.config.ExportProperties;
 import org.icgc.dcc.release.job.id.config.IdProperties;
 import org.icgc.dcc.release.job.id.config.PostgresqlProperties;
+import org.icgc.dcc.release.job.image.config.ImageProperties;
 import org.icgc.dcc.release.job.imports.config.MongoProperties;
 import org.icgc.dcc.release.job.index.config.IndexProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -53,6 +54,12 @@ public class WorkflowProperties {
   @ConfigurationProperties(prefix = "document")
   public DocumentProperties documentProperties() {
     return new DocumentProperties();
+  }
+
+  @Bean
+  @ConfigurationProperties(prefix = "image")
+  public ImageProperties imageProperties() {
+    return new ImageProperties();
   }
 
   @Bean
