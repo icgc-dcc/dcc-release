@@ -17,21 +17,32 @@
  */
 package org.icgc.dcc.release.job.image.core;
 
+import java.util.Collections;
 import java.util.Map;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import org.icgc.dcc.release.core.job.FileType;
 import org.icgc.dcc.release.core.job.GenericJob;
 import org.icgc.dcc.release.core.job.JobContext;
 import org.icgc.dcc.release.core.job.JobType;
+import org.icgc.dcc.release.job.image.config.ImageProperties;
 import org.icgc.dcc.release.job.image.task.AddSpecimenImageTask;
 import org.icgc.dcc.release.job.image.util.SpecimenImageResolver;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor(onConstructor = @__({ @Autowired}))
 public class ImageJob extends GenericJob {
+
+  /**
+   * Dependencies
+   */
+  @NonNull
+  private final ImageProperties properties;
 
   @Override
   public JobType getType() {
@@ -42,7 +53,7 @@ public class ImageJob extends GenericJob {
   public void execute(@NonNull JobContext jobContext) {
     clean(jobContext);
 
-    val specimenImageUrls = getSpecimenImageUrls();
+    val specimenImageUrls = properties.isSkipUrls() ? Collections.<String, String>emptyMap() : getSpecimenImageUrls();
     addSpecimenImage(jobContext, specimenImageUrls);
   }
 

@@ -77,6 +77,9 @@ mail:
 
 document:
   exportVCF: false
+
+image:
+  skipUrls: true
   
 index:
   esUri: "es://localhost:9300"
