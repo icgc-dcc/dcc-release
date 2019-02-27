@@ -53,7 +53,7 @@ Join job performs joins of clinical data (donor/specimen/sample), and each of th
 Import Job imports reference data such as projects, go, genes, CGC and pathways data from the reference database. The data is used to enrich documents loaded to the ElasticSearch cluster.
 
 ## <a name="fathmm"></a> FATHMM Job
-FATHMM job performs Functional Analysis through Hidden Markov Models (FATHMM). More detailed information could be found in the [FATHMM documentation](Fathmm.md).
+FATHMM job performs Functional Analysis through Hidden Markov Models (FATHMM). More detailed information could be found in the [FATHMM documentation](FATHMM.md).
 
 ## <a name="fi"></a> Functional Impact Analysis Job
 The job performs mutation functional impact analysis. More documentation could be found in the [DCC documentation](http://docs.icgc.org/portal/methods/#mutation-function-impact-prediction).
