@@ -24,6 +24,7 @@ import java.io.File;
 import lombok.val;
 
 import org.icgc.dcc.release.core.job.FileType;
+import org.icgc.dcc.release.job.image.config.ImageProperties;
 import org.icgc.dcc.release.test.job.AbstractJobTest;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -43,7 +44,8 @@ public class ImageJobTest extends AbstractJobTest {
   @Before
   public void setUp() {
     super.setUp();
-    this.job = new ImageJob();
+    val properties = new ImageProperties().setSkipUrls(true);
+    this.job = new ImageJob(properties);
   }
 
   @Test
